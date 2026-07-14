@@ -67,7 +67,7 @@ function NewCard() {
     const { error } = await supabase.from("card_templates").insert({
       business_id: businessId, title, subtitle: subtitle || null,
       total_steps: totalSteps, shape, bg_color: bg, accent_color: accent, text_color: text,
-      stamp_icon: icon, logo_url: logoUrl || null, rewards: cleanRewards, active: true,
+      stamp_icon: icon ?? "star", logo_url: logoUrl || null, rewards: cleanRewards, active: true,
     });
     setSaving(false);
     if (error) { toast.error(error.message); return; }
