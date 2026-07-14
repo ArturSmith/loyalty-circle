@@ -77,7 +77,21 @@ function NewCard() {
     navigate({ to: "/business" });
   };
 
-  const stepsLabels = ["Basics", "Shape & steps", "Style", "Rewards", "Review"];
+  const stepsLabels = ["Basics", "Style", "Steps & rewards", "Review"];
+  const [editingStep, setEditingStep] = useState<number | null>(null);
+  const [editingLabel, setEditingLabel] = useState("");
+
+  const openStepEditor = (s: number) => {
+    setEditingStep(s);
+    setEditingLabel(rewards.find((r) => r.step === s)?.label ?? "");
+  };
+  const saveStepEditor = () => {
+    if (editingStep == null) return;
+    const others = rewards.filter((r) => r.step !== editingStep);
+    const label = editingLabel.trim();
+    setRewards(label ? [...others, { step: editingStep, label }].sort((a, b) => a.step - b.step) : others);
+    setEditingStep(null);
+  };
 
   return (
     <div className="min-h-screen px-4 py-6 max-w-2xl mx-auto">
@@ -98,7 +112,25 @@ function NewCard() {
       <div className="mt-6 rounded-2xl border-2 border-ink/10 bg-card p-4">
         <StampCard title="Card title" subtitle="" totalSteps={totalSteps} stampsCount={0}
           shape={shape} bgColor={bg} accentColor={accent} textColor={text} stampIcon={icon}
-          logoUrl={null} rewards={[]} businessName="PREVIEW" />
+          logoUrl={null} rewards={rewards} businessName="PREVIEW"
+          hideSteps={step === 0}
+          onStepClick={step === 2 ? openStepEditor : undefined}
+          activeStep={editingStep ?? undefined} />
+        {step === 2 && editingStep != null && (
+          <div className="mt-4 rounded-xl border-2 border-ink/10 bg-secondary/50 p-3">
+            <Label className="text-xs">Benefit on step {editingStep}</Label>
+            <div className="mt-2 flex gap-2">
+              <Input autoFocus value={editingLabel} onChange={(e) => setEditingLabel(e.target.value)}
+                placeholder="e.g. -50%, FREE, ★"
+                onKeyDown={(e) => { if (e.key === "Enter") saveStepEditor(); if (e.key === "Escape") setEditingStep(null); }} />
+              <Button onClick={saveStepEditor} size="sm"><Check className="h-4 w-4" /></Button>
+              <Button variant="ghost" size="sm" onClick={() => setEditingStep(null)}>Cancel</Button>
+            </div>
+          </div>
+        )}
+        {step === 2 && editingStep == null && (
+          <p className="mt-3 text-center text-xs text-muted-foreground">Tap any step above to set a benefit</p>
+        )}
       </div>
 
       <div className="mt-6 rounded-2xl border-2 border-ink/10 bg-card paper-grain p-6">
@@ -139,11 +171,6 @@ function NewCard() {
             {step === 1 && (
               <div className="space-y-6">
                 <div>
-                  <Label>Total steps</Label>
-                  <Input type="number" min={1} value={totalSteps}
-                    onChange={(e) => setTotalSteps(Math.max(1, Number(e.target.value) || 1))} className="mt-2 w-32" />
-                </div>
-                <div>
                   <Label>Card shape</Label>
                   <div className="mt-2 grid grid-cols-3 gap-2">
                     {SHAPES.map((s) => (
@@ -154,10 +181,6 @@ function NewCard() {
                     ))}
                   </div>
                 </div>
-              </div>
-            )}
-            {step === 2 && (
-              <div className="space-y-6">
                 <div>
                   <Label>Color</Label>
                   <div className="mt-2 grid grid-cols-6 gap-2">
@@ -186,10 +209,17 @@ function NewCard() {
                 </div>
               </div>
             )}
-            {step === 3 && (
-              <RewardsEditor rewards={rewards} setRewards={setRewards} totalSteps={totalSteps} />
+            {step === 2 && (
+              <div className="space-y-4">
+                <div>
+                  <Label>Total steps</Label>
+                  <Input type="number" min={1} value={totalSteps}
+                    onChange={(e) => setTotalSteps(Math.max(1, Number(e.target.value) || 1))} className="mt-2 w-32" />
+                </div>
+                <p className="text-sm text-muted-foreground">Tap a step on the preview above to set the benefit shown when the customer reaches it (e.g. "-50%" on step 5, "FREE" on step 10).</p>
+              </div>
             )}
-            {step === 4 && (
+            {step === 3 && (
               <div className="text-center space-y-3">
                 <OrnamentDivider className="w-32 mx-auto opacity-60" />
                 <h3 className="font-display text-xl">Looks good?</h3>
