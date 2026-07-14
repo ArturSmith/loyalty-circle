@@ -244,25 +244,3 @@ function NewCard() {
   );
 }
 
-function RewardsEditor({ rewards, setRewards, totalSteps }: { rewards: Reward[]; setRewards: (r: Reward[]) => void; totalSteps: number }) {
-  return (
-    <div className="space-y-3">
-      <Label>Rewards on specific steps</Label>
-      <p className="text-xs text-muted-foreground">The number that appears in that circle before it's stamped. Example: step 10 = "FREE".</p>
-      {rewards.map((r, i) => (
-        <div key={i} className="flex items-center gap-2">
-          <Input type="number" min={1} value={r.step}
-            onChange={(e) => setRewards(rewards.map((x, j) => j === i ? { ...x, step: Number(e.target.value) } : x))} className="w-20" />
-          <Input value={r.label}
-            onChange={(e) => setRewards(rewards.map((x, j) => j === i ? { ...x, label: e.target.value } : x))} placeholder="-50%" />
-          <Button variant="ghost" size="icon" onClick={() => setRewards(rewards.filter((_, j) => j !== i))}>
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      ))}
-      <Button variant="outline" size="sm" onClick={() => setRewards([...rewards, { step: totalSteps, label: "" }])}>
-        <Plus className="h-4 w-4" /> Add reward
-      </Button>
-    </div>
-  );
-}
