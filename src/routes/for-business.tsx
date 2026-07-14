@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
-import { StampCard } from "@/components/StampCard";
+import { WalletStack } from "@/components/WalletStack";
+import type { StampCardProps } from "@/components/StampCard";
 import { Button } from "@/components/ui/button";
 import {
   QrCode,
