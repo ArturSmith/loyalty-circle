@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { motion } from "framer-motion";
-import { ArrowLeft, Scissors } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { z } from "zod";
 
 const searchSchema = z.object({ redirect: z.string().optional() }).catch({ redirect: undefined });
@@ -32,6 +32,13 @@ function AuthPage() {
 
   const handleGoogle = async () => {
     const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+    if (result.error) { toast.error("Sign-in failed. Try again."); return; }
+    if (result.redirected) return;
+    goNext();
+  };
+
+  const handleApple = async () => {
+    const result = await lovable.auth.signInWithOAuth("apple", { redirect_uri: window.location.origin });
     if (result.error) { toast.error("Sign-in failed. Try again."); return; }
     if (result.redirected) return;
     goNext();
@@ -65,7 +72,6 @@ function AuthPage() {
             <ArrowLeft className="h-4 w-4" />
             Back
           </Link>
-          <Scissors className="h-6 w-6 text-ink" />
           <OrnamentDivider className="my-3 w-32" />
           <h1 className="font-display text-3xl font-semibold">Welcome to Stempel</h1>
           <p className="mt-2 text-sm text-muted-foreground">Sign in to collect stamps and unlock rewards.</p>
@@ -74,6 +80,9 @@ function AuthPage() {
         <div className="mt-8 space-y-3">
           <Button onClick={handleGoogle} className="w-full h-11" variant="outline">
             <GoogleIcon /> Continue with Google
+          </Button>
+          <Button onClick={handleApple} className="w-full h-11" variant="outline">
+            <AppleIcon /> Continue with Apple
           </Button>
 
           <div className="flex items-center gap-3 py-2 text-xs text-muted-foreground">
@@ -117,6 +126,17 @@ function GoogleIcon() {
       <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.75c-.99.66-2.25 1.06-3.71 1.06-2.86 0-5.29-1.93-6.15-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
       <path fill="#FBBC05" d="M5.85 14.12c-.22-.66-.35-1.36-.35-2.12s.13-1.46.35-2.12V7.04H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.96l3.67-2.84z"/>
       <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.04l3.67 2.84C6.71 7.31 9.14 5.38 12 5.38z"/>
+    </svg>
+  );
+}
+
+function AppleIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="mr-2 h-4 w-4" aria-hidden>
+      <path
+        fill="currentColor"
+        d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.79 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.22 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"
+      />
     </svg>
   );
 }
