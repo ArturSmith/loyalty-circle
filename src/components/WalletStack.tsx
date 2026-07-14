@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { StampCard, type StampCardProps } from "./StampCard";
 
 export function WalletStack({ cards }: { cards: StampCardProps[] }) {
-  const [active, setActive] = useState(Math.floor((cards.length - 1) / 2));
+  const [active, setActive] = useState(Math.floor(cards.length / 2));
   const n = cards.length;
 
   // Fan spread parameters
