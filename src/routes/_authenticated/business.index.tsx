@@ -172,7 +172,7 @@ function BusinessDashboard() {
           </div>
         )}
         {tpls.map((t) => (
-          <Link key={t.id} to="/business/cards/$id/edit" params={{ id: t.id }}
+          <Link key={t.id} to="/business/cards/$id" params={{ id: t.id }}
             className="group relative block rounded-2xl focus:outline-none focus:ring-2 focus:ring-ink/40">
             <StampCard
               title={t.title}
