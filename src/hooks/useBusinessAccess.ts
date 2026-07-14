@@ -73,10 +73,10 @@ export function useBusinessAccess(): BusinessAccess {
       const currentPeriodEnd = sub?.current_period_end
         ? new Date(sub.current_period_end as string)
         : null;
-      const subActive = sub
+      const subActive: boolean = sub
         ? (["active", "trialing", "past_due"].includes(sub.status as string) &&
             (!currentPeriodEnd || currentPeriodEnd.getTime() > now)) ||
-          (sub.status === "canceled" && currentPeriodEnd && currentPeriodEnd.getTime() > now)
+          (sub.status === "canceled" && !!currentPeriodEnd && currentPeriodEnd.getTime() > now)
         : false;
 
       let hasAccess: boolean;
