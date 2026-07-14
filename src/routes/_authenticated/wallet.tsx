@@ -189,7 +189,7 @@ function Wallet() {
         >
           {(() => {
             const CARD_H = 220;
-            const PEEK = 92;
+            const PEEK = 56;
             const TIGHT = 34;
             const GAP = 14;
             const expandedIndex = expandedId ? instances.findIndex((x) => x.id === expandedId) : -1;

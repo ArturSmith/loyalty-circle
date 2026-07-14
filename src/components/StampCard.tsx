@@ -54,12 +54,6 @@ export function StampCard({
       className={`relative w-full paper-grain card-shadow border-2 ${radius}`}
       style={{ backgroundColor: bgColor, borderColor: accentColor + "22", color: textColor, aspectRatio: "1.586 / 1" }}
     >
-      {shape === "ticket" && (
-        <>
-          <div className="absolute -left-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-background" />
-          <div className="absolute -right-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-background" />
-        </>
-      )}
       <div className="flex h-full flex-col p-4 sm:p-5">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
