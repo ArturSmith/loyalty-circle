@@ -173,12 +173,29 @@ function BusinessDashboard() {
         )}
         {tpls.map((t) => (
           <Link key={t.id} to="/business/cards/$id/edit" params={{ id: t.id }}
-            className="flex items-center justify-between rounded-xl border-2 border-ink/10 bg-card paper-grain p-4 hover:border-ink/20 transition-colors">
-            <div>
-              <div className="font-display text-lg">{t.title}</div>
-              <div className="text-xs text-muted-foreground">{t.total_steps} steps · {t.active ? "active" : "paused"}</div>
+            className="group relative block rounded-2xl focus:outline-none focus:ring-2 focus:ring-ink/40">
+            <StampCard
+              title={t.title}
+              subtitle={t.subtitle}
+              totalSteps={t.total_steps}
+              stampsCount={0}
+              shape={t.shape}
+              bgColor={t.bg_color}
+              accentColor={t.accent_color}
+              textColor={t.text_color}
+              stampIcon={t.stamp_icon}
+              logoUrl={t.logo_url}
+              rewards={t.rewards ?? []}
+              businessName={biz.name}
+            />
+            <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-background/80 backdrop-blur px-2 py-1 text-[10px] font-medium shadow-sm opacity-0 group-hover:opacity-100 transition">
+              <Pencil className="h-3 w-3" /> Edit
             </div>
-            <Pencil className="h-4 w-4 text-muted-foreground" />
+            {!t.active && (
+              <div className="absolute top-2 left-2 rounded-full bg-background/80 backdrop-blur px-2 py-1 text-[10px] font-medium uppercase tracking-wider shadow-sm">
+                Paused
+              </div>
+            )}
           </Link>
         ))}
       </div>
