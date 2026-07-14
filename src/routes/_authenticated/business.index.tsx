@@ -9,9 +9,15 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { Plus, QrCode, ScanLine, Users, Stamp as StampIco, Wallet as WalletIcon, Pencil, Menu, Settings } from "lucide-react";
+import { StampCard } from "@/components/StampCard";
+import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
 
 type Business = { id: string; name: string; logo_url: string | null; brand_color: string | null };
-type Tpl = { id: string; title: string; total_steps: number; active: boolean };
+type Tpl = {
+  id: string; title: string; subtitle: string | null; total_steps: number; active: boolean;
+  shape: CardShape; bg_color: string; accent_color: string; text_color: string;
+  stamp_icon: StampIconName; logo_url: string | null; rewards: Reward[] | null;
+};
 
 export const Route = createFileRoute("/_authenticated/business/")({
   head: () => ({ meta: [{ title: "Business dashboard — Stempel" }] }),
@@ -38,7 +44,7 @@ function BusinessDashboard() {
       setBiz(b as Business | null);
       if (b) {
         const [{ data: t }, { count: sCount }, { data: instRows }] = await Promise.all([
-          supabase.from("card_templates").select("id,title,total_steps,active").eq("business_id", b.id).order("created_at", { ascending: false }),
+          supabase.from("card_templates").select("id,title,subtitle,total_steps,active,shape,bg_color,accent_color,text_color,stamp_icon,logo_url,rewards").eq("business_id", b.id).order("created_at", { ascending: false }),
           supabase.from("stamps").select("id", { count: "exact", head: true }).eq("business_id", b.id),
           supabase.from("card_instances").select("customer_id, template:card_templates!inner(business_id)").eq("template.business_id", b.id),
         ]);
@@ -167,12 +173,29 @@ function BusinessDashboard() {
         )}
         {tpls.map((t) => (
           <Link key={t.id} to="/business/cards/$id/edit" params={{ id: t.id }}
-            className="flex items-center justify-between rounded-xl border-2 border-ink/10 bg-card paper-grain p-4 hover:border-ink/20 transition-colors">
-            <div>
-              <div className="font-display text-lg">{t.title}</div>
-              <div className="text-xs text-muted-foreground">{t.total_steps} steps · {t.active ? "active" : "paused"}</div>
+            className="group relative block rounded-2xl focus:outline-none focus:ring-2 focus:ring-ink/40">
+            <StampCard
+              title={t.title}
+              subtitle={t.subtitle}
+              totalSteps={t.total_steps}
+              stampsCount={0}
+              shape={t.shape}
+              bgColor={t.bg_color}
+              accentColor={t.accent_color}
+              textColor={t.text_color}
+              stampIcon={t.stamp_icon}
+              logoUrl={t.logo_url}
+              rewards={t.rewards ?? []}
+              businessName={biz.name}
+            />
+            <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-background/80 backdrop-blur px-2 py-1 text-[10px] font-medium shadow-sm opacity-0 group-hover:opacity-100 transition">
+              <Pencil className="h-3 w-3" /> Edit
             </div>
-            <Pencil className="h-4 w-4 text-muted-foreground" />
+            {!t.active && (
+              <div className="absolute top-2 left-2 rounded-full bg-background/80 backdrop-blur px-2 py-1 text-[10px] font-medium uppercase tracking-wider shadow-sm">
+                Paused
+              </div>
+            )}
           </Link>
         ))}
       </div>
