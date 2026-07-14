@@ -22,6 +22,7 @@ import { Route as AuthenticatedBusinessIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedBusinessScanRouteImport } from './routes/_authenticated/business.scan'
 import { Route as AuthenticatedBusinessEditRouteImport } from './routes/_authenticated/business.edit'
 import { Route as AuthenticatedBusinessCardsNewRouteImport } from './routes/_authenticated/business.cards.new'
+import { Route as AuthenticatedBusinessCardsIdIndexRouteImport } from './routes/_authenticated/business.cards.$id.index'
 import { Route as AuthenticatedBusinessCardsIdEditRouteImport } from './routes/_authenticated/business.cards.$id.edit'
 
 const ForCustomersRoute = ForCustomersRouteImport.update({
@@ -92,6 +93,12 @@ const AuthenticatedBusinessCardsNewRoute =
     path: '/business/cards/new',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedBusinessCardsIdIndexRoute =
+  AuthenticatedBusinessCardsIdIndexRouteImport.update({
+    id: '/business/cards/$id/',
+    path: '/business/cards/$id/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedBusinessCardsIdEditRoute =
   AuthenticatedBusinessCardsIdEditRouteImport.update({
     id: '/business/cards/$id/edit',
@@ -113,6 +120,7 @@ export interface FileRoutesByFullPath {
   '/business/': typeof AuthenticatedBusinessIndexRoute
   '/business/cards/new': typeof AuthenticatedBusinessCardsNewRoute
   '/business/cards/$id/edit': typeof AuthenticatedBusinessCardsIdEditRoute
+  '/business/cards/$id/': typeof AuthenticatedBusinessCardsIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -128,6 +136,7 @@ export interface FileRoutesByTo {
   '/business': typeof AuthenticatedBusinessIndexRoute
   '/business/cards/new': typeof AuthenticatedBusinessCardsNewRoute
   '/business/cards/$id/edit': typeof AuthenticatedBusinessCardsIdEditRoute
+  '/business/cards/$id': typeof AuthenticatedBusinessCardsIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -145,6 +154,7 @@ export interface FileRoutesById {
   '/_authenticated/business/': typeof AuthenticatedBusinessIndexRoute
   '/_authenticated/business/cards/new': typeof AuthenticatedBusinessCardsNewRoute
   '/_authenticated/business/cards/$id/edit': typeof AuthenticatedBusinessCardsIdEditRoute
+  '/_authenticated/business/cards/$id/': typeof AuthenticatedBusinessCardsIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -162,6 +172,7 @@ export interface FileRouteTypes {
     | '/business/'
     | '/business/cards/new'
     | '/business/cards/$id/edit'
+    | '/business/cards/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -177,6 +188,7 @@ export interface FileRouteTypes {
     | '/business'
     | '/business/cards/new'
     | '/business/cards/$id/edit'
+    | '/business/cards/$id'
   id:
     | '__root__'
     | '/'
@@ -193,6 +205,7 @@ export interface FileRouteTypes {
     | '/_authenticated/business/'
     | '/_authenticated/business/cards/new'
     | '/_authenticated/business/cards/$id/edit'
+    | '/_authenticated/business/cards/$id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -297,6 +310,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBusinessCardsNewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/business/cards/$id/': {
+      id: '/_authenticated/business/cards/$id/'
+      path: '/business/cards/$id'
+      fullPath: '/business/cards/$id/'
+      preLoaderRoute: typeof AuthenticatedBusinessCardsIdIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/business/cards/$id/edit': {
       id: '/_authenticated/business/cards/$id/edit'
       path: '/business/cards/$id/edit'
@@ -316,6 +336,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBusinessIndexRoute: typeof AuthenticatedBusinessIndexRoute
   AuthenticatedBusinessCardsNewRoute: typeof AuthenticatedBusinessCardsNewRoute
   AuthenticatedBusinessCardsIdEditRoute: typeof AuthenticatedBusinessCardsIdEditRoute
+  AuthenticatedBusinessCardsIdIndexRoute: typeof AuthenticatedBusinessCardsIdIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -327,6 +348,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBusinessIndexRoute: AuthenticatedBusinessIndexRoute,
   AuthenticatedBusinessCardsNewRoute: AuthenticatedBusinessCardsNewRoute,
   AuthenticatedBusinessCardsIdEditRoute: AuthenticatedBusinessCardsIdEditRoute,
+  AuthenticatedBusinessCardsIdIndexRoute:
+    AuthenticatedBusinessCardsIdIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
