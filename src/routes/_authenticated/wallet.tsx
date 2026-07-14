@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { motion, AnimatePresence } from "framer-motion";
 import useEmblaCarousel from "embla-carousel-react";
-import { ChevronLeft, ChevronRight, LogOut, Menu, ScanLine, Sparkles, Store, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, LogOut, Menu, ScanLine, Sparkles, Store, User, X } from "lucide-react";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 
 type Instance = {
