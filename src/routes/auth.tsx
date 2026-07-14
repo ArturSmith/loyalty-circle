@@ -72,7 +72,6 @@ function AuthPage() {
             <ArrowLeft className="h-4 w-4" />
             Back
           </Link>
-          <Scissors className="h-6 w-6 text-ink" />
           <OrnamentDivider className="my-3 w-32" />
           <h1 className="font-display text-3xl font-semibold">Welcome to Stempel</h1>
           <p className="mt-2 text-sm text-muted-foreground">Sign in to collect stamps and unlock rewards.</p>
