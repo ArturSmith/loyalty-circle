@@ -42,8 +42,7 @@ function Wallet() {
   const navigate = useNavigate();
   const [instances, setInstances] = useState<Instance[]>([]);
   const [loading, setLoading] = useState(true);
-  const [emblaRef, embla] = useEmblaCarousel({ align: "center", loop: false });
-  const [selected, setSelected] = useState(0);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [flippedId, setFlippedId] = useState<string | null>(null);
   const [celebration, setCelebration] = useState<Celebration | null>(null);
 
