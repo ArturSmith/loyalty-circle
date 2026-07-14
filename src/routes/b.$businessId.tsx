@@ -101,8 +101,18 @@ function BusinessPublic() {
               rewards={t.rewards}
               businessName={business.name}
             />
-            <Button className="mt-3 w-full h-11" disabled={claiming === t.id} onClick={() => claim(t.id)}>
-              {claiming === t.id ? "Adding…" : userId ? "Add to my wallet" : "Sign in to add"}
+            <Button
+              className="mt-3 w-full h-11"
+              disabled={claiming === t.id || ownedTemplateIds.has(t.id)}
+              onClick={() => claim(t.id)}
+            >
+              {claiming === t.id
+                ? "Adding…"
+                : ownedTemplateIds.has(t.id)
+                ? "Already in your wallet"
+                : userId
+                ? "Add to my wallet"
+                : "Sign in to add"}
             </Button>
           </motion.div>
         ))}
