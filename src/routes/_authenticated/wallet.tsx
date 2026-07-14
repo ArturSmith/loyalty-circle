@@ -67,12 +67,17 @@ function Wallet() {
   if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading your wallet…</div>;
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="flex items-center justify-between px-5 py-4">
-        <h1 className="font-display text-2xl font-semibold">My cards</h1>
+    <div className="relative min-h-screen flex flex-col overflow-hidden">
+      <div aria-hidden className="pointer-events-none absolute -top-20 -left-16 h-64 w-64 rounded-full bg-[oklch(0.82_0.16_300/0.4)] blur-3xl" />
+      <div aria-hidden className="pointer-events-none absolute -bottom-24 -right-16 h-72 w-72 rounded-full bg-[oklch(0.86_0.14_195/0.4)] blur-3xl" />
+
+      <header className="relative flex items-center justify-between px-5 py-4">
+        <h1 className="font-display text-3xl font-extrabold tracking-tight">
+          My <span className="text-iridescent italic">cards</span>
+        </h1>
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" title="Menu"><Menu className="h-5 w-5" /></Button>
+            <Button variant="ghost" size="icon" title="Menu" className="rounded-full glass-panel"><Menu className="h-5 w-5" /></Button>
           </SheetTrigger>
           <SheetContent side="right" className="w-64">
             <SheetHeader className="text-left">
@@ -98,16 +103,28 @@ function Wallet() {
       </header>
 
       {instances.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
-          <OrnamentDivider className="w-32 opacity-60" />
-          <h2 className="mt-6 font-display text-2xl">No cards yet</h2>
+        <div className="relative flex-1 flex flex-col items-center justify-center px-6 text-center">
+          <motion.div
+            initial={{ scale: 0.85, opacity: 0, rotate: -8 }}
+            animate={{ scale: 1, opacity: 1, rotate: -4 }}
+            transition={{ type: "spring", stiffness: 220, damping: 18 }}
+            className="relative h-40 w-40 rounded-[2rem] sticker-shadow border border-white/70 flex items-center justify-center"
+            style={{ backgroundImage: "var(--gradient-iris)" }}
+          >
+            <div className="absolute inset-3 rounded-[1.5rem] bg-white/40 backdrop-blur-md flex items-center justify-center">
+              <ScanLine className="h-14 w-14 text-foreground/80" />
+            </div>
+            <div className="absolute -top-3 -right-3 h-10 w-10 rounded-full bg-white text-foreground sticker-shadow flex items-center justify-center">
+              <Sparkles className="h-4 w-4" />
+            </div>
+          </motion.div>
+          <h2 className="mt-8 font-display text-3xl font-extrabold">No cards yet</h2>
           <p className="mt-2 text-sm text-muted-foreground max-w-xs">Scan a business's QR to add your first loyalty card.</p>
           <Link to="/scan" className="mt-8 w-full max-w-xs">
-            <Button size="lg" className="w-full h-12 gap-2 text-base">
+            <Button size="lg" className="w-full h-14 gap-2 text-base rounded-2xl bg-[image:var(--gradient-primary)] text-white sticker-shadow border-0 hover:opacity-95">
               <ScanLine className="h-5 w-5" /> Scan QR
             </Button>
           </Link>
-          <OrnamentDivider className="w-32 mt-8 opacity-60" />
         </div>
       ) : (
         <>
