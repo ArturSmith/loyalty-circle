@@ -16,6 +16,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as BBusinessIdRouteImport } from './routes/b.$businessId'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
+import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated/scan'
 import { Route as AuthenticatedBusinessRouteImport } from './routes/_authenticated/business'
 import { Route as AuthenticatedBusinessScanRouteImport } from './routes/_authenticated/business.scan'
 import { Route as AuthenticatedBusinessCardsNewRouteImport } from './routes/_authenticated/business.cards.new'
@@ -55,6 +56,11 @@ const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
   path: '/wallet',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedScanRoute = AuthenticatedScanRouteImport.update({
+  id: '/scan',
+  path: '/scan',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedBusinessRoute = AuthenticatedBusinessRouteImport.update({
   id: '/business',
   path: '/business',
@@ -85,6 +91,7 @@ export interface FileRoutesByFullPath {
   '/for-business': typeof ForBusinessRoute
   '/for-customers': typeof ForCustomersRoute
   '/business': typeof AuthenticatedBusinessRouteWithChildren
+  '/scan': typeof AuthenticatedScanRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/b/$businessId': typeof BBusinessIdRoute
   '/business/scan': typeof AuthenticatedBusinessScanRoute
@@ -97,6 +104,7 @@ export interface FileRoutesByTo {
   '/for-business': typeof ForBusinessRoute
   '/for-customers': typeof ForCustomersRoute
   '/business': typeof AuthenticatedBusinessRouteWithChildren
+  '/scan': typeof AuthenticatedScanRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/b/$businessId': typeof BBusinessIdRoute
   '/business/scan': typeof AuthenticatedBusinessScanRoute
@@ -111,6 +119,7 @@ export interface FileRoutesById {
   '/for-business': typeof ForBusinessRoute
   '/for-customers': typeof ForCustomersRoute
   '/_authenticated/business': typeof AuthenticatedBusinessRouteWithChildren
+  '/_authenticated/scan': typeof AuthenticatedScanRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/b/$businessId': typeof BBusinessIdRoute
   '/_authenticated/business/scan': typeof AuthenticatedBusinessScanRoute
@@ -125,6 +134,7 @@ export interface FileRouteTypes {
     | '/for-business'
     | '/for-customers'
     | '/business'
+    | '/scan'
     | '/wallet'
     | '/b/$businessId'
     | '/business/scan'
@@ -137,6 +147,7 @@ export interface FileRouteTypes {
     | '/for-business'
     | '/for-customers'
     | '/business'
+    | '/scan'
     | '/wallet'
     | '/b/$businessId'
     | '/business/scan'
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '/for-business'
     | '/for-customers'
     | '/_authenticated/business'
+    | '/_authenticated/scan'
     | '/_authenticated/wallet'
     | '/b/$businessId'
     | '/_authenticated/business/scan'
@@ -217,6 +229,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWalletRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/scan': {
+      id: '/_authenticated/scan'
+      path: '/scan'
+      fullPath: '/scan'
+      preLoaderRoute: typeof AuthenticatedScanRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/business': {
       id: '/_authenticated/business'
       path: '/business'
@@ -267,11 +286,13 @@ const AuthenticatedBusinessRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedBusinessRoute: typeof AuthenticatedBusinessRouteWithChildren
+  AuthenticatedScanRoute: typeof AuthenticatedScanRoute
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBusinessRoute: AuthenticatedBusinessRouteWithChildren,
+  AuthenticatedScanRoute: AuthenticatedScanRoute,
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
 }
 
