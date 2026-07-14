@@ -182,47 +182,81 @@ function Wallet() {
         </div>
       ) : (
         <>
-          <div className="flex-1 overflow-hidden py-6" ref={emblaRef}>
-            <div className="flex touch-pan-y">
-              {instances.map((inst, i) => (
-                <div key={inst.id} className="min-w-0 flex-[0_0_88%] px-2 sm:flex-[0_0_420px]">
-                  <motion.button
-                    className="w-full text-left focus:outline-none"
-                    animate={{ scale: selected === i ? 1 : 0.94, opacity: selected === i ? 1 : 0.5 }}
-                    transition={{ type: "spring", stiffness: 220, damping: 24 }}
-                    onClick={() => setFlippedId(inst.id)}
-                  >
-                    <StampCard
-                      title={inst.template.title}
-                      subtitle={inst.template.subtitle}
-                      totalSteps={inst.template.total_steps}
-                      stampsCount={inst.stamps_count}
-                      shape={inst.template.shape}
-                      bgColor={inst.template.bg_color}
-                      accentColor={inst.template.accent_color}
-                      textColor={inst.template.text_color}
-                      stampIcon={inst.template.stamp_icon}
-                      logoUrl={inst.template.logo_url}
-                      rewards={inst.template.rewards}
-                      businessName={inst.template.business.name}
-                      lastStamp={inst.stamps_count}
-                    />
-                  </motion.button>
-                  {inst.completed_at && (
-                    <div className="mt-3 flex items-center justify-center gap-2 text-xs text-gold">
-                      <Sparkles className="h-3 w-3" /> Card complete — reward unlocked
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
+        <div
+          className="relative flex-1 overflow-y-auto px-4 pb-10"
+          onClick={() => setExpandedId(null)}
+        >
+          {(() => {
+            const CARD_H = 220;
+            const PEEK = 92;
+            const TIGHT = 34;
+            const GAP = 14;
+            const expandedIndex = expandedId ? instances.findIndex((x) => x.id === expandedId) : -1;
+            const totalHeight =
+              expandedIndex >= 0
+                ? expandedIndex * TIGHT + CARD_H + GAP + Math.max(0, instances.length - expandedIndex - 1) * (TIGHT + 8) + 40
+                : (instances.length - 1) * PEEK + CARD_H + 40;
 
-          <div className="flex items-center justify-center gap-3 pb-4">
-            <Button size="icon" variant="ghost" onClick={() => embla?.scrollPrev()}><ChevronLeft className="h-4 w-4" /></Button>
-            <span className="text-xs text-muted-foreground">{selected + 1} / {instances.length}</span>
-            <Button size="icon" variant="ghost" onClick={() => embla?.scrollNext()}><ChevronRight className="h-4 w-4" /></Button>
-          </div>
+            return (
+              <div className="relative mx-auto max-w-md" style={{ height: totalHeight }}>
+                {instances.map((inst, i) => {
+                  const isExpanded = i === expandedIndex;
+                  let top: number;
+                  if (expandedIndex < 0) {
+                    top = i * PEEK;
+                  } else if (i < expandedIndex) {
+                    top = i * TIGHT;
+                  } else if (i === expandedIndex) {
+                    top = expandedIndex * TIGHT + GAP;
+                  } else {
+                    top = expandedIndex * TIGHT + GAP + CARD_H + GAP + (i - expandedIndex - 1) * (TIGHT + 8);
+                  }
+                  return (
+                    <motion.div
+                      key={inst.id}
+                      className="absolute inset-x-0"
+                      initial={false}
+                      animate={{ y: top, scale: isExpanded ? 1 : 0.98 }}
+                      transition={{ type: "spring", stiffness: 260, damping: 30 }}
+                      style={{ zIndex: i + 1 }}
+                    >
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (isExpanded) setFlippedId(inst.id);
+                          else setExpandedId(inst.id);
+                        }}
+                        className="block w-full text-left focus:outline-none drop-shadow-2xl"
+                        aria-label={isExpanded ? `Show QR for ${inst.template.title}` : `Open ${inst.template.title}`}
+                      >
+                        <StampCard
+                          title={inst.template.title}
+                          subtitle={inst.template.subtitle}
+                          totalSteps={inst.template.total_steps}
+                          stampsCount={inst.stamps_count}
+                          shape={inst.template.shape}
+                          bgColor={inst.template.bg_color}
+                          accentColor={inst.template.accent_color}
+                          textColor={inst.template.text_color}
+                          stampIcon={inst.template.stamp_icon}
+                          logoUrl={inst.template.logo_url}
+                          rewards={inst.template.rewards}
+                          businessName={inst.template.business.name}
+                          lastStamp={inst.stamps_count}
+                        />
+                      </button>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+          <p className="mt-4 text-center text-xs text-muted-foreground">
+            {expandedId ? "Tap the card again to show your QR" : "Tap a card to bring it forward"}
+          </p>
+        </div>
+
         </>
       )}
 
