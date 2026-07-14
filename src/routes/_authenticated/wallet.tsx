@@ -257,6 +257,139 @@ function Wallet() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <AnimatePresence>
+        {celebration && (
+          <motion.div
+            key={`celebrate-${celebration.instanceId}-${celebration.stampsCount}`}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] bg-ink/85 backdrop-blur-md flex items-center justify-center p-6"
+            onClick={() => { setCelebration(null); setFlippedId(null); }}
+          >
+            {Array.from({ length: 14 }).map((_, i) => (
+              <motion.span
+                key={i}
+                initial={{ opacity: 0, x: 0, y: 0, scale: 0 }}
+                animate={{
+                  opacity: [0, 1, 0],
+                  x: Math.cos((i / 14) * Math.PI * 2) * 160,
+                  y: Math.sin((i / 14) * Math.PI * 2) * 160,
+                  scale: [0, 1, 0.6],
+                  rotate: i * 30,
+                }}
+                transition={{ duration: 1.2, delay: 0.1 + i * 0.02, ease: "easeOut" }}
+                className="pointer-events-none absolute h-2 w-2 rounded-full"
+                style={{ background: celebration.accentColor }}
+              />
+            ))}
+
+            <motion.div
+              initial={{ scale: 0.6, y: 40, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: "spring", damping: 16, stiffness: 220 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-sm rounded-3xl bg-paper paper-grain card-shadow p-8 text-center"
+            >
+              <button
+                onClick={() => { setCelebration(null); setFlippedId(null); }}
+                className="absolute top-3 right-3 p-2 opacity-60 hover:opacity-100"
+                aria-label="Close"
+              >
+                <X className="h-4 w-4" />
+              </button>
+
+              <OrnamentDivider className="w-40 mx-auto opacity-70" />
+
+              {celebration.completed ? (
+                <>
+                  <motion.div
+                    initial={{ scale: 0, rotate: -30 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: "spring", damping: 10, stiffness: 200, delay: 0.1 }}
+                    className="mt-4 mx-auto h-24 w-24 rounded-full bg-gold text-ink flex items-center justify-center"
+                  >
+                    <Sparkles className="h-10 w-10" />
+                  </motion.div>
+                  <h2 className="font-display text-3xl mt-4">Card complete!</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">{celebration.businessName} · {celebration.title}</p>
+                  <div className="mt-4 rounded-lg bg-gold/20 text-ink px-4 py-2 text-sm font-semibold">
+                    {celebration.unlockedReward?.label
+                      ? `Reward unlocked: ${celebration.unlockedReward.label}`
+                      : "Reward unlocked — enjoy!"}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <motion.div
+                    initial={{ scale: 3, rotate: -18, opacity: 0 }}
+                    animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                    transition={{ type: "spring", damping: 12, stiffness: 200 }}
+                    className="mt-4 mx-auto h-24 w-24 rounded-full bg-ink text-paper flex items-center justify-center stamp-emboss"
+                  >
+                    <Check className="h-10 w-10" />
+                  </motion.div>
+                  <h2 className="font-display text-3xl mt-4">Stamp added!</h2>
+                  <p className="mt-1 text-xs uppercase tracking-widest text-muted-foreground">{celebration.businessName}</p>
+
+                  <div className="mt-5 flex items-center justify-center gap-1.5">
+                    {Array.from({ length: celebration.totalSteps }).map((_, i) => (
+                      <motion.span
+                        key={i}
+                        initial={{ scale: 0.6, opacity: 0.3 }}
+                        animate={{
+                          scale: i === celebration.stampsCount - 1 ? [1.4, 1] : 1,
+                          opacity: i < celebration.stampsCount ? 1 : 0.25,
+                        }}
+                        transition={{ delay: i === celebration.stampsCount - 1 ? 0.25 : 0, type: "spring", damping: 12 }}
+                        className="h-2.5 w-2.5 rounded-full"
+                        style={{ background: i < celebration.stampsCount ? celebration.accentColor : "currentColor" }}
+                      />
+                    ))}
+                  </div>
+                  <p className="mt-3 text-sm text-muted-foreground">
+                    {celebration.stampsCount} of {celebration.totalSteps} stamps
+                  </p>
+
+                  {celebration.unlockedReward && (
+                    <motion.div
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.4, type: "spring", damping: 14 }}
+                      className="mt-4 rounded-lg bg-gold/25 text-ink px-4 py-2 text-sm font-semibold inline-flex items-center gap-2"
+                    >
+                      <Gift className="h-4 w-4" /> Reward unlocked: {celebration.unlockedReward.label}
+                    </motion.div>
+                  )}
+
+                  {celebration.stepsToNext !== null && (
+                    <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-ink/5 px-4 py-2 text-sm">
+                      <Gift className="h-4 w-4 opacity-70" />
+                      <span>
+                        <strong>{celebration.stepsToNext}</strong>{" "}
+                        {celebration.stepsToNext === 1 ? "stamp" : "stamps"} to{" "}
+                        {celebration.nextReward ? (
+                          <>next reward: <em>{celebration.nextReward.label}</em></>
+                        ) : (
+                          "complete the card"
+                        )}
+                      </span>
+                    </div>
+                  )}
+                </>
+              )}
+
+              <OrnamentDivider className="w-40 mx-auto opacity-70 mt-6" />
+              <Button
+                className="mt-6 w-full h-11"
+                onClick={() => { setCelebration(null); setFlippedId(null); }}
+              >
+                Nice!
+              </Button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
