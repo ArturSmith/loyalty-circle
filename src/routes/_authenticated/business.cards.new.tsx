@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Slider } from "@/components/ui/slider";
+// slider no longer used
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { StampCard, STAMP_ICONS } from "@/components/StampCard";
