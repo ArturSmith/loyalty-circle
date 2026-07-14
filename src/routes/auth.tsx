@@ -25,12 +25,18 @@ function AuthPage() {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
 
+  const intendedPath = redirect && redirect.startsWith("/") ? redirect : "/wallet";
+
   const goNext = () => {
-    if (redirect && redirect.startsWith("/")) navigate({ to: redirect });
-    else navigate({ to: "/wallet" });
+    navigate({ to: intendedPath });
+  };
+
+  const stashRedirect = () => {
+    try { sessionStorage.setItem("post_auth_redirect", intendedPath); } catch {}
   };
 
   const handleGoogle = async () => {
+    stashRedirect();
     const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
     if (result.error) { toast.error("Sign-in failed. Try again."); return; }
     if (result.redirected) return;
@@ -38,6 +44,7 @@ function AuthPage() {
   };
 
   const handleApple = async () => {
+    stashRedirect();
     const result = await lovable.auth.signInWithOAuth("apple", { redirect_uri: window.location.origin });
     if (result.error) { toast.error("Sign-in failed. Try again."); return; }
     if (result.redirected) return;
