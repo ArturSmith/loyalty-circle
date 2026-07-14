@@ -124,14 +124,14 @@ function Landing() {
               Cafés, florists, bakeries, wine bars, gyms, salons — shape, color, icon and rewards, all yours to design.
             </p>
           </div>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {showcaseCards.map((card, i) => (
               <motion.div
                 key={card.title}
                 initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.5, delay: (i % 3) * 0.08 }}
+                transition={{ duration: 0.5, delay: (i % 4) * 0.08 }}
               >
                 <StampCard {...card} />
               </motion.div>
