@@ -140,22 +140,25 @@ function ForBusinessPage() {
             </h2>
           </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {benefits.map((benefit, i) => (
-              <motion.div
-                key={benefit.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.5, delay: (i % 3) * 0.08 }}
-                className="rounded-2xl border border-border/70 bg-secondary/30 p-6"
-              >
-                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                  <Icon className="h-4 w-4" />
-                </div>
-                <h3 className="font-display text-xl font-semibold">{benefit.title}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{benefit.body}</p>
-              </motion.div>
-            ))}
+            {benefits.map((benefit, i) => {
+              const Icon = benefit.icon;
+              return (
+                <motion.div
+                  key={benefit.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-60px" }}
+                  transition={{ duration: 0.5, delay: (i % 3) * 0.08 }}
+                  className="rounded-2xl border border-border/70 bg-secondary/30 p-6"
+                >
+                  <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <h3 className="font-display text-xl font-semibold">{benefit.title}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">{benefit.body}</p>
+                </motion.div>
+              );
+            })}
           </div>
         </section>
       </main>
