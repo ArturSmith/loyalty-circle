@@ -55,6 +55,7 @@ function BusinessPublic() {
 
   const claim = async (templateId: string) => {
     if (!userId) {
+      try { sessionStorage.setItem(`pending_claim:${businessId}`, templateId); } catch {}
       navigate({ to: "/auth", search: { redirect: `/b/${businessId}` } });
       return;
     }
@@ -70,6 +71,21 @@ function BusinessPublic() {
     toast.success("Card added to your wallet");
     navigate({ to: "/wallet" });
   };
+
+  // Auto-claim after signing in via redirect back
+  useEffect(() => {
+    if (!userId || loading || templates.length === 0) return;
+    let pending: string | null = null;
+    try { pending = sessionStorage.getItem(`pending_claim:${businessId}`); } catch {}
+    if (!pending) return;
+    try { sessionStorage.removeItem(`pending_claim:${businessId}`); } catch {}
+    if (ownedTemplateIds.has(pending)) { navigate({ to: "/wallet" }); return; }
+    if (templates.find((t) => t.id === pending)) {
+      claim(pending);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, loading, templates, businessId]);
+
 
   if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>;
   if (!business) return <div className="min-h-screen flex items-center justify-center">Business not found.</div>;
