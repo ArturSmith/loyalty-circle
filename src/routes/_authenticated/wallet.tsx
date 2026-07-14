@@ -35,11 +35,14 @@ function Wallet() {
   const [flippedId, setFlippedId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) { setInstances([]); setLoading(false); return; }
     const { data } = await supabase
       .from("card_instances")
       .select(`id, stamps_count, completed_at, created_at,
         template:card_templates!inner(id, title, subtitle, total_steps, shape, bg_color, accent_color, text_color, stamp_icon, logo_url, rewards,
           business:businesses!inner(id, name))`)
+      .eq("customer_id", u.user.id)
       .order("created_at", { ascending: false });
     setInstances((data as unknown as Instance[]) ?? []);
     setLoading(false);
