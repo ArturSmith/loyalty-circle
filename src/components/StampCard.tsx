@@ -25,13 +25,17 @@ export interface StampCardProps {
   rewards?: Reward[];
   businessName?: string;
   interactive?: boolean;
-  lastStamp?: number; // animate the latest stamp
+  lastStamp?: number;
+  hideSteps?: boolean;
+  onStepClick?: (step: number) => void;
+  activeStep?: number;
 }
 
 export function StampCard({
   title, subtitle, totalSteps, stampsCount = 0, shape = "rounded",
   bgColor = "#faf8f2", accentColor = "#1a1a2e", textColor = "#1a1a2e",
   stampIcon = "star", logoUrl, rewards = [], businessName, lastStamp,
+  hideSteps = false, onStepClick, activeStep,
 }: StampCardProps) {
   const Icon = STAMP_ICONS[stampIcon] ?? Star;
   const radius = shape === "square" ? "rounded-lg" : shape === "ticket" ? "rounded-none" : "rounded-3xl";
