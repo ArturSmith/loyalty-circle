@@ -64,7 +64,7 @@ export function StampCard({
             <img src={logoUrl} alt="" className="h-9 w-9 rounded-full object-cover ring-1 ring-black/10" />
           ) : (
             <div className="h-9 w-9 rounded-full flex items-center justify-center" style={{ backgroundColor: accentColor + "11", color: accentColor }}>
-              <Icon className="h-4 w-4" />
+              {Icon && <Icon className="h-4 w-4" />}
             </div>
           )}
         </div>
