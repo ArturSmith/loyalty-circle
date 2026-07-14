@@ -89,11 +89,18 @@ export function StampCard({
               return (
                 <div key={i} className="flex items-center justify-center">
                   {clickable ? (
-                    <button type="button" onClick={() => onStepClick!(step)}
-                      className={`relative aspect-square w-full max-w-[42px] rounded-full border-2 flex items-center justify-center text-[10px] font-semibold cursor-pointer transition-transform hover:scale-110 ${filled ? "stamp-emboss" : ""}`}
-                      style={commonStyle} aria-label={`Edit step ${step}`}>
+                    <motion.button
+                      type="button"
+                      onClick={() => onStepClick!(step)}
+                      animate={!filled ? { scale: [1, 1.12, 1], boxShadow: [`0 0 0 0px ${accentColor}66`, `0 0 0 8px ${accentColor}00`, `0 0 0 0px ${accentColor}66`] } : undefined}
+                      transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+                      whileHover={{ scale: 1.15 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={`relative aspect-square w-full max-w-[42px] rounded-full border-2 flex items-center justify-center text-[10px] font-semibold cursor-pointer ${filled ? "stamp-emboss" : ""}`}
+                      style={commonStyle}
+                      aria-label={`Edit step ${step}`}>
                       {inner}
-                    </button>
+                    </motion.button>
                   ) : (
                     <motion.div
                       key={isLast ? `stamp-${lastStamp}` : `slot-${i}`}

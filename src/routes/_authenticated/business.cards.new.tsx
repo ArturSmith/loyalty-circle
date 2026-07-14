@@ -127,7 +127,7 @@ function NewCard() {
           </div>
         )}
         {step === 2 && editingStep == null && (
-          <p className="mt-3 text-center text-xs text-muted-foreground">Tap any step above to set a benefit</p>
+          <p className="mt-3 text-center text-sm font-medium text-ink animate-pulse">Tap on step to set rewards</p>
         )}
       </div>
 
