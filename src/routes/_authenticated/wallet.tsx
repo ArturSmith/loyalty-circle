@@ -279,6 +279,19 @@ function Wallet() {
             setFlippedId(null);
             load();
           };
+          const remove = async () => {
+            if (!inst) return;
+            if (!window.confirm(`Remove "${inst.template.title}" from your wallet? This cannot be undone.`)) return;
+            const { error } = await supabase.from("card_instances").delete().eq("id", inst.id);
+            if (error) {
+              toast.error("Couldn't remove card", { description: error.message });
+              return;
+            }
+            toast.success("Card removed from your wallet");
+            setFlippedId(null);
+            setExpandedId(null);
+            load();
+          };
           return (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
