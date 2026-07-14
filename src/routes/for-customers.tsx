@@ -61,6 +61,29 @@ const benefits = [
   },
 ];
 
+const customerStackCards: StampCardProps[] = [
+  {
+    title: "Baker's Row", subtitle: "Free loaf at 10", totalSteps: 10, stampsCount: 9,
+    stampIcon: "cookie", bgColor: "#fbf3e4", accentColor: "#6b4a1f", textColor: "#6b4a1f",
+    rewards: [{ step: 10, label: "FREE" }], businessName: "BAKER'S ROW",
+  },
+  {
+    title: "Café Nord", subtitle: "10th coffee free", totalSteps: 10, stampsCount: 5,
+    stampIcon: "coffee", bgColor: "#f5efe4", accentColor: "#4a2c1a", textColor: "#4a2c1a",
+    rewards: [{ step: 10, label: "FREE" }], businessName: "CAFÉ NORD",
+  },
+  {
+    title: "Milan Frisør", subtitle: "5th cut half price", totalSteps: 8, stampsCount: 3,
+    stampIcon: "sparkles", bgColor: "#eef1f5", accentColor: "#1e2a44", textColor: "#1e2a44",
+    rewards: [{ step: 5, label: "-50%" }, { step: 8, label: "FREE" }], businessName: "MILAN FRISØR",
+  },
+  {
+    title: "Vinbar 22", subtitle: "Glass on us at 6", totalSteps: 6, stampsCount: 2,
+    stampIcon: "wine", bgColor: "#2a1a24", accentColor: "#e8b4c0", textColor: "#f5e6ea",
+    rewards: [{ step: 6, label: "FREE" }], businessName: "VINBAR 22",
+  },
+];
+
 function ForCustomersPage() {
   return (
     <div className="min-h-screen">
