@@ -108,7 +108,7 @@ function NewCard() {
       </div>
 
       <div className="mt-6 rounded-2xl border-2 border-ink/10 bg-card p-4">
-        <StampCard title="Card title" subtitle="" totalSteps={totalSteps} stampsCount={0}
+        <StampCard title={title || "Card title"} subtitle={subtitle} totalSteps={totalSteps} stampsCount={0}
           shape={shape} bgColor={bg} accentColor={accent} textColor={text} stampIcon={icon}
           logoUrl={null} rewards={rewards} businessName="PREVIEW"
           hideSteps={step === 0}
