@@ -16,11 +16,14 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as BBusinessIdRouteImport } from './routes/b.$businessId'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
+import { Route as AuthenticatedSubscribeRouteImport } from './routes/_authenticated/subscribe'
 import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated/scan'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedBusinessRouteImport } from './routes/_authenticated/business'
 import { Route as AuthenticatedBusinessIndexRouteImport } from './routes/_authenticated/business.index'
 import { Route as AuthenticatedBusinessScanRouteImport } from './routes/_authenticated/business.scan'
 import { Route as AuthenticatedBusinessEditRouteImport } from './routes/_authenticated/business.edit'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as AuthenticatedBusinessCardsNewRouteImport } from './routes/_authenticated/business.cards.new'
 import { Route as AuthenticatedBusinessCardsIdIndexRouteImport } from './routes/_authenticated/business.cards.$id.index'
 import { Route as AuthenticatedBusinessCardsIdEditRouteImport } from './routes/_authenticated/business.cards.$id.edit'
@@ -59,6 +62,11 @@ const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
   path: '/wallet',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSubscribeRoute = AuthenticatedSubscribeRouteImport.update({
+  id: '/subscribe',
+  path: '/subscribe',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedScanRoute = AuthenticatedScanRouteImport.update({
   id: '/scan',
   path: '/scan',
@@ -69,41 +77,52 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedBusinessRoute = AuthenticatedBusinessRouteImport.update({
+  id: '/business',
+  path: '/business',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedBusinessIndexRoute =
   AuthenticatedBusinessIndexRouteImport.update({
-    id: '/business/',
-    path: '/business/',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedBusinessRoute,
   } as any)
 const AuthenticatedBusinessScanRoute =
   AuthenticatedBusinessScanRouteImport.update({
-    id: '/business/scan',
-    path: '/business/scan',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    id: '/scan',
+    path: '/scan',
+    getParentRoute: () => AuthenticatedBusinessRoute,
   } as any)
 const AuthenticatedBusinessEditRoute =
   AuthenticatedBusinessEditRouteImport.update({
-    id: '/business/edit',
-    path: '/business/edit',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    id: '/edit',
+    path: '/edit',
+    getParentRoute: () => AuthenticatedBusinessRoute,
+  } as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
   } as any)
 const AuthenticatedBusinessCardsNewRoute =
   AuthenticatedBusinessCardsNewRouteImport.update({
-    id: '/business/cards/new',
-    path: '/business/cards/new',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    id: '/cards/new',
+    path: '/cards/new',
+    getParentRoute: () => AuthenticatedBusinessRoute,
   } as any)
 const AuthenticatedBusinessCardsIdIndexRoute =
   AuthenticatedBusinessCardsIdIndexRouteImport.update({
-    id: '/business/cards/$id/',
-    path: '/business/cards/$id/',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    id: '/cards/$id/',
+    path: '/cards/$id/',
+    getParentRoute: () => AuthenticatedBusinessRoute,
   } as any)
 const AuthenticatedBusinessCardsIdEditRoute =
   AuthenticatedBusinessCardsIdEditRouteImport.update({
-    id: '/business/cards/$id/edit',
-    path: '/business/cards/$id/edit',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    id: '/cards/$id/edit',
+    path: '/cards/$id/edit',
+    getParentRoute: () => AuthenticatedBusinessRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -111,14 +130,17 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/for-business': typeof ForBusinessRoute
   '/for-customers': typeof ForCustomersRoute
+  '/business': typeof AuthenticatedBusinessRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
   '/scan': typeof AuthenticatedScanRoute
+  '/subscribe': typeof AuthenticatedSubscribeRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/b/$businessId': typeof BBusinessIdRoute
   '/business/edit': typeof AuthenticatedBusinessEditRoute
   '/business/scan': typeof AuthenticatedBusinessScanRoute
   '/business/': typeof AuthenticatedBusinessIndexRoute
   '/business/cards/new': typeof AuthenticatedBusinessCardsNewRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/business/cards/$id/edit': typeof AuthenticatedBusinessCardsIdEditRoute
   '/business/cards/$id/': typeof AuthenticatedBusinessCardsIdIndexRoute
 }
@@ -129,12 +151,14 @@ export interface FileRoutesByTo {
   '/for-customers': typeof ForCustomersRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/scan': typeof AuthenticatedScanRoute
+  '/subscribe': typeof AuthenticatedSubscribeRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/b/$businessId': typeof BBusinessIdRoute
   '/business/edit': typeof AuthenticatedBusinessEditRoute
   '/business/scan': typeof AuthenticatedBusinessScanRoute
   '/business': typeof AuthenticatedBusinessIndexRoute
   '/business/cards/new': typeof AuthenticatedBusinessCardsNewRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/business/cards/$id/edit': typeof AuthenticatedBusinessCardsIdEditRoute
   '/business/cards/$id': typeof AuthenticatedBusinessCardsIdIndexRoute
 }
@@ -145,14 +169,17 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/for-business': typeof ForBusinessRoute
   '/for-customers': typeof ForCustomersRoute
+  '/_authenticated/business': typeof AuthenticatedBusinessRouteWithChildren
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/scan': typeof AuthenticatedScanRoute
+  '/_authenticated/subscribe': typeof AuthenticatedSubscribeRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/b/$businessId': typeof BBusinessIdRoute
   '/_authenticated/business/edit': typeof AuthenticatedBusinessEditRoute
   '/_authenticated/business/scan': typeof AuthenticatedBusinessScanRoute
   '/_authenticated/business/': typeof AuthenticatedBusinessIndexRoute
   '/_authenticated/business/cards/new': typeof AuthenticatedBusinessCardsNewRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/_authenticated/business/cards/$id/edit': typeof AuthenticatedBusinessCardsIdEditRoute
   '/_authenticated/business/cards/$id/': typeof AuthenticatedBusinessCardsIdIndexRoute
 }
@@ -163,14 +190,17 @@ export interface FileRouteTypes {
     | '/auth'
     | '/for-business'
     | '/for-customers'
+    | '/business'
     | '/profile'
     | '/scan'
+    | '/subscribe'
     | '/wallet'
     | '/b/$businessId'
     | '/business/edit'
     | '/business/scan'
     | '/business/'
     | '/business/cards/new'
+    | '/api/public/payments/webhook'
     | '/business/cards/$id/edit'
     | '/business/cards/$id/'
   fileRoutesByTo: FileRoutesByTo
@@ -181,12 +211,14 @@ export interface FileRouteTypes {
     | '/for-customers'
     | '/profile'
     | '/scan'
+    | '/subscribe'
     | '/wallet'
     | '/b/$businessId'
     | '/business/edit'
     | '/business/scan'
     | '/business'
     | '/business/cards/new'
+    | '/api/public/payments/webhook'
     | '/business/cards/$id/edit'
     | '/business/cards/$id'
   id:
@@ -196,14 +228,17 @@ export interface FileRouteTypes {
     | '/auth'
     | '/for-business'
     | '/for-customers'
+    | '/_authenticated/business'
     | '/_authenticated/profile'
     | '/_authenticated/scan'
+    | '/_authenticated/subscribe'
     | '/_authenticated/wallet'
     | '/b/$businessId'
     | '/_authenticated/business/edit'
     | '/_authenticated/business/scan'
     | '/_authenticated/business/'
     | '/_authenticated/business/cards/new'
+    | '/api/public/payments/webhook'
     | '/_authenticated/business/cards/$id/edit'
     | '/_authenticated/business/cards/$id/'
   fileRoutesById: FileRoutesById
@@ -215,6 +250,7 @@ export interface RootRouteChildren {
   ForBusinessRoute: typeof ForBusinessRoute
   ForCustomersRoute: typeof ForCustomersRoute
   BBusinessIdRoute: typeof BBusinessIdRoute
+  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -268,6 +304,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWalletRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/subscribe': {
+      id: '/_authenticated/subscribe'
+      path: '/subscribe'
+      fullPath: '/subscribe'
+      preLoaderRoute: typeof AuthenticatedSubscribeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/scan': {
       id: '/_authenticated/scan'
       path: '/scan'
@@ -282,55 +325,66 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/business': {
+      id: '/_authenticated/business'
+      path: '/business'
+      fullPath: '/business'
+      preLoaderRoute: typeof AuthenticatedBusinessRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/business/': {
       id: '/_authenticated/business/'
-      path: '/business'
+      path: '/'
       fullPath: '/business/'
       preLoaderRoute: typeof AuthenticatedBusinessIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedBusinessRoute
     }
     '/_authenticated/business/scan': {
       id: '/_authenticated/business/scan'
-      path: '/business/scan'
+      path: '/scan'
       fullPath: '/business/scan'
       preLoaderRoute: typeof AuthenticatedBusinessScanRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedBusinessRoute
     }
     '/_authenticated/business/edit': {
       id: '/_authenticated/business/edit'
-      path: '/business/edit'
+      path: '/edit'
       fullPath: '/business/edit'
       preLoaderRoute: typeof AuthenticatedBusinessEditRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedBusinessRoute
+    }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/business/cards/new': {
       id: '/_authenticated/business/cards/new'
-      path: '/business/cards/new'
+      path: '/cards/new'
       fullPath: '/business/cards/new'
       preLoaderRoute: typeof AuthenticatedBusinessCardsNewRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedBusinessRoute
     }
     '/_authenticated/business/cards/$id/': {
       id: '/_authenticated/business/cards/$id/'
-      path: '/business/cards/$id'
+      path: '/cards/$id'
       fullPath: '/business/cards/$id/'
       preLoaderRoute: typeof AuthenticatedBusinessCardsIdIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedBusinessRoute
     }
     '/_authenticated/business/cards/$id/edit': {
       id: '/_authenticated/business/cards/$id/edit'
-      path: '/business/cards/$id/edit'
+      path: '/cards/$id/edit'
       fullPath: '/business/cards/$id/edit'
       preLoaderRoute: typeof AuthenticatedBusinessCardsIdEditRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedBusinessRoute
     }
   }
 }
 
-interface AuthenticatedRouteRouteChildren {
-  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
-  AuthenticatedScanRoute: typeof AuthenticatedScanRoute
-  AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
+interface AuthenticatedBusinessRouteChildren {
   AuthenticatedBusinessEditRoute: typeof AuthenticatedBusinessEditRoute
   AuthenticatedBusinessScanRoute: typeof AuthenticatedBusinessScanRoute
   AuthenticatedBusinessIndexRoute: typeof AuthenticatedBusinessIndexRoute
@@ -339,10 +393,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBusinessCardsIdIndexRoute: typeof AuthenticatedBusinessCardsIdIndexRoute
 }
 
-const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedProfileRoute: AuthenticatedProfileRoute,
-  AuthenticatedScanRoute: AuthenticatedScanRoute,
-  AuthenticatedWalletRoute: AuthenticatedWalletRoute,
+const AuthenticatedBusinessRouteChildren: AuthenticatedBusinessRouteChildren = {
   AuthenticatedBusinessEditRoute: AuthenticatedBusinessEditRoute,
   AuthenticatedBusinessScanRoute: AuthenticatedBusinessScanRoute,
   AuthenticatedBusinessIndexRoute: AuthenticatedBusinessIndexRoute,
@@ -350,6 +401,27 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBusinessCardsIdEditRoute: AuthenticatedBusinessCardsIdEditRoute,
   AuthenticatedBusinessCardsIdIndexRoute:
     AuthenticatedBusinessCardsIdIndexRoute,
+}
+
+const AuthenticatedBusinessRouteWithChildren =
+  AuthenticatedBusinessRoute._addFileChildren(
+    AuthenticatedBusinessRouteChildren,
+  )
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedBusinessRoute: typeof AuthenticatedBusinessRouteWithChildren
+  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedScanRoute: typeof AuthenticatedScanRoute
+  AuthenticatedSubscribeRoute: typeof AuthenticatedSubscribeRoute
+  AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedBusinessRoute: AuthenticatedBusinessRouteWithChildren,
+  AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedScanRoute: AuthenticatedScanRoute,
+  AuthenticatedSubscribeRoute: AuthenticatedSubscribeRoute,
+  AuthenticatedWalletRoute: AuthenticatedWalletRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -362,17 +434,8 @@ const rootRouteChildren: RootRouteChildren = {
   ForBusinessRoute: ForBusinessRoute,
   ForCustomersRoute: ForCustomersRoute,
   BBusinessIdRoute: BBusinessIdRoute,
+  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
