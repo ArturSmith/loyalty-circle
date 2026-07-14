@@ -118,20 +118,10 @@ function ForBusinessPage() {
             transition={{ duration: 0.6, delay: 0.15 }}
             className="mx-auto w-full max-w-sm lg:mx-0 lg:ml-auto"
           >
-            <StampCard
-              title="Café Nord"
-              subtitle="10th coffee on the house"
-              totalSteps={10}
-              stampsCount={7}
-              stampIcon="coffee"
-              bgColor="#f5efe4"
-              accentColor="#4a2c1a"
-              textColor="#4a2c1a"
-              rewards={[{ step: 10, label: "FREE" }]}
-              businessName="CAFÉ NORD"
-            />
+            <WalletStack cards={businessStackCards} />
           </motion.div>
         </div>
+
 
         <section className="mt-24">
           <div className="mb-12 text-center">
