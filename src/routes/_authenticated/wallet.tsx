@@ -7,7 +7,7 @@ import { QrDisplay } from "@/components/QrDisplay";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Gift, LogOut, Menu, RotateCcw, ScanLine, Sparkles, Store, Trash2, User, X } from "lucide-react";
+import { Check, Gift, LogOut, Menu, RotateCcw, ScanLine, Snowflake, Sparkles, Store, Trash2, User, X } from "lucide-react";
 import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 
@@ -42,6 +42,7 @@ type Celebration = {
 function Wallet() {
   const navigate = useNavigate();
   const [instances, setInstances] = useState<Instance[]>([]);
+  const [frozenBusinessIds, setFrozenBusinessIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [flippedId, setFlippedId] = useState<string | null>(null);
@@ -91,6 +92,14 @@ function Wallet() {
       }
       return next;
     });
+    // Check which businesses are frozen (subscription lapsed)
+    const bizIds = Array.from(new Set(next.map((i) => i.template.business.id)));
+    if (bizIds.length > 0) {
+      const { data: frozen } = await supabase.rpc("get_frozen_business_ids", { _ids: bizIds });
+      setFrozenBusinessIds(new Set((frozen ?? []).map((r: { business_id: string }) => r.business_id)));
+    } else {
+      setFrozenBusinessIds(new Set());
+    }
     setLoading(false);
   }, []);
 
@@ -212,6 +221,7 @@ function Wallet() {
                   } else {
                     top = expandedIndex * TIGHT + GAP + CARD_H + GAP + (i - expandedIndex - 1) * (TIGHT + 8);
                   }
+                  const isFrozen = frozenBusinessIds.has(inst.template.business.id);
                   return (
                     <motion.div
                       key={inst.id}
@@ -228,24 +238,31 @@ function Wallet() {
                           if (isExpanded) setFlippedId(inst.id);
                           else setExpandedId(inst.id);
                         }}
-                        className="block w-full text-left focus:outline-none drop-shadow-2xl"
+                        className="relative block w-full text-left focus:outline-none drop-shadow-2xl"
                         aria-label={isExpanded ? `Show QR for ${inst.template.title}` : `Open ${inst.template.title}`}
                       >
-                        <StampCard
-                          title={inst.template.title}
-                          subtitle={inst.template.subtitle}
-                          totalSteps={inst.template.total_steps}
-                          stampsCount={inst.stamps_count}
-                          shape={inst.template.shape}
-                          bgColor={inst.template.bg_color}
-                          accentColor={inst.template.accent_color}
-                          textColor={inst.template.text_color}
-                          stampIcon={inst.template.stamp_icon}
-                          logoUrl={inst.template.logo_url}
-                          rewards={inst.template.rewards}
-                          businessName={inst.template.business.name}
-                          lastStamp={inst.stamps_count}
-                        />
+                        <div className={isFrozen ? "relative" : undefined}>
+                          <StampCard
+                            title={inst.template.title}
+                            subtitle={inst.template.subtitle}
+                            totalSteps={inst.template.total_steps}
+                            stampsCount={inst.stamps_count}
+                            shape={inst.template.shape}
+                            bgColor={inst.template.bg_color}
+                            accentColor={inst.template.accent_color}
+                            textColor={inst.template.text_color}
+                            stampIcon={inst.template.stamp_icon}
+                            logoUrl={inst.template.logo_url}
+                            rewards={inst.template.rewards}
+                            businessName={inst.template.business.name}
+                            lastStamp={inst.stamps_count}
+                          />
+                          {isFrozen && (
+                            <div className="pointer-events-none absolute top-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-sky-500/95 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white shadow-lg ring-1 ring-white/40 backdrop-blur">
+                              <Snowflake className="h-3 w-3" /> Frozen
+                            </div>
+                          )}
+                        </div>
                       </button>
                     </motion.div>
                   );
@@ -265,6 +282,7 @@ function Wallet() {
         {flippedId && (() => {
           const inst = instances.find((x) => x.id === flippedId);
           const isCompleted = !!inst?.completed_at || (inst ? inst.stamps_count >= inst.template.total_steps : false);
+          const isFrozen = !!inst && frozenBusinessIds.has(inst.template.business.id);
           const renew = async () => {
             if (!inst) return;
             const { error } = await supabase
@@ -323,6 +341,18 @@ function Wallet() {
                   <h3 className="font-display text-2xl mt-3">Show to stamp</h3>
                   <p className="text-xs text-muted-foreground">Let the business scan this code</p>
                 </>
+              )}
+              {isFrozen && (
+                <div className="mt-4 rounded-xl border border-sky-300 bg-sky-50 px-3 py-2 text-left text-xs text-sky-900">
+                  <div className="flex items-center gap-1.5 font-semibold">
+                    <Snowflake className="h-3.5 w-3.5" /> Card frozen
+                  </div>
+                  <p className="mt-1 text-sky-800">
+                    {isCompleted
+                      ? "This business's subscription is inactive, but you can still redeem your completed reward."
+                      : "This business's subscription is inactive, so new stamps are paused until they resume."}
+                  </p>
+                </div>
               )}
               <div className="mt-6 flex justify-center">
                 <QrDisplay value={`stempel:card:${flippedId}`} size={260} />

@@ -268,6 +268,12 @@ export type Database = {
         Args: { _business_created_at: string; _owner_id: string }
         Returns: boolean
       }
+      get_frozen_business_ids: {
+        Args: { _ids: string[] }
+        Returns: {
+          business_id: string
+        }[]
+      }
       has_active_subscription: {
         Args: { check_env?: string; user_uuid: string }
         Returns: boolean
