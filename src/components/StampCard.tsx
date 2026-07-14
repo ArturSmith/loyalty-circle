@@ -31,9 +31,9 @@ export interface StampCardProps {
 export function StampCard({
   title, subtitle, totalSteps, stampsCount = 0, shape = "rounded",
   bgColor = "#faf8f2", accentColor = "#1a1a2e", textColor = "#1a1a2e",
-  stampIcon = "scissors", logoUrl, rewards = [], businessName, lastStamp,
+  stampIcon = "star", logoUrl, rewards = [], businessName, lastStamp,
 }: StampCardProps) {
-  const Icon = STAMP_ICONS[stampIcon] ?? Scissors;
+  const Icon = STAMP_ICONS[stampIcon] ?? Star;
   const radius = shape === "square" ? "rounded-lg" : shape === "ticket" ? "rounded-none" : "rounded-3xl";
 
   // grid: 5 cols if 10, else adaptive
