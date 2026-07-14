@@ -42,6 +42,7 @@ type Celebration = {
 function Wallet() {
   const navigate = useNavigate();
   const [instances, setInstances] = useState<Instance[]>([]);
+  const [frozenBusinessIds, setFrozenBusinessIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [flippedId, setFlippedId] = useState<string | null>(null);
