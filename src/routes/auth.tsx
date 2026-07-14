@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { motion } from "framer-motion";
-import { ArrowLeft, Scissors } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { z } from "zod";
 
 const searchSchema = z.object({ redirect: z.string().optional() }).catch({ redirect: undefined });
