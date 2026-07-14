@@ -44,7 +44,7 @@ function NewCard() {
   const [totalSteps, setTotalSteps] = useState(10);
   const [shape, setShape] = useState<CardShape>("rounded");
   const [preset, setPreset] = useState(0);
-  const [icon, setIcon] = useState<StampIconName>("scissors");
+  const [icon, setIcon] = useState<StampIconName | null>(null);
   const [logoUrl, setLogoUrl] = useState("");
   const [rewards, setRewards] = useState<Reward[]>([{ step: 5, label: "-50%" }, { step: 10, label: "FREE" }]);
 
@@ -67,7 +67,7 @@ function NewCard() {
     const { error } = await supabase.from("card_templates").insert({
       business_id: businessId, title, subtitle: subtitle || null,
       total_steps: totalSteps, shape, bg_color: bg, accent_color: accent, text_color: text,
-      stamp_icon: icon, logo_url: logoUrl || null, rewards: cleanRewards, active: true,
+      stamp_icon: icon ?? "star", logo_url: logoUrl || null, rewards: cleanRewards, active: true,
     });
     setSaving(false);
     if (error) { toast.error(error.message); return; }
@@ -108,7 +108,7 @@ function NewCard() {
       </div>
 
       <div className="mt-6 rounded-2xl border-2 border-ink/10 bg-card p-4">
-        <StampCard title="Card title" subtitle="" totalSteps={totalSteps} stampsCount={0}
+        <StampCard title={title || "Card title"} subtitle={subtitle} totalSteps={totalSteps} stampsCount={0}
           shape={shape} bgColor={bg} accentColor={accent} textColor={text} stampIcon={icon}
           logoUrl={null} rewards={rewards} businessName="PREVIEW"
           hideSteps={step === 0}

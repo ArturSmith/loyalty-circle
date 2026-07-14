@@ -20,7 +20,7 @@ export interface StampCardProps {
   bgColor?: string;
   accentColor?: string;
   textColor?: string;
-  stampIcon?: StampIconName;
+  stampIcon?: StampIconName | null;
   logoUrl?: string | null;
   rewards?: Reward[];
   businessName?: string;
@@ -37,7 +37,7 @@ export function StampCard({
   stampIcon = "star", logoUrl, rewards = [], businessName, lastStamp,
   hideSteps = false, onStepClick, activeStep,
 }: StampCardProps) {
-  const Icon = STAMP_ICONS[stampIcon] ?? Star;
+  const Icon = stampIcon ? (STAMP_ICONS[stampIcon] ?? Star) : null;
   const radius = shape === "square" ? "rounded-lg" : shape === "ticket" ? "rounded-none" : "rounded-3xl";
 
   // grid: 5 cols if 10, else adaptive
@@ -64,11 +64,12 @@ export function StampCard({
             <img src={logoUrl} alt="" className="h-9 w-9 rounded-full object-cover ring-1 ring-black/10" />
           ) : (
             <div className="h-9 w-9 rounded-full flex items-center justify-center" style={{ backgroundColor: accentColor + "11", color: accentColor }}>
-              <Icon className="h-4 w-4" />
+              {Icon && <Icon className="h-4 w-4" />}
             </div>
           )}
         </div>
 
+        {hideSteps && <div className="flex-1" />}
         {!hideSteps && (
           <div className="flex-1 grid gap-1.5 sm:gap-2 items-center mt-2" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
             {Array.from({ length: totalSteps }).map((_, i) => {
@@ -78,7 +79,7 @@ export function StampCard({
               const isLast = filled && step === stampsCount && lastStamp !== undefined;
               const isActive = activeStep === step;
               const clickable = !!onStepClick;
-              const inner = filled ? <Icon className="h-4 w-4" /> : reward ? <span className="leading-none">{reward.label}</span> : <span className="opacity-60">{step}</span>;
+              const inner = filled && Icon ? <Icon className="h-4 w-4" /> : reward ? <span className="leading-none">{reward.label}</span> : <span className="opacity-60">{step}</span>;
               const commonStyle = {
                 borderColor: accentColor + (filled ? "" : isActive ? "" : "55"),
                 backgroundColor: filled ? accentColor : "transparent",
