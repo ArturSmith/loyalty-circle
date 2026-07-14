@@ -150,7 +150,7 @@ function ForBusinessPage() {
                 className="rounded-2xl border border-border/70 bg-secondary/30 p-6"
               >
                 <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                  <benefit.icon className="h-4 w-4" />
+                  <Icon className="h-4 w-4" />
                 </div>
                 <h3 className="font-display text-xl font-semibold">{benefit.title}</h3>
                 <p className="mt-2 text-sm text-muted-foreground">{benefit.body}</p>
