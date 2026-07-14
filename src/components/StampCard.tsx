@@ -37,7 +37,7 @@ export function StampCard({
   stampIcon = "star", logoUrl, rewards = [], businessName, lastStamp,
   hideSteps = false, onStepClick, activeStep,
 }: StampCardProps) {
-  const Icon = STAMP_ICONS[stampIcon] ?? Star;
+  const Icon = stampIcon ? (STAMP_ICONS[stampIcon] ?? Star) : null;
   const radius = shape === "square" ? "rounded-lg" : shape === "ticket" ? "rounded-none" : "rounded-3xl";
 
   // grid: 5 cols if 10, else adaptive
