@@ -336,6 +336,13 @@ function Wallet() {
                   <RotateCcw className="h-4 w-4" /> Renew card
                 </Button>
               )}
+              <Button
+                onClick={remove}
+                variant="ghost"
+                className="mt-3 w-full h-11 gap-2 rounded-2xl text-destructive hover:text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="h-4 w-4" /> Remove from wallet
+              </Button>
             </motion.div>
           </motion.div>
           );
