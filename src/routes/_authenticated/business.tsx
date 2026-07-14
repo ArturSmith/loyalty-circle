@@ -109,19 +109,6 @@ function BusinessDashboard() {
                   <Settings className="h-4 w-4" /> Edit business info
                 </Button>
               </Link>
-              <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => setShowQr((v) => !v)}>
-                <QrCode className="h-4 w-4" /> Business QR
-              </Button>
-              <Link to="/business/scan" className="w-full">
-                <Button variant="ghost" className="w-full justify-start gap-3">
-                  <ScanLine className="h-4 w-4" /> Scan customer
-                </Button>
-              </Link>
-              <Link to="/business/cards/new" className="w-full">
-                <Button variant="ghost" className="w-full justify-start gap-3">
-                  <Plus className="h-4 w-4" /> New card
-                </Button>
-              </Link>
               <Link to="/wallet" className="w-full">
                 <Button variant="ghost" className="w-full justify-start gap-3">
                   <WalletIcon className="h-4 w-4" /> My wallet
@@ -131,6 +118,25 @@ function BusinessDashboard() {
           </SheetContent>
         </Sheet>
       </header>
+
+      <div className="mt-6 grid grid-cols-3 gap-2">
+        <Button variant="outline" onClick={() => setShowQr((v) => !v)} className="h-auto flex-col gap-1.5 py-3 rounded-2xl glass-panel">
+          <QrCode className="h-5 w-5" />
+          <span className="text-xs font-semibold">Business QR</span>
+        </Button>
+        <Link to="/business/scan">
+          <Button variant="outline" className="w-full h-auto flex-col gap-1.5 py-3 rounded-2xl glass-panel">
+            <ScanLine className="h-5 w-5" />
+            <span className="text-xs font-semibold">Scan customer</span>
+          </Button>
+        </Link>
+        <Link to="/business/cards/new">
+          <Button className="w-full h-auto flex-col gap-1.5 py-3 rounded-2xl bg-[image:var(--gradient-primary)] text-white sticker-shadow border-0 hover:opacity-95">
+            <Plus className="h-5 w-5" />
+            <span className="text-xs font-semibold">New card</span>
+          </Button>
+        </Link>
+      </div>
 
       {showQr && (
         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
