@@ -43,7 +43,8 @@ function NewCard() {
   const [subtitle, setSubtitle] = useState("");
   const [totalSteps, setTotalSteps] = useState(10);
   const [shape, setShape] = useState<CardShape>("rounded");
-  const [preset, setPreset] = useState(0);
+  const [preset, setPreset] = useState<number>(0);
+  const [customColors, setCustomColors] = useState<{ bg: string; accent: string; text: string } | null>(null);
   const [icon, setIcon] = useState<StampIconName | null>(null);
   const [logoUrl, setLogoUrl] = useState("");
   const [rewards, setRewards] = useState<Reward[]>([{ step: 5, label: "-50%" }, { step: 10, label: "FREE" }]);
@@ -58,7 +59,8 @@ function NewCard() {
     })();
   }, [navigate]);
 
-  const { bg, accent, text } = PRESETS[preset];
+  const { bg, accent, text } = customColors ?? PRESETS[preset];
+
 
   const save = async () => {
     if (!businessId) return;
