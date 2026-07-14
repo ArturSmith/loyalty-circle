@@ -91,6 +91,17 @@ function RootComponent() {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();
       if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
+      if (event === "SIGNED_IN") {
+        try {
+          const dest = sessionStorage.getItem("post_auth_redirect");
+          if (dest && dest.startsWith("/")) {
+            sessionStorage.removeItem("post_auth_redirect");
+            if (window.location.pathname !== dest) {
+              router.navigate({ to: dest });
+            }
+          }
+        } catch {}
+      }
     });
     return () => data.subscription.unsubscribe();
   }, [queryClient, router]);
