@@ -29,6 +29,7 @@ function BusinessPublic() {
   const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [ownedTemplateIds, setOwnedTemplateIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     (async () => {
@@ -39,7 +40,15 @@ function BusinessPublic() {
       ]);
       setBusiness(b as Business | null);
       setTemplates((t as Template[] | null) ?? []);
-      setUserId(u.user?.id ?? null);
+      const uid = u.user?.id ?? null;
+      setUserId(uid);
+      if (uid) {
+        const { data: owned } = await supabase
+          .from("card_instances")
+          .select("template_id")
+          .eq("customer_id", uid);
+        setOwnedTemplateIds(new Set((owned ?? []).map((r: { template_id: string }) => r.template_id)));
+      }
       setLoading(false);
     })();
   }, [businessId]);
