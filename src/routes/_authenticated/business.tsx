@@ -1,13 +1,14 @@
-import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { QrDisplay } from "@/components/QrDisplay";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
-import { Plus, QrCode, ScanLine, Users, Stamp as StampIco, Wallet as WalletIcon, Pencil } from "lucide-react";
+import { Plus, QrCode, ScanLine, Users, Stamp as StampIco, Wallet as WalletIcon, Pencil, Menu, Settings } from "lucide-react";
 
 type Business = { id: string; name: string; logo_url: string | null; brand_color: string | null };
 type Tpl = { id: string; title: string; total_steps: number; active: boolean };
@@ -92,12 +93,43 @@ function BusinessDashboard() {
       <header className="flex items-center justify-between">
         <div>
           <p className="text-xs uppercase tracking-widest text-muted-foreground">Dashboard</p>
-          <h1 className="font-display text-3xl font-semibold">{biz.name}</h1>
+          <h1 className="font-display text-3xl font-extrabold tracking-tight">{biz.name}</h1>
         </div>
-        <div className="flex gap-1">
-          <Link to="/wallet"><Button variant="ghost" size="icon" title="My wallet"><WalletIcon className="h-4 w-4" /></Button></Link>
-          <Button variant="outline" size="icon" onClick={() => setShowQr((v) => !v)} title="Business QR"><QrCode className="h-4 w-4" /></Button>
-        </div>
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon" className="rounded-full glass-panel" title="Menu"><Menu className="h-5 w-5" /></Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-64">
+            <SheetHeader className="text-left">
+              <SheetTitle className="font-display">Menu</SheetTitle>
+            </SheetHeader>
+            <nav className="mt-8 flex flex-col gap-2">
+              <Link to="/business/edit" className="w-full">
+                <Button variant="ghost" className="w-full justify-start gap-3">
+                  <Settings className="h-4 w-4" /> Edit business info
+                </Button>
+              </Link>
+              <Button variant="ghost" className="w-full justify-start gap-3" onClick={() => setShowQr((v) => !v)}>
+                <QrCode className="h-4 w-4" /> Business QR
+              </Button>
+              <Link to="/business/scan" className="w-full">
+                <Button variant="ghost" className="w-full justify-start gap-3">
+                  <ScanLine className="h-4 w-4" /> Scan customer
+                </Button>
+              </Link>
+              <Link to="/business/cards/new" className="w-full">
+                <Button variant="ghost" className="w-full justify-start gap-3">
+                  <Plus className="h-4 w-4" /> New card
+                </Button>
+              </Link>
+              <Link to="/wallet" className="w-full">
+                <Button variant="ghost" className="w-full justify-start gap-3">
+                  <WalletIcon className="h-4 w-4" /> My wallet
+                </Button>
+              </Link>
+            </nav>
+          </SheetContent>
+        </Sheet>
       </header>
 
       {showQr && (
@@ -117,12 +149,8 @@ function BusinessDashboard() {
         <Stat icon={WalletIcon} label="Active cards" value={stats.active} />
       </div>
 
-      <div className="mt-10 flex items-center justify-between">
+      <div className="mt-10">
         <h2 className="font-display text-xl">Your cards</h2>
-        <div className="flex gap-2">
-          <Link to="/business/scan"><Button variant="outline"><ScanLine className="h-4 w-4" /> Scan customer</Button></Link>
-          <Link to="/business/cards/new"><Button><Plus className="h-4 w-4" /> New card</Button></Link>
-        </div>
       </div>
 
       <div className="mt-4 grid gap-3">
