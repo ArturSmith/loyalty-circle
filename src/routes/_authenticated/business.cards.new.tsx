@@ -111,7 +111,7 @@ function NewCard() {
         <StampCard title={title || "Card title"} subtitle={subtitle} totalSteps={totalSteps} stampsCount={0}
           shape={shape} bgColor={bg} accentColor={accent} textColor={text} stampIcon={icon}
           logoUrl={null} rewards={rewards} businessName="PREVIEW"
-          hideSteps={step === 0}
+          hideSteps={step < 2}
           onStepClick={step === 2 ? openStepEditor : undefined}
           activeStep={editingStep ?? undefined} />
         {step === 2 && editingStep != null && (
