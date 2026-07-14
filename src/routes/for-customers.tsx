@@ -140,18 +140,8 @@ function ForCustomersPage() {
             transition={{ duration: 0.6, delay: 0.15 }}
             className="mx-auto w-full max-w-sm lg:mx-0 lg:ml-auto"
           >
-            <StampCard
-              title="Baker's Row"
-              subtitle="Free loaf at 10"
-              totalSteps={10}
-              stampsCount={9}
-              stampIcon="cookie"
-              bgColor="#fbf3e4"
-              accentColor="#6b4a1f"
-              textColor="#6b4a1f"
-              rewards={[{ step: 10, label: "FREE" }]}
-              businessName="BAKER'S ROW"
-            />
+            <WalletStack cards={customerStackCards} />
+
           </motion.div>
         </div>
 
