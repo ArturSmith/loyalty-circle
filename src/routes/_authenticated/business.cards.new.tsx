@@ -96,9 +96,9 @@ function NewCard() {
       </div>
 
       <div className="mt-6 rounded-2xl border-2 border-ink/10 bg-card p-4">
-        <StampCard title={title} subtitle={subtitle} totalSteps={totalSteps} stampsCount={Math.floor(totalSteps / 3)}
+        <StampCard title="Card title" subtitle="" totalSteps={totalSteps} stampsCount={0}
           shape={shape} bgColor={bg} accentColor={accent} textColor={text} stampIcon={icon}
-          logoUrl={logoUrl || null} rewards={rewards} businessName="PREVIEW" />
+          logoUrl={null} rewards={[]} businessName="PREVIEW" />
       </div>
 
       <div className="mt-6 rounded-2xl border-2 border-ink/10 bg-card paper-grain p-6">
@@ -115,16 +115,33 @@ function NewCard() {
                   <Input value={subtitle} onChange={(e) => setSubtitle(e.target.value)} placeholder="10 klipp gratis" />
                 </div>
                 <div>
-                  <Label>Logo URL (optional)</Label>
-                  <Input value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="https://…" />
+                  <Label>Logo (SVG, optional)</Label>
+                  <Input type="file" accept="image/svg+xml,.svg"
+                    onChange={async (e) => {
+                      const f = e.target.files?.[0];
+                      if (!f) return;
+                      if (!f.type.includes("svg") && !f.name.toLowerCase().endsWith(".svg")) {
+                        toast.error("Please upload an SVG file");
+                        return;
+                      }
+                      const text = await f.text();
+                      setLogoUrl(`data:image/svg+xml;utf8,${encodeURIComponent(text)}`);
+                    }} />
+                  {logoUrl && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <img src={logoUrl} alt="logo" className="h-10 w-10 rounded-full ring-1 ring-black/10 bg-white p-1" />
+                      <Button variant="ghost" size="sm" onClick={() => setLogoUrl("")}>Remove</Button>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
             {step === 1 && (
               <div className="space-y-6">
                 <div>
-                  <Label>Total steps: <span className="font-semibold">{totalSteps}</span></Label>
-                  <Slider min={3} max={20} step={1} value={[totalSteps]} onValueChange={(v) => setTotalSteps(v[0])} className="mt-2" />
+                  <Label>Total steps</Label>
+                  <Input type="number" min={1} value={totalSteps}
+                    onChange={(e) => setTotalSteps(Math.max(1, Number(e.target.value) || 1))} className="mt-2 w-32" />
                 </div>
                 <div>
                   <Label>Card shape</Label>
