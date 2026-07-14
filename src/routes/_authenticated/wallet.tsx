@@ -7,8 +7,7 @@ import { QrDisplay } from "@/components/QrDisplay";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { motion, AnimatePresence } from "framer-motion";
-import useEmblaCarousel from "embla-carousel-react";
-import { Check, ChevronLeft, ChevronRight, Gift, LogOut, Menu, ScanLine, Sparkles, Store, User, X } from "lucide-react";
+import { Check, Gift, LogOut, Menu, ScanLine, Sparkles, Store, User, X } from "lucide-react";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 
 type Instance = {
