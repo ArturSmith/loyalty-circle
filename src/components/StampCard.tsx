@@ -20,7 +20,7 @@ export interface StampCardProps {
   bgColor?: string;
   accentColor?: string;
   textColor?: string;
-  stampIcon?: StampIconName;
+  stampIcon?: StampIconName | null;
   logoUrl?: string | null;
   rewards?: Reward[];
   businessName?: string;
