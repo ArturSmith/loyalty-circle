@@ -7,7 +7,7 @@ import { QrDisplay } from "@/components/QrDisplay";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Gift, LogOut, Menu, RotateCcw, ScanLine, Sparkles, Store, User, X } from "lucide-react";
+import { Check, Gift, LogOut, Menu, RotateCcw, ScanLine, Sparkles, Store, Trash2, User, X } from "lucide-react";
 import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 
@@ -279,6 +279,19 @@ function Wallet() {
             setFlippedId(null);
             load();
           };
+          const remove = async () => {
+            if (!inst) return;
+            if (!window.confirm(`Remove "${inst.template.title}" from your wallet? This cannot be undone.`)) return;
+            const { error } = await supabase.from("card_instances").delete().eq("id", inst.id);
+            if (error) {
+              toast.error("Couldn't remove card", { description: error.message });
+              return;
+            }
+            toast.success("Card removed from your wallet");
+            setFlippedId(null);
+            setExpandedId(null);
+            load();
+          };
           return (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -323,6 +336,13 @@ function Wallet() {
                   <RotateCcw className="h-4 w-4" /> Renew card
                 </Button>
               )}
+              <Button
+                onClick={remove}
+                variant="ghost"
+                className="mt-3 w-full h-11 gap-2 rounded-2xl text-destructive hover:text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="h-4 w-4" /> Remove from wallet
+              </Button>
             </motion.div>
           </motion.div>
           );
