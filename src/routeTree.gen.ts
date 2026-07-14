@@ -9,38 +9,153 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BBusinessIdRouteImport } from './routes/b.$businessId'
+import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
+import { Route as AuthenticatedBusinessRouteImport } from './routes/_authenticated/business'
+import { Route as AuthenticatedBusinessScanRouteImport } from './routes/_authenticated/business.scan'
+import { Route as AuthenticatedBusinessCardsNewRouteImport } from './routes/_authenticated/business.cards.new'
+import { Route as AuthenticatedBusinessCardsIdEditRouteImport } from './routes/_authenticated/business.cards.$id.edit'
 
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BBusinessIdRoute = BBusinessIdRouteImport.update({
+  id: '/b/$businessId',
+  path: '/b/$businessId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedBusinessRoute = AuthenticatedBusinessRouteImport.update({
+  id: '/business',
+  path: '/business',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedBusinessScanRoute =
+  AuthenticatedBusinessScanRouteImport.update({
+    id: '/scan',
+    path: '/scan',
+    getParentRoute: () => AuthenticatedBusinessRoute,
+  } as any)
+const AuthenticatedBusinessCardsNewRoute =
+  AuthenticatedBusinessCardsNewRouteImport.update({
+    id: '/cards/new',
+    path: '/cards/new',
+    getParentRoute: () => AuthenticatedBusinessRoute,
+  } as any)
+const AuthenticatedBusinessCardsIdEditRoute =
+  AuthenticatedBusinessCardsIdEditRouteImport.update({
+    id: '/cards/$id/edit',
+    path: '/cards/$id/edit',
+    getParentRoute: () => AuthenticatedBusinessRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/business': typeof AuthenticatedBusinessRouteWithChildren
+  '/wallet': typeof AuthenticatedWalletRoute
+  '/b/$businessId': typeof BBusinessIdRoute
+  '/business/scan': typeof AuthenticatedBusinessScanRoute
+  '/business/cards/new': typeof AuthenticatedBusinessCardsNewRoute
+  '/business/cards/$id/edit': typeof AuthenticatedBusinessCardsIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/business': typeof AuthenticatedBusinessRouteWithChildren
+  '/wallet': typeof AuthenticatedWalletRoute
+  '/b/$businessId': typeof BBusinessIdRoute
+  '/business/scan': typeof AuthenticatedBusinessScanRoute
+  '/business/cards/new': typeof AuthenticatedBusinessCardsNewRoute
+  '/business/cards/$id/edit': typeof AuthenticatedBusinessCardsIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/_authenticated/business': typeof AuthenticatedBusinessRouteWithChildren
+  '/_authenticated/wallet': typeof AuthenticatedWalletRoute
+  '/b/$businessId': typeof BBusinessIdRoute
+  '/_authenticated/business/scan': typeof AuthenticatedBusinessScanRoute
+  '/_authenticated/business/cards/new': typeof AuthenticatedBusinessCardsNewRoute
+  '/_authenticated/business/cards/$id/edit': typeof AuthenticatedBusinessCardsIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/business'
+    | '/wallet'
+    | '/b/$businessId'
+    | '/business/scan'
+    | '/business/cards/new'
+    | '/business/cards/$id/edit'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/business'
+    | '/wallet'
+    | '/b/$businessId'
+    | '/business/scan'
+    | '/business/cards/new'
+    | '/business/cards/$id/edit'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/business'
+    | '/_authenticated/wallet'
+    | '/b/$businessId'
+    | '/_authenticated/business/scan'
+    | '/_authenticated/business/cards/new'
+    | '/_authenticated/business/cards/$id/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  BBusinessIdRoute: typeof BBusinessIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +163,87 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/b/$businessId': {
+      id: '/b/$businessId'
+      path: '/b/$businessId'
+      fullPath: '/b/$businessId'
+      preLoaderRoute: typeof BBusinessIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/wallet': {
+      id: '/_authenticated/wallet'
+      path: '/wallet'
+      fullPath: '/wallet'
+      preLoaderRoute: typeof AuthenticatedWalletRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/business': {
+      id: '/_authenticated/business'
+      path: '/business'
+      fullPath: '/business'
+      preLoaderRoute: typeof AuthenticatedBusinessRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/business/scan': {
+      id: '/_authenticated/business/scan'
+      path: '/scan'
+      fullPath: '/business/scan'
+      preLoaderRoute: typeof AuthenticatedBusinessScanRouteImport
+      parentRoute: typeof AuthenticatedBusinessRoute
+    }
+    '/_authenticated/business/cards/new': {
+      id: '/_authenticated/business/cards/new'
+      path: '/cards/new'
+      fullPath: '/business/cards/new'
+      preLoaderRoute: typeof AuthenticatedBusinessCardsNewRouteImport
+      parentRoute: typeof AuthenticatedBusinessRoute
+    }
+    '/_authenticated/business/cards/$id/edit': {
+      id: '/_authenticated/business/cards/$id/edit'
+      path: '/cards/$id/edit'
+      fullPath: '/business/cards/$id/edit'
+      preLoaderRoute: typeof AuthenticatedBusinessCardsIdEditRouteImport
+      parentRoute: typeof AuthenticatedBusinessRoute
+    }
   }
 }
 
+interface AuthenticatedBusinessRouteChildren {
+  AuthenticatedBusinessScanRoute: typeof AuthenticatedBusinessScanRoute
+  AuthenticatedBusinessCardsNewRoute: typeof AuthenticatedBusinessCardsNewRoute
+  AuthenticatedBusinessCardsIdEditRoute: typeof AuthenticatedBusinessCardsIdEditRoute
+}
+
+const AuthenticatedBusinessRouteChildren: AuthenticatedBusinessRouteChildren = {
+  AuthenticatedBusinessScanRoute: AuthenticatedBusinessScanRoute,
+  AuthenticatedBusinessCardsNewRoute: AuthenticatedBusinessCardsNewRoute,
+  AuthenticatedBusinessCardsIdEditRoute: AuthenticatedBusinessCardsIdEditRoute,
+}
+
+const AuthenticatedBusinessRouteWithChildren =
+  AuthenticatedBusinessRoute._addFileChildren(
+    AuthenticatedBusinessRouteChildren,
+  )
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedBusinessRoute: typeof AuthenticatedBusinessRouteWithChildren
+  AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedBusinessRoute: AuthenticatedBusinessRouteWithChildren,
+  AuthenticatedWalletRoute: AuthenticatedWalletRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  BBusinessIdRoute: BBusinessIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
