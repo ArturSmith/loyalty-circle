@@ -26,6 +26,19 @@ export const Route = createFileRoute("/_authenticated/wallet")({
   component: Wallet,
 });
 
+type Celebration = {
+  instanceId: string;
+  title: string;
+  businessName: string;
+  stampsCount: number;
+  totalSteps: number;
+  stepsToNext: number | null;
+  nextReward: Reward | null;
+  unlockedReward: Reward | null;
+  completed: boolean;
+  accentColor: string;
+};
+
 function Wallet() {
   const navigate = useNavigate();
   const [instances, setInstances] = useState<Instance[]>([]);
@@ -33,6 +46,7 @@ function Wallet() {
   const [emblaRef, embla] = useEmblaCarousel({ align: "center", loop: false });
   const [selected, setSelected] = useState(0);
   const [flippedId, setFlippedId] = useState<string | null>(null);
+  const [celebration, setCelebration] = useState<Celebration | null>(null);
 
   const load = useCallback(async () => {
     const { data: u } = await supabase.auth.getUser();
@@ -44,7 +58,40 @@ function Wallet() {
           business:businesses!inner(id, name))`)
       .eq("customer_id", u.user.id)
       .order("created_at", { ascending: false });
-    setInstances((data as unknown as Instance[]) ?? []);
+    const next = (data as unknown as Instance[]) ?? [];
+    // Diff against previous state to celebrate any stamp increment for the current user
+    setInstances((prev) => {
+      const prevMap = new Map(prev.map((p) => [p.id, p.stamps_count]));
+      for (const inst of next) {
+        const before = prevMap.get(inst.id);
+        if (before !== undefined && inst.stamps_count > before) {
+          const rewards = (inst.template.rewards ?? []) as Reward[];
+          const unlocked = rewards.find((r) => r.step === inst.stamps_count) ?? null;
+          const upcoming = rewards
+            .filter((r) => r.step > inst.stamps_count)
+            .sort((a, b) => a.step - b.step)[0] ?? null;
+          const stepsToNext = upcoming
+            ? upcoming.step - inst.stamps_count
+            : inst.stamps_count < inst.template.total_steps
+            ? inst.template.total_steps - inst.stamps_count
+            : null;
+          setCelebration({
+            instanceId: inst.id,
+            title: inst.template.title,
+            businessName: inst.template.business.name,
+            stampsCount: inst.stamps_count,
+            totalSteps: inst.template.total_steps,
+            stepsToNext,
+            nextReward: upcoming,
+            unlockedReward: unlocked,
+            completed: inst.stamps_count >= inst.template.total_steps,
+            accentColor: inst.template.accent_color,
+          });
+          break;
+        }
+      }
+      return next;
+    });
     setLoading(false);
   }, []);
 
@@ -57,6 +104,14 @@ function Wallet() {
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [load]);
+
+  // Auto-dismiss celebration
+  useEffect(() => {
+    if (!celebration) return;
+    const t = setTimeout(() => setCelebration(null), 5000);
+    return () => clearTimeout(t);
+  }, [celebration]);
+
 
   useEffect(() => {
     if (!embla) return;
