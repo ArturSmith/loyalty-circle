@@ -65,7 +65,7 @@ function NewCard() {
   const save = async () => {
     if (!businessId) return;
     setSaving(true);
-    const cleanRewards = rewards.filter((r) => r.step >= 1 && r.step <= totalSteps && r.label.trim().length > 0);
+    const cleanRewards = rewards.filter((r) => r.step >= 1 && r.label.trim().length > 0);
     const { error } = await supabase.from("card_templates").insert({
       business_id: businessId, title, subtitle: subtitle || null,
       total_steps: totalSteps, shape, bg_color: bg, accent_color: accent, text_color: text,
