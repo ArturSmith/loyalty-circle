@@ -57,7 +57,14 @@ function AuthPage() {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-sm rounded-2xl border-2 border-ink/10 bg-card paper-grain card-shadow p-8"
       >
-        <div className="flex flex-col items-center text-center">
+        <div className="relative flex flex-col items-center text-center">
+          <Link
+            to="/"
+            className="absolute left-0 top-0 inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Link>
           <Scissors className="h-6 w-6 text-ink" />
           <OrnamentDivider className="my-3 w-32" />
           <h1 className="font-display text-3xl font-semibold">Welcome to Stempel</h1>
