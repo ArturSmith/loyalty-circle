@@ -1,50 +1,58 @@
-import { useState } from "react";
+import useEmblaCarousel from "embla-carousel-react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { StampCard, type StampCardProps } from "./StampCard";
 
 export function WalletStack({ cards }: { cards: StampCardProps[] }) {
-  const [activeIdx, setActiveIdx] = useState(0);
-  const n = cards.length;
+  const [emblaRef, embla] = useEmblaCarousel({ align: "center", loop: true, containScroll: false });
+  const [selected, setSelected] = useState(0);
 
-  // Reorder so active is on top; others fan below in a stack.
-  const order = Array.from({ length: n }, (_, i) => (activeIdx + i) % n);
+  useEffect(() => {
+    if (!embla) return;
+    const onSel = () => setSelected(embla.selectedScrollSnap());
+    embla.on("select", onSel);
+    onSel();
+    return () => { embla.off("select", onSel); };
+  }, [embla]);
 
   return (
-    <div
-      className="relative mx-auto w-full max-w-sm select-none"
-      style={{ height: 420 }}
-    >
-      {order.map((cardIdx, pos) => {
-        const card = cards[cardIdx];
-        const isActive = pos === 0;
-        // Peek height per card behind
-        const peek = 28;
-        const y = isActive ? 0 : peek * pos + 40;
-        const scale = 1 - pos * 0.04;
-        const zIndex = n - pos;
-        const opacity = pos > 3 ? 0 : 1;
+    <div className="relative w-full">
+      <div className="overflow-hidden" ref={emblaRef}>
+        <div className="flex touch-pan-y items-center py-4">
+          {cards.map((card, i) => {
+            const dist = Math.abs(i - selected);
+            const isActive = i === selected;
+            return (
+              <div
+                key={i}
+                className="min-w-0 flex-[0_0_82%] px-3 sm:flex-[0_0_360px]"
+              >
+                <motion.div
+                  animate={{
+                    scale: isActive ? 1 : 0.88,
+                    opacity: dist > 2 ? 0.3 : isActive ? 1 : 0.65,
+                    y: isActive ? 0 : 8,
+                  }}
+                  transition={{ type: "spring", stiffness: 220, damping: 26 }}
+                >
+                  <StampCard {...card} />
+                </motion.div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
-        return (
-          <motion.button
-            key={cardIdx}
+      <div className="mt-4 flex items-center justify-center gap-1.5">
+        {cards.map((_, i) => (
+          <button
+            key={i}
             type="button"
-            onClick={() => setActiveIdx(cardIdx)}
-            className="absolute left-0 right-0 top-0 focus:outline-none"
-            initial={false}
-            animate={{ y, scale, opacity }}
-            transition={{ type: "spring", stiffness: 260, damping: 30 }}
-            style={{ zIndex, transformOrigin: "top center" }}
-            aria-label={`Show ${card.title}`}
-          >
-            <div className={isActive ? "" : "pointer-events-none"}>
-              <StampCard {...card} />
-            </div>
-          </motion.button>
-        );
-      })}
-
-      <div className="pointer-events-none absolute inset-x-0 -bottom-6 text-center text-xs text-muted-foreground">
-        Tap a card to bring it to the front
+            onClick={() => embla?.scrollTo(i)}
+            className={`h-1.5 rounded-full transition-all ${i === selected ? "w-6 bg-foreground" : "w-1.5 bg-foreground/25"}`}
+            aria-label={`Show card ${i + 1}`}
+          />
+        ))}
       </div>
     </div>
   );
