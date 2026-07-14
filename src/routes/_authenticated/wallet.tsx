@@ -69,14 +69,27 @@ function Wallet() {
   return (
     <div className="min-h-screen flex flex-col">
       <header className="flex items-center justify-between px-5 py-4">
-        <div>
-          <h1 className="font-display text-2xl font-semibold">My Wallet</h1>
-          <p className="text-xs text-muted-foreground">Tap a card to show your QR</p>
-        </div>
-        <div className="flex gap-1">
-          <Link to="/business"><Button variant="ghost" size="icon" title="Business"><Store className="h-4 w-4" /></Button></Link>
-          <Button variant="ghost" size="icon" onClick={signOut} title="Sign out"><LogOut className="h-4 w-4" /></Button>
-        </div>
+        <h1 className="font-display text-2xl font-semibold">My cards</h1>
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon" title="Menu"><Menu className="h-5 w-5" /></Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-64">
+            <SheetHeader className="text-left">
+              <SheetTitle className="font-display">Menu</SheetTitle>
+            </SheetHeader>
+            <nav className="mt-8 flex flex-col gap-2">
+              <Link to="/business" className="w-full">
+                <Button variant="ghost" className="w-full justify-start gap-3">
+                  <Store className="h-4 w-4" /> Business dashboard
+                </Button>
+              </Link>
+              <Button variant="ghost" className="w-full justify-start gap-3" onClick={signOut}>
+                <LogOut className="h-4 w-4" /> Sign out
+              </Button>
+            </nav>
+          </SheetContent>
+        </Sheet>
       </header>
 
       {instances.length === 0 ? (
@@ -84,7 +97,12 @@ function Wallet() {
           <OrnamentDivider className="w-32 opacity-60" />
           <h2 className="mt-6 font-display text-2xl">No cards yet</h2>
           <p className="mt-2 text-sm text-muted-foreground max-w-xs">Scan a business's QR to add your first loyalty card.</p>
-          <OrnamentDivider className="w-32 mt-6 opacity-60" />
+          <Link to="/scan" className="mt-8 w-full max-w-xs">
+            <Button size="lg" className="w-full h-12 gap-2 text-base">
+              <ScanLine className="h-5 w-5" /> Scan QR
+            </Button>
+          </Link>
+          <OrnamentDivider className="w-32 mt-8 opacity-60" />
         </div>
       ) : (
         <>
