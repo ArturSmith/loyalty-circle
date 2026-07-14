@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { motion, AnimatePresence } from "framer-motion";
 import useEmblaCarousel from "embla-carousel-react";
-import { ChevronLeft, ChevronRight, LogOut, Menu, ScanLine, Sparkles, Store, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, LogOut, Menu, ScanLine, Sparkles, Store, User, X } from "lucide-react";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 
 type Instance = {
@@ -79,6 +79,11 @@ function Wallet() {
               <SheetTitle className="font-display">Menu</SheetTitle>
             </SheetHeader>
             <nav className="mt-8 flex flex-col gap-2">
+              <Link to="/profile" className="w-full">
+                <Button variant="ghost" className="w-full justify-start gap-3">
+                  <User className="h-4 w-4" /> Profile
+                </Button>
+              </Link>
               <Link to="/business" className="w-full">
                 <Button variant="ghost" className="w-full justify-start gap-3">
                   <Store className="h-4 w-4" /> Business dashboard
