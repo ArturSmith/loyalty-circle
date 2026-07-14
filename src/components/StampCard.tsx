@@ -69,37 +69,52 @@ export function StampCard({
           )}
         </div>
 
-        <div className="flex-1 grid gap-1.5 sm:gap-2 items-center mt-2" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
-          {Array.from({ length: totalSteps }).map((_, i) => {
-            const step = i + 1;
-            const filled = step <= stampsCount;
-            const reward = rewards.find((r) => r.step === step);
-            const isLast = filled && step === stampsCount && lastStamp !== undefined;
-            return (
-              <div key={i} className="flex items-center justify-center">
-                <motion.div
-                  key={isLast ? `stamp-${lastStamp}` : `slot-${i}`}
-                  initial={isLast ? { scale: 3, rotate: -18, opacity: 0 } : false}
-                  animate={isLast ? { scale: 1, rotate: 0, opacity: 1 } : undefined}
-                  transition={{ type: "spring", stiffness: 260, damping: 14 }}
-                  className={`relative aspect-square w-full max-w-[42px] rounded-full border-2 flex items-center justify-center text-[10px] font-semibold ${filled ? "stamp-emboss" : ""}`}
-                  style={{
-                    borderColor: accentColor + (filled ? "" : "55"),
-                    backgroundColor: filled ? accentColor : "transparent",
-                    color: filled ? bgColor : accentColor,
-                  }}
-                >
-                  {filled ? <Icon className="h-4 w-4" /> : reward ? <span className="leading-none">{reward.label}</span> : <span className="opacity-60">{step}</span>}
-                </motion.div>
-              </div>
-            );
-          })}
-        </div>
+        {!hideSteps && (
+          <div className="flex-1 grid gap-1.5 sm:gap-2 items-center mt-2" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
+            {Array.from({ length: totalSteps }).map((_, i) => {
+              const step = i + 1;
+              const filled = step <= stampsCount;
+              const reward = rewards.find((r) => r.step === step);
+              const isLast = filled && step === stampsCount && lastStamp !== undefined;
+              const isActive = activeStep === step;
+              const clickable = !!onStepClick;
+              const inner = filled ? <Icon className="h-4 w-4" /> : reward ? <span className="leading-none">{reward.label}</span> : <span className="opacity-60">{step}</span>;
+              const commonStyle = {
+                borderColor: accentColor + (filled ? "" : isActive ? "" : "55"),
+                backgroundColor: filled ? accentColor : "transparent",
+                color: filled ? bgColor : accentColor,
+                boxShadow: isActive ? `0 0 0 2px ${accentColor}` : undefined,
+              } as const;
+              return (
+                <div key={i} className="flex items-center justify-center">
+                  {clickable ? (
+                    <button type="button" onClick={() => onStepClick!(step)}
+                      className={`relative aspect-square w-full max-w-[42px] rounded-full border-2 flex items-center justify-center text-[10px] font-semibold cursor-pointer transition-transform hover:scale-110 ${filled ? "stamp-emboss" : ""}`}
+                      style={commonStyle} aria-label={`Edit step ${step}`}>
+                      {inner}
+                    </button>
+                  ) : (
+                    <motion.div
+                      key={isLast ? `stamp-${lastStamp}` : `slot-${i}`}
+                      initial={isLast ? { scale: 3, rotate: -18, opacity: 0 } : false}
+                      animate={isLast ? { scale: 1, rotate: 0, opacity: 1 } : undefined}
+                      transition={{ type: "spring", stiffness: 260, damping: 14 }}
+                      className={`relative aspect-square w-full max-w-[42px] rounded-full border-2 flex items-center justify-center text-[10px] font-semibold ${filled ? "stamp-emboss" : ""}`}
+                      style={commonStyle}
+                    >
+                      {inner}
+                    </motion.div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         <div className="flex items-end justify-between mt-2">
           <div className="text-[10px] opacity-60 uppercase tracking-widest">{businessName}</div>
           <div className="text-[11px]" style={{ color: accentColor }}>
-            {stampsCount}/{totalSteps}
+            {hideSteps ? "" : `${stampsCount}/${totalSteps}`}
           </div>
         </div>
       </div>
