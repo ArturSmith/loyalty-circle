@@ -29,6 +29,7 @@ function BusinessPublic() {
   const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [ownedTemplateIds, setOwnedTemplateIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     (async () => {
@@ -39,7 +40,15 @@ function BusinessPublic() {
       ]);
       setBusiness(b as Business | null);
       setTemplates((t as Template[] | null) ?? []);
-      setUserId(u.user?.id ?? null);
+      const uid = u.user?.id ?? null;
+      setUserId(uid);
+      if (uid) {
+        const { data: owned } = await supabase
+          .from("card_instances")
+          .select("template_id")
+          .eq("customer_id", uid);
+        setOwnedTemplateIds(new Set((owned ?? []).map((r: { template_id: string }) => r.template_id)));
+      }
       setLoading(false);
     })();
   }, [businessId]);
@@ -92,8 +101,18 @@ function BusinessPublic() {
               rewards={t.rewards}
               businessName={business.name}
             />
-            <Button className="mt-3 w-full h-11" disabled={claiming === t.id} onClick={() => claim(t.id)}>
-              {claiming === t.id ? "Adding…" : userId ? "Add to my wallet" : "Sign in to add"}
+            <Button
+              className="mt-3 w-full h-11"
+              disabled={claiming === t.id || ownedTemplateIds.has(t.id)}
+              onClick={() => claim(t.id)}
+            >
+              {claiming === t.id
+                ? "Adding…"
+                : ownedTemplateIds.has(t.id)
+                ? "Already in your wallet"
+                : userId
+                ? "Add to my wallet"
+                : "Sign in to add"}
             </Button>
           </motion.div>
         ))}
