@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
-import { StampCard } from "@/components/StampCard";
+import { WalletStack } from "@/components/WalletStack";
+import type { StampCardProps } from "@/components/StampCard";
 import { Button } from "@/components/ui/button";
 import {
   QrCode,
@@ -61,6 +62,29 @@ const benefits = [
   },
 ];
 
+const businessStackCards: StampCardProps[] = [
+  {
+    title: "Café Nord", subtitle: "10th coffee on the house", totalSteps: 10, stampsCount: 7,
+    stampIcon: "coffee", bgColor: "#f5efe4", accentColor: "#4a2c1a", textColor: "#4a2c1a",
+    rewards: [{ step: 5, label: "-50%" }, { step: 10, label: "FREE" }], businessName: "CAFÉ NORD",
+  },
+  {
+    title: "Bloom & Wild", subtitle: "Bouquet on us at 8", totalSteps: 8, stampsCount: 4,
+    stampIcon: "heart", bgColor: "#f7e9ee", accentColor: "#8a2a4a", textColor: "#8a2a4a",
+    rewards: [{ step: 8, label: "FREE" }], businessName: "BLOOM & WILD", shape: "rounded",
+  },
+  {
+    title: "Forge Gym", subtitle: "Free session at 10", totalSteps: 10, stampsCount: 6,
+    stampIcon: "flame", bgColor: "#1a1a1f", accentColor: "#f5b73a", textColor: "#f5f2e8",
+    rewards: [{ step: 10, label: "FREE" }], businessName: "FORGE GYM",
+  },
+  {
+    title: "Vinbar 22", subtitle: "Glass on the house at 6", totalSteps: 6, stampsCount: 2,
+    stampIcon: "wine", bgColor: "#2a1a24", accentColor: "#e8b4c0", textColor: "#f5e6ea",
+    rewards: [{ step: 6, label: "FREE" }], businessName: "VINBAR 22",
+  },
+];
+
 function ForBusinessPage() {
   return (
     <div className="min-h-screen">
@@ -117,20 +141,10 @@ function ForBusinessPage() {
             transition={{ duration: 0.6, delay: 0.15 }}
             className="mx-auto w-full max-w-sm lg:mx-0 lg:ml-auto"
           >
-            <StampCard
-              title="Café Nord"
-              subtitle="10th coffee on the house"
-              totalSteps={10}
-              stampsCount={7}
-              stampIcon="coffee"
-              bgColor="#f5efe4"
-              accentColor="#4a2c1a"
-              textColor="#4a2c1a"
-              rewards={[{ step: 10, label: "FREE" }]}
-              businessName="CAFÉ NORD"
-            />
+            <WalletStack cards={businessStackCards} />
           </motion.div>
         </div>
+
 
         <section className="mt-24">
           <div className="mb-12 text-center">
