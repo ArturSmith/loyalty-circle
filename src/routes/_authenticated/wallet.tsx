@@ -221,6 +221,7 @@ function Wallet() {
                   } else {
                     top = expandedIndex * TIGHT + GAP + CARD_H + GAP + (i - expandedIndex - 1) * (TIGHT + 8);
                   }
+                  const isFrozen = frozenBusinessIds.has(inst.template.business.id);
                   return (
                     <motion.div
                       key={inst.id}
@@ -237,24 +238,31 @@ function Wallet() {
                           if (isExpanded) setFlippedId(inst.id);
                           else setExpandedId(inst.id);
                         }}
-                        className="block w-full text-left focus:outline-none drop-shadow-2xl"
+                        className="relative block w-full text-left focus:outline-none drop-shadow-2xl"
                         aria-label={isExpanded ? `Show QR for ${inst.template.title}` : `Open ${inst.template.title}`}
                       >
-                        <StampCard
-                          title={inst.template.title}
-                          subtitle={inst.template.subtitle}
-                          totalSteps={inst.template.total_steps}
-                          stampsCount={inst.stamps_count}
-                          shape={inst.template.shape}
-                          bgColor={inst.template.bg_color}
-                          accentColor={inst.template.accent_color}
-                          textColor={inst.template.text_color}
-                          stampIcon={inst.template.stamp_icon}
-                          logoUrl={inst.template.logo_url}
-                          rewards={inst.template.rewards}
-                          businessName={inst.template.business.name}
-                          lastStamp={inst.stamps_count}
-                        />
+                        <div className={isFrozen ? "relative" : undefined}>
+                          <StampCard
+                            title={inst.template.title}
+                            subtitle={inst.template.subtitle}
+                            totalSteps={inst.template.total_steps}
+                            stampsCount={inst.stamps_count}
+                            shape={inst.template.shape}
+                            bgColor={inst.template.bg_color}
+                            accentColor={inst.template.accent_color}
+                            textColor={inst.template.text_color}
+                            stampIcon={inst.template.stamp_icon}
+                            logoUrl={inst.template.logo_url}
+                            rewards={inst.template.rewards}
+                            businessName={inst.template.business.name}
+                            lastStamp={inst.stamps_count}
+                          />
+                          {isFrozen && (
+                            <div className="pointer-events-none absolute top-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-sky-500/95 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white shadow-lg ring-1 ring-white/40 backdrop-blur">
+                              <Snowflake className="h-3 w-3" /> Frozen
+                            </div>
+                          )}
+                        </div>
                       </button>
                     </motion.div>
                   );
