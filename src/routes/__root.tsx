@@ -49,7 +49,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: "Stempel — Digital loyalty cards for local businesses" },
       { name: "description", content: "Replace paper punch cards with beautiful digital stamp cards. Made for cafés, salons, and shops." },
-      { name: "theme-color", content: "#faf7ee" },
+      { name: "theme-color", content: "#fafbfc" },
       { property: "og:title", content: "Stempel — Digital loyalty cards" },
       { property: "og:description", content: "Beautiful digital stamp cards for local businesses." },
       { property: "og:type", content: "website" },
