@@ -92,8 +92,6 @@ function Wallet() {
       }
       return next;
     });
-      return next;
-    });
     // Check which businesses are frozen (subscription lapsed)
     const bizIds = Array.from(new Set(next.map((i) => i.template.business.id)));
     if (bizIds.length > 0) {
