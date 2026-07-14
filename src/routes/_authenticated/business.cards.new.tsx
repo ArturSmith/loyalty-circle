@@ -221,7 +221,7 @@ function RewardsEditor({ rewards, setRewards, totalSteps }: { rewards: Reward[];
       <p className="text-xs text-muted-foreground">The number that appears in that circle before it's stamped. Example: step 10 = "FREE".</p>
       {rewards.map((r, i) => (
         <div key={i} className="flex items-center gap-2">
-          <Input type="number" min={1} max={totalSteps} value={r.step}
+          <Input type="number" min={1} value={r.step}
             onChange={(e) => setRewards(rewards.map((x, j) => j === i ? { ...x, step: Number(e.target.value) } : x))} className="w-20" />
           <Input value={r.label}
             onChange={(e) => setRewards(rewards.map((x, j) => j === i ? { ...x, label: e.target.value } : x))} placeholder="-50%" />
