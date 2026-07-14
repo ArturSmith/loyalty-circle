@@ -37,6 +37,13 @@ function AuthPage() {
     goNext();
   };
 
+  const handleApple = async () => {
+    const result = await lovable.auth.signInWithOAuth("apple", { redirect_uri: window.location.origin });
+    if (result.error) { toast.error("Sign-in failed. Try again."); return; }
+    if (result.redirected) return;
+    goNext();
+  };
+
   const handleMagic = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
