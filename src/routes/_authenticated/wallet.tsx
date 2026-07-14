@@ -79,6 +79,11 @@ function Wallet() {
               <SheetTitle className="font-display">Menu</SheetTitle>
             </SheetHeader>
             <nav className="mt-8 flex flex-col gap-2">
+              <Link to="/profile" className="w-full">
+                <Button variant="ghost" className="w-full justify-start gap-3">
+                  <User className="h-4 w-4" /> Profile
+                </Button>
+              </Link>
               <Link to="/business" className="w-full">
                 <Button variant="ghost" className="w-full justify-start gap-3">
                   <Store className="h-4 w-4" /> Business dashboard
