@@ -78,6 +78,7 @@ function NewCard() {
   const stepsLabels = ["Basics", "Style", "Steps & rewards", "Review"];
   const [editingStep, setEditingStep] = useState<number | null>(null);
   const [editingLabel, setEditingLabel] = useState("");
+  const [editingField, setEditingField] = useState<null | "title" | "subtitle" | "icon">(null);
 
   const openStepEditor = (s: number) => {
     setEditingStep(s);
@@ -89,6 +90,16 @@ function NewCard() {
     const label = editingLabel.trim();
     setRewards(label ? [...others, { step: editingStep, label }].sort((a, b) => a.step - b.step) : others);
     setEditingStep(null);
+  };
+
+  const handleLogoUpload = async (f: File) => {
+    if (!f.type.includes("svg") && !f.name.toLowerCase().endsWith(".svg")) {
+      toast.error("Please upload an SVG file");
+      return;
+    }
+    const svg = await f.text();
+    setLogoUrl(`data:image/svg+xml;utf8,${encodeURIComponent(svg)}`);
+    setIcon(null);
   };
 
   return (
@@ -110,10 +121,67 @@ function NewCard() {
       <div className="mt-6 rounded-2xl border-2 border-ink/10 bg-card p-4">
         <StampCard title={title || "Card title"} subtitle={subtitle} totalSteps={totalSteps} stampsCount={0}
           shape={shape} bgColor={bg} accentColor={accent} textColor={text} stampIcon={icon}
-          logoUrl={null} rewards={rewards} businessName="PREVIEW"
+          logoUrl={logoUrl || null} rewards={rewards} businessName="PREVIEW"
           hideSteps={step < 2}
           onStepClick={step === 2 ? openStepEditor : undefined}
-          activeStep={editingStep ?? undefined} />
+          activeStep={editingStep ?? undefined}
+          onTitleClick={() => { setEditingStep(null); setEditingField("title"); }}
+          onSubtitleClick={() => { setEditingStep(null); setEditingField("subtitle"); }}
+          onIconClick={() => { setEditingStep(null); setEditingField("icon"); }} />
+
+        {editingField === "title" && (
+          <div className="mt-4 rounded-xl border-2 border-ink/10 bg-secondary/50 p-3">
+            <Label className="text-xs">Title</Label>
+            <div className="mt-2 flex gap-2">
+              <Input autoFocus value={title} onChange={(e) => setTitle(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === "Escape") setEditingField(null); }} />
+              <Button size="sm" onClick={() => setEditingField(null)}><Check className="h-4 w-4" /></Button>
+            </div>
+          </div>
+        )}
+        {editingField === "subtitle" && (
+          <div className="mt-4 rounded-xl border-2 border-ink/10 bg-secondary/50 p-3">
+            <Label className="text-xs">Subtitle</Label>
+            <div className="mt-2 flex gap-2">
+              <Input autoFocus value={subtitle} onChange={(e) => setSubtitle(e.target.value)}
+                placeholder="Optional"
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === "Escape") setEditingField(null); }} />
+              <Button size="sm" onClick={() => setEditingField(null)}><Check className="h-4 w-4" /></Button>
+            </div>
+          </div>
+        )}
+        {editingField === "icon" && (
+          <div className="mt-4 rounded-xl border-2 border-ink/10 bg-secondary/50 p-3 space-y-3">
+            <div>
+              <Label className="text-xs">Choose icon</Label>
+              <div className="mt-2 grid grid-cols-8 gap-2">
+                {ICONS.map((name) => {
+                  const I = STAMP_ICONS[name];
+                  return (
+                    <button key={name} type="button"
+                      onClick={() => { setIcon(name); setLogoUrl(""); }}
+                      className={`aspect-square rounded-lg border-2 flex items-center justify-center bg-background ${icon === name && !logoUrl ? "border-ink" : "border-border"}`}>
+                      <I className="h-4 w-4" />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Or upload SVG logo</Label>
+              <Input type="file" accept="image/svg+xml,.svg" className="mt-2"
+                onChange={async (e) => { const f = e.target.files?.[0]; if (f) await handleLogoUpload(f); }} />
+              {logoUrl && (
+                <div className="mt-2 flex items-center gap-2">
+                  <img src={logoUrl} alt="logo" className="h-8 w-8 rounded-full ring-1 ring-black/10 bg-white p-0.5" />
+                  <Button variant="ghost" size="sm" onClick={() => setLogoUrl("")}>Remove</Button>
+                </div>
+              )}
+            </div>
+            <Button size="sm" variant="ghost" onClick={() => setEditingField(null)}>Done</Button>
+          </div>
+        )}
+
         {step === 2 && editingStep != null && (
           <div className="mt-4 rounded-xl border-2 border-ink/10 bg-secondary/50 p-3">
             <Label className="text-xs">Benefit on step {editingStep}</Label>
@@ -126,8 +194,11 @@ function NewCard() {
             </div>
           </div>
         )}
-        {step === 2 && editingStep == null && (
+        {step === 2 && editingStep == null && editingField == null && (
           <p className="mt-3 text-center text-sm font-medium text-ink animate-pulse">Tap on step to set rewards</p>
+        )}
+        {step < 2 && editingField == null && (
+          <p className="mt-3 text-center text-xs text-muted-foreground">Tap the title, subtitle, or icon on the card to edit</p>
         )}
       </div>
 
