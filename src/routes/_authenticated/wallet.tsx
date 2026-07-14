@@ -7,7 +7,7 @@ import { QrDisplay } from "@/components/QrDisplay";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Gift, LogOut, Menu, RotateCcw, ScanLine, Sparkles, Store, User, X } from "lucide-react";
+import { Check, Gift, LogOut, Menu, RotateCcw, ScanLine, Sparkles, Store, Trash2, User, X } from "lucide-react";
 import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 
