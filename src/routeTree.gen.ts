@@ -15,6 +15,9 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as BBusinessIdRouteImport } from './routes/b.$businessId'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
 import { Route as AuthenticatedBusinessRouteImport } from './routes/_authenticated/business'
+import { Route as AuthenticatedBusinessScanRouteImport } from './routes/_authenticated/business.scan'
+import { Route as AuthenticatedBusinessCardsNewRouteImport } from './routes/_authenticated/business.cards.new'
+import { Route as AuthenticatedBusinessCardsIdEditRouteImport } from './routes/_authenticated/business.cards.$id.edit'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -45,35 +48,78 @@ const AuthenticatedBusinessRoute = AuthenticatedBusinessRouteImport.update({
   path: '/business',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedBusinessScanRoute =
+  AuthenticatedBusinessScanRouteImport.update({
+    id: '/scan',
+    path: '/scan',
+    getParentRoute: () => AuthenticatedBusinessRoute,
+  } as any)
+const AuthenticatedBusinessCardsNewRoute =
+  AuthenticatedBusinessCardsNewRouteImport.update({
+    id: '/cards/new',
+    path: '/cards/new',
+    getParentRoute: () => AuthenticatedBusinessRoute,
+  } as any)
+const AuthenticatedBusinessCardsIdEditRoute =
+  AuthenticatedBusinessCardsIdEditRouteImport.update({
+    id: '/cards/$id/edit',
+    path: '/cards/$id/edit',
+    getParentRoute: () => AuthenticatedBusinessRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/business': typeof AuthenticatedBusinessRoute
+  '/business': typeof AuthenticatedBusinessRouteWithChildren
   '/wallet': typeof AuthenticatedWalletRoute
   '/b/$businessId': typeof BBusinessIdRoute
+  '/business/scan': typeof AuthenticatedBusinessScanRoute
+  '/business/cards/new': typeof AuthenticatedBusinessCardsNewRoute
+  '/business/cards/$id/edit': typeof AuthenticatedBusinessCardsIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/business': typeof AuthenticatedBusinessRoute
+  '/business': typeof AuthenticatedBusinessRouteWithChildren
   '/wallet': typeof AuthenticatedWalletRoute
   '/b/$businessId': typeof BBusinessIdRoute
+  '/business/scan': typeof AuthenticatedBusinessScanRoute
+  '/business/cards/new': typeof AuthenticatedBusinessCardsNewRoute
+  '/business/cards/$id/edit': typeof AuthenticatedBusinessCardsIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
-  '/_authenticated/business': typeof AuthenticatedBusinessRoute
+  '/_authenticated/business': typeof AuthenticatedBusinessRouteWithChildren
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/b/$businessId': typeof BBusinessIdRoute
+  '/_authenticated/business/scan': typeof AuthenticatedBusinessScanRoute
+  '/_authenticated/business/cards/new': typeof AuthenticatedBusinessCardsNewRoute
+  '/_authenticated/business/cards/$id/edit': typeof AuthenticatedBusinessCardsIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/business' | '/wallet' | '/b/$businessId'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/business'
+    | '/wallet'
+    | '/b/$businessId'
+    | '/business/scan'
+    | '/business/cards/new'
+    | '/business/cards/$id/edit'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/business' | '/wallet' | '/b/$businessId'
+  to:
+    | '/'
+    | '/auth'
+    | '/business'
+    | '/wallet'
+    | '/b/$businessId'
+    | '/business/scan'
+    | '/business/cards/new'
+    | '/business/cards/$id/edit'
   id:
     | '__root__'
     | '/'
@@ -82,6 +128,9 @@ export interface FileRouteTypes {
     | '/_authenticated/business'
     | '/_authenticated/wallet'
     | '/b/$businessId'
+    | '/_authenticated/business/scan'
+    | '/_authenticated/business/cards/new'
+    | '/_authenticated/business/cards/$id/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -135,16 +184,54 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBusinessRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/business/scan': {
+      id: '/_authenticated/business/scan'
+      path: '/scan'
+      fullPath: '/business/scan'
+      preLoaderRoute: typeof AuthenticatedBusinessScanRouteImport
+      parentRoute: typeof AuthenticatedBusinessRoute
+    }
+    '/_authenticated/business/cards/new': {
+      id: '/_authenticated/business/cards/new'
+      path: '/cards/new'
+      fullPath: '/business/cards/new'
+      preLoaderRoute: typeof AuthenticatedBusinessCardsNewRouteImport
+      parentRoute: typeof AuthenticatedBusinessRoute
+    }
+    '/_authenticated/business/cards/$id/edit': {
+      id: '/_authenticated/business/cards/$id/edit'
+      path: '/cards/$id/edit'
+      fullPath: '/business/cards/$id/edit'
+      preLoaderRoute: typeof AuthenticatedBusinessCardsIdEditRouteImport
+      parentRoute: typeof AuthenticatedBusinessRoute
+    }
   }
 }
 
+interface AuthenticatedBusinessRouteChildren {
+  AuthenticatedBusinessScanRoute: typeof AuthenticatedBusinessScanRoute
+  AuthenticatedBusinessCardsNewRoute: typeof AuthenticatedBusinessCardsNewRoute
+  AuthenticatedBusinessCardsIdEditRoute: typeof AuthenticatedBusinessCardsIdEditRoute
+}
+
+const AuthenticatedBusinessRouteChildren: AuthenticatedBusinessRouteChildren = {
+  AuthenticatedBusinessScanRoute: AuthenticatedBusinessScanRoute,
+  AuthenticatedBusinessCardsNewRoute: AuthenticatedBusinessCardsNewRoute,
+  AuthenticatedBusinessCardsIdEditRoute: AuthenticatedBusinessCardsIdEditRoute,
+}
+
+const AuthenticatedBusinessRouteWithChildren =
+  AuthenticatedBusinessRoute._addFileChildren(
+    AuthenticatedBusinessRouteChildren,
+  )
+
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedBusinessRoute: typeof AuthenticatedBusinessRoute
+  AuthenticatedBusinessRoute: typeof AuthenticatedBusinessRouteWithChildren
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedBusinessRoute: AuthenticatedBusinessRoute,
+  AuthenticatedBusinessRoute: AuthenticatedBusinessRouteWithChildren,
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
 }
 
