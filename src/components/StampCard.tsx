@@ -29,6 +29,9 @@ export interface StampCardProps {
   hideSteps?: boolean;
   onStepClick?: (step: number) => void;
   activeStep?: number;
+  onTitleClick?: () => void;
+  onSubtitleClick?: () => void;
+  onIconClick?: () => void;
 }
 
 export function StampCard({
@@ -36,12 +39,15 @@ export function StampCard({
   bgColor = "#faf8f2", accentColor = "#1a1a2e", textColor = "#1a1a2e",
   stampIcon = "star", logoUrl, rewards = [], businessName, lastStamp,
   hideSteps = false, onStepClick, activeStep,
+  onTitleClick, onSubtitleClick, onIconClick,
 }: StampCardProps) {
   const Icon = stampIcon ? (STAMP_ICONS[stampIcon] ?? Star) : null;
   const radius = shape === "square" ? "rounded-lg" : shape === "ticket" ? "rounded-none" : "rounded-3xl";
 
   // grid: 5 cols if 10, else adaptive
   const cols = totalSteps <= 5 ? totalSteps : totalSteps <= 10 ? 5 : totalSteps <= 12 ? 6 : 5;
+
+  const editableClass = "rounded-md transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 cursor-pointer px-1 -mx-1";
 
   return (
     <div
@@ -56,17 +62,37 @@ export function StampCard({
       )}
       <div className="flex h-full flex-col p-4 sm:p-5">
         <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <div className="font-display text-lg sm:text-xl leading-tight truncate" style={{ color: accentColor }}>{title}</div>
-            {subtitle && <div className="text-[11px] sm:text-xs opacity-70 truncate">{subtitle}</div>}
+          <div className="min-w-0 flex-1">
+            {onTitleClick ? (
+              <button type="button" onClick={onTitleClick}
+                className={`font-display text-lg sm:text-xl leading-tight truncate block max-w-full text-left ${editableClass}`}
+                style={{ color: accentColor }}>{title}</button>
+            ) : (
+              <div className="font-display text-lg sm:text-xl leading-tight truncate" style={{ color: accentColor }}>{title}</div>
+            )}
+            {onSubtitleClick ? (
+              <button type="button" onClick={onSubtitleClick}
+                className={`text-[11px] sm:text-xs opacity-70 truncate block max-w-full text-left ${editableClass}`}>
+                {subtitle || <span className="italic opacity-60">Add subtitle</span>}
+              </button>
+            ) : subtitle ? (
+              <div className="text-[11px] sm:text-xs opacity-70 truncate">{subtitle}</div>
+            ) : null}
           </div>
-          {logoUrl ? (
-            <img src={logoUrl} alt="" className="h-9 w-9 rounded-full object-cover ring-1 ring-black/10" />
-          ) : (
-            <div className="h-9 w-9 rounded-full flex items-center justify-center" style={{ backgroundColor: accentColor + "11", color: accentColor }}>
-              {Icon && <Icon className="h-4 w-4" />}
-            </div>
-          )}
+          {(() => {
+            const inner = logoUrl ? (
+              <img src={logoUrl} alt="" className="h-9 w-9 rounded-full object-cover ring-1 ring-black/10 bg-white" />
+            ) : (
+              <div className="h-9 w-9 rounded-full flex items-center justify-center" style={{ backgroundColor: accentColor + "11", color: accentColor }}>
+                {Icon && <Icon className="h-4 w-4" />}
+              </div>
+            );
+            return onIconClick ? (
+              <button type="button" onClick={onIconClick} className="rounded-full hover:ring-2 hover:ring-black/20 transition" aria-label="Change logo or icon">
+                {inner}
+              </button>
+            ) : inner;
+          })()}
         </div>
 
         {hideSteps && <div className="flex-1" />}
