@@ -7,7 +7,8 @@ import { QrDisplay } from "@/components/QrDisplay";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Gift, LogOut, Menu, ScanLine, Sparkles, Store, User, X } from "lucide-react";
+import { Check, Gift, LogOut, Menu, RotateCcw, ScanLine, Sparkles, Store, User, X } from "lucide-react";
+import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 
 type Instance = {
@@ -261,7 +262,24 @@ function Wallet() {
       )}
 
       <AnimatePresence>
-        {flippedId && (
+        {flippedId && (() => {
+          const inst = instances.find((x) => x.id === flippedId);
+          const isCompleted = !!inst?.completed_at || (inst ? inst.stamps_count >= inst.template.total_steps : false);
+          const renew = async () => {
+            if (!inst) return;
+            const { error } = await supabase
+              .from("card_instances")
+              .update({ stamps_count: 0, completed_at: null })
+              .eq("id", inst.id);
+            if (error) {
+              toast.error("Couldn't renew card", { description: error.message });
+              return;
+            }
+            toast.success("Card renewed — start collecting again!");
+            setFlippedId(null);
+            load();
+          };
+          return (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 bg-ink/85 backdrop-blur-md flex items-center justify-center p-6"
@@ -277,16 +295,40 @@ function Wallet() {
                 <X className="h-4 w-4" />
               </button>
               <OrnamentDivider className="w-40 mx-auto opacity-70" />
-              <h3 className="font-display text-2xl mt-3">Show to stamp</h3>
-              <p className="text-xs text-muted-foreground">Let the business scan this code</p>
+              {isCompleted ? (
+                <>
+                  <div className="mt-3 inline-flex items-center gap-2 text-gold">
+                    <Sparkles className="h-4 w-4" />
+                    <span className="text-xs uppercase tracking-widest">Card complete</span>
+                    <Sparkles className="h-4 w-4" />
+                  </div>
+                  <h3 className="font-display text-2xl mt-2">Reward unlocked</h3>
+                  <p className="text-xs text-muted-foreground">Show this code to redeem, then renew to start again</p>
+                </>
+              ) : (
+                <>
+                  <h3 className="font-display text-2xl mt-3">Show to stamp</h3>
+                  <p className="text-xs text-muted-foreground">Let the business scan this code</p>
+                </>
+              )}
               <div className="mt-6 flex justify-center">
                 <QrDisplay value={`stempel:card:${flippedId}`} size={260} />
               </div>
               <OrnamentDivider className="w-40 mx-auto mt-6 opacity-70" />
+              {isCompleted && (
+                <Button
+                  onClick={renew}
+                  className="mt-5 w-full h-12 gap-2 rounded-2xl bg-[image:var(--gradient-primary)] text-white sticker-shadow border-0 hover:opacity-95"
+                >
+                  <RotateCcw className="h-4 w-4" /> Renew card
+                </Button>
+              )}
             </motion.div>
           </motion.div>
-        )}
+          );
+        })()}
       </AnimatePresence>
+
 
       <AnimatePresence>
         {celebration && (
