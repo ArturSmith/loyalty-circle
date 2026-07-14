@@ -282,6 +282,7 @@ function Wallet() {
         {flippedId && (() => {
           const inst = instances.find((x) => x.id === flippedId);
           const isCompleted = !!inst?.completed_at || (inst ? inst.stamps_count >= inst.template.total_steps : false);
+          const isFrozen = !!inst && frozenBusinessIds.has(inst.template.business.id);
           const renew = async () => {
             if (!inst) return;
             const { error } = await supabase
