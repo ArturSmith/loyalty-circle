@@ -69,6 +69,7 @@ export function StampCard({
           )}
         </div>
 
+        {hideSteps && <div className="flex-1" />}
         {!hideSteps && (
           <div className="flex-1 grid gap-1.5 sm:gap-2 items-center mt-2" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
             {Array.from({ length: totalSteps }).map((_, i) => {
