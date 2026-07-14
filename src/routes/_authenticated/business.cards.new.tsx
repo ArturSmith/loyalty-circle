@@ -256,14 +256,42 @@ function NewCard() {
                   <Label>Color</Label>
                   <div className="mt-2 grid grid-cols-6 gap-2">
                     {PRESETS.map((p, i) => (
-                      <button key={i} type="button" onClick={() => setPreset(i)}
-                        className={`aspect-square rounded-lg border-2 flex items-center justify-center ${preset === i ? "border-ink" : "border-transparent"}`}
+                      <button key={i} type="button" onClick={() => { setPreset(i); setCustomColors(null); }}
+                        className={`aspect-square rounded-lg border-2 flex items-center justify-center ${!customColors && preset === i ? "border-ink" : "border-transparent"}`}
                         style={{ backgroundColor: p.bg }}>
                         <div className="h-4 w-4 rounded-full" style={{ backgroundColor: p.accent }} />
                       </button>
                     ))}
                   </div>
+                  <div className="mt-3 rounded-lg border-2 border-border p-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium">Custom palette</span>
+                      {customColors && (
+                        <button type="button" className="text-xs text-muted-foreground underline"
+                          onClick={() => setCustomColors(null)}>Reset to preset</button>
+                      )}
+                    </div>
+                    <div className="mt-2 grid grid-cols-3 gap-2">
+                      {([
+                        { key: "bg", label: "Background" },
+                        { key: "accent", label: "Accent" },
+                        { key: "text", label: "Text" },
+                      ] as const).map(({ key, label }) => (
+                        <label key={key} className="flex flex-col items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                          {label}
+                          <input type="color"
+                            value={(customColors ?? PRESETS[preset])[key]}
+                            onChange={(e) => {
+                              const base = customColors ?? PRESETS[preset];
+                              setCustomColors({ ...base, [key]: e.target.value });
+                            }}
+                            className="h-10 w-full rounded-md border border-border bg-transparent cursor-pointer" />
+                        </label>
+                      ))}
+                    </div>
+                  </div>
                 </div>
+
                 <div>
                   <Label>Stamp icon</Label>
                   <div className="mt-2 grid grid-cols-8 gap-2">
