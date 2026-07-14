@@ -342,6 +342,18 @@ function Wallet() {
                   <p className="text-xs text-muted-foreground">Let the business scan this code</p>
                 </>
               )}
+              {isFrozen && (
+                <div className="mt-4 rounded-xl border border-sky-300 bg-sky-50 px-3 py-2 text-left text-xs text-sky-900">
+                  <div className="flex items-center gap-1.5 font-semibold">
+                    <Snowflake className="h-3.5 w-3.5" /> Card frozen
+                  </div>
+                  <p className="mt-1 text-sky-800">
+                    {isCompleted
+                      ? "This business's subscription is inactive, but you can still redeem your completed reward."
+                      : "This business's subscription is inactive, so new stamps are paused until they resume."}
+                  </p>
+                </div>
+              )}
               <div className="mt-6 flex justify-center">
                 <QrDisplay value={`stempel:card:${flippedId}`} size={260} />
               </div>
