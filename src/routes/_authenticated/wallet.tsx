@@ -111,12 +111,10 @@ function Wallet() {
   }, [celebration]);
 
 
+  // Keep expanded card valid when instances change
   useEffect(() => {
-    if (!embla) return;
-    const onSel = () => setSelected(embla.selectedScrollSnap());
-    embla.on("select", onSel);
-    return () => { embla.off("select", onSel); };
-  }, [embla]);
+    if (expandedId && !instances.find((i) => i.id === expandedId)) setExpandedId(null);
+  }, [instances, expandedId]);
 
   const signOut = async () => { await supabase.auth.signOut(); navigate({ to: "/" }); };
 
