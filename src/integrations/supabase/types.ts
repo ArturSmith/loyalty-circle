@@ -14,13 +14,208 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      businesses: {
+        Row: {
+          brand_color: string | null
+          created_at: string
+          id: string
+          logo_url: string | null
+          name: string
+          owner_id: string
+          slug: string | null
+          updated_at: string
+        }
+        Insert: {
+          brand_color?: string | null
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name: string
+          owner_id: string
+          slug?: string | null
+          updated_at?: string
+        }
+        Update: {
+          brand_color?: string | null
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name?: string
+          owner_id?: string
+          slug?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      card_instances: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          customer_id: string
+          id: string
+          stamps_count: number
+          template_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          customer_id: string
+          id?: string
+          stamps_count?: number
+          template_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          customer_id?: string
+          id?: string
+          stamps_count?: number
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_instances_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "card_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      card_templates: {
+        Row: {
+          accent_color: string
+          active: boolean
+          bg_color: string
+          business_id: string
+          created_at: string
+          id: string
+          logo_url: string | null
+          rewards: Json
+          shape: string
+          stamp_icon: string
+          subtitle: string | null
+          text_color: string
+          title: string
+          total_steps: number
+          updated_at: string
+        }
+        Insert: {
+          accent_color?: string
+          active?: boolean
+          bg_color?: string
+          business_id: string
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          rewards?: Json
+          shape?: string
+          stamp_icon?: string
+          subtitle?: string | null
+          text_color?: string
+          title: string
+          total_steps?: number
+          updated_at?: string
+        }
+        Update: {
+          accent_color?: string
+          active?: boolean
+          bg_color?: string
+          business_id?: string
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          rewards?: Json
+          shape?: string
+          stamp_icon?: string
+          subtitle?: string | null
+          text_color?: string
+          title?: string
+          total_steps?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_templates_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      stamps: {
+        Row: {
+          business_id: string
+          card_instance_id: string
+          created_at: string
+          id: string
+          issued_by: string
+          step_number: number
+        }
+        Insert: {
+          business_id: string
+          card_instance_id: string
+          created_at?: string
+          id?: string
+          issued_by: string
+          step_number: number
+        }
+        Update: {
+          business_id?: string
+          card_instance_id?: string
+          created_at?: string
+          id?: string
+          issued_by?: string
+          step_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stamps_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stamps_card_instance_id_fkey"
+            columns: ["card_instance_id"]
+            isOneToOne: false
+            referencedRelation: "card_instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      add_stamp: { Args: { _card_instance_id: string }; Returns: Json }
     }
     Enums: {
       [_ in never]: never
