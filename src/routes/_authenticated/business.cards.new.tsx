@@ -44,7 +44,7 @@ function NewCard() {
   const [totalSteps, setTotalSteps] = useState(10);
   const [shape, setShape] = useState<CardShape>("rounded");
   const [preset, setPreset] = useState(0);
-  const [icon, setIcon] = useState<StampIconName>("scissors");
+  const [icon, setIcon] = useState<StampIconName | null>(null);
   const [logoUrl, setLogoUrl] = useState("");
   const [rewards, setRewards] = useState<Reward[]>([{ step: 5, label: "-50%" }, { step: 10, label: "FREE" }]);
 
