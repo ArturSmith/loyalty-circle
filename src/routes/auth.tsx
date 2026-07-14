@@ -81,6 +81,9 @@ function AuthPage() {
           <Button onClick={handleGoogle} className="w-full h-11" variant="outline">
             <GoogleIcon /> Continue with Google
           </Button>
+          <Button onClick={handleApple} className="w-full h-11" variant="outline">
+            <AppleIcon /> Continue with Apple
+          </Button>
 
           <div className="flex items-center gap-3 py-2 text-xs text-muted-foreground">
             <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
