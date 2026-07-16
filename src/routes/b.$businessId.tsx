@@ -23,13 +23,12 @@ export const Route = createFileRoute("/b/$businessId")({
 function BusinessPublic() {
   const { businessId } = Route.useParams();
   const navigate = useNavigate();
-  const router = useRouter();
   const [business, setBusiness] = useState<Business | null>(null);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
-  const [ownedTemplateIds, setOwnedTemplateIds] = useState<Set<string>>(new Set());
+  const [ownedTemplateIds, setOwnedTemplateIds] = useState<Map<string, string>>(new Map());
 
   useEffect(() => {
     (async () => {
@@ -45,9 +44,11 @@ function BusinessPublic() {
       if (uid) {
         const { data: owned } = await supabase
           .from("card_instances")
-          .select("template_id")
+          .select("id, template_id")
           .eq("customer_id", uid);
-        setOwnedTemplateIds(new Set((owned ?? []).map((r: { template_id: string }) => r.template_id)));
+        const m = new Map<string, string>();
+        (owned ?? []).forEach((r: { id: string; template_id: string }) => m.set(r.template_id, r.id));
+        setOwnedTemplateIds(m);
       }
       setLoading(false);
     })();
