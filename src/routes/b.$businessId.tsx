@@ -102,37 +102,60 @@ function BusinessPublic() {
 
       <div className="mx-auto max-w-md space-y-6">
         {templates.length === 0 && <p className="text-center text-muted-foreground">No active cards yet.</p>}
-        {templates.map((t, i) => (
+        {templates.map((t, i) => {
+          const ownedInstanceId = ownedTemplateIds.get(t.id);
+          const handleCardClick = () => {
+            if (!userId) {
+              try { sessionStorage.setItem(`pending_claim:${businessId}`, t.id); } catch {}
+              navigate({ to: "/auth", search: { redirect: `/b/${businessId}` } });
+              return;
+            }
+            if (ownedInstanceId) {
+              try { sessionStorage.setItem("open_card_id", ownedInstanceId); } catch {}
+              navigate({ to: "/wallet" });
+              return;
+            }
+            claim(t.id);
+          };
+          return (
           <motion.div key={t.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}>
-            <StampCard
-              title={t.title}
-              subtitle={t.subtitle}
-              totalSteps={t.total_steps}
-              stampsCount={0}
-              shape={t.shape}
-              bgColor={t.bg_color}
-              accentColor={t.accent_color}
-              textColor={t.text_color}
-              stampIcon={t.stamp_icon}
-              logoUrl={t.logo_url}
-              rewards={t.rewards}
-              businessName={business.name}
-            />
+            <button
+              type="button"
+              onClick={handleCardClick}
+              className="block w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-2xl"
+              aria-label={ownedInstanceId ? `Open ${t.title} in your wallet` : userId ? `Add ${t.title} to your wallet` : `Sign in to add ${t.title}`}
+            >
+              <StampCard
+                title={t.title}
+                subtitle={t.subtitle}
+                totalSteps={t.total_steps}
+                stampsCount={0}
+                shape={t.shape}
+                bgColor={t.bg_color}
+                accentColor={t.accent_color}
+                textColor={t.text_color}
+                stampIcon={t.stamp_icon}
+                logoUrl={t.logo_url}
+                rewards={t.rewards}
+                businessName={business.name}
+              />
+            </button>
             <Button
               className="mt-3 w-full h-11"
-              disabled={claiming === t.id || ownedTemplateIds.has(t.id)}
-              onClick={() => claim(t.id)}
+              disabled={claiming === t.id}
+              onClick={handleCardClick}
             >
               {claiming === t.id
                 ? "Adding…"
-                : ownedTemplateIds.has(t.id)
-                ? "Already in your wallet"
+                : ownedInstanceId
+                ? "Open in my wallet"
                 : userId
                 ? "Add to my wallet"
                 : "Sign in to add"}
             </Button>
           </motion.div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
