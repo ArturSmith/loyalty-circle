@@ -105,6 +105,19 @@ function Wallet() {
 
   useEffect(() => { load(); }, [load]);
 
+  // If arriving from a business page with a card to open, expand + flip it
+  useEffect(() => {
+    if (loading || instances.length === 0) return;
+    let target: string | null = null;
+    try { target = sessionStorage.getItem("open_card_id"); } catch {}
+    if (!target) return;
+    try { sessionStorage.removeItem("open_card_id"); } catch {}
+    if (instances.find((i) => i.id === target)) {
+      setExpandedId(target);
+      setFlippedId(target);
+    }
+  }, [loading, instances]);
+
   // Realtime: refresh when stamps come in for any card the user owns
   useEffect(() => {
     const channel = supabase.channel("wallet-stamps")
