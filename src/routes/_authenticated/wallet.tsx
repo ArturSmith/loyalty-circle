@@ -10,6 +10,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Check, Gift, LogOut, Menu, RotateCcw, ScanLine, Snowflake, Sparkles, Store, Trash2, User, X } from "lucide-react";
 import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
+import { useServerFn } from "@tanstack/react-start";
+import { getFrozenBusinessIds } from "@/utils/frozen-businesses.functions";
 
 type Instance = {
   id: string; stamps_count: number; completed_at: string | null; created_at: string;
@@ -47,6 +49,7 @@ function Wallet() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [flippedId, setFlippedId] = useState<string | null>(null);
   const [celebration, setCelebration] = useState<Celebration | null>(null);
+  const fetchFrozen = useServerFn(getFrozenBusinessIds);
 
   const load = useCallback(async () => {
     const { data: u } = await supabase.auth.getUser();
@@ -95,13 +98,13 @@ function Wallet() {
     // Check which businesses are frozen (subscription lapsed)
     const bizIds = Array.from(new Set(next.map((i) => i.template.business.id)));
     if (bizIds.length > 0) {
-      const { data: frozen } = await supabase.rpc("get_frozen_business_ids", { _ids: bizIds });
-      setFrozenBusinessIds(new Set((frozen ?? []).map((r: { business_id: string }) => r.business_id)));
+      const frozen = await fetchFrozen({ data: { ids: bizIds } });
+      setFrozenBusinessIds(new Set(frozen));
     } else {
       setFrozenBusinessIds(new Set());
     }
     setLoading(false);
-  }, []);
+  }, [fetchFrozen]);
 
   useEffect(() => { load(); }, [load]);
 
