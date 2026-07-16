@@ -98,8 +98,8 @@ function Wallet() {
     // Check which businesses are frozen (subscription lapsed)
     const bizIds = Array.from(new Set(next.map((i) => i.template.business.id)));
     if (bizIds.length > 0) {
-      const { data: frozen } = await supabase.rpc("get_frozen_business_ids", { _ids: bizIds });
-      setFrozenBusinessIds(new Set((frozen ?? []).map((r: { business_id: string }) => r.business_id)));
+      const frozen = await fetchFrozen({ data: { ids: bizIds } });
+      setFrozenBusinessIds(new Set(frozen));
     } else {
       setFrozenBusinessIds(new Set());
     }
