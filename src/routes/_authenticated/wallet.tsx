@@ -10,6 +10,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Check, Gift, LogOut, Menu, RotateCcw, ScanLine, Snowflake, Sparkles, Store, Trash2, User, X } from "lucide-react";
 import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
+import { useServerFn } from "@tanstack/react-start";
+import { getFrozenBusinessIds } from "@/utils/frozen-businesses.functions";
 
 type Instance = {
   id: string; stamps_count: number; completed_at: string | null; created_at: string;
