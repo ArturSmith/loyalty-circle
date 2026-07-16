@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 
-type Business = { id: string; name: string; logo_url: string | null; brand_color: string | null };
 type Template = {
   id: string; business_id: string; title: string; subtitle: string | null;
   total_steps: number; shape: CardShape; bg_color: string; accent_color: string; text_color: string;
@@ -23,7 +22,6 @@ export const Route = createFileRoute("/b/$businessId")({
 function BusinessPublic() {
   const { businessId } = Route.useParams();
   const navigate = useNavigate();
-  const [business, setBusiness] = useState<Business | null>(null);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState<string | null>(null);
@@ -32,12 +30,10 @@ function BusinessPublic() {
 
   useEffect(() => {
     (async () => {
-      const [{ data: b }, { data: t }, { data: u }] = await Promise.all([
-        supabase.from("businesses").select("id,name,logo_url,brand_color").eq("id", businessId).maybeSingle(),
+      const [{ data: t }, { data: u }] = await Promise.all([
         supabase.from("card_templates").select("*").eq("business_id", businessId).eq("active", true).order("created_at"),
         supabase.auth.getUser(),
       ]);
-      setBusiness(b as Business | null);
       setTemplates((t as Template[] | null) ?? []);
       const uid = u.user?.id ?? null;
       setUserId(uid);
@@ -89,19 +85,26 @@ function BusinessPublic() {
 
 
   if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>;
-  if (!business) return <div className="min-h-screen flex items-center justify-center">Business not found.</div>;
+  if (templates.length === 0) {
+    return (
+      <div className="min-h-screen px-4 py-10">
+        <div className="mx-auto max-w-md text-center">
+          <h1 className="mt-4 font-display text-3xl font-semibold">Loyalty cards</h1>
+          <p className="mt-2 text-sm text-muted-foreground">No active cards available.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen px-4 py-10">
       <div className="mx-auto max-w-md text-center">
-        {business.logo_url && <img src={business.logo_url} alt={business.name} className="mx-auto h-16 w-16 rounded-full object-cover ring-1 ring-black/10" />}
-        <h1 className="mt-4 font-display text-3xl font-semibold">{business.name}</h1>
+        <h1 className="mt-4 font-display text-3xl font-semibold">Loyalty cards</h1>
         <p className="mt-2 text-sm text-muted-foreground">Choose a loyalty card to add to your wallet.</p>
         <OrnamentDivider className="w-40 mx-auto my-6 opacity-60" />
       </div>
 
       <div className="mx-auto max-w-md space-y-6">
-        {templates.length === 0 && <p className="text-center text-muted-foreground">No active cards yet.</p>}
         {templates.map((t, i) => {
           const ownedInstanceId = ownedTemplateIds.get(t.id);
           const handleCardClick = () => {
@@ -137,7 +140,6 @@ function BusinessPublic() {
                 stampIcon={t.stamp_icon}
                 logoUrl={t.logo_url}
                 rewards={t.rewards}
-                businessName={business.name}
               />
             </button>
             <Button
