@@ -49,6 +49,7 @@ function Wallet() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [flippedId, setFlippedId] = useState<string | null>(null);
   const [celebration, setCelebration] = useState<Celebration | null>(null);
+  const fetchFrozen = useServerFn(getFrozenBusinessIds);
 
   const load = useCallback(async () => {
     const { data: u } = await supabase.auth.getUser();
