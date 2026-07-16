@@ -104,7 +104,7 @@ function Wallet() {
       setFrozenBusinessIds(new Set());
     }
     setLoading(false);
-  }, []);
+  }, [fetchFrozen]);
 
   useEffect(() => { load(); }, [load]);
 
