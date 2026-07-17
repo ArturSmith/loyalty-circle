@@ -118,15 +118,35 @@ export function StampCard({
               const step = i + 1;
               const filled = step <= stampsCount;
               const reward = rewards.find((r) => r.step === step);
+              const isRewardStep = !!reward;
               const isLast = filled && step === stampsCount && lastStamp !== undefined;
               const isActive = activeStep === step;
               const clickable = !!onStepClick;
-              const inner = filled && Icon ? <Icon className={stampIconClass} /> : reward ? <span className="leading-none">{reward.label}</span> : <span className="opacity-60">{step}</span>;
+              const rewardLabel = (reward?.label ?? "").trim();
+              const rewardTextSizeClass = rewardLabel.length >= 6
+                ? "text-[6px]"
+                : rewardLabel.length >= 4
+                ? "text-[7px]"
+                : "text-[8px]";
+              const inner = reward
+                ? (
+                  <span
+                    className={`block max-w-full px-[1px] text-center font-bold uppercase leading-none tracking-tight whitespace-nowrap overflow-hidden ${rewardTextSizeClass}`}
+                    title={rewardLabel}
+                  >
+                    {rewardLabel}
+                  </span>
+                )
+                : filled && Icon
+                ? <Icon className={stampIconClass} />
+                : <span className="opacity-60">{step}</span>;
               const commonStyle = {
-                borderColor: accentColor + (filled ? "" : isActive ? "" : "55"),
-                backgroundColor: filled ? accentColor : "transparent",
-                color: filled ? bgColor : accentColor,
-                boxShadow: isActive ? `0 0 0 2px ${accentColor}` : undefined,
+                borderColor: isRewardStep ? "#D4AF37" : accentColor + (filled ? "" : isActive ? "" : "55"),
+                backgroundColor: isRewardStep ? (filled ? "#E6C777" : "#E6C77722") : (filled ? accentColor : "transparent"),
+                color: isRewardStep ? "#4B3A12" : (filled ? bgColor : accentColor),
+                boxShadow: isActive
+                  ? `0 0 0 2px ${isRewardStep ? "#D4AF37" : accentColor}`
+                  : undefined,
               } as const;
               return (
                 <div key={i} className={`flex items-center justify-center ${stepItemPadClass}`}>
