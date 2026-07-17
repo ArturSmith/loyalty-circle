@@ -47,7 +47,8 @@ export function StampCard({
   const radius = shape === "square" ? "rounded-lg" : shape === "ticket" ? "rounded-none" : "rounded-3xl";
 
   // grid: 5 cols if 10, else adaptive
-  const cols = totalSteps <= 5 ? totalSteps : totalSteps <= 10 ? 5 : totalSteps <= 12 ? 6 : 5;
+  const colsRaw = totalSteps <= 5 ? totalSteps : totalSteps <= 10 ? 5 : totalSteps <= 12 ? 6 : 5;
+  const cols = Math.max(1, colsRaw);
 
   const editableClass = "rounded-md transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 cursor-pointer px-1 -mx-1";
 
