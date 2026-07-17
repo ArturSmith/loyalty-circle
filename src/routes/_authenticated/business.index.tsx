@@ -8,10 +8,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
-import { Plus, QrCode, ScanLine, Users, Stamp as StampIco, Wallet as WalletIcon, Pencil, Menu, Settings, LogOut } from "lucide-react";
+import { Plus, QrCode, ScanLine, Users, Stamp as StampIco, Wallet as WalletIcon, Pencil, Menu, Settings, LogOut, Download } from "lucide-react";
 import { StampCard } from "@/components/StampCard";
 import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import QRCode from "qrcode";
 
 type Business = { id: string; name: string; logo_url: string | null; brand_color: string | null };
 type Tpl = {
@@ -74,6 +75,26 @@ function BusinessDashboard() {
   const signOut = async () => {
     await supabase.auth.signOut();
     navigate({ to: "/" });
+  };
+
+  const downloadBusinessQr = async () => {
+    try {
+      const dataUrl = await QRCode.toDataURL(bizUrl, {
+        width: 1024,
+        margin: 2,
+        color: { dark: "#1a1a2e", light: "#ffffffff" },
+        errorCorrectionLevel: "M",
+      });
+      const a = document.createElement("a");
+      const safeName = (biz.name || "business").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+      a.href = dataUrl;
+      a.download = `${safeName || "business"}-qr.png`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch {
+      toast.error("Could not download QR image");
+    }
   };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>;
@@ -161,6 +182,9 @@ function BusinessDashboard() {
           <p className="text-xs text-muted-foreground">Customers scan this to see and claim your cards.</p>
           <div className="mt-4 flex justify-center"><QrDisplay value={bizUrl} size={220} /></div>
           <p className="mt-3 text-xs text-muted-foreground break-all">{bizUrl}</p>
+          <Button variant="outline" className="mt-4 gap-2" onClick={downloadBusinessQr}>
+            <Download className="h-4 w-4" /> Download QR image
+          </Button>
         </motion.div>
       )}
 
