@@ -47,9 +47,8 @@ function CardDetails() {
       const { data: b } = await supabase.from("businesses").select("id,name,owner_id").eq("id", (t as Tpl).business_id).maybeSingle();
       setBiz(b as Biz | null);
 
-      const [{ data: instances }, { count: stampsCount }] = await Promise.all([
+      const [{ data: instances }] = await Promise.all([
         supabase.from("card_instances").select("id,customer_id,stamps_count,completed_at,created_at").eq("template_id", id).order("created_at", { ascending: false }),
-        supabase.from("stamps").select("id", { count: "exact", head: true }).eq("business_id", (t as Tpl).business_id),
       ]);
 
       const rows = (instances as { id: string; customer_id: string; stamps_count: number; completed_at: string | null; created_at: string }[] | null) ?? [];
@@ -81,7 +80,7 @@ function CardDetails() {
       setCustomers(list);
       setStats({
         users: customerIds.length,
-        stamps: stampsCount ?? 0,
+        stamps: (lastStamps ?? []).length,
         completed: rows.filter(r => r.completed_at).length,
       });
       setLoading(false);
