@@ -8,7 +8,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
-import { Plus, QrCode, ScanLine, Users, Stamp as StampIco, Wallet as WalletIcon, Pencil, Menu, Settings } from "lucide-react";
+import { Plus, QrCode, ScanLine, Users, Stamp as StampIco, Wallet as WalletIcon, Pencil, Menu, Settings, LogOut } from "lucide-react";
 import { StampCard } from "@/components/StampCard";
 import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
 
@@ -70,6 +70,11 @@ function BusinessDashboard() {
     toast.success("Business created");
   };
 
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    navigate({ to: "/" });
+  };
+
   if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>;
 
   if (!biz) {
@@ -120,6 +125,9 @@ function BusinessDashboard() {
                   <WalletIcon className="h-4 w-4" /> My wallet
                 </Button>
               </Link>
+              <Button variant="ghost" className="w-full justify-start gap-3" onClick={signOut}>
+                <LogOut className="h-4 w-4" /> Sign out
+              </Button>
             </nav>
           </SheetContent>
         </Sheet>
