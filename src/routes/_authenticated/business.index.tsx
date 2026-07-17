@@ -11,6 +11,7 @@ import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { Plus, QrCode, ScanLine, Users, Stamp as StampIco, Wallet as WalletIcon, Pencil, Menu, Settings, LogOut } from "lucide-react";
 import { StampCard } from "@/components/StampCard";
 import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 
 type Business = { id: string; name: string; logo_url: string | null; brand_color: string | null };
 type Tpl = {
@@ -173,39 +174,58 @@ function BusinessDashboard() {
         <h2 className="font-display text-xl">Your cards</h2>
       </div>
 
-      <div className="mt-4 grid gap-3">
+      <div className="mt-4">
         {tpls.length === 0 && (
           <div className="rounded-xl border-2 border-dashed border-border p-8 text-center text-sm text-muted-foreground">
             No cards yet. Create your first loyalty card to share with customers.
           </div>
         )}
-        {tpls.map((t) => (
-          <Link key={t.id} to="/business/cards/$id" params={{ id: t.id }}
-            className="group relative block rounded-2xl focus:outline-none focus:ring-2 focus:ring-ink/40">
-            <StampCard
-              title={t.title}
-              subtitle={t.subtitle}
-              totalSteps={t.total_steps}
-              stampsCount={0}
-              shape={t.shape}
-              bgColor={t.bg_color}
-              accentColor={t.accent_color}
-              textColor={t.text_color}
-              stampIcon={t.stamp_icon}
-              logoUrl={t.logo_url}
-              rewards={t.rewards ?? []}
-              businessName={biz.name}
-            />
-            <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-background/80 backdrop-blur px-2 py-1 text-[10px] font-medium shadow-sm opacity-0 group-hover:opacity-100 transition">
-              <Pencil className="h-3 w-3" /> Edit
-            </div>
-            {!t.active && (
-              <div className="absolute top-2 left-2 rounded-full bg-background/80 backdrop-blur px-2 py-1 text-[10px] font-medium uppercase tracking-wider shadow-sm">
-                Paused
-              </div>
+
+        {tpls.length > 0 && (
+          <Carousel opts={{ align: "start" }} className="relative">
+            <CarouselContent>
+              {tpls.map((t) => (
+                <CarouselItem key={t.id} className="basis-[88%] sm:basis-[72%] lg:basis-[62%]">
+                  <Link
+                    to="/business/cards/$id"
+                    params={{ id: t.id }}
+                    className="group relative block rounded-2xl focus:outline-none focus:ring-2 focus:ring-ink/40"
+                  >
+                    <StampCard
+                      title={t.title}
+                      subtitle={t.subtitle}
+                      totalSteps={t.total_steps}
+                      stampsCount={0}
+                      shape={t.shape}
+                      bgColor={t.bg_color}
+                      accentColor={t.accent_color}
+                      textColor={t.text_color}
+                      stampIcon={t.stamp_icon}
+                      logoUrl={t.logo_url}
+                      rewards={t.rewards ?? []}
+                      businessName={biz.name}
+                    />
+                    <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-background/80 backdrop-blur px-2 py-1 text-[10px] font-medium shadow-sm opacity-0 group-hover:opacity-100 transition">
+                      <Pencil className="h-3 w-3" /> Edit
+                    </div>
+                    {!t.active && (
+                      <div className="absolute top-2 left-2 rounded-full bg-background/80 backdrop-blur px-2 py-1 text-[10px] font-medium uppercase tracking-wider shadow-sm">
+                        Paused
+                      </div>
+                    )}
+                  </Link>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+
+            {tpls.length > 1 && (
+              <>
+                <CarouselPrevious className="left-2 top-1/2 h-9 w-9 -translate-y-1/2 bg-background/90 shadow-md" />
+                <CarouselNext className="right-2 top-1/2 h-9 w-9 -translate-y-1/2 bg-background/90 shadow-md" />
+              </>
             )}
-          </Link>
-        ))}
+          </Carousel>
+        )}
       </div>
     </div>
   );
