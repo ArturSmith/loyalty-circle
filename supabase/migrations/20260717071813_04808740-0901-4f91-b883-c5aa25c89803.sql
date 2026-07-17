@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Card holders read business basics" ON public.businesses;
