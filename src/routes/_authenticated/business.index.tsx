@@ -174,7 +174,7 @@ function BusinessDashboard() {
         <h2 className="font-display text-xl">Your cards</h2>
       </div>
 
-      <div className="mt-4">
+  <div className="mt-4 -mx-5 px-0">
         {tpls.length === 0 && (
           <div className="rounded-xl border-2 border-dashed border-border p-8 text-center text-sm text-muted-foreground">
             No cards yet. Create your first loyalty card to share with customers.
@@ -183,9 +183,9 @@ function BusinessDashboard() {
 
         {tpls.length > 0 && (
           <Carousel opts={{ align: "start" }} className="relative">
-            <CarouselContent>
+            <CarouselContent className="-ml-0">
               {tpls.map((t) => (
-                <CarouselItem key={t.id} className="basis-[88%] sm:basis-[72%] lg:basis-[62%]">
+                <CarouselItem key={t.id} className="pl-0 basis-[88%] sm:basis-[72%] lg:basis-[62%]">
                   <Link
                     to="/business/cards/$id"
                     params={{ id: t.id }}
@@ -204,6 +204,7 @@ function BusinessDashboard() {
                       logoUrl={t.logo_url}
                       rewards={t.rewards ?? []}
                       businessName={biz.name}
+                      disableShadow
                     />
                     <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-background/80 backdrop-blur px-2 py-1 text-[10px] font-medium shadow-sm opacity-0 group-hover:opacity-100 transition">
                       <Pencil className="h-3 w-3" /> Edit

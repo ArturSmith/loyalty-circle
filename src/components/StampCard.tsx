@@ -32,6 +32,7 @@ export interface StampCardProps {
   onTitleClick?: () => void;
   onSubtitleClick?: () => void;
   onIconClick?: () => void;
+  disableShadow?: boolean;
 }
 
 export function StampCard({
@@ -40,6 +41,7 @@ export function StampCard({
   stampIcon = "star", logoUrl, rewards = [], businessName, lastStamp,
   hideSteps = false, onStepClick, activeStep,
   onTitleClick, onSubtitleClick, onIconClick,
+  disableShadow = false,
 }: StampCardProps) {
   const Icon = stampIcon ? (STAMP_ICONS[stampIcon] ?? Star) : null;
   const radius = shape === "square" ? "rounded-lg" : shape === "ticket" ? "rounded-none" : "rounded-3xl";
@@ -51,7 +53,7 @@ export function StampCard({
 
   return (
     <div
-      className={`relative w-full paper-grain card-shadow border-2 ${radius}`}
+      className={`relative w-full paper-grain border-2 ${disableShadow ? "" : "card-shadow"} ${radius}`}
       style={{ backgroundColor: bgColor, borderColor: accentColor + "22", color: textColor, aspectRatio: "1.586 / 1" }}
     >
       <div className="flex h-full flex-col p-4 sm:p-5">
