@@ -278,6 +278,10 @@ export type Database = {
         Args: { check_env?: string; user_uuid: string }
         Returns: boolean
       }
+      user_holds_card_for_business: {
+        Args: { _business_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
