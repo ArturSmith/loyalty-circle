@@ -45,19 +45,31 @@ export function StampCard({
 }: StampCardProps) {
   const Icon = stampIcon ? (STAMP_ICONS[stampIcon] ?? Star) : null;
   const radius = shape === "square" ? "rounded-lg" : shape === "ticket" ? "rounded-none" : "rounded-3xl";
+  const isDense = totalSteps >= 20;
+  const isUltraDense = totalSteps >= 26;
 
   // grid: 5 cols if 10, else adaptive
-  const colsRaw = totalSteps <= 5 ? totalSteps : totalSteps <= 10 ? 5 : totalSteps <= 12 ? 6 : 5;
+  const colsRaw = totalSteps <= 5 ? totalSteps : totalSteps <= 10 ? 5 : totalSteps <= 18 ? 6 : totalSteps <= 24 ? 7 : 8;
   const cols = Math.max(1, colsRaw);
+  const cardAspectRatio = isUltraDense ? "1.42 / 1" : isDense ? "1.5 / 1" : "1.586 / 1";
+  const cardPadding = isDense ? "p-3 sm:p-4" : "p-4 sm:p-5";
+  const stepGapClass = isDense ? "gap-1.5 sm:gap-2" : "gap-1.5 sm:gap-2";
+  const stepItemPadClass = isUltraDense ? "p-0.5" : isDense ? "p-[3px]" : "p-0.5";
+  const stepChipClass = isUltraDense
+    ? "max-w-[28px] text-[8px]"
+    : isDense
+    ? "max-w-[34px] text-[9px]"
+    : "max-w-[42px] text-[10px]";
+  const stampIconClass = isUltraDense ? "h-3 w-3" : "h-4 w-4";
 
   const editableClass = "rounded-md transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 cursor-pointer px-1 -mx-1";
 
   return (
     <div
       className={`relative w-full paper-grain border-2 ${disableShadow ? "" : "card-shadow"} ${radius}`}
-      style={{ backgroundColor: bgColor, borderColor: accentColor + "22", color: textColor, aspectRatio: "1.586 / 1" }}
+      style={{ backgroundColor: bgColor, borderColor: accentColor + "22", color: textColor, aspectRatio: cardAspectRatio }}
     >
-      <div className="flex h-full flex-col p-4 sm:p-5">
+      <div className={`flex h-full flex-col ${cardPadding}`}>
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             {onTitleClick ? (
@@ -94,7 +106,7 @@ export function StampCard({
 
         {hideSteps && <div className="flex-1" />}
         {!hideSteps && (
-          <div className="flex-1 grid gap-1.5 sm:gap-2 items-center mt-2" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
+          <div className={`flex-1 grid ${stepGapClass} items-center mt-2`} style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
             {Array.from({ length: totalSteps }).map((_, i) => {
               const step = i + 1;
               const filled = step <= stampsCount;
@@ -102,7 +114,7 @@ export function StampCard({
               const isLast = filled && step === stampsCount && lastStamp !== undefined;
               const isActive = activeStep === step;
               const clickable = !!onStepClick;
-              const inner = filled && Icon ? <Icon className="h-4 w-4" /> : reward ? <span className="leading-none">{reward.label}</span> : <span className="opacity-60">{step}</span>;
+              const inner = filled && Icon ? <Icon className={stampIconClass} /> : reward ? <span className="leading-none">{reward.label}</span> : <span className="opacity-60">{step}</span>;
               const commonStyle = {
                 borderColor: accentColor + (filled ? "" : isActive ? "" : "55"),
                 backgroundColor: filled ? accentColor : "transparent",
@@ -110,7 +122,7 @@ export function StampCard({
                 boxShadow: isActive ? `0 0 0 2px ${accentColor}` : undefined,
               } as const;
               return (
-                <div key={i} className="flex items-center justify-center">
+                <div key={i} className={`flex items-center justify-center ${stepItemPadClass}`}>
                   {clickable ? (
                     <motion.button
                       type="button"
@@ -119,7 +131,7 @@ export function StampCard({
                       transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
                       whileHover={{ scale: 1.15 }}
                       whileTap={{ scale: 0.95 }}
-                      className={`relative aspect-square w-full max-w-[42px] rounded-full border-2 flex items-center justify-center text-[10px] font-semibold cursor-pointer ${filled ? "stamp-emboss" : ""}`}
+                      className={`relative aspect-square w-full rounded-full border-2 flex items-center justify-center font-semibold cursor-pointer ${stepChipClass} ${filled ? "stamp-emboss" : ""}`}
                       style={commonStyle}
                       aria-label={`Edit step ${step}`}>
                       {inner}
@@ -130,7 +142,7 @@ export function StampCard({
                       initial={isLast ? { scale: 3, rotate: -18, opacity: 0 } : false}
                       animate={isLast ? { scale: 1, rotate: 0, opacity: 1 } : undefined}
                       transition={{ type: "spring", stiffness: 260, damping: 14 }}
-                      className={`relative aspect-square w-full max-w-[42px] rounded-full border-2 flex items-center justify-center text-[10px] font-semibold ${filled ? "stamp-emboss" : ""}`}
+                      className={`relative aspect-square w-full rounded-full border-2 flex items-center justify-center font-semibold ${stepChipClass} ${filled ? "stamp-emboss" : ""}`}
                       style={commonStyle}
                     >
                       {inner}
