@@ -45,20 +45,23 @@ export function StampCard({
 }: StampCardProps) {
   const Icon = stampIcon ? (STAMP_ICONS[stampIcon] ?? Star) : null;
   const radius = shape === "square" ? "rounded-lg" : shape === "ticket" ? "rounded-none" : "rounded-3xl";
-  const isDense = totalSteps >= 20;
-  const isUltraDense = totalSteps >= 26;
+  const isDense = totalSteps >= 16;
+  const isUltraDense = totalSteps >= 24;
 
-  // grid: 5 cols if 10, else adaptive
-  const colsRaw = totalSteps <= 5 ? totalSteps : totalSteps <= 10 ? 5 : totalSteps <= 18 ? 6 : totalSteps <= 24 ? 7 : 8;
+  // adaptive grid to keep rows compact for larger cards
+  const colsRaw = totalSteps <= 5 ? totalSteps : totalSteps <= 10 ? 5 : totalSteps <= 15 ? 6 : totalSteps <= 21 ? 7 : 8;
   const cols = Math.max(1, colsRaw);
-  const cardAspectRatio = isUltraDense ? "1.42 / 1" : isDense ? "1.5 / 1" : "1.586 / 1";
+  const rows = Math.max(1, Math.ceil(totalSteps / cols));
+  const cardAspectRatio = "1.586 / 1";
   const cardPadding = isDense ? "p-3 sm:p-4" : "p-4 sm:p-5";
-  const stepGapClass = isDense ? "gap-1.5 sm:gap-2" : "gap-1.5 sm:gap-2";
+  const stepGapClass = isUltraDense ? "gap-1.5" : isDense ? "gap-1.5 sm:gap-2" : "gap-1.5 sm:gap-2";
   const stepItemPadClass = isUltraDense ? "p-0.5" : isDense ? "p-[3px]" : "p-0.5";
-  const stepChipClass = isUltraDense
-    ? "max-w-[28px] text-[8px]"
+  const stepChipClass = rows >= 5
+    ? "max-w-[24px] text-[8px]"
+    : rows >= 4
+    ? "max-w-[30px] text-[9px]"
     : isDense
-    ? "max-w-[34px] text-[9px]"
+    ? "max-w-[36px] text-[9px]"
     : "max-w-[42px] text-[10px]";
   const stampIconClass = isUltraDense ? "h-3 w-3" : "h-4 w-4";
 
@@ -74,26 +77,26 @@ export function StampCard({
           <div className="min-w-0 flex-1">
             {onTitleClick ? (
               <button type="button" onClick={onTitleClick}
-                className={`font-display text-lg sm:text-xl leading-tight truncate block max-w-full text-left ${editableClass}`}
+                className={`font-display ${isDense ? "text-base sm:text-lg" : "text-lg sm:text-xl"} leading-tight truncate block max-w-full text-left ${editableClass}`}
                 style={{ color: accentColor }}>{title}</button>
             ) : (
-              <div className="font-display text-lg sm:text-xl leading-tight truncate" style={{ color: accentColor }}>{title}</div>
+              <div className={`font-display ${isDense ? "text-base sm:text-lg" : "text-lg sm:text-xl"} leading-tight truncate`} style={{ color: accentColor }}>{title}</div>
             )}
             {onSubtitleClick ? (
               <button type="button" onClick={onSubtitleClick}
-                className={`text-[11px] sm:text-xs opacity-70 truncate block max-w-full text-left ${editableClass}`}>
+                className={`${isDense ? "text-[10px]" : "text-[11px] sm:text-xs"} opacity-70 truncate block max-w-full text-left ${editableClass}`}>
                 {subtitle || <span className="italic opacity-60">Add subtitle</span>}
               </button>
             ) : subtitle ? (
-              <div className="text-[11px] sm:text-xs opacity-70 truncate">{subtitle}</div>
+              <div className={`${isDense ? "text-[10px]" : "text-[11px] sm:text-xs"} opacity-70 truncate`}>{subtitle}</div>
             ) : null}
           </div>
           {(() => {
             const inner = logoUrl ? (
-              <img src={logoUrl} alt="" className="h-9 w-9 rounded-full object-cover ring-1 ring-black/10 bg-white" />
+              <img src={logoUrl} alt="" className={`${isDense ? "h-8 w-8" : "h-9 w-9"} rounded-full object-cover ring-1 ring-black/10 bg-white`} />
             ) : (
-              <div className="h-9 w-9 rounded-full flex items-center justify-center" style={{ backgroundColor: accentColor + "11", color: accentColor }}>
-                {Icon && <Icon className="h-4 w-4" />}
+              <div className={`${isDense ? "h-8 w-8" : "h-9 w-9"} rounded-full flex items-center justify-center`} style={{ backgroundColor: accentColor + "11", color: accentColor }}>
+                {Icon && <Icon className={stampIconClass} />}
               </div>
             );
             return onIconClick ? (
