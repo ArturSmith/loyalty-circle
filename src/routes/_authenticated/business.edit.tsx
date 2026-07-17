@@ -27,7 +27,7 @@ function EditBusiness() {
     (async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
-      const { data } = await supabase.from("businesses").select("id, name, logo_url, brand_color, slug, created_at, updated_at").limit(1).maybeSingle();
+      const { data } = await supabase.from("businesses").select("*").eq("owner_id", u.user.id).maybeSingle();
       const b = data as Business | null;
       setBiz(b);
       if (b) {
