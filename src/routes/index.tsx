@@ -1,10 +1,18 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Stamp, Store, Wallet, ArrowRight, Sparkles } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
+  ssr: false,
+  beforeLoad: async () => {
+    const { data, error } = await supabase.auth.getUser();
+    if (!error && data.user) {
+      throw redirect({ to: "/wallet" });
+    }
+  },
   head: () => ({
     meta: [
       { title: "Stempel — Digital loyalty cards for local businesses" },
