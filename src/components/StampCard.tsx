@@ -45,23 +45,27 @@ export function StampCard({
 }: StampCardProps) {
   const Icon = stampIcon ? (STAMP_ICONS[stampIcon] ?? Star) : null;
   const radius = shape === "square" ? "rounded-lg" : shape === "ticket" ? "rounded-none" : "rounded-3xl";
-  const isDense = totalSteps >= 16;
-  const isUltraDense = totalSteps >= 24;
+  const maxRows = 3;
+  const maxCols = 10;
+  const normalizedSteps = Math.max(0, totalSteps);
+  // Rule: max 3 rows, each row up to 10 circles
+  const cols = Math.max(1, Math.min(maxCols, Math.ceil(normalizedSteps / maxRows)));
+  const rows = Math.max(1, Math.ceil(normalizedSteps / cols));
+  const isDense = cols >= 7;
+  const isUltraDense = cols >= 9;
 
-  // adaptive grid to keep rows compact for larger cards
-  const colsRaw = totalSteps <= 5 ? totalSteps : totalSteps <= 10 ? 5 : totalSteps <= 15 ? 6 : totalSteps <= 21 ? 7 : 8;
-  const cols = Math.max(1, colsRaw);
-  const rows = Math.max(1, Math.ceil(totalSteps / cols));
   const cardAspectRatio = "1.586 / 1";
   const cardPadding = isDense ? "p-3 sm:p-4" : "p-4 sm:p-5";
   const stepGapClass = isUltraDense ? "gap-1.5" : isDense ? "gap-1.5 sm:gap-2" : "gap-1.5 sm:gap-2";
   const stepItemPadClass = isUltraDense ? "p-0.5" : isDense ? "p-[3px]" : "p-0.5";
-  const stepChipClass = rows >= 5
+  const stepChipClass = cols >= 10
+    ? "max-w-[22px] text-[8px]"
+    : cols >= 9
     ? "max-w-[24px] text-[8px]"
-    : rows >= 4
-    ? "max-w-[30px] text-[9px]"
-    : isDense
-    ? "max-w-[36px] text-[9px]"
+    : cols >= 8
+    ? "max-w-[28px] text-[9px]"
+    : cols >= 7
+    ? "max-w-[32px] text-[9px]"
     : "max-w-[42px] text-[10px]";
   const stampIconClass = isUltraDense ? "h-3 w-3" : "h-4 w-4";
 
