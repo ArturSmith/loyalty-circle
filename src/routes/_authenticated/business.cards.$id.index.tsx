@@ -13,7 +13,7 @@ type Tpl = {
   accent_color: string; text_color: string; stamp_icon: StampIconName;
   logo_url: string | null; rewards: Reward[] | null; created_at: string;
 };
-type Biz = { id: string; name: string; owner_id: string };
+type Biz = { id: string; name: string };
 type Customer = {
   customer_id: string;
   display_name: string | null;
@@ -44,7 +44,7 @@ function CardDetails() {
       const { data: t } = await supabase.from("card_templates").select("*").eq("id", id).maybeSingle();
       if (!t) { setLoading(false); return; }
       setTpl(t as Tpl);
-      const { data: b } = await supabase.from("businesses").select("id,name,owner_id").eq("id", (t as Tpl).business_id).maybeSingle();
+      const { data: b } = await supabase.from("businesses").select("id,name").eq("id", (t as Tpl).business_id).maybeSingle();
       setBiz(b as Biz | null);
 
       const [{ data: instances }, { count: stampsCount }] = await Promise.all([

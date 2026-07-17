@@ -40,7 +40,7 @@ function BusinessDashboard() {
     (async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
-      const { data: b } = await supabase.from("businesses").select("*").eq("owner_id", u.user.id).maybeSingle();
+      const { data: b } = await supabase.from("businesses").select("id, name, logo_url, brand_color, slug, created_at, updated_at").limit(1).maybeSingle();
       setBiz(b as Business | null);
       if (b) {
         const [{ data: t }, { count: sCount }, { data: instRows }] = await Promise.all([

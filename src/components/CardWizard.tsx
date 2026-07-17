@@ -59,7 +59,7 @@ export function CardWizard({ templateId }: Props) {
     (async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
-      const { data: b } = await supabase.from("businesses").select("id").eq("owner_id", u.user.id).maybeSingle();
+      const { data: b } = await supabase.from("businesses").select("id").limit(1).maybeSingle();
       if (!b) { navigate({ to: "/business" }); return; }
       setBusinessId((b as { id: string }).id);
 
