@@ -254,11 +254,11 @@ function Wallet() {
                           if (isExpanded) {
                             setFlippedId(inst.id);
                           } else {
-                            // Move card to first position and expand it
+                            // Move card to last position and expand it
                             setInstances((prev) => {
                               const idx = prev.findIndex((x) => x.id === inst.id);
-                              if (idx > 0) {
-                                const reordered = [prev[idx], ...prev.slice(0, idx), ...prev.slice(idx + 1)];
+                              if (idx < prev.length - 1) {
+                                const reordered = [...prev.slice(0, idx), ...prev.slice(idx + 1), prev[idx]];
                                 return reordered;
                               }
                               return prev;
