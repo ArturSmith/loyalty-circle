@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { StampCard, type StampCardProps } from "@/components/StampCard";
 import { Button } from "@/components/ui/button";
@@ -90,11 +90,23 @@ function ForBusinessPage() {
   const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
 
-  const handleApi = (api: CarouselApi) => {
-    setCarouselApi(api);
-    setCurrent(api.selectedScrollSnap());
-    api.on("select", () => setCurrent(api.selectedScrollSnap()));
-  };
+  useEffect(() => {
+    if (!carouselApi) return;
+    const onSelect = () => setCurrent(carouselApi.selectedScrollSnap());
+    onSelect();
+    carouselApi.on("select", onSelect);
+    return () => {
+      carouselApi.off("select", onSelect);
+    };
+  }, [carouselApi]);
+
+  useEffect(() => {
+    if (!carouselApi) return;
+    const id = window.setInterval(() => {
+      carouselApi.scrollNext();
+    }, 3200);
+    return () => window.clearInterval(id);
+  }, [carouselApi]);
 
   return (
     <div className="min-h-screen">
@@ -152,12 +164,12 @@ function ForBusinessPage() {
             className="mx-auto w-full max-w-xl lg:mx-0 lg:ml-auto"
           >
             <div className="rounded-3xl border border-border/60 bg-secondary/20 p-4 sm:p-5">
-              <Carousel setApi={handleApi} opts={{ align: "center", loop: true }} className="relative">
+              <Carousel setApi={setCarouselApi} opts={{ align: "center", loop: true }} className="relative">
                 <CarouselContent className="-ml-0">
                   {businessStackCards.map((card, idx) => (
-                    <CarouselItem key={`${card.title}-${idx}`} className="pl-0 basis-full">
+                    <CarouselItem key={`${card.title}-${idx}`} className="pl-3 basis-[84%] sm:basis-[82%]">
                       <div className="mx-auto max-w-[420px]">
-                        <StampCard {...card} />
+                        <StampCard {...card} disableShadow />
                       </div>
                     </CarouselItem>
                   ))}

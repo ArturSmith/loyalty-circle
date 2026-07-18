@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
-import { WalletStack } from "@/components/WalletStack";
-import type { StampCardProps } from "@/components/StampCard";
+import { useEffect, useState } from "react";
+import { StampCard, type StampCardProps } from "@/components/StampCard";
 import { Button } from "@/components/ui/button";
+import { Carousel, CarouselApi, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import {
   Wallet,
   QrCode,
@@ -85,6 +86,27 @@ const customerStackCards: StampCardProps[] = [
 ];
 
 function ForCustomersPage() {
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    if (!carouselApi) return;
+    const onSelect = () => setCurrent(carouselApi.selectedScrollSnap());
+    onSelect();
+    carouselApi.on("select", onSelect);
+    return () => {
+      carouselApi.off("select", onSelect);
+    };
+  }, [carouselApi]);
+
+  useEffect(() => {
+    if (!carouselApi) return;
+    const id = window.setInterval(() => {
+      carouselApi.scrollNext();
+    }, 3200);
+    return () => window.clearInterval(id);
+  }, [carouselApi]);
+
   return (
     <div className="min-h-screen">
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6">
@@ -138,10 +160,58 @@ function ForCustomersPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.15 }}
-            className="mx-auto w-full max-w-sm lg:mx-0 lg:ml-auto"
+            className="mx-auto w-full max-w-xl lg:mx-0 lg:ml-auto"
           >
-            <WalletStack cards={customerStackCards} />
+            <div className="rounded-3xl border border-border/60 bg-secondary/20 p-4 sm:p-5">
+              <Carousel setApi={setCarouselApi} opts={{ align: "center", loop: true }} className="relative">
+                <CarouselContent className="-ml-0">
+                  {customerStackCards.map((card, idx) => (
+                    <CarouselItem key={`${card.title}-${idx}`} className="pl-3 basis-[84%] sm:basis-[82%]">
+                      <div className="mx-auto max-w-[420px]">
+                        <StampCard {...card} disableShadow />
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+              </Carousel>
 
+              <div className="mt-4 flex items-center justify-between gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full"
+                  onClick={() => carouselApi?.scrollPrev()}
+                  aria-label="Previous card"
+                >
+                  Previous
+                </Button>
+
+                <div className="flex items-center gap-2" role="tablist" aria-label="Card pages">
+                  {customerStackCards.map((_, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      className={`h-2.5 rounded-full transition-all ${current === i ? "w-6 bg-primary" : "w-2.5 bg-muted-foreground/40 hover:bg-muted-foreground/60"}`}
+                      onClick={() => carouselApi?.scrollTo(i)}
+                      aria-label={`Go to card ${i + 1}`}
+                      aria-current={current === i}
+                    />
+                  ))}
+                </div>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full"
+                  onClick={() => carouselApi?.scrollNext()}
+                  aria-label="Next card"
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
           </motion.div>
         </div>
 
