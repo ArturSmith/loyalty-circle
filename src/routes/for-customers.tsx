@@ -160,14 +160,14 @@ function ForCustomersPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.15 }}
-            className="mx-auto w-full max-w-xl lg:mx-0 lg:ml-auto"
+            className="mx-auto w-full max-w-md lg:mx-0 lg:ml-auto lg:max-w-xl"
           >
-            <div className="rounded-3xl border border-border/60 bg-secondary/20 p-4 sm:p-5">
+            <div className="rounded-3xl border border-border/60 bg-secondary/20 py-3 sm:py-5">
               <Carousel setApi={setCarouselApi} opts={{ align: "center", loop: true }} className="relative">
                 <CarouselContent className="-ml-0">
                   {customerStackCards.map((card, idx) => (
-                    <CarouselItem key={`${card.title}-${idx}`} className="pl-3 basis-[84%] sm:basis-[82%]">
-                      <div className="mx-auto max-w-[420px]">
+                    <CarouselItem key={`${card.title}-${idx}`} className="pl-2 basis-[78%] sm:pl-3 sm:basis-[82%]">
+                      <div className="mx-auto w-full max-w-[290px] sm:max-w-[420px]">
                         <StampCard {...card} disableShadow />
                       </div>
                     </CarouselItem>
@@ -175,19 +175,19 @@ function ForCustomersPage() {
                 </CarouselContent>
               </Carousel>
 
-              <div className="mt-4 flex items-center justify-between gap-3">
+              <div className="mt-3 flex items-center justify-between gap-2 sm:mt-4 sm:gap-3">
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="rounded-full"
+                  className="h-9 rounded-full px-3 text-xs sm:px-4 sm:text-sm"
                   onClick={() => carouselApi?.scrollPrev()}
                   aria-label="Previous card"
                 >
                   Previous
                 </Button>
 
-                <div className="flex items-center gap-2" role="tablist" aria-label="Card pages">
+                <div className="flex items-center gap-1.5 sm:gap-2" role="tablist" aria-label="Card pages">
                   {customerStackCards.map((_, i) => (
                     <button
                       key={i}
@@ -204,7 +204,7 @@ function ForCustomersPage() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="rounded-full"
+                  className="h-9 rounded-full px-3 text-xs sm:px-4 sm:text-sm"
                   onClick={() => carouselApi?.scrollNext()}
                   aria-label="Next card"
                 >
