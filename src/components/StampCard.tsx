@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import { Scissors, Coffee, Sparkles, Star, Heart, Flame, Cookie, Wine } from "lucide-react";
+import { Scissors, Coffee, Sparkles, Star, Heart, Flame, Cookie, Wine, ChevronDown } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export type Reward = { step: number; label: string };
@@ -50,6 +50,7 @@ export function StampCard({
   const gridRef = useRef<HTMLDivElement>(null);
   const [cardWidth, setCardWidth] = useState<number>(420);
   const [gridHeight, setGridHeight] = useState<number>(0);
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
   useEffect(() => {
     const node = rootRef.current;
@@ -105,34 +106,35 @@ export function StampCard({
   }
   
   // Height constraints
-  // Min height: 2 rows + header + footer
-  // Max height: 3 rows + header + footer
+  // Default: Always show 3 rows (15 steps max) + header + footer + expand button
+  // When expanded: Show all rows
   // Header (title + subtitle + logo) = ~60px
   // Footer (business name + count) = ~24px
-  // Gap between rows = 8px per gap
-  // Step circle = 44px (for 2-3 rows)
+  // Step square = 48px (for squares, larger than circles)
+  // Row gap = 12px
+  // Expand button = 36px (only shown if totalSteps > 15)
   
-  const CIRCLE_SIZE_2_3_ROWS = 44; // px
-  const HEADER_HEIGHT = 60; // px (title, subtitle, logo)
-  const FOOTER_HEIGHT = 24; // px (business name + count)
-  const ROW_GAP = 8; // px between rows
-  const GRID_PADDING = 12; // px total padding in grid area
+  const SQUARE_SIZE = 48; // px
+  const HEADER_HEIGHT = 60; // px
+  const FOOTER_HEIGHT = 24; // px
+  const ROW_GAP = 12; // px between rows
+  const GRID_PADDING = 16; // px total padding in grid area
+  const EXPAND_BUTTON_HEIGHT = 40; // px
+  const DEFAULT_VISIBLE_ROWS = 3;
+  const DEFAULT_VISIBLE_STEPS = 15; // 3 rows × 5 columns
   
   // Calculate heights
-  const minHeight = HEADER_HEIGHT + FOOTER_HEIGHT + GRID_PADDING + 2 * CIRCLE_SIZE_2_3_ROWS + 1 * ROW_GAP; // 2 rows
-  const baseMaxHeight = HEADER_HEIGHT + FOOTER_HEIGHT + GRID_PADDING + 3 * CIRCLE_SIZE_2_3_ROWS + 2 * ROW_GAP; // 3 rows
+  const defaultHeight = HEADER_HEIGHT + FOOTER_HEIGHT + GRID_PADDING + DEFAULT_VISIBLE_ROWS * SQUARE_SIZE + (DEFAULT_VISIBLE_ROWS - 1) * ROW_GAP + (totalSteps > 15 ? EXPAND_BUTTON_HEIGHT : 0);
   
-  // If more than 3 rows, allow height to grow but scale circles down
-  let circleSize = CIRCLE_SIZE_2_3_ROWS;
-  let maxHeight = baseMaxHeight;
-  
-  if (rows > 3) {
-    // Use a smaller circle size that fits better with many rows
-    const smallCircleSize = 32; // px for 4+ rows
-    // Calculate actual height needed with smaller circles
-    maxHeight = HEADER_HEIGHT + FOOTER_HEIGHT + GRID_PADDING + rows * smallCircleSize + (rows - 1) * ROW_GAP;
-    circleSize = smallCircleSize;
+  // When expanded, show all rows
+  let expandedHeight = defaultHeight;
+  if (isExpanded && totalSteps > 15) {
+    const totalRows = Math.ceil(totalSteps / 5);
+    expandedHeight = HEADER_HEIGHT + FOOTER_HEIGHT + GRID_PADDING + totalRows * SQUARE_SIZE + (totalRows - 1) * ROW_GAP + EXPAND_BUTTON_HEIGHT;
   }
+  
+  // Determine how many steps to show initially
+  const visibleSteps = isExpanded ? totalSteps : Math.min(totalSteps, DEFAULT_VISIBLE_STEPS);
   
   const isDense = cols >= 7;
   const isUltraDense = cols >= 9;
@@ -153,7 +155,7 @@ export function StampCard({
   const stepItemPadClass = gridHeight > 0 ? "" : (isDense ? "p-[3px]" : "p-0.5");
   
   // Adaptive font size for step numbers/labels based on circle size
-  const adaptiveTextSize = circleSize <= 24 ? "text-[6px]" : circleSize <= 32 ? "text-[7px]" : circleSize <= 40 ? "text-[8px]" : "text-[9px]";
+  const adaptiveTextSize = SQUARE_SIZE <= 24 ? "text-[6px]" : SQUARE_SIZE <= 32 ? "text-[7px]" : SQUARE_SIZE <= 40 ? "text-[8px]" : "text-[9px]";
   
   const stepChipClass = cols >= 10
     ? "max-w-[22px] text-[8px]"
@@ -171,7 +173,7 @@ export function StampCard({
     ? "max-w-[22px] text-[8px]"
     : stepChipClass);
   
-  const adaptiveIconSize = circleSize <= 24 ? "h-2.5 w-2.5" : circleSize <= 32 ? "h-3 w-3" : "h-4 w-4";
+  const adaptiveIconSize = SQUARE_SIZE <= 24 ? "h-2.5 w-2.5" : SQUARE_SIZE <= 32 ? "h-3 w-3" : "h-4 w-4";
   const stampIconClass = gridHeight > 0 ? adaptiveIconSize : (isUltraCompact ? "h-2.5 w-2.5" : isCompact || isDense ? "h-3 w-3" : "h-4 w-4");
 
   const editableClass = "rounded-md transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 cursor-pointer px-1 -mx-1";
@@ -184,8 +186,9 @@ export function StampCard({
         backgroundColor: bgColor, 
         borderColor: accentColor + "22", 
         color: textColor, 
-        minHeight: `${minHeight}px`,
-        maxHeight: `${maxHeight}px`,
+        minHeight: `${defaultHeight}px`,
+        maxHeight: `${isExpanded ? expandedHeight : defaultHeight}px`,
+        transition: 'max-height 0.3s ease-in-out',
         display: 'flex',
         flexDirection: 'column'
       }}
@@ -235,7 +238,7 @@ export function StampCard({
               gap: `${ROW_GAP}px`,
             }}
           >
-            {Array.from({ length: totalSteps }).map((_, i) => {
+            {Array.from({ length: visibleSteps }).map((_, i) => {
               const step = i + 1;
               const filled = step <= stampsCount;
               const reward = rewards.find((r) => r.step === step);
@@ -279,11 +282,11 @@ export function StampCard({
                       transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
                       whileHover={{ scale: 1.15 }}
                       whileTap={{ scale: 0.95 }}
-                      className={`relative aspect-square w-full rounded-full border-2 flex items-center justify-center font-semibold cursor-pointer ${compactChipClass} ${filled ? "stamp-emboss" : ""}`}
+                      className={`relative aspect-square w-full rounded-md border-2 flex items-center justify-center font-semibold cursor-pointer ${compactChipClass} ${filled ? "stamp-emboss" : ""}`}
                       style={{ 
                         ...commonStyle,
-                        maxWidth: `${circleSize}px`, 
-                        height: `${circleSize}px`
+                        maxWidth: `${SQUARE_SIZE}px`, 
+                        height: `${SQUARE_SIZE}px`
                       }}
                       aria-label={`Edit step ${step}`}>
                       {inner}
@@ -294,11 +297,11 @@ export function StampCard({
                       initial={isLast ? { scale: 3, rotate: -18, opacity: 0 } : false}
                       animate={isLast ? { scale: 1, rotate: 0, opacity: 1 } : undefined}
                       transition={{ type: "spring", stiffness: 260, damping: 14 }}
-                      className={`relative aspect-square w-full rounded-full border-2 flex items-center justify-center font-semibold ${compactChipClass} ${filled ? "stamp-emboss" : ""}`}
+                      className={`relative aspect-square w-full rounded-md border-2 flex items-center justify-center font-semibold ${compactChipClass} ${filled ? "stamp-emboss" : ""}`}
                       style={{ 
                         ...commonStyle,
-                        maxWidth: `${circleSize}px`, 
-                        height: `${circleSize}px`
+                        maxWidth: `${SQUARE_SIZE}px`, 
+                        height: `${SQUARE_SIZE}px`
                       }}
                     >
                       {inner}
@@ -310,12 +313,29 @@ export function StampCard({
           </div>
         )}
 
-        <div className="flex items-end justify-between mt-2">
-          <div className={`${isUltraCompact ? "text-[8px]" : "text-[10px]"} opacity-60 uppercase tracking-widest`}>{businessName}</div>
-          <div className={`${isUltraCompact ? "text-[9px]" : "text-[11px]"}`} style={{ color: accentColor }}>
-            {hideSteps ? "" : `${stampsCount}/${totalSteps}`}
+        {totalSteps > DEFAULT_VISIBLE_STEPS && (
+          <div className="flex items-center justify-center mt-2 mb-1">
+            <button
+              type="button"
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="text-xs font-semibold uppercase tracking-widest px-3 py-1.5 rounded-md transition-colors hover:opacity-80"
+              style={{
+                color: accentColor,
+                backgroundColor: accentColor + "11",
+                border: `1px solid ${accentColor}33`
+              }}
+            >
+              <span className="flex items-center gap-1.5">
+                {isExpanded ? "SHOW LESS" : "SHOW MORE"}
+                <ChevronDown 
+                  size={14} 
+                  className="transition-transform duration-300" 
+                  style={{ transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)" }}
+                />
+              </span>
+            </button>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
