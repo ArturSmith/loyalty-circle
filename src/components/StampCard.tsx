@@ -80,12 +80,29 @@ export function StampCard({
 
   const Icon = stampIcon ? (STAMP_ICONS[stampIcon] ?? Star) : null;
   const radius = shape === "square" ? "rounded-lg" : shape === "ticket" ? "rounded-none" : "rounded-3xl";
-  const maxRows = 3;
-  const maxCols = 10;
   const normalizedSteps = Math.max(0, totalSteps);
-  // Rule: max 3 rows, each row up to 10 circles
-  const cols = Math.max(1, Math.min(maxCols, Math.ceil(normalizedSteps / maxRows)));
-  const rows = Math.max(1, Math.ceil(normalizedSteps / cols));
+  
+  // Custom step placement rules
+  let cols: number;
+  let rows: number;
+  
+  if (normalizedSteps <= 3) {
+    cols = normalizedSteps;
+    rows = 1;
+  } else if (normalizedSteps === 4) {
+    cols = 2;
+    rows = 2;
+  } else if (normalizedSteps === 5) {
+    cols = 5;
+    rows = 1;
+  } else if (normalizedSteps === 6) {
+    cols = 3;
+    rows = 2;
+  } else {
+    // 7+ steps: max 5 per row
+    cols = 5;
+    rows = Math.ceil(normalizedSteps / 5);
+  }
   
   // Calculate adaptive step size based on grid height and number of rows
   // Available height should fit rows + gaps + padding
