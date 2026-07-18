@@ -93,7 +93,7 @@ export function CardWizard({ templateId }: Props) {
   const save = async () => {
     if (!businessId) return;
     setSaving(true);
-    const cleanRewards = rewards.filter((r) => r.step >= 1 && r.step <= totalSteps && r.label.trim().length > 0);
+    const cleanRewards = rewards.filter((r) => r.step >= 1 && r.label.trim().length > 0);
     const payload = {
       title, subtitle: subtitle || null,
       total_steps: totalSteps, shape, bg_color: bg, accent_color: accent, text_color: text,
@@ -244,11 +244,7 @@ export function CardWizard({ templateId }: Props) {
           </div>
         )}
         {step === 2 && editingStep == null && editingField == null && (
-          totalSteps > 0 ? (
-            <p className="mt-3 text-center text-sm font-medium text-ink animate-pulse">Tap on step to set rewards</p>
-          ) : (
-            <p className="mt-3 text-center text-xs text-muted-foreground">No steps configured. Increase total steps to add rewards.</p>
-          )
+          <p className="mt-3 text-center text-sm font-medium text-ink animate-pulse">Tap on step to set rewards</p>
         )}
         {step < 2 && editingField == null && (
           <p className="mt-3 text-center text-xs text-muted-foreground">Tap the title, subtitle, or icon on the card to edit</p>
@@ -354,21 +350,13 @@ export function CardWizard({ templateId }: Props) {
               <div className="space-y-4">
                 <div>
                   <Label>Total steps</Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    max={30}
-                    value={totalSteps}
+                  <Input type="number" min={1} value={totalSteps}
                     onChange={(e) => {
-                      const raw = Number(e.target.value);
-                      if (Number.isNaN(raw)) {
-                        setTotalSteps(0);
-                        return;
-                      }
-                      setTotalSteps(Math.min(30, Math.max(0, raw)));
-                    }}
-                    className="mt-2 w-32"
-                  />
+                      const newTotal = Math.max(1, Number(e.target.value) || 1);
+                      setTotalSteps(newTotal);
+                      // Clean up rewards that are now invalid (step > totalSteps)
+                      setRewards((prev) => prev.filter((r) => r.step <= newTotal));
+                    }} className="mt-2 w-32" />
                 </div>
                 <p className="text-sm text-muted-foreground">Tap a step on the preview above to set the benefit shown when the customer reaches it (e.g. "-50%" on step 5, "FREE" on step 10).</p>
               </div>
