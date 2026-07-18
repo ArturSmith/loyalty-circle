@@ -161,14 +161,14 @@ function ForBusinessPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.15 }}
-            className="mx-auto w-full max-w-md lg:mx-0 lg:ml-auto lg:max-w-xl"
+            className="mx-auto w-full lg:mx-0 lg:ml-auto lg:max-w-xl"
           >
-            <div className="rounded-3xl border border-border/60 bg-secondary/20 py-3 sm:py-5">
+            <div className="-mx-6 py-3 sm:mx-0 sm:py-5">
               <Carousel setApi={setCarouselApi} opts={{ align: "center", loop: true }} className="relative">
-                <CarouselContent className="-ml-0">
+                <CarouselContent>
                   {businessStackCards.map((card, idx) => (
-                    <CarouselItem key={`${card.title}-${idx}`} className="pl-2 basis-[78%] sm:pl-3 sm:basis-[82%]">
-                      <div className="mx-auto w-full max-w-[290px] sm:max-w-[420px]">
+                    <CarouselItem key={`${card.title}-${idx}`} className="basis-[80%] sm:basis-[82%]">
+                      <div className="mx-auto w-full max-w-[300px] sm:max-w-[420px]">
                         <StampCard {...card} disableShadow />
                       </div>
                     </CarouselItem>
