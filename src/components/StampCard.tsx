@@ -120,15 +120,18 @@ export function StampCard({
   
   // Calculate heights
   const minHeight = HEADER_HEIGHT + FOOTER_HEIGHT + GRID_PADDING + 2 * CIRCLE_SIZE_2_3_ROWS + 1 * ROW_GAP; // 2 rows
-  const maxHeight = HEADER_HEIGHT + FOOTER_HEIGHT + GRID_PADDING + 3 * CIRCLE_SIZE_2_3_ROWS + 2 * ROW_GAP; // 3 rows
+  const baseMaxHeight = HEADER_HEIGHT + FOOTER_HEIGHT + GRID_PADDING + 3 * CIRCLE_SIZE_2_3_ROWS + 2 * ROW_GAP; // 3 rows
   
-  // If more than 3 rows, scale down circles to fit in maxHeight
+  // If more than 3 rows, allow height to grow but scale circles down
   let circleSize = CIRCLE_SIZE_2_3_ROWS;
+  let maxHeight = baseMaxHeight;
+  
   if (rows > 3) {
-    // Available height for grid = maxHeight - header - footer - padding - (rows-1)*gap
-    const availableHeight = maxHeight - HEADER_HEIGHT - FOOTER_HEIGHT - GRID_PADDING - (rows - 1) * ROW_GAP;
-    circleSize = Math.floor(availableHeight / rows * 0.95); // 95% to leave some breathing room
-    circleSize = Math.max(20, Math.min(CIRCLE_SIZE_2_3_ROWS, circleSize)); // Clamp between 20-44px
+    // Use a smaller circle size that fits better with many rows
+    const smallCircleSize = 32; // px for 4+ rows
+    // Calculate actual height needed with smaller circles
+    maxHeight = HEADER_HEIGHT + FOOTER_HEIGHT + GRID_PADDING + rows * smallCircleSize + (rows - 1) * ROW_GAP;
+    circleSize = smallCircleSize;
   }
   
   const isDense = cols >= 7;
