@@ -86,7 +86,7 @@ function BusinessDashboard() {
         errorCorrectionLevel: "M",
       });
       const a = document.createElement("a");
-      const safeName = (biz.name || "business").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+      const safeName = (biz?.name || "business").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
       a.href = dataUrl;
       a.download = `${safeName || "business"}-qr.png`;
       document.body.appendChild(a);
