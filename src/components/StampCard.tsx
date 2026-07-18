@@ -45,9 +45,12 @@ export function StampCard({
 }: StampCardProps) {
   const Icon = stampIcon ? (STAMP_ICONS[stampIcon] ?? Star) : null;
   const radius = shape === "square" ? "rounded-lg" : shape === "ticket" ? "rounded-none" : "rounded-3xl";
+  
+  // Limit max steps to 15
+  const normalizedSteps = Math.min(15, totalSteps);
 
   // grid: 5 cols if 10, else adaptive
-  const colsRaw = totalSteps <= 5 ? totalSteps : totalSteps <= 10 ? 5 : totalSteps <= 12 ? 6 : 5;
+  const colsRaw = normalizedSteps <= 5 ? normalizedSteps : normalizedSteps <= 10 ? 5 : normalizedSteps <= 12 ? 6 : 5;
   const cols = Math.max(1, colsRaw);
 
   const editableClass = "rounded-md transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 cursor-pointer px-1 -mx-1";
@@ -95,7 +98,7 @@ export function StampCard({
         {hideSteps && <div className="flex-1" />}
         {!hideSteps && (
           <div className="flex-1 grid gap-1.5 sm:gap-2 items-center mt-2" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
-            {Array.from({ length: totalSteps }).map((_, i) => {
+            {Array.from({ length: normalizedSteps }).map((_, i) => {
               const step = i + 1;
               const filled = step <= stampsCount;
               const reward = rewards.find((r) => r.step === step);
@@ -141,13 +144,6 @@ export function StampCard({
             })}
           </div>
         )}
-
-        <div className="flex items-end justify-between mt-2">
-          <div className="text-[10px] opacity-60 uppercase tracking-widest">{businessName}</div>
-          <div className="text-[11px]" style={{ color: accentColor }}>
-            {hideSteps ? "" : `${stampsCount}/${totalSteps}`}
-          </div>
-        </div>
       </div>
     </div>
   );
