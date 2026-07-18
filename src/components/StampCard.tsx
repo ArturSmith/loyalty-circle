@@ -115,7 +115,7 @@ export function StampCard({
   const isCompact = cardWidth < 340;
   const isUltraCompact = cardWidth < 300;
 
-  const cardAspectRatio = "1.586 / 1";
+  const cardAspectRatio = "1.2 / 1";
   const cardPadding = isUltraCompact
     ? "p-2.5"
     : isCompact
