@@ -267,7 +267,7 @@ export function StampCard({
                   : undefined,
               } as const;
               return (
-                <div key={i} className={`flex items-center justify-center ${gridHeight > 0 ? "" : stepItemPadClass}`} style={gridHeight > 0 ? { padding: `${adaptiveGap / 2}px` } : undefined}>
+                <div key={i} className={`flex items-center justify-center ${gridHeight > 0 ? "" : stepItemPadClass}`} style={gridHeight > 0 ? { padding: `${ROW_GAP / 2}px` } : undefined}>
                   {clickable ? (
                     <motion.button
                       type="button"
