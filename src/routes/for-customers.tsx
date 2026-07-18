@@ -175,18 +175,7 @@ function ForCustomersPage() {
                 </CarouselContent>
               </Carousel>
 
-              <div className="mt-3 flex items-center justify-between gap-2 sm:mt-4 sm:gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-9 rounded-full px-3 text-xs sm:px-4 sm:text-sm"
-                  onClick={() => carouselApi?.scrollPrev()}
-                  aria-label="Previous card"
-                >
-                  Previous
-                </Button>
-
+              <div className="mt-3 flex items-center justify-center sm:mt-4">
                 <div className="flex items-center gap-1.5 sm:gap-2" role="tablist" aria-label="Card pages">
                   {customerStackCards.map((_, i) => (
                     <button
@@ -199,17 +188,6 @@ function ForCustomersPage() {
                     />
                   ))}
                 </div>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-9 rounded-full px-3 text-xs sm:px-4 sm:text-sm"
-                  onClick={() => carouselApi?.scrollNext()}
-                  aria-label="Next card"
-                >
-                  Next
-                </Button>
               </div>
             </div>
           </motion.div>
