@@ -226,7 +226,7 @@ export function StampCard({
         {!hideSteps && (
           <div 
             ref={gridRef}
-            className={`flex-1 grid items-center mt-2 min-h-0 ${stepGapClass}`}
+            className={`grid items-center mt-2 ${stepGapClass}`}
             style={{ 
               gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
               gap: `${ROW_GAP}px`,
