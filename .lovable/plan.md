@@ -1,4 +1,3 @@
-
 # Stempel — Digital Loyalty Cards
 
 A mobile-first web app where businesses create customizable digital stamp cards ("5 klipp -50%, 10 gratis") and customers collect stamps via QR scanning. Inspired by paper punch cards like Milano Frisør.
@@ -8,6 +7,7 @@ A mobile-first web app where businesses create customizable digital stamp cards 
 Two roles in one app: **business** and **customer**. Auth is shared; a user becomes a business by creating a business profile.
 
 ### Customer flow
+
 1. Scans a business's QR (deep link to `/b/:businessId`).
 2. Signs in (email magic link + Google — one-tap).
 3. Sees business's available card templates → picks one → "card instance" is created for them.
@@ -17,6 +17,7 @@ Two roles in one app: **business** and **customer**. Auth is shared; a user beco
 7. On reward steps (e.g. 5, 10), a celebratory animation + redeem action.
 
 ### Business flow
+
 1. Sign up → create business (name, logo).
 2. Dashboard: list of cards, stamps issued, unique customers, redemptions.
 3. "Create card" wizard: title, total steps, per-step rewards, card shape (rounded/square/ticket), background color, accent color, logo, stamp icon.
@@ -27,15 +28,18 @@ Two roles in one app: **business** and **customer**. Auth is shared; a user beco
 ## Screens
 
 **Public/shared**
+
 - `/` — landing (marketing + "I'm a business" / "I have a card")
 - `/auth` — magic link + Google
 - `/b/:businessId` — public business page, list of card templates to claim
 
 **Customer (`_authenticated`)**
+
 - `/wallet` — swipeable card carousel; tap-to-flip QR
 - `/wallet/:cardInstanceId` — detail (history of stamps)
 
 **Business (`_authenticated/business`)**
+
 - `/business` — dashboard (KPIs, cards list, business QR)
 - `/business/cards/new` — wizard
 - `/business/cards/:id/edit`
@@ -59,6 +63,7 @@ user_roles(user_id, role) -- 'business_owner' via has_role()
 ```
 
 RLS:
+
 - profiles: self read/update.
 - businesses: owner full; public read for id/name/logo/slug.
 - card_templates: owner CRUD; public read where active.
@@ -93,6 +98,7 @@ Norwegian small-business paper aesthetic reinterpreted: warm off-white paper bac
 9. Polish, empty states, error boundaries, SEO on public routes.
 
 ## Not in V1
+
 - Push notifications
 - Multi-staff scanning permissions UI (schema ready)
 - Payments / paid plans
