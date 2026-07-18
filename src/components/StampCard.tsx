@@ -115,6 +115,7 @@ export function StampCard({
   const isCompact = cardWidth < 340;
   const isUltraCompact = cardWidth < 300;
 
+  const cardAspectRatio = "1.586 / 1";
   const cardPadding = isUltraCompact
     ? "p-2.5"
     : isCompact
@@ -155,9 +156,9 @@ export function StampCard({
     <div
       ref={rootRef}
       className={`relative w-full paper-grain border-2 ${disableShadow ? "" : "card-shadow"} ${radius}`}
-      style={{ backgroundColor: bgColor, borderColor: accentColor + "22", color: textColor, minHeight: "250px" }}
+      style={{ backgroundColor: bgColor, borderColor: accentColor + "22", color: textColor, aspectRatio: cardAspectRatio }}
     >
-      <div className={`flex flex-col ${cardPadding} overflow-visible`}>
+      <div className={`flex h-full flex-col ${cardPadding} overflow-hidden`}>
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             {onTitleClick ? (
@@ -196,7 +197,7 @@ export function StampCard({
         {!hideSteps && (
           <div 
             ref={gridRef}
-            className={`w-full grid items-center mt-2 ${stepGapClass}`}
+            className={`flex-1 grid items-center mt-2 min-h-0 ${stepGapClass}`}
             style={{ 
               gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
               gap: gridHeight > 0 ? `${adaptiveGap}px` : undefined,
