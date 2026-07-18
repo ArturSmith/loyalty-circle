@@ -251,8 +251,20 @@ function Wallet() {
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (isExpanded) setFlippedId(inst.id);
-                          else setExpandedId(inst.id);
+                          if (isExpanded) {
+                            setFlippedId(inst.id);
+                          } else {
+                            // Move card to last position and expand it
+                            setInstances((prev) => {
+                              const idx = prev.findIndex((x) => x.id === inst.id);
+                              if (idx < prev.length - 1) {
+                                const reordered = [...prev.slice(0, idx), ...prev.slice(idx + 1), prev[idx]];
+                                return reordered;
+                              }
+                              return prev;
+                            });
+                            setExpandedId(inst.id);
+                          }
                         }}
                         className="relative block w-full text-left focus:outline-none drop-shadow-2xl"
                         aria-label={isExpanded ? `Show QR for ${inst.template.title}` : `Open ${inst.template.title}`}
