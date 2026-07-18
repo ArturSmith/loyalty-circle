@@ -154,7 +154,7 @@ function ForBusinessPage() {
                     key={`${card.title}-${idx}`}
                     className={`absolute w-[85%] max-w-[420px] transition-transform ${layerClass}`}
                   >
-                    <StampCard {...card} disableShadow />
+                    <StampCard {...card} disableShadow adaptiveContent />
                   </div>
                 );
               })}
