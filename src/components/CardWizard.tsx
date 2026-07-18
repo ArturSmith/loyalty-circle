@@ -357,7 +357,7 @@ export function CardWizard({ templateId }: Props) {
                   <Input
                     type="number"
                     min={0}
-                    max={30}
+                    max={15}
                     value={totalSteps}
                     onChange={(e) => {
                       const raw = Number(e.target.value);
@@ -365,7 +365,7 @@ export function CardWizard({ templateId }: Props) {
                         setTotalSteps(0);
                         return;
                       }
-                      setTotalSteps(Math.min(30, Math.max(0, raw)));
+                      setTotalSteps(Math.min(15, Math.max(0, raw)));
                     }}
                     className="mt-2 w-32"
                   />
