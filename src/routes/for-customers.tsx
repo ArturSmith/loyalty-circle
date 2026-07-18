@@ -1,10 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
-import { useEffect, useState } from "react";
 import { StampCard, type StampCardProps } from "@/components/StampCard";
 import { Button } from "@/components/ui/button";
-import { Carousel, CarouselApi, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import {
   Wallet,
   QrCode,
@@ -86,27 +84,6 @@ const customerStackCards: StampCardProps[] = [
 ];
 
 function ForCustomersPage() {
-  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
-  const [current, setCurrent] = useState(0);
-
-  useEffect(() => {
-    if (!carouselApi) return;
-    const onSelect = () => setCurrent(carouselApi.selectedScrollSnap());
-    onSelect();
-    carouselApi.on("select", onSelect);
-    return () => {
-      carouselApi.off("select", onSelect);
-    };
-  }, [carouselApi]);
-
-  useEffect(() => {
-    if (!carouselApi) return;
-    const id = window.setInterval(() => {
-      carouselApi.scrollNext();
-    }, 3200);
-    return () => window.clearInterval(id);
-  }, [carouselApi]);
-
   return (
     <div className="min-h-screen">
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6">
@@ -162,34 +139,25 @@ function ForCustomersPage() {
             transition={{ duration: 0.6, delay: 0.15 }}
             className="mx-auto w-full lg:mx-0 lg:ml-auto lg:max-w-xl"
           >
-            <div className="-mx-6 py-3 sm:mx-0 sm:py-5">
-              <Carousel setApi={setCarouselApi} opts={{ align: "center", loop: true }} className="relative">
-                <CarouselContent>
-                  {customerStackCards.map((card, idx) => (
-                    <CarouselItem key={`${card.title}-${idx}`} className="basis-[80%] sm:basis-[82%]">
-                      <div className="mx-auto w-full max-w-[300px] sm:max-w-[420px]">
-                        <StampCard {...card} disableShadow />
-                      </div>
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-              </Carousel>
+            <div className="relative mx-auto h-[250px] w-full max-w-[460px] sm:h-[330px]">
+              {customerStackCards.slice(0, 3).map((card, idx) => {
+                const layerClass =
+                  idx === 0
+                    ? "left-1/2 top-0 z-10 -translate-x-[62%]"
+                    : idx === 1
+                    ? "left-1/2 top-8 z-20 -translate-x-1/2"
+                    : "left-1/2 top-16 z-30 -translate-x-[38%]";
 
-              <div className="mt-3 flex items-center justify-center sm:mt-4">
-                <div className="flex items-center gap-1.5 sm:gap-2" role="tablist" aria-label="Card pages">
-                  {customerStackCards.map((_, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      className={`h-2.5 rounded-full transition-all ${current === i ? "w-6 bg-primary" : "w-2.5 bg-muted-foreground/40 hover:bg-muted-foreground/60"}`}
-                      onClick={() => carouselApi?.scrollTo(i)}
-                      aria-label={`Go to card ${i + 1}`}
-                      aria-current={current === i}
-                    />
-                  ))}
-                </div>
+                return (
+                  <div
+                    key={`${card.title}-${idx}`}
+                    className={`absolute w-[85%] max-w-[420px] transition-transform ${layerClass}`}
+                  >
+                    <StampCard {...card} disableShadow />
+                  </div>
+                );
+              })}
               </div>
-            </div>
           </motion.div>
         </div>
 
