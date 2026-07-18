@@ -7,8 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { LoyaltyCard, STAMP_ICONS } from "@/components/LoyaltyCard";
-import type { Reward, StampIconName } from "@/components/LoyaltyCard";
+import { StampCard, STAMP_ICONS } from "@/components/StampCard";
+import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
 import { ArrowLeft, ArrowRight, Check, Trash2 } from "lucide-react";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 
@@ -19,6 +19,12 @@ const PRESETS = [
   { bg: "#f7d8d8", accent: "#8a1e3c", text: "#3a1020" },
   { bg: "#e8f0e6", accent: "#2f5c3a", text: "#152b1c" },
   { bg: "#1a1a1a", accent: "#f4d47c", text: "#faf7ee" },
+];
+
+const SHAPES: { value: CardShape; label: string }[] = [
+  { value: "rounded", label: "Rounded" },
+  { value: "square", label: "Square" },
+  { value: "ticket", label: "Ticket" },
 ];
 
 const ICONS: StampIconName[] = ["scissors", "coffee", "sparkles", "star", "heart", "flame", "cookie", "wine"];
@@ -39,12 +45,13 @@ export function CardWizard({ templateId }: Props) {
   const [loading, setLoading] = useState(isEdit);
 
   const [title, setTitle] = useState("Loyalty Card");
-  const [discountText, setDiscountText] = useState("-50%");
+  const [subtitle, setSubtitle] = useState("");
   const [totalSteps, setTotalSteps] = useState(10);
+  const [shape, setShape] = useState<CardShape>("rounded");
   const [preset, setPreset] = useState<number>(0);
   const [customColors, setCustomColors] = useState<{ bg: string; accent: string; text: string } | null>(null);
   const [icon, setIcon] = useState<StampIconName | null>(null);
-  const [imageUrl, setImageUrl] = useState("");
+  const [logoUrl, setLogoUrl] = useState("");
   const [rewards, setRewards] = useState<Reward[]>([{ step: 5, label: "-50%" }, { step: 10, label: "FREE" }]);
   const [active, setActive] = useState(true);
 
@@ -60,18 +67,19 @@ export function CardWizard({ templateId }: Props) {
         const { data: t } = await supabase.from("card_templates").select("*").eq("id", templateId).maybeSingle();
         if (t) {
           const tpl = t as {
-            title: string; discount_text: string; total_steps: number;
+            title: string; subtitle: string | null; total_steps: number; shape: CardShape;
             bg_color: string; accent_color: string; text_color: string; stamp_icon: StampIconName;
-            image_url: string | null; rewards: Reward[] | null; active: boolean;
+            logo_url: string | null; rewards: Reward[] | null; active: boolean;
           };
           setTitle(tpl.title);
-          setDiscountText(tpl.discount_text ?? "-50%");
+          setSubtitle(tpl.subtitle ?? "");
           setTotalSteps(tpl.total_steps);
+          setShape(tpl.shape);
           const pi = matchPreset(tpl.bg_color, tpl.accent_color, tpl.text_color);
           if (pi >= 0) setPreset(pi);
           else setCustomColors({ bg: tpl.bg_color, accent: tpl.accent_color, text: tpl.text_color });
           setIcon(tpl.stamp_icon);
-          setImageUrl(tpl.image_url ?? "");
+          setLogoUrl(tpl.logo_url ?? "");
           setRewards(tpl.rewards ?? []);
           setActive(tpl.active);
         }
@@ -85,11 +93,11 @@ export function CardWizard({ templateId }: Props) {
   const save = async () => {
     if (!businessId) return;
     setSaving(true);
-    const cleanRewards = rewards.filter((r: Reward) => r.step >= 1 && r.label.trim().length > 0);
+    const cleanRewards = rewards.filter((r) => r.step >= 1 && r.step <= totalSteps && r.label.trim().length > 0);
     const payload = {
-      title, discount_text: discountText,
-      total_steps: totalSteps, bg_color: bg, accent_color: accent, text_color: text,
-      stamp_icon: icon ?? "star", image_url: imageUrl || null, rewards: cleanRewards, active,
+      title, subtitle: subtitle || null,
+      total_steps: totalSteps, shape, bg_color: bg, accent_color: accent, text_color: text,
+      stamp_icon: icon ?? "star", logo_url: logoUrl || null, rewards: cleanRewards, active,
     };
     const { error } = isEdit && templateId
       ? await supabase.from("card_templates").update(payload).eq("id", templateId)
@@ -112,18 +120,28 @@ export function CardWizard({ templateId }: Props) {
   const stepsLabels = ["Basics", "Style", "Steps & rewards", "Review"];
   const [editingStep, setEditingStep] = useState<number | null>(null);
   const [editingLabel, setEditingLabel] = useState("");
-  const [editingField, setEditingField] = useState<null | "title" | "discount" | "image" | "icon">(null);
+  const [editingField, setEditingField] = useState<null | "title" | "subtitle" | "icon">(null);
 
   const openStepEditor = (s: number) => {
     setEditingStep(s);
-    setEditingLabel(rewards.find((r: Reward) => r.step === s)?.label ?? "");
+    setEditingLabel(rewards.find((r) => r.step === s)?.label ?? "");
   };
   const saveStepEditor = () => {
     if (editingStep == null) return;
-    const others = rewards.filter((r: Reward) => r.step !== editingStep);
+    const others = rewards.filter((r) => r.step !== editingStep);
     const label = editingLabel.trim();
-    setRewards(label ? [...others, { step: editingStep, label }].sort((a: Reward, b: Reward) => a.step - b.step) : others);
+    setRewards(label ? [...others, { step: editingStep, label }].sort((a, b) => a.step - b.step) : others);
     setEditingStep(null);
+  };
+
+  const handleLogoUpload = async (f: File) => {
+    if (!f.type.includes("svg") && !f.name.toLowerCase().endsWith(".svg")) {
+      toast.error("Please upload an SVG file");
+      return;
+    }
+    const svg = await f.text();
+    setLogoUrl(`data:image/svg+xml;utf8,${encodeURIComponent(svg)}`);
+    setIcon(null);
   };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>;
@@ -150,65 +168,35 @@ export function CardWizard({ templateId }: Props) {
       </div>
 
       <div className="mt-6 rounded-2xl border-2 border-ink/10 bg-card p-4">
-        <LoyaltyCard 
-          title={title || "Card title"} 
-          discountText={discountText}
-          totalSteps={step < 2 ? 0 : totalSteps}
-          stampsCount={0}
-          accentColor={accent} 
-          textColor={text} 
-          stampIcon={icon}
-          imageUrl={imageUrl || null} 
-          rewards={rewards}
+        <StampCard title={title || "Card title"} subtitle={subtitle} totalSteps={totalSteps} stampsCount={0}
+          shape={shape} bgColor={bg} accentColor={accent} textColor={text} stampIcon={icon}
+          logoUrl={logoUrl || null} rewards={rewards} businessName="PREVIEW"
+          hideSteps={step < 2}
           onStepClick={step === 2 ? openStepEditor : undefined}
           activeStep={editingStep ?? undefined}
           onTitleClick={() => { setEditingStep(null); setEditingField("title"); }}
-          onDiscountClick={() => { setEditingStep(null); setEditingField("discount"); }}
-          onImageClick={() => { setEditingStep(null); setEditingField("image"); }} 
-        />
+          onSubtitleClick={() => { setEditingStep(null); setEditingField("subtitle"); }}
+          onIconClick={() => { setEditingStep(null); setEditingField("icon"); }} />
 
         {editingField === "title" && (
           <div className="mt-4 rounded-xl border-2 border-ink/10 bg-secondary/50 p-3">
             <Label className="text-xs">Title</Label>
             <div className="mt-2 flex gap-2">
-              <Input autoFocus value={title} onChange={(e: any) => setTitle(e.target.value)}
-                onKeyDown={(e: any) => { if (e.key === "Enter" || e.key === "Escape") setEditingField(null); }} />
+              <Input autoFocus value={title} onChange={(e) => setTitle(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === "Escape") setEditingField(null); }} />
               <Button size="sm" onClick={() => setEditingField(null)}><Check className="h-4 w-4" /></Button>
             </div>
           </div>
         )}
-        {editingField === "discount" && (
+        {editingField === "subtitle" && (
           <div className="mt-4 rounded-xl border-2 border-ink/10 bg-secondary/50 p-3">
-            <Label className="text-xs">Discount / Offer Text</Label>
+            <Label className="text-xs">Subtitle</Label>
             <div className="mt-2 flex gap-2">
-              <Input autoFocus value={discountText} onChange={(e: any) => setDiscountText(e.target.value)}
-                placeholder="e.g. -50%, FREE, 20% OFF"
-                onKeyDown={(e: any) => { if (e.key === "Enter" || e.key === "Escape") setEditingField(null); }} />
+              <Input autoFocus value={subtitle} onChange={(e) => setSubtitle(e.target.value)}
+                placeholder="Optional"
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === "Escape") setEditingField(null); }} />
               <Button size="sm" onClick={() => setEditingField(null)}><Check className="h-4 w-4" /></Button>
             </div>
-          </div>
-        )}
-        {editingField === "image" && (
-          <div className="mt-4 rounded-xl border-2 border-ink/10 bg-secondary/50 p-3 space-y-3">
-            <div>
-              <Label className="text-xs">Upload Image</Label>
-              <Input type="file" accept="image/*" className="mt-2"
-                onChange={async (e: any) => { 
-                  const f = e.target.files?.[0]; 
-                  if (f) {
-                    const reader = new FileReader();
-                    reader.onload = (evt: any) => setImageUrl(evt.target.result);
-                    reader.readAsDataURL(f);
-                  }
-                }} />
-              {imageUrl && (
-                <div className="mt-2 flex items-center gap-2">
-                  <img src={imageUrl} alt="preview" className="h-12 w-12 rounded-lg object-cover" />
-                  <Button variant="ghost" size="sm" onClick={() => setImageUrl("")}>Remove</Button>
-                </div>
-              )}
-            </div>
-            <Button size="sm" variant="ghost" onClick={() => setEditingField(null)}>Done</Button>
           </div>
         )}
         {editingField === "icon" && (
@@ -220,13 +208,24 @@ export function CardWizard({ templateId }: Props) {
                   const I = STAMP_ICONS[name];
                   return (
                     <button key={name} type="button"
-                      onClick={() => setIcon(name)}
-                      className={`aspect-square rounded-lg border-2 flex items-center justify-center bg-background ${icon === name ? "border-ink" : "border-border"}`}>
+                      onClick={() => { setIcon(name); setLogoUrl(""); }}
+                      className={`aspect-square rounded-lg border-2 flex items-center justify-center bg-background ${icon === name && !logoUrl ? "border-ink" : "border-border"}`}>
                       <I className="h-4 w-4" />
                     </button>
                   );
                 })}
               </div>
+            </div>
+            <div>
+              <Label className="text-xs">Or upload SVG logo</Label>
+              <Input type="file" accept="image/svg+xml,.svg" className="mt-2"
+                onChange={async (e) => { const f = e.target.files?.[0]; if (f) await handleLogoUpload(f); }} />
+              {logoUrl && (
+                <div className="mt-2 flex items-center gap-2">
+                  <img src={logoUrl} alt="logo" className="h-8 w-8 rounded-full ring-1 ring-black/10 bg-white p-0.5" />
+                  <Button variant="ghost" size="sm" onClick={() => setLogoUrl("")}>Remove</Button>
+                </div>
+              )}
             </div>
             <Button size="sm" variant="ghost" onClick={() => setEditingField(null)}>Done</Button>
           </div>
@@ -245,7 +244,11 @@ export function CardWizard({ templateId }: Props) {
           </div>
         )}
         {step === 2 && editingStep == null && editingField == null && (
-          <p className="mt-3 text-center text-sm font-medium text-ink animate-pulse">Tap on step to set rewards</p>
+          totalSteps > 0 ? (
+            <p className="mt-3 text-center text-sm font-medium text-ink animate-pulse">Tap on step to set rewards</p>
+          ) : (
+            <p className="mt-3 text-center text-xs text-muted-foreground">No steps configured. Increase total steps to add rewards.</p>
+          )
         )}
         {step < 2 && editingField == null && (
           <p className="mt-3 text-center text-xs text-muted-foreground">Tap the title, subtitle, or icon on the card to edit</p>
@@ -351,13 +354,21 @@ export function CardWizard({ templateId }: Props) {
               <div className="space-y-4">
                 <div>
                   <Label>Total steps</Label>
-                  <Input type="number" min={1} value={totalSteps}
+                  <Input
+                    type="number"
+                    min={0}
+                    max={30}
+                    value={totalSteps}
                     onChange={(e) => {
-                      const newTotal = Math.max(1, Number(e.target.value) || 1);
-                      setTotalSteps(newTotal);
-                      // Clean up rewards that are now invalid (step > totalSteps)
-                      setRewards((prev) => prev.filter((r) => r.step <= newTotal));
-                    }} className="mt-2 w-32" />
+                      const raw = Number(e.target.value);
+                      if (Number.isNaN(raw)) {
+                        setTotalSteps(0);
+                        return;
+                      }
+                      setTotalSteps(Math.min(30, Math.max(0, raw)));
+                    }}
+                    className="mt-2 w-32"
+                  />
                 </div>
                 <p className="text-sm text-muted-foreground">Tap a step on the preview above to set the benefit shown when the customer reaches it (e.g. "-50%" on step 5, "FREE" on step 10).</p>
               </div>

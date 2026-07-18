@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
-import { StampCard, type StampCardProps } from "@/components/StampCard";
+import { WalletStack } from "@/components/WalletStack";
+import type { StampCardProps } from "@/components/StampCard";
 import { Button } from "@/components/ui/button";
 import {
   Wallet,
@@ -137,27 +138,10 @@ function ForCustomersPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.15 }}
-            className="mx-auto w-full lg:mx-0 lg:ml-auto lg:max-w-xl"
+            className="mx-auto w-full max-w-sm lg:mx-0 lg:ml-auto"
           >
-            <div className="relative mx-auto h-[250px] w-full max-w-[460px] sm:h-[330px]">
-              {customerStackCards.slice(0, 3).map((card, idx) => {
-                const layerClass =
-                  idx === 0
-                    ? "left-1/2 top-0 z-10 -translate-x-[62%]"
-                    : idx === 1
-                    ? "left-1/2 top-8 z-20 -translate-x-1/2"
-                    : "left-1/2 top-16 z-30 -translate-x-[38%]";
+            <WalletStack cards={customerStackCards} />
 
-                return (
-                  <div
-                    key={`${card.title}-${idx}`}
-                    className={`absolute w-[85%] max-w-[420px] transition-transform ${layerClass}`}
-                  >
-                    <StampCard {...card} disableShadow adaptiveContent />
-                  </div>
-                );
-              })}
-              </div>
           </motion.div>
         </div>
 

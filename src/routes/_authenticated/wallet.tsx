@@ -1,8 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { LoyaltyCard } from "@/components/LoyaltyCard";
-import type { Reward, StampIconName } from "@/components/LoyaltyCard";
+import { StampCard } from "@/components/StampCard";
+import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
 import { QrDisplay } from "@/components/QrDisplay";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -16,9 +16,9 @@ import { getFrozenBusinessIds } from "@/utils/frozen-businesses.functions";
 type Instance = {
   id: string; stamps_count: number; completed_at: string | null; created_at: string;
   template: {
-    id: string; title: string; discount_text: string; total_steps: number;
+    id: string; title: string; subtitle: string | null; total_steps: number; shape: CardShape;
     bg_color: string; accent_color: string; text_color: string; stamp_icon: StampIconName;
-    image_url: string | null; rewards: Reward[];
+    logo_url: string | null; rewards: Reward[];
     business: { id: string; name: string };
   };
 };
@@ -57,7 +57,7 @@ function Wallet() {
     const { data } = await supabase
       .from("card_instances")
       .select(`id, stamps_count, completed_at, created_at,
-        template:card_templates!inner(id, title, discount_text, total_steps, bg_color, accent_color, text_color, stamp_icon, image_url, rewards,
+        template:card_templates!inner(id, title, subtitle, total_steps, shape, bg_color, accent_color, text_color, stamp_icon, logo_url, rewards,
           business:businesses!inner(id, name))`)
       .eq("customer_id", u.user.id)
       .order("created_at", { ascending: false });
@@ -251,35 +251,26 @@ function Wallet() {
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (isExpanded) {
-                            setFlippedId(inst.id);
-                          } else {
-                            // Move card to last position and expand it
-                            setInstances((prev) => {
-                              const idx = prev.findIndex((x) => x.id === inst.id);
-                              if (idx < prev.length - 1) {
-                                const reordered = [...prev.slice(0, idx), ...prev.slice(idx + 1), prev[idx]];
-                                return reordered;
-                              }
-                              return prev;
-                            });
-                            setExpandedId(inst.id);
-                          }
+                          if (isExpanded) setFlippedId(inst.id);
+                          else setExpandedId(inst.id);
                         }}
                         className="relative block w-full text-left focus:outline-none drop-shadow-2xl"
                         aria-label={isExpanded ? `Show QR for ${inst.template.title}` : `Open ${inst.template.title}`}
                       >
                         <div className={isFrozen ? "relative" : undefined}>
-                          <LoyaltyCard
+                          <StampCard
                             title={inst.template.title}
-                            discountText={inst.template.discount_text}
+                            subtitle={inst.template.subtitle}
                             totalSteps={inst.template.total_steps}
                             stampsCount={inst.stamps_count}
+                            shape={inst.template.shape}
+                            bgColor={inst.template.bg_color}
                             accentColor={inst.template.accent_color}
                             textColor={inst.template.text_color}
                             stampIcon={inst.template.stamp_icon}
-                            imageUrl={inst.template.image_url}
+                            logoUrl={inst.template.logo_url}
                             rewards={inst.template.rewards}
+                            businessName={inst.template.business.name}
                             lastStamp={inst.stamps_count}
                           />
                           {isFrozen && (
