@@ -104,11 +104,32 @@ export function StampCard({
     rows = Math.ceil(normalizedSteps / 5);
   }
   
-  // Calculate adaptive step size based on grid height and number of rows
-  // Available height should fit rows + gaps + padding
-  const targetRowHeight = gridHeight > 0 ? gridHeight / rows : 50;
-  const adaptiveStepSize = Math.max(16, Math.min(48, Math.floor(targetRowHeight * 0.85))); // 85% of row height
-  const adaptiveGap = Math.max(4, Math.floor(adaptiveStepSize * 0.1)); // 10% of step size
+  // Height constraints
+  // Min height: 2 rows + header + footer
+  // Max height: 3 rows + header + footer
+  // Header (title + subtitle + logo) = ~60px
+  // Footer (business name + count) = ~24px
+  // Gap between rows = 8px per gap
+  // Step circle = 44px (for 2-3 rows)
+  
+  const CIRCLE_SIZE_2_3_ROWS = 44; // px
+  const HEADER_HEIGHT = 60; // px (title, subtitle, logo)
+  const FOOTER_HEIGHT = 24; // px (business name + count)
+  const ROW_GAP = 8; // px between rows
+  const GRID_PADDING = 12; // px total padding in grid area
+  
+  // Calculate heights
+  const minHeight = HEADER_HEIGHT + FOOTER_HEIGHT + GRID_PADDING + 2 * CIRCLE_SIZE_2_3_ROWS + 1 * ROW_GAP; // 2 rows
+  const maxHeight = HEADER_HEIGHT + FOOTER_HEIGHT + GRID_PADDING + 3 * CIRCLE_SIZE_2_3_ROWS + 2 * ROW_GAP; // 3 rows
+  
+  // If more than 3 rows, scale down circles to fit in maxHeight
+  let circleSize = CIRCLE_SIZE_2_3_ROWS;
+  if (rows > 3) {
+    // Available height for grid = maxHeight - header - footer - padding - (rows-1)*gap
+    const availableHeight = maxHeight - HEADER_HEIGHT - FOOTER_HEIGHT - GRID_PADDING - (rows - 1) * ROW_GAP;
+    circleSize = Math.floor(availableHeight / rows * 0.95); // 95% to leave some breathing room
+    circleSize = Math.max(20, Math.min(CIRCLE_SIZE_2_3_ROWS, circleSize)); // Clamp between 20-44px
+  }
   
   const isDense = cols >= 7;
   const isUltraDense = cols >= 9;
@@ -125,11 +146,11 @@ export function StampCard({
     : "p-4 sm:p-5";
   
   // Use adaptive spacing when card has reasonable height, otherwise use fixed
-  const stepGapClass = gridHeight > 0 ? "" : (isUltraDense ? "gap-1.5" : isDense ? "gap-1.5 sm:gap-2" : "gap-1.5 sm:gap-2");
-  const stepItemPadClass = gridHeight > 0 ? "" : (isUltraDense ? "p-0.5" : isDense ? "p-[3px]" : "p-0.5");
+  const stepGapClass = gridHeight > 0 ? "" : (isDense ? "gap-1.5 sm:gap-2" : "gap-1.5 sm:gap-2");
+  const stepItemPadClass = gridHeight > 0 ? "" : (isDense ? "p-[3px]" : "p-0.5");
   
-  // Adaptive font size for step numbers/labels
-  const adaptiveTextSize = adaptiveStepSize <= 20 ? "text-[6px]" : adaptiveStepSize <= 28 ? "text-[7px]" : adaptiveStepSize <= 36 ? "text-[8px]" : "text-[9px]";
+  // Adaptive font size for step numbers/labels based on circle size
+  const adaptiveTextSize = circleSize <= 24 ? "text-[6px]" : circleSize <= 32 ? "text-[7px]" : circleSize <= 40 ? "text-[8px]" : "text-[9px]";
   
   const stepChipClass = cols >= 10
     ? "max-w-[22px] text-[8px]"
@@ -147,8 +168,8 @@ export function StampCard({
     ? "max-w-[22px] text-[8px]"
     : stepChipClass);
   
-  const adaptiveIconSize = adaptiveStepSize <= 20 ? "h-2.5 w-2.5" : adaptiveStepSize <= 28 ? "h-3 w-3" : "h-4 w-4";
-  const stampIconClass = gridHeight > 0 ? adaptiveIconSize : (isUltraCompact ? "h-2.5 w-2.5" : isCompact || isUltraDense ? "h-3 w-3" : "h-4 w-4");
+  const adaptiveIconSize = circleSize <= 24 ? "h-2.5 w-2.5" : circleSize <= 32 ? "h-3 w-3" : "h-4 w-4";
+  const stampIconClass = gridHeight > 0 ? adaptiveIconSize : (isUltraCompact ? "h-2.5 w-2.5" : isCompact || isDense ? "h-3 w-3" : "h-4 w-4");
 
   const editableClass = "rounded-md transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 cursor-pointer px-1 -mx-1";
 
@@ -156,7 +177,15 @@ export function StampCard({
     <div
       ref={rootRef}
       className={`relative w-full paper-grain border-2 ${disableShadow ? "" : "card-shadow"} ${radius}`}
-      style={{ backgroundColor: bgColor, borderColor: accentColor + "22", color: textColor, aspectRatio: cardAspectRatio }}
+      style={{ 
+        backgroundColor: bgColor, 
+        borderColor: accentColor + "22", 
+        color: textColor, 
+        minHeight: `${minHeight}px`,
+        maxHeight: `${maxHeight}px`,
+        display: 'flex',
+        flexDirection: 'column'
+      }}
     >
       <div className={`flex h-full flex-col ${cardPadding} overflow-hidden`}>
         <div className="flex items-start justify-between gap-2">
@@ -200,7 +229,7 @@ export function StampCard({
             className={`flex-1 grid items-center mt-2 min-h-0 ${stepGapClass}`}
             style={{ 
               gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-              gap: gridHeight > 0 ? `${adaptiveGap}px` : undefined,
+              gap: `${ROW_GAP}px`,
             }}
           >
             {Array.from({ length: totalSteps }).map((_, i) => {
@@ -250,7 +279,8 @@ export function StampCard({
                       className={`relative aspect-square w-full rounded-full border-2 flex items-center justify-center font-semibold cursor-pointer ${compactChipClass} ${filled ? "stamp-emboss" : ""}`}
                       style={{ 
                         ...commonStyle,
-                        ...(gridHeight > 0 ? { maxWidth: `${adaptiveStepSize}px`, height: `${adaptiveStepSize}px` } : {})
+                        maxWidth: `${circleSize}px`, 
+                        height: `${circleSize}px`
                       }}
                       aria-label={`Edit step ${step}`}>
                       {inner}
@@ -264,7 +294,8 @@ export function StampCard({
                       className={`relative aspect-square w-full rounded-full border-2 flex items-center justify-center font-semibold ${compactChipClass} ${filled ? "stamp-emboss" : ""}`}
                       style={{ 
                         ...commonStyle,
-                        ...(gridHeight > 0 ? { maxWidth: `${adaptiveStepSize}px`, height: `${adaptiveStepSize}px` } : {})
+                        maxWidth: `${circleSize}px`, 
+                        height: `${circleSize}px`
                       }}
                     >
                       {inner}
