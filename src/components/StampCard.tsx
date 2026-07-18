@@ -47,10 +47,11 @@ export function StampCard({
   adaptiveContent = false,
 }: StampCardProps) {
   const rootRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
   const [cardWidth, setCardWidth] = useState<number>(420);
+  const [gridHeight, setGridHeight] = useState<number>(0);
 
   useEffect(() => {
-    if (!adaptiveContent) return;
     const node = rootRef.current;
     if (!node || typeof ResizeObserver === "undefined") return;
 
@@ -61,7 +62,21 @@ export function StampCard({
 
     observer.observe(node);
     return () => observer.disconnect();
-  }, [adaptiveContent]);
+  }, []);
+
+  useEffect(() => {
+    if (!gridRef.current) return;
+    const node = gridRef.current;
+    if (typeof ResizeObserver === "undefined") return;
+
+    const observer = new ResizeObserver((entries) => {
+      const next = entries[0]?.contentRect.height;
+      if (next) setGridHeight(next);
+    });
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
 
   const Icon = stampIcon ? (STAMP_ICONS[stampIcon] ?? Star) : null;
   const radius = shape === "square" ? "rounded-lg" : shape === "ticket" ? "rounded-none" : "rounded-3xl";
@@ -71,10 +86,17 @@ export function StampCard({
   // Rule: max 3 rows, each row up to 10 circles
   const cols = Math.max(1, Math.min(maxCols, Math.ceil(normalizedSteps / maxRows)));
   const rows = Math.max(1, Math.ceil(normalizedSteps / cols));
+  
+  // Calculate adaptive step size based on grid height and number of rows
+  // Available height should fit rows + gaps + padding
+  const targetRowHeight = gridHeight > 0 ? gridHeight / rows : 50;
+  const adaptiveStepSize = Math.max(16, Math.min(48, Math.floor(targetRowHeight * 0.85))); // 85% of row height
+  const adaptiveGap = Math.max(4, Math.floor(adaptiveStepSize * 0.1)); // 10% of step size
+  
   const isDense = cols >= 7;
   const isUltraDense = cols >= 9;
-  const isCompact = adaptiveContent && cardWidth < 340;
-  const isUltraCompact = adaptiveContent && cardWidth < 300;
+  const isCompact = cardWidth < 340;
+  const isUltraCompact = cardWidth < 300;
 
   const cardAspectRatio = "1.586 / 1";
   const cardPadding = isUltraCompact
@@ -84,8 +106,14 @@ export function StampCard({
     : isDense
     ? "p-3 sm:p-4"
     : "p-4 sm:p-5";
-  const stepGapClass = isUltraDense ? "gap-1.5" : isDense ? "gap-1.5 sm:gap-2" : "gap-1.5 sm:gap-2";
-  const stepItemPadClass = isUltraDense ? "p-0.5" : isDense ? "p-[3px]" : "p-0.5";
+  
+  // Use adaptive spacing when card has reasonable height, otherwise use fixed
+  const stepGapClass = gridHeight > 0 ? "" : (isUltraDense ? "gap-1.5" : isDense ? "gap-1.5 sm:gap-2" : "gap-1.5 sm:gap-2");
+  const stepItemPadClass = gridHeight > 0 ? "" : (isUltraDense ? "p-0.5" : isDense ? "p-[3px]" : "p-0.5");
+  
+  // Adaptive font size for step numbers/labels
+  const adaptiveTextSize = adaptiveStepSize <= 20 ? "text-[6px]" : adaptiveStepSize <= 28 ? "text-[7px]" : adaptiveStepSize <= 36 ? "text-[8px]" : "text-[9px]";
+  
   const stepChipClass = cols >= 10
     ? "max-w-[22px] text-[8px]"
     : cols >= 9
@@ -95,12 +123,15 @@ export function StampCard({
     : cols >= 7
     ? "max-w-[32px] text-[9px]"
     : "max-w-[42px] text-[10px]";
-  const compactChipClass = isUltraCompact
+  
+  const compactChipClass = gridHeight > 0 ? adaptiveTextSize : (isUltraCompact
     ? "max-w-[18px] text-[7px]"
     : isCompact
     ? "max-w-[22px] text-[8px]"
-    : stepChipClass;
-  const stampIconClass = isUltraCompact ? "h-2.5 w-2.5" : isCompact || isUltraDense ? "h-3 w-3" : "h-4 w-4";
+    : stepChipClass);
+  
+  const adaptiveIconSize = adaptiveStepSize <= 20 ? "h-2.5 w-2.5" : adaptiveStepSize <= 28 ? "h-3 w-3" : "h-4 w-4";
+  const stampIconClass = gridHeight > 0 ? adaptiveIconSize : (isUltraCompact ? "h-2.5 w-2.5" : isCompact || isUltraDense ? "h-3 w-3" : "h-4 w-4");
 
   const editableClass = "rounded-md transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 cursor-pointer px-1 -mx-1";
 
@@ -147,7 +178,14 @@ export function StampCard({
 
         {hideSteps && <div className="flex-1" />}
         {!hideSteps && (
-          <div className={`flex-1 grid ${stepGapClass} items-center mt-2 min-h-0`} style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
+          <div 
+            ref={gridRef}
+            className={`flex-1 grid items-center mt-2 min-h-0 ${stepGapClass}`}
+            style={{ 
+              gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+              gap: gridHeight > 0 ? `${adaptiveGap}px` : undefined,
+            }}
+          >
             {Array.from({ length: totalSteps }).map((_, i) => {
               const step = i + 1;
               const filled = step <= stampsCount;
@@ -183,7 +221,7 @@ export function StampCard({
                   : undefined,
               } as const;
               return (
-                <div key={i} className={`flex items-center justify-center ${stepItemPadClass}`}>
+                <div key={i} className={`flex items-center justify-center ${gridHeight > 0 ? "" : stepItemPadClass}`} style={gridHeight > 0 ? { padding: `${adaptiveGap / 2}px` } : undefined}>
                   {clickable ? (
                     <motion.button
                       type="button"
@@ -193,7 +231,10 @@ export function StampCard({
                       whileHover={{ scale: 1.15 }}
                       whileTap={{ scale: 0.95 }}
                       className={`relative aspect-square w-full rounded-full border-2 flex items-center justify-center font-semibold cursor-pointer ${compactChipClass} ${filled ? "stamp-emboss" : ""}`}
-                      style={commonStyle}
+                      style={{ 
+                        ...commonStyle,
+                        ...(gridHeight > 0 ? { maxWidth: `${adaptiveStepSize}px`, height: `${adaptiveStepSize}px` } : {})
+                      }}
                       aria-label={`Edit step ${step}`}>
                       {inner}
                     </motion.button>
@@ -204,7 +245,10 @@ export function StampCard({
                       animate={isLast ? { scale: 1, rotate: 0, opacity: 1 } : undefined}
                       transition={{ type: "spring", stiffness: 260, damping: 14 }}
                       className={`relative aspect-square w-full rounded-full border-2 flex items-center justify-center font-semibold ${compactChipClass} ${filled ? "stamp-emboss" : ""}`}
-                      style={commonStyle}
+                      style={{ 
+                        ...commonStyle,
+                        ...(gridHeight > 0 ? { maxWidth: `${adaptiveStepSize}px`, height: `${adaptiveStepSize}px` } : {})
+                      }}
                     >
                       {inner}
                     </motion.div>
