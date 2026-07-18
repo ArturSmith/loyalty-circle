@@ -82,9 +82,27 @@ export function StampCard({
   const radius = shape === "square" ? "rounded-lg" : shape === "ticket" ? "rounded-none" : "rounded-3xl";
   const normalizedSteps = Math.max(0, Math.min(30, totalSteps)); // Max 30 steps
   
-  // Step placement: always 5 steps per row max
-  const cols = Math.min(5, normalizedSteps);
-  const rows = Math.ceil(normalizedSteps / 5);
+  // Step placement: dynamic columns based on step count
+  // Prefer to fit steps in fewer rows
+  let cols: number;
+  let rows: number;
+  
+  if (normalizedSteps <= 5) {
+    cols = normalizedSteps;
+    rows = 1;
+  } else if (normalizedSteps <= 10) {
+    cols = Math.ceil(normalizedSteps / 2);
+    rows = 2;
+  } else if (normalizedSteps <= 15) {
+    cols = Math.ceil(normalizedSteps / 3);
+    rows = 3;
+  } else if (normalizedSteps <= 20) {
+    cols = Math.ceil(normalizedSteps / 4);
+    rows = 4;
+  } else {
+    cols = Math.ceil(normalizedSteps / 5);
+    rows = 5;
+  }
   
   // Size definitions for step items (square)
   const SIZE_LARGE = 48;   // px - large size
