@@ -80,53 +80,50 @@ export function StampCard({
 
   const Icon = stampIcon ? (STAMP_ICONS[stampIcon] ?? Star) : null;
   const radius = shape === "square" ? "rounded-lg" : shape === "ticket" ? "rounded-none" : "rounded-3xl";
-  const normalizedSteps = Math.max(0, totalSteps);
+  const normalizedSteps = Math.max(0, Math.min(30, totalSteps)); // Max 30 steps
   
-  // Custom step placement rules
-  let cols: number;
-  let rows: number;
+  // Step placement: always 5 steps per row max
+  const cols = Math.min(5, normalizedSteps);
+  const rows = Math.ceil(normalizedSteps / 5);
   
-  if (normalizedSteps <= 3) {
-    cols = normalizedSteps;
-    rows = 1;
-  } else if (normalizedSteps === 4) {
-    cols = 2;
-    rows = 2;
-  } else if (normalizedSteps === 5) {
-    cols = 5;
-    rows = 1;
-  } else if (normalizedSteps === 6) {
-    cols = 3;
-    rows = 2;
-  } else {
-    // 7+ steps: max 5 per row
-    cols = 5;
-    rows = Math.ceil(normalizedSteps / 5);
-  }
+  // Size definitions for step items (square)
+  const SIZE_LARGE = 48;   // px - large size
+  const SIZE_MEDIUM = 32;  // px - medium size
+  const SIZE_SMALL = 20;   // px - small size
   
-  // Height constraints
-  // Static height for 3 rows + header (no footer)
-  // Header (title + subtitle + logo) = ~60px
-  // Gap between rows = 8px per gap
-  // Step circle = 44px (for 3 rows)
-  
-  const CIRCLE_SIZE = 44; // px
   const HEADER_HEIGHT = 60; // px (title, subtitle, logo)
   const ROW_GAP = 8; // px between rows
+  const COL_GAP = 8; // px between columns
   const GRID_PADDING = 12; // px total padding in grid area
+  const BOTTOM_SPACE = 4; // px bottom spacing
   
-  // Static height for 3 rows with 44px circles
-  const minHeight = HEADER_HEIGHT + GRID_PADDING + 3 * CIRCLE_SIZE + 2 * ROW_GAP; // 228px
-  const maxHeight = minHeight; // Same as minHeight for static height
+  // Calculate min height: 2 rows of large items
+  const minHeight = HEADER_HEIGHT + GRID_PADDING + 2 * SIZE_LARGE + 1 * ROW_GAP;
   
-  const circleSize = CIRCLE_SIZE;
+  // Calculate max height: 6 rows of small items + bottom space
+  const maxHeight = HEADER_HEIGHT + GRID_PADDING + 6 * SIZE_SMALL + 5 * ROW_GAP + BOTTOM_SPACE;
+  
+  // Determine optimal step item size based on row count
+  let stepItemSize: number;
+  if (rows <= 2) {
+    stepItemSize = SIZE_LARGE;
+  } else if (rows <= 4) {
+    // Linearly interpolate between large and medium
+    stepItemSize = SIZE_LARGE - ((rows - 2) / 2) * (SIZE_LARGE - SIZE_MEDIUM);
+  } else {
+    // Use medium to small range for 5+ rows
+    stepItemSize = SIZE_MEDIUM - ((rows - 4) / 2) * (SIZE_MEDIUM - SIZE_SMALL);
+    // Ensure minimum size
+    stepItemSize = Math.max(SIZE_SMALL, stepItemSize);
+  }
+  
+  const circleSize = stepItemSize;
   
   const isDense = cols >= 7;
   const isUltraDense = cols >= 9;
   const isCompact = cardWidth < 340;
   const isUltraCompact = cardWidth < 300;
 
-  const cardAspectRatio = "1.2 / 1";
   const cardPadding = isUltraCompact
     ? "p-2.5"
     : isCompact
@@ -135,31 +132,12 @@ export function StampCard({
     ? "p-3 sm:p-4"
     : "p-4 sm:p-5";
   
-  // Use adaptive spacing when card has reasonable height, otherwise use fixed
-  const stepGapClass = gridHeight > 0 ? "" : (isDense ? "gap-1.5 sm:gap-2" : "gap-1.5 sm:gap-2");
-  const stepItemPadClass = gridHeight > 0 ? "" : (isDense ? "p-[3px]" : "p-0.5");
+  // Adaptive font size based on step item size
+  const adaptiveTextSize = stepItemSize <= 24 ? "text-[6px]" : stepItemSize <= 32 ? "text-[7px]" : stepItemSize <= 40 ? "text-[8px]" : "text-[9px]";
   
-  // Adaptive font size for step numbers/labels based on circle size
-  const adaptiveTextSize = circleSize <= 24 ? "text-[6px]" : circleSize <= 32 ? "text-[7px]" : circleSize <= 40 ? "text-[8px]" : "text-[9px]";
-  
-  const stepChipClass = cols >= 10
-    ? "max-w-[22px] text-[8px]"
-    : cols >= 9
-    ? "max-w-[24px] text-[8px]"
-    : cols >= 8
-    ? "max-w-[28px] text-[9px]"
-    : cols >= 7
-    ? "max-w-[32px] text-[9px]"
-    : "max-w-[42px] text-[10px]";
-  
-  const compactChipClass = gridHeight > 0 ? adaptiveTextSize : (isUltraCompact
-    ? "max-w-[18px] text-[7px]"
-    : isCompact
-    ? "max-w-[22px] text-[8px]"
-    : stepChipClass);
-  
-  const adaptiveIconSize = circleSize <= 24 ? "h-2.5 w-2.5" : circleSize <= 32 ? "h-3 w-3" : "h-4 w-4";
-  const stampIconClass = gridHeight > 0 ? adaptiveIconSize : (isUltraCompact ? "h-2.5 w-2.5" : isCompact || isDense ? "h-3 w-3" : "h-4 w-4");
+  // Adaptive icon size based on step item size
+  const adaptiveIconSize = stepItemSize <= 24 ? "h-2.5 w-2.5" : stepItemSize <= 32 ? "h-3 w-3" : stepItemSize <= 40 ? "h-3.5 w-3.5" : "h-4 w-4";
+  const stampIconClass = adaptiveIconSize;
 
   const editableClass = "rounded-md transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 cursor-pointer px-1 -mx-1";
 
@@ -216,10 +194,11 @@ export function StampCard({
         {!hideSteps && (
           <div 
             ref={gridRef}
-            className={`grid items-center mt-2 ${stepGapClass}`}
+            className={`grid items-center justify-center mt-2 flex-1`}
             style={{ 
-              gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-              gap: `${ROW_GAP}px`,
+              gridTemplateColumns: `repeat(${cols}, ${stepItemSize}px)`,
+              gap: `${COL_GAP}px`,
+              rowGap: `${ROW_GAP}px`,
             }}
           >
             {Array.from({ length: totalSteps }).map((_, i) => {
@@ -257,7 +236,7 @@ export function StampCard({
                   : undefined,
               } as const;
               return (
-                <div key={i} className={`flex items-center justify-center ${gridHeight > 0 ? "" : stepItemPadClass}`} style={gridHeight > 0 ? { padding: `${ROW_GAP / 2}px` } : undefined}>
+                <div key={i} className="flex items-center justify-center">
                   {clickable ? (
                     <motion.button
                       type="button"
@@ -266,11 +245,11 @@ export function StampCard({
                       transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
                       whileHover={{ scale: 1.15 }}
                       whileTap={{ scale: 0.95 }}
-                      className={`relative aspect-square w-full rounded-full border-2 flex items-center justify-center font-semibold cursor-pointer ${compactChipClass} ${filled ? "stamp-emboss" : ""}`}
+                      className={`relative w-full h-full rounded-md border-2 flex items-center justify-center font-semibold cursor-pointer ${adaptiveTextSize} ${filled ? "stamp-emboss" : ""}`}
                       style={{ 
                         ...commonStyle,
-                        maxWidth: `${circleSize}px`, 
-                        height: `${circleSize}px`
+                        width: `${stepItemSize}px`, 
+                        height: `${stepItemSize}px`
                       }}
                       aria-label={`Edit step ${step}`}>
                       {inner}
@@ -281,11 +260,11 @@ export function StampCard({
                       initial={isLast ? { scale: 3, rotate: -18, opacity: 0 } : false}
                       animate={isLast ? { scale: 1, rotate: 0, opacity: 1 } : undefined}
                       transition={{ type: "spring", stiffness: 260, damping: 14 }}
-                      className={`relative aspect-square w-full rounded-full border-2 flex items-center justify-center font-semibold ${compactChipClass} ${filled ? "stamp-emboss" : ""}`}
+                      className={`relative w-full h-full rounded-md border-2 flex items-center justify-center font-semibold ${adaptiveTextSize} ${filled ? "stamp-emboss" : ""}`}
                       style={{ 
                         ...commonStyle,
-                        maxWidth: `${circleSize}px`, 
-                        height: `${circleSize}px`
+                        width: `${stepItemSize}px`, 
+                        height: `${stepItemSize}px`
                       }}
                     >
                       {inner}
