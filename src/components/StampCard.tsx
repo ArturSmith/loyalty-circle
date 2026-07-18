@@ -105,34 +105,21 @@ export function StampCard({
   }
   
   // Height constraints
-  // Min height: 2 rows + header + footer
-  // Max height: 3 rows + header + footer
+  // Static height for 3 rows + header (no footer)
   // Header (title + subtitle + logo) = ~60px
-  // Footer (business name + count) = ~24px
   // Gap between rows = 8px per gap
-  // Step circle = 44px (for 2-3 rows)
+  // Step circle = 44px (for 3 rows)
   
-  const CIRCLE_SIZE_2_3_ROWS = 44; // px
+  const CIRCLE_SIZE = 44; // px
   const HEADER_HEIGHT = 60; // px (title, subtitle, logo)
-  const FOOTER_HEIGHT = 24; // px (business name + count)
   const ROW_GAP = 8; // px between rows
   const GRID_PADDING = 12; // px total padding in grid area
   
-  // Calculate heights
-  const minHeight = HEADER_HEIGHT + FOOTER_HEIGHT + GRID_PADDING + 2 * CIRCLE_SIZE_2_3_ROWS + 1 * ROW_GAP; // 2 rows
-  const baseMaxHeight = HEADER_HEIGHT + FOOTER_HEIGHT + GRID_PADDING + 3 * CIRCLE_SIZE_2_3_ROWS + 2 * ROW_GAP; // 3 rows
+  // Static height for 3 rows with 44px circles
+  const minHeight = HEADER_HEIGHT + GRID_PADDING + 3 * CIRCLE_SIZE + 2 * ROW_GAP; // 228px
+  const maxHeight = minHeight; // Same as minHeight for static height
   
-  // If more than 3 rows, allow height to grow but scale circles down
-  let circleSize = CIRCLE_SIZE_2_3_ROWS;
-  let maxHeight = baseMaxHeight;
-  
-  if (rows > 3) {
-    // Use a smaller circle size that fits better with many rows
-    const smallCircleSize = 32; // px for 4+ rows
-    // Calculate actual height needed with smaller circles
-    maxHeight = HEADER_HEIGHT + FOOTER_HEIGHT + GRID_PADDING + rows * smallCircleSize + (rows - 1) * ROW_GAP;
-    circleSize = smallCircleSize;
-  }
+  const circleSize = CIRCLE_SIZE;
   
   const isDense = cols >= 7;
   const isUltraDense = cols >= 9;
@@ -310,12 +297,6 @@ export function StampCard({
           </div>
         )}
 
-        <div className="flex items-end justify-between mt-2">
-          <div className={`${isUltraCompact ? "text-[8px]" : "text-[10px]"} opacity-60 uppercase tracking-widest`}>{businessName}</div>
-          <div className={`${isUltraCompact ? "text-[9px]" : "text-[11px]"}`} style={{ color: accentColor }}>
-            {hideSteps ? "" : `${stampsCount}/${totalSteps}`}
-          </div>
-        </div>
       </div>
     </div>
   );
