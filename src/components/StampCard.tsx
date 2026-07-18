@@ -110,7 +110,7 @@ export function StampCard({
       className={`relative w-full paper-grain border-2 ${disableShadow ? "" : "card-shadow"} ${radius}`}
       style={{ backgroundColor: bgColor, borderColor: accentColor + "22", color: textColor, aspectRatio: cardAspectRatio }}
     >
-      <div className={`flex h-full flex-col ${cardPadding}`}>
+      <div className={`flex h-full flex-col ${cardPadding} overflow-hidden`}>
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             {onTitleClick ? (
@@ -147,7 +147,7 @@ export function StampCard({
 
         {hideSteps && <div className="flex-1" />}
         {!hideSteps && (
-          <div className={`flex-1 grid ${stepGapClass} items-center mt-2`} style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
+          <div className={`flex-1 grid ${stepGapClass} items-center mt-2 min-h-0`} style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
             {Array.from({ length: totalSteps }).map((_, i) => {
               const step = i + 1;
               const filled = step <= stampsCount;
