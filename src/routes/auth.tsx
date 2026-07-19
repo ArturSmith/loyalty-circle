@@ -161,14 +161,59 @@ function AuthPage() {
               <Button type="submit" disabled={sending} className="w-full h-11">
                 {sending ? "Signing in…" : "Sign in"}
               </Button>
+              <div className="flex items-center justify-between gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => { setMode("reset"); setPassword(""); }}
+                >
+                  Forgot password?
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => { setMode("signup"); setPassword(""); }}
+                >
+                  Create account
+                </Button>
+              </div>
+            </form>
+          )}
+
+          {mode === "signup" && (
+            <form onSubmit={handleSignUp} className="space-y-3">
+              <Input
+                type="email"
+                required
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="h-11"
+              />
+              <Input
+                type="password"
+                required
+                minLength={6}
+                placeholder="Password (min. 6 characters)"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="h-11"
+              />
+              <Button type="submit" disabled={sending} className="w-full h-11">
+                {sending ? "Creating account…" : "Sign up"}
+              </Button>
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
                 className="w-full text-xs"
-                onClick={() => { setMode("reset"); setEmail(""); setPassword(""); }}
+                onClick={() => { setMode("password"); setPassword(""); }}
               >
-                Forgot password?
+                Already have an account? Sign in
               </Button>
             </form>
           )}
