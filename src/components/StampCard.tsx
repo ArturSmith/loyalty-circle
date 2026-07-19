@@ -89,6 +89,25 @@ export function StampCard({
               {title}
             </div>
           )}
+          {subtitle ? (
+            onSubtitleClick ? (
+              <button
+                type="button"
+                onClick={onSubtitleClick}
+                className={`${editable} text-center font-medium leading-tight break-words w-full px-1`}
+                style={{ color: textColor, fontSize: "clamp(9px, 2.5vw, 12px)" }}
+              >
+                {subtitle}
+              </button>
+            ) : (
+              <div
+                className="text-center font-medium leading-tight break-words w-full px-1"
+                style={{ color: textColor, fontSize: "clamp(9px, 2.5vw, 12px)" }}
+              >
+                {subtitle}
+              </div>
+            )
+          ) : null}
           <div
             className="font-display font-bold leading-none text-center"
             style={{ color: accentColor, fontSize: "clamp(1rem, 4.5vw, 1.75rem)" }}
