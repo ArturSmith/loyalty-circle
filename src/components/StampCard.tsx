@@ -46,7 +46,7 @@ export function StampCard({
   disableShadow = false,
 }: StampCardProps) {
   const Icon = stampIcon ? (STAMP_ICONS[stampIcon] ?? Star) : null;
-  const radius = shape === "square" ? "rounded-lg" : shape === "ticket" ? "rounded-none" : "rounded-2xl";
+  const radius = shape === "square" ? "rounded-xl" : shape === "ticket" ? "rounded-none" : "rounded-2xl";
 
   const normalizedSteps = Math.max(0, totalSteps);
 
