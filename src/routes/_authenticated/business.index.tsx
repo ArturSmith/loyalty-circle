@@ -60,6 +60,12 @@ function BusinessDashboard() {
     })();
   }, []);
 
+  useEffect(() => {
+    if (!api) return;
+    setCurrent(api.selectedScrollSnap());
+    api.on("select", () => setCurrent(api.selectedScrollSnap()));
+  }, [api]);
+
   const createBiz = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreating(true);
