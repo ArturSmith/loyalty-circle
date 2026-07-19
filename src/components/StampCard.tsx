@@ -60,27 +60,6 @@ export function StampCard({
       className={`relative w-full paper-grain ${disableShadow ? "" : "card-shadow"} ${radius} overflow-hidden min-h-[124px] sm:min-h-[172px]`}
       style={{ backgroundColor: bgColor, color: textColor }}
     >
-      {/* TOP — centered title above the steps */}
-      <div className="w-full text-center pt-3 sm:pt-4 pb-1 px-4">
-        {onTitleClick ? (
-          <button
-            type="button"
-            onClick={onTitleClick}
-            className={`${editable} font-display font-bold tracking-widest text-sm sm:text-base leading-tight break-words`}
-            style={{ color: accentColor }}
-          >
-            {title}
-          </button>
-        ) : (
-          <div
-            className="font-display font-bold tracking-widest text-sm sm:text-base leading-tight break-words"
-            style={{ color: accentColor }}
-          >
-            {title}
-          </div>
-        )}
-      </div>
-
       <div className="flex">
         {/* LEFT — compact info panel */}
         <div
