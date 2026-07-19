@@ -46,7 +46,7 @@ export function StampCard({
   disableShadow = false,
 }: StampCardProps) {
   const Icon = stampIcon ? (STAMP_ICONS[stampIcon] ?? Star) : null;
-  const radius = shape === "square" ? "rounded-lg" : shape === "ticket" ? "rounded-none" : "rounded-2xl";
+  const radius = shape === "square" ? "rounded-xl" : shape === "ticket" ? "rounded-none" : "rounded-2xl";
 
   const normalizedSteps = Math.max(0, totalSteps);
 
@@ -63,14 +63,14 @@ export function StampCard({
 
   return (
     <div
-      className={`relative w-full paper-grain border-2 ${disableShadow ? "" : "card-shadow"} ${radius} overflow-hidden`}
-      style={{ backgroundColor: bgColor, borderColor: accentColor, color: textColor }}
+      className={`relative w-full paper-grain ${disableShadow ? "" : "card-shadow"} ${radius} overflow-hidden`}
+      style={{ backgroundColor: bgColor, color: textColor }}
     >
       <div className="flex">
         {/* LEFT — compact info panel */}
         <div
           className="flex flex-col items-center justify-center gap-2 py-3 px-2 sm:py-4 sm:px-3 shrink-0"
-          style={{ borderRight: `2px solid ${accentColor}`, width: "26%", minWidth: 78, maxWidth: 140 }}
+          style={{ width: "22%", minWidth: 70, maxWidth: 120 }}
         >
           {onTitleClick ? (
             <button
