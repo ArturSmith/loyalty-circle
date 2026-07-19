@@ -126,7 +126,8 @@ export function StampCard({
               const isLast = filled && step === stampsCount && lastStamp !== undefined;
               const isActive = activeStep === step;
               const clickable = !!onStepClick;
-              const inner = filled && Icon ? <Icon className={iconSize} /> : <span className={`opacity-60 ${stepTextSize}`}>{step}</span>;
+              const inner = filled && Icon ? <Icon className="h-4 w-4" /> : reward ? <span className="leading-none">{reward.label}</span> : <span className="opacity-60">{step}</span>;
+              const slotInner = filled && Icon ? <Icon className={iconSize} /> : <span className={`opacity-60 ${stepTextSize}`}>{step}</span>;
               const commonStyle = {
                 borderColor: accentColor + (filled ? "" : isActive ? "" : "55"),
                 backgroundColor: filled ? accentColor : "transparent",
