@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { StampCard } from "@/components/StampCard";
-import type { CardShape, Reward, StampIconName, StampShape } from "@/components/StampCard";
+import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -10,7 +10,7 @@ import { OrnamentDivider } from "@/components/OrnamentDivider";
 
 type Template = {
   id: string; business_id: string; title: string; subtitle: string | null;
-  total_steps: number; shape: CardShape; stamp_shape?: StampShape; bg_color: string; accent_color: string; text_color: string;
+  total_steps: number; shape: CardShape; bg_color: string; accent_color: string; text_color: string;
   stamp_icon: StampIconName; logo_url: string | null; rewards: Reward[]; active: boolean;
 };
 
@@ -134,7 +134,6 @@ function BusinessPublic() {
                 totalSteps={t.total_steps}
                 stampsCount={0}
                 shape={t.shape}
-                stampShape={t.stamp_shape ?? "circle"}
                 bgColor={t.bg_color}
                 accentColor={t.accent_color}
                 textColor={t.text_color}
