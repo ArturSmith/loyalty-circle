@@ -25,7 +25,7 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
-  const [mode, setMode] = useState<"password" | "reset">("password");
+  const [mode, setMode] = useState<"password" | "signup" | "reset">("password");
 
   const intendedPath = redirect && redirect.startsWith("/") ? redirect : "/wallet";
 
