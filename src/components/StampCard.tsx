@@ -48,37 +48,27 @@ export function StampCard({
   const Icon = stampIcon ? (STAMP_ICONS[stampIcon] ?? Star) : null;
   const radius = shape === "square" ? "rounded-lg" : shape === "ticket" ? "rounded-none" : "rounded-3xl";
   
-  // Limit max steps to 30
-  const normalizedSteps = Math.min(30, Math.max(0, totalSteps));
+  const normalizedSteps = Math.max(0, totalSteps);
 
   // Row can contain max 8 steps
   const colsPerRow = Math.min(8, normalizedSteps || 1);
   const cols = Math.max(1, colsPerRow);
   const rows = normalizedSteps > 0 ? Math.ceil(normalizedSteps / cols) : 0;
 
-  // Size of steps item depends on max amount - smaller steps for more items
-  const getStepSize = () => {
-    if (normalizedSteps <= 6) return "max-w-[44px]"; // Large
-    if (normalizedSteps <= 12) return "max-w-[34px]"; // Medium
-    if (normalizedSteps <= 20) return "max-w-[28px]"; // Small
-    return "max-w-[22px]"; // Extra small
-  };
-
-  const stepSize = getStepSize();
-  const stepTextSize = normalizedSteps <= 12 ? "text-[10px]" : "text-[9px]";
-  const rewardTextSize = normalizedSteps <= 12 ? "text-xs sm:text-sm" : "text-[10px] sm:text-xs";
-  const iconSize = normalizedSteps <= 12 ? "h-3.5 w-3.5" : "h-3 w-3";
-
-  const stampShapeClass = stampShape === "square" ? "rounded-lg" : stampShape === "diamond" ? "rounded-none transform -rotate-45" : "rounded-full";
+  // Static square step size (does not shrink with more steps — card grows instead)
+  const stepBox = "h-9 w-9 sm:h-11 sm:w-11";
+  const stepTextSize = "text-[11px]";
+  const rewardTextSize = "text-xs sm:text-sm";
+  const iconSize = "h-4 w-4";
 
   const editableClass = "rounded-md transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 cursor-pointer px-1 -mx-1";
 
   return (
     <div
       className={`relative w-full paper-grain border-2 ${disableShadow ? "" : "card-shadow"} ${radius}`}
-      style={{ backgroundColor: bgColor, borderColor: accentColor + "22", color: textColor, aspectRatio: "1.586 / 1" }}
+      style={{ backgroundColor: bgColor, borderColor: accentColor + "22", color: textColor }}
     >
-      <div className="flex h-full flex-col p-4 sm:p-5">
+      <div className="flex flex-col p-4 sm:p-5">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             {onTitleClick ? (
