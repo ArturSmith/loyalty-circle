@@ -141,15 +141,12 @@ export function StampCard({
                   boxShadow: isActive ? `0 0 0 2px ${accentColor}` : undefined,
                 } as const;
 
-                const content = (
-                  <div className="flex flex-col items-center justify-center leading-none">
-                    <span className="font-bold text-[10px] sm:text-xs">{step}</span>
-                    {reward && (
-                      <span className="font-bold uppercase mt-0.5" style={{ fontSize: "7px", lineHeight: 1 }}>
-                        {reward.label}
-                      </span>
-                    )}
-                  </div>
+                const content = reward ? (
+                  <span className="font-bold uppercase text-center px-0.5 leading-none" style={{ fontSize: "7px", lineHeight: 1 }}>
+                    {reward.label}
+                  </span>
+                ) : (
+                  <span className="font-bold text-[10px] sm:text-xs">{step}</span>
                 );
 
                 if (clickable) {
