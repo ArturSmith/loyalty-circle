@@ -108,12 +108,6 @@ export function StampCard({
               </div>
             )
           ) : null}
-          <div
-            className="font-display font-bold leading-none text-center"
-            style={{ color: accentColor, fontSize: "clamp(1rem, 4.5vw, 1.75rem)" }}
-          >
-            {headlineReward ?? "—"}
-          </div>
           {(() => {
             const inner = logoUrl ? (
               <img src={logoUrl} alt="" className="h-6 w-6 sm:h-8 sm:w-8 object-contain" />
