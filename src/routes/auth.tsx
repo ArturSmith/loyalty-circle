@@ -25,7 +25,7 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
-  const [mode, setMode] = useState<"password" | "reset">("password");
+  const [mode, setMode] = useState<"password" | "signup" | "reset">("password");
 
   const intendedPath = redirect && redirect.startsWith("/") ? redirect : "/wallet";
 
@@ -74,6 +74,24 @@ function AuthPage() {
     setSending(false);
     if (error) { toast.error(error.message); return; }
     goNext();
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) return;
+    if (password.length < 6) { toast.error("Password must be at least 6 characters"); return; }
+    setSending(true);
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: window.location.origin + intendedPath },
+    });
+    setSending(false);
+    if (error) { toast.error(error.message); return; }
+    if (data.session) { goNext(); return; }
+    toast.success("Check your email to confirm your account");
+    setMode("password");
+    setPassword("");
   };
 
   const handleResetPassword = async (e: React.FormEvent) => {
@@ -143,14 +161,59 @@ function AuthPage() {
               <Button type="submit" disabled={sending} className="w-full h-11">
                 {sending ? "Signing in…" : "Sign in"}
               </Button>
+              <div className="flex items-center justify-between gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => { setMode("reset"); setPassword(""); }}
+                >
+                  Forgot password?
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => { setMode("signup"); setPassword(""); }}
+                >
+                  Create account
+                </Button>
+              </div>
+            </form>
+          )}
+
+          {mode === "signup" && (
+            <form onSubmit={handleSignUp} className="space-y-3">
+              <Input
+                type="email"
+                required
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="h-11"
+              />
+              <Input
+                type="password"
+                required
+                minLength={6}
+                placeholder="Password (min. 6 characters)"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="h-11"
+              />
+              <Button type="submit" disabled={sending} className="w-full h-11">
+                {sending ? "Creating account…" : "Sign up"}
+              </Button>
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
                 className="w-full text-xs"
-                onClick={() => { setMode("reset"); setEmail(""); setPassword(""); }}
+                onClick={() => { setMode("password"); setPassword(""); }}
               >
-                Forgot password?
+                Already have an account? Sign in
               </Button>
             </form>
           )}
