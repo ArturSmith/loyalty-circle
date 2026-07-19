@@ -187,25 +187,6 @@ export function StampCard({
             </div>
           )}
 
-          {/* Brand footer */}
-          <div className="mt-3 text-center">
-            {businessName && (
-              <div className="font-display font-bold tracking-[0.2em] text-sm sm:text-lg leading-none" style={{ color: accentColor }}>
-                {businessName}
-              </div>
-            )}
-            {onSubtitleClick ? (
-              <button
-                type="button"
-                onClick={onSubtitleClick}
-                className={`${editable} block mx-auto mt-1 text-[9px] sm:text-[11px] tracking-[0.25em] uppercase opacity-80`}
-              >
-                {subtitle || <span className="italic opacity-60">Add subtitle</span>}
-              </button>
-            ) : subtitle ? (
-              <div className="mt-1 text-[9px] sm:text-[11px] tracking-[0.25em] uppercase opacity-80">{subtitle}</div>
-            ) : null}
-          </div>
         </div>
       </div>
     </div>
