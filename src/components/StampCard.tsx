@@ -182,7 +182,7 @@ export function StampCard({
                       initial={isLast ? { scale: 3, rotate: -18, opacity: 0 } : false}
                       animate={isLast ? { scale: 1, rotate: 0, opacity: 1 } : undefined}
                       transition={{ type: "spring", stiffness: 260, damping: 14 }}
-                      className={`relative aspect-square w-full ${stepSize} border-2 flex items-center justify-center text-[10px] font-semibold ${shapeForStep === "diamond" ? "transform -rotate-45" : shapeForStep === "square" ? "rounded-lg" : "rounded-full"} ${filled ? "stamp-emboss" : ""}`}
+                      className={`relative aspect-square w-full min-w-0 ${stepSize} border-2 flex items-center justify-center ${stepTextSize} font-semibold ${shapeForStep === "diamond" ? "transform -rotate-45" : shapeForStep === "square" ? "rounded-lg" : "rounded-full"} ${filled ? "stamp-emboss" : ""}`}
                       style={commonStyle}
                     >
                       {shapeForStep === "diamond" ? <span className="transform rotate-45">{inner}</span> : inner}
