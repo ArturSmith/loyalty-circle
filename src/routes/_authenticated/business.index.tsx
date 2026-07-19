@@ -198,7 +198,7 @@ function BusinessDashboard() {
         <h2 className="font-display text-xl">Your cards</h2>
       </div>
 
-  <div className="mt-4 -mx-5 px-0">
+  <div className="mt-4">
         {tpls.length === 0 && (
           <div className="rounded-xl border-2 border-dashed border-border p-8 text-center text-sm text-muted-foreground">
             No cards yet. Create your first loyalty card to share with customers.
@@ -206,10 +206,10 @@ function BusinessDashboard() {
         )}
 
         {tpls.length > 0 && (
-          <Carousel opts={{ align: "start" }} className="relative">
-            <CarouselContent className="-ml-0 pr-5">
+          <Carousel opts={{ align: "center" }} className="relative">
+            <CarouselContent className="-ml-0">
               {tpls.map((t) => (
-                <CarouselItem key={t.id} className="pl-5 basis-[88%] sm:basis-[72%] lg:basis-[62%]">
+                <CarouselItem key={t.id} className="basis-full pl-0">
                   <Link
                     to="/business/cards/$id"
                     params={{ id: t.id }}
