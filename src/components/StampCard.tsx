@@ -141,13 +141,25 @@ export function StampCard({
               // Use circle shape for steps with rewards, use selected shape otherwise
               const shapeForStep = reward ? "circle" : stampShape;
               
-              // For reward steps, don't show border or shape - just text
+              // For reward steps, don't show border or shape - just text, but allow clicking to edit
               if (reward) {
                 return (
                   <div key={i} className="flex items-center justify-center">
-                    <div className="relative aspect-square w-full flex items-center justify-center text-[10px] font-semibold" style={{ color: accentColor }}>
-                      {inner}
-                    </div>
+                    {clickable ? (
+                      <motion.button
+                        type="button"
+                        onClick={() => onStepClick!(step)}
+                        className="relative aspect-square w-full flex items-center justify-center text-[10px] font-semibold cursor-pointer hover:opacity-70 transition"
+                        style={{ color: accentColor }}
+                        aria-label={`Edit reward for step ${step}`}
+                      >
+                        {inner}
+                      </motion.button>
+                    ) : (
+                      <div className="relative aspect-square w-full flex items-center justify-center text-[10px] font-semibold" style={{ color: accentColor }}>
+                        {inner}
+                      </div>
+                    )}
                   </div>
                 );
               }
