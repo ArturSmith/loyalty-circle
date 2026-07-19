@@ -90,8 +90,7 @@ function AuthPage() {
     setSending(false);
     if (error) { toast.error(error.message); return; }
     if (data.session) { goNext(); return; }
-    toast.success("Check your email to confirm your account");
-    setMode("password");
+    setSignupEmail(email);
     setPassword("");
   };
 
