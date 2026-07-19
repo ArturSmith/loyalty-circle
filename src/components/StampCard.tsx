@@ -4,7 +4,6 @@ import type { LucideIcon } from "lucide-react";
 
 export type Reward = { step: number; label: string };
 export type CardShape = "rounded" | "square" | "ticket";
-export type StampShape = "circle" | "square" | "diamond" | "heart";
 export type StampIconName = "scissors" | "coffee" | "sparkles" | "star" | "heart" | "flame" | "cookie" | "wine";
 
 export const STAMP_ICONS: Record<StampIconName, LucideIcon> = {
@@ -18,7 +17,6 @@ export interface StampCardProps {
   totalSteps: number;
   stampsCount?: number;
   shape?: CardShape;
-  stampShape?: StampShape;
   bgColor?: string;
   accentColor?: string;
   textColor?: string;
