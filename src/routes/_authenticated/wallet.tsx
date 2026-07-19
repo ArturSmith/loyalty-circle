@@ -14,7 +14,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { getFrozenBusinessIds } from "@/utils/frozen-businesses.functions";
 
 type Instance = {
-  id: string; stamps_count: number; completed_at: string | null; created_at: string; order_index: number | null;
+  id: string; stamps_count: number; completed_at: string | null; created_at: string;
   template: {
     id: string; title: string; subtitle: string | null; total_steps: number; shape: CardShape; stamp_shape?: StampShape;
     bg_color: string; accent_color: string; text_color: string; stamp_icon: StampIconName;
@@ -56,11 +56,10 @@ function Wallet() {
     if (!u.user) { setInstances([]); setLoading(false); return; }
     const { data } = await supabase
       .from("card_instances")
-      .select(`id, stamps_count, completed_at, created_at, order_index,
+      .select(`id, stamps_count, completed_at, created_at,
         template:card_templates!inner(id, title, subtitle, total_steps, shape, stamp_shape, bg_color, accent_color, text_color, stamp_icon, logo_url, rewards,
           business:businesses!inner(id, name))`)
       .eq("customer_id", u.user.id)
-      .order("order_index", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false });
     const next = (data as unknown as Instance[]) ?? [];
     // Diff against previous state to celebrate any stamp increment for the current user
@@ -239,17 +238,14 @@ function Wallet() {
                     top = expandedIndex * TIGHT + GAP + CARD_H + GAP + (i - expandedIndex - 1) * (TIGHT + 8);
                   }
                   const isFrozen = frozenBusinessIds.has(inst.template.business.id);
-                  // Stable z-index: expanded card always on top, others keep their stack order
-                  const zIndex = isExpanded ? 100 : instances.length - i;
                   return (
                     <motion.div
                       key={inst.id}
-                      layout
                       className="absolute inset-x-0"
                       initial={false}
-                      animate={{ y: top, scale: isExpanded ? 1.02 : 1 }}
-                      transition={{ type: "spring", stiffness: 160, damping: 26, mass: 0.8 }}
-                      style={{ zIndex }}
+                      animate={{ y: top, scale: isExpanded ? 1 : 0.98 }}
+                      transition={{ type: "spring", stiffness: 260, damping: 30 }}
+                      style={{ zIndex: i + 1 }}
                     >
                       <button
                         type="button"
@@ -258,6 +254,15 @@ function Wallet() {
                           if (isExpanded) {
                             setFlippedId(inst.id);
                           } else {
+                            // Move card to last position and expand it
+                            setInstances((prev) => {
+                              const idx = prev.findIndex((x) => x.id === inst.id);
+                              if (idx < prev.length - 1) {
+                                const reordered = [...prev.slice(0, idx), ...prev.slice(idx + 1), prev[idx]];
+                                return reordered;
+                              }
+                              return prev;
+                            });
                             setExpandedId(inst.id);
                           }
                         }}

@@ -53,7 +53,6 @@ export type Database = {
           created_at: string
           customer_id: string
           id: string
-          order_index: number | null
           stamps_count: number
           template_id: string
         }
@@ -62,7 +61,6 @@ export type Database = {
           created_at?: string
           customer_id: string
           id?: string
-          order_index?: number | null
           stamps_count?: number
           template_id: string
         }
@@ -71,7 +69,6 @@ export type Database = {
           created_at?: string
           customer_id?: string
           id?: string
-          order_index?: number | null
           stamps_count?: number
           template_id?: string
         }
@@ -97,7 +94,6 @@ export type Database = {
           rewards: Json
           shape: string
           stamp_icon: string
-          stamp_shape: string
           subtitle: string | null
           text_color: string
           title: string
@@ -115,7 +111,6 @@ export type Database = {
           rewards?: Json
           shape?: string
           stamp_icon?: string
-          stamp_shape?: string
           subtitle?: string | null
           text_color?: string
           title: string
@@ -133,7 +128,6 @@ export type Database = {
           rewards?: Json
           shape?: string
           stamp_icon?: string
-          stamp_shape?: string
           subtitle?: string | null
           text_color?: string
           title?: string
