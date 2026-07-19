@@ -186,7 +186,7 @@ export function StampCard({
                       className={`relative aspect-square w-full min-w-0 ${stepSize} border-2 flex items-center justify-center ${stepTextSize} font-semibold ${shapeForStep === "diamond" ? "transform -rotate-45" : shapeForStep === "square" ? "rounded-lg" : "rounded-full"} ${filled ? "stamp-emboss" : ""}`}
                       style={commonStyle}
                     >
-                      {shapeForStep === "diamond" ? <span className="transform rotate-45">{inner}</span> : inner}
+                      {shapeForStep === "diamond" ? <span className="transform rotate-45">{slotInner}</span> : slotInner}
                     </motion.div>
                   )}
                 </div>
