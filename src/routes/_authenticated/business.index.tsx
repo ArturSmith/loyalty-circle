@@ -10,14 +10,14 @@ import { motion } from "framer-motion";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { Plus, QrCode, ScanLine, Users, Stamp as StampIco, Wallet as WalletIcon, Pencil, Menu, Settings, LogOut, Download } from "lucide-react";
 import { StampCard } from "@/components/StampCard";
-import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
+import type { CardShape, Reward, StampIconName, StampShape } from "@/components/StampCard";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import QRCode from "qrcode";
 
 type Business = { id: string; name: string; logo_url: string | null; brand_color: string | null };
 type Tpl = {
   id: string; title: string; subtitle: string | null; total_steps: number; active: boolean;
-  shape: CardShape; bg_color: string; accent_color: string; text_color: string;
+  shape: CardShape; stamp_shape?: StampShape; bg_color: string; accent_color: string; text_color: string;
   stamp_icon: StampIconName; logo_url: string | null; rewards: Reward[] | null;
 };
 
@@ -221,6 +221,7 @@ function BusinessDashboard() {
                       totalSteps={t.total_steps}
                       stampsCount={0}
                       shape={t.shape}
+                      stampShape={t.stamp_shape ?? "circle"}
                       bgColor={t.bg_color}
                       accentColor={t.accent_color}
                       textColor={t.text_color}

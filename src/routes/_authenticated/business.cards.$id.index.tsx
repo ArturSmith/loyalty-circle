@@ -3,13 +3,13 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { StampCard } from "@/components/StampCard";
-import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
+import type { CardShape, Reward, StampIconName, StampShape } from "@/components/StampCard";
 import { ArrowLeft, Pencil, Users, Stamp as StampIco, CheckCircle2, Calendar } from "lucide-react";
 import { motion } from "framer-motion";
 
 type Tpl = {
   id: string; business_id: string; title: string; subtitle: string | null;
-  total_steps: number; active: boolean; shape: CardShape; bg_color: string;
+  total_steps: number; active: boolean; shape: CardShape; stamp_shape?: StampShape; bg_color: string;
   accent_color: string; text_color: string; stamp_icon: StampIconName;
   logo_url: string | null; rewards: Reward[] | null; created_at: string;
 };
@@ -119,6 +119,7 @@ function CardDetails() {
           totalSteps={tpl.total_steps}
           stampsCount={0}
           shape={tpl.shape}
+          stampShape={tpl.stamp_shape ?? "circle"}
           bgColor={tpl.bg_color}
           accentColor={tpl.accent_color}
           textColor={tpl.text_color}

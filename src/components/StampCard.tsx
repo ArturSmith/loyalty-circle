@@ -137,6 +137,10 @@ export function StampCard({
                 color: filled ? bgColor : accentColor,
                 boxShadow: isActive ? `0 0 0 2px ${accentColor}` : undefined,
               } as const;
+              
+              // Use circle shape for steps with rewards, use selected shape otherwise
+              const shapeForStep = reward ? "circle" : stampShape;
+              
               return (
                 <div key={i} className="flex items-center justify-center">
                   {clickable ? (
@@ -147,10 +151,10 @@ export function StampCard({
                       transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
                       whileHover={{ scale: 1.15 }}
                       whileTap={{ scale: 0.95 }}
-                      className={`relative aspect-square w-full ${stepSize} border-2 flex items-center justify-center text-[10px] font-semibold cursor-pointer ${stampShape === "diamond" ? "transform -rotate-45" : stampShape === "square" ? "rounded-lg" : "rounded-full"} ${filled ? "stamp-emboss" : ""}`}
+                      className={`relative aspect-square w-full ${stepSize} border-2 flex items-center justify-center text-[10px] font-semibold cursor-pointer ${shapeForStep === "diamond" ? "transform -rotate-45" : shapeForStep === "square" ? "rounded-lg" : "rounded-full"} ${filled ? "stamp-emboss" : ""}`}
                       style={commonStyle}
                       aria-label={`Edit step ${step}`}>
-                      {stampShape === "diamond" ? <span className="transform rotate-45">{inner}</span> : inner}
+                      {shapeForStep === "diamond" ? <span className="transform rotate-45">{inner}</span> : inner}
                     </motion.button>
                   ) : (
                     <motion.div
@@ -158,10 +162,10 @@ export function StampCard({
                       initial={isLast ? { scale: 3, rotate: -18, opacity: 0 } : false}
                       animate={isLast ? { scale: 1, rotate: 0, opacity: 1 } : undefined}
                       transition={{ type: "spring", stiffness: 260, damping: 14 }}
-                      className={`relative aspect-square w-full ${stepSize} border-2 flex items-center justify-center text-[10px] font-semibold ${stampShape === "diamond" ? "transform -rotate-45" : stampShape === "square" ? "rounded-lg" : "rounded-full"} ${filled ? "stamp-emboss" : ""}`}
+                      className={`relative aspect-square w-full ${stepSize} border-2 flex items-center justify-center text-[10px] font-semibold ${shapeForStep === "diamond" ? "transform -rotate-45" : shapeForStep === "square" ? "rounded-lg" : "rounded-full"} ${filled ? "stamp-emboss" : ""}`}
                       style={commonStyle}
                     >
-                      {stampShape === "diamond" ? <span className="transform rotate-45">{inner}</span> : inner}
+                      {shapeForStep === "diamond" ? <span className="transform rotate-45">{inner}</span> : inner}
                     </motion.div>
                   )}
                 </div>
