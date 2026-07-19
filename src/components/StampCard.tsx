@@ -63,8 +63,8 @@ export function StampCard({
 
   return (
     <div
-      className={`relative w-full paper-grain border-2 ${disableShadow ? "" : "card-shadow"} ${radius} overflow-hidden`}
-      style={{ backgroundColor: bgColor, borderColor: accentColor, color: textColor }}
+      className={`relative w-full paper-grain ${disableShadow ? "" : "card-shadow"} ${radius} overflow-hidden`}
+      style={{ backgroundColor: bgColor, color: textColor }}
     >
       <div className="flex">
         {/* LEFT — compact info panel */}
