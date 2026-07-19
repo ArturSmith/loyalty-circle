@@ -33,6 +33,8 @@ function BusinessDashboard() {
   const [stats, setStats] = useState({ stamps: 0, customers: 0, active: 0 });
   const [loading, setLoading] = useState(true);
   const [showQr, setShowQr] = useState(false);
+  const [api, setApi] = useState<CarouselApi>();
+  const [current, setCurrent] = useState(0);
   // create biz form
   const [name, setName] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
