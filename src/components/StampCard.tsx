@@ -39,152 +39,178 @@ export interface StampCardProps {
 
 export function StampCard({
   title, subtitle, totalSteps, stampsCount = 0, shape = "rounded",
-  stampShape = "circle", bgColor = "#faf8f2", accentColor = "#1a1a2e", textColor = "#1a1a2e",
-  stampIcon = "star", logoUrl, rewards = [], businessName, lastStamp,
+  bgColor = "#faf8f2", accentColor = "#4b3a35", textColor = "#4b3a35",
+  stampIcon = null, logoUrl, rewards = [], businessName, lastStamp,
   hideSteps = false, onStepClick, activeStep,
   onTitleClick, onSubtitleClick, onIconClick,
   disableShadow = false,
 }: StampCardProps) {
   const Icon = stampIcon ? (STAMP_ICONS[stampIcon] ?? Star) : null;
-  const radius = shape === "square" ? "rounded-lg" : shape === "ticket" ? "rounded-none" : "rounded-3xl";
-  
+  const radius = shape === "square" ? "rounded-lg" : shape === "ticket" ? "rounded-none" : "rounded-2xl";
+
   const normalizedSteps = Math.max(0, totalSteps);
 
-  // Row can contain max 8 steps
-  const colsPerRow = Math.min(8, normalizedSteps || 1);
-  const cols = Math.max(1, colsPerRow);
+  // Max 8 steps per row; card grows vertically as needed
+  const cols = Math.max(1, Math.min(8, normalizedSteps || 1));
   const rows = normalizedSteps > 0 ? Math.ceil(normalizedSteps / cols) : 0;
 
-  // Static square step size (does not shrink with more steps — card grows instead)
-  const stepBox = "h-6 w-6 sm:h-9 sm:w-9";
-  const stepTextSize = "text-[10px]";
-  const rewardTextSize = "text-[11px] sm:text-xs";
-  const iconSize = "h-3.5 w-3.5";
+  // Headline reward: the last (highest-step) reward, used as the big number on the left
+  const headlineReward = rewards.length > 0
+    ? [...rewards].sort((a, b) => b.step - a.step)[0].label
+    : null;
 
-  const editableClass = "rounded-md transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 cursor-pointer px-1 -mx-1";
+  const editable = "rounded-md transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 cursor-pointer";
 
   return (
     <div
-      className={`relative w-full paper-grain border-2 ${disableShadow ? "" : "card-shadow"} ${radius}`}
-      style={{ backgroundColor: bgColor, borderColor: accentColor + "22", color: textColor }}
+      className={`relative w-full paper-grain border-2 ${disableShadow ? "" : "card-shadow"} ${radius} overflow-hidden`}
+      style={{ backgroundColor: bgColor, borderColor: accentColor, color: textColor }}
     >
-      <div className="flex flex-col p-4 sm:p-5">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0 flex-1">
-            {onTitleClick ? (
-              <button type="button" onClick={onTitleClick}
-                className={`font-display text-lg sm:text-xl leading-tight truncate block max-w-full text-left ${editableClass}`}
-                style={{ color: accentColor }}>{title}</button>
-            ) : (
-              <div className="font-display text-lg sm:text-xl leading-tight truncate" style={{ color: accentColor }}>{title}</div>
-            )}
-            {onSubtitleClick ? (
-              <button type="button" onClick={onSubtitleClick}
-                className={`text-[11px] sm:text-xs opacity-70 truncate block max-w-full text-left ${editableClass}`}>
-                {subtitle || <span className="italic opacity-60">Add subtitle</span>}
-              </button>
-            ) : subtitle ? (
-              <div className="text-[11px] sm:text-xs opacity-70 truncate">{subtitle}</div>
-            ) : null}
+      <div className="flex">
+        {/* LEFT — compact info panel */}
+        <div
+          className="flex flex-col items-center justify-center gap-2 py-3 px-2 sm:py-4 sm:px-3 shrink-0"
+          style={{ borderRight: `2px solid ${accentColor}`, width: "26%", minWidth: 78, maxWidth: 140 }}
+        >
+          <div className="w-full border-t-2" style={{ borderColor: accentColor }} />
+          {onTitleClick ? (
+            <button
+              type="button"
+              onClick={onTitleClick}
+              className={`${editable} text-center font-display font-bold tracking-widest text-[11px] sm:text-sm leading-tight break-words w-full px-1`}
+              style={{ color: accentColor }}
+            >
+              {title}
+            </button>
+          ) : (
+            <div
+              className="text-center font-display font-bold tracking-widest text-[11px] sm:text-sm leading-tight break-words w-full px-1"
+              style={{ color: accentColor }}
+            >
+              {title}
+            </div>
+          )}
+          <div
+            className="font-display font-bold leading-none text-center"
+            style={{ color: accentColor, fontSize: "clamp(1.25rem, 6vw, 2.75rem)" }}
+          >
+            {headlineReward ?? "—"}
           </div>
+          <div className="w-full border-t-2" style={{ borderColor: accentColor }} />
           {(() => {
             const inner = logoUrl ? (
-              <img src={logoUrl} alt="" className="h-9 w-9 rounded-full object-cover ring-1 ring-black/10 bg-white" />
+              <img src={logoUrl} alt="" className="h-6 w-6 sm:h-8 sm:w-8 object-contain" />
+            ) : Icon ? (
+              <Icon className="h-4 w-4 sm:h-5 sm:w-5" style={{ color: accentColor }} />
             ) : (
-              <div className="h-9 w-9 rounded-full flex items-center justify-center" style={{ backgroundColor: accentColor + "11", color: accentColor }}>
-                {Icon && <Icon className="h-4 w-4" />}
-              </div>
+              <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full border-2" style={{ borderColor: accentColor }} />
             );
             return onIconClick ? (
-              <button type="button" onClick={onIconClick} className="rounded-full hover:ring-2 hover:ring-black/20 transition" aria-label="Change logo or icon">
+              <button type="button" onClick={onIconClick} className="rounded-full hover:ring-2 hover:ring-black/20 transition p-1" aria-label="Change logo or icon">
                 {inner}
               </button>
-            ) : inner;
+            ) : (
+              <div className="p-1">{inner}</div>
+            );
           })()}
         </div>
 
-        {hideSteps && <div className="mt-2" />}
-        {!hideSteps && (
-          <div className="grid gap-1.5 sm:gap-2 content-start justify-items-center mt-4 min-w-0"
-            style={{
-              gridTemplateColumns: `repeat(${cols}, minmax(0, auto))`,
-              gridTemplateRows: rows > 0 ? `repeat(${rows}, auto)` : undefined,
-              justifyContent: "center",
-            }}>
-            {Array.from({ length: normalizedSteps }).map((_, i) => {
-              const step = i + 1;
-              const filled = step <= stampsCount;
-              const reward = rewards.find((r) => r.step === step);
-              const isLast = filled && step === stampsCount && lastStamp !== undefined;
-              const isActive = activeStep === step;
-              const clickable = !!onStepClick;
-              const inner = filled && Icon ? <Icon className={iconSize} /> : reward ? <span className="leading-none">{reward.label}</span> : <span className="opacity-60">{step}</span>;
-              const slotInner = filled && Icon ? <Icon className={iconSize} /> : <span className={`opacity-60 ${stepTextSize}`}>{step}</span>;
-              const commonStyle = {
-                borderColor: accentColor + (filled ? "" : isActive ? "" : "55"),
-                backgroundColor: filled ? accentColor : "transparent",
-                color: filled ? bgColor : accentColor,
-                boxShadow: isActive ? `0 0 0 2px ${accentColor}` : undefined,
-              } as const;
+        {/* RIGHT — stamps + brand */}
+        <div className="flex-1 flex flex-col justify-between p-3 sm:p-4 min-w-0">
+          {hideSteps ? (
+            <div className="min-h-[60px]" />
+          ) : (
+            <div
+              className="grid gap-2 sm:gap-2.5 content-start justify-items-center mx-auto"
+              style={{
+                gridTemplateColumns: `repeat(${cols}, minmax(0, auto))`,
+                gridTemplateRows: rows > 0 ? `repeat(${rows}, auto)` : undefined,
+              }}
+            >
+              {Array.from({ length: normalizedSteps }).map((_, i) => {
+                const step = i + 1;
+                const filled = step <= stampsCount;
+                const reward = rewards.find((r) => r.step === step);
+                const isLast = filled && step === stampsCount && lastStamp !== undefined;
+                const isActive = activeStep === step;
+                const clickable = !!onStepClick;
 
-              // For reward steps, show label; make clickable during card creation
-              if (reward) {
-                return (
-                  <div key={i} className="flex items-center justify-center">
-                    {clickable ? (
-                      <motion.button
-                        type="button"
-                        onClick={() => onStepClick!(step)}
-                        whileHover={{ scale: 1.12 }}
-                        whileTap={{ scale: 0.95 }}
-                        className={`relative ${stepBox} border-2 border-dashed flex items-center justify-center ${rewardTextSize} font-bold cursor-pointer rounded-lg ${isActive ? "ring-2" : ""}`}
-                        style={{ borderColor: accentColor + "88", color: accentColor, boxShadow: isActive ? `0 0 0 2px ${accentColor}` : undefined }}
-                        aria-label={`Edit reward on step ${step}`}>
-                        {inner}
-                      </motion.button>
-                    ) : (
-                      <div className={`relative ${stepBox} flex items-center justify-center ${rewardTextSize} font-bold`} style={{ color: accentColor }}>
-                        {inner}
-                      </div>
+                const stepBox = "h-6 w-6 sm:h-9 sm:w-9";
+                const commonStyle = {
+                  borderColor: accentColor,
+                  backgroundColor: filled ? accentColor : "transparent",
+                  color: filled ? bgColor : accentColor,
+                  boxShadow: isActive ? `0 0 0 2px ${accentColor}` : undefined,
+                } as const;
+
+                const content = (
+                  <div className="flex flex-col items-center justify-center leading-none">
+                    <span className="font-bold text-[10px] sm:text-xs">{step}</span>
+                    {reward && (
+                      <span className="font-bold uppercase mt-0.5" style={{ fontSize: "7px", lineHeight: 1 }}>
+                        {reward.label}
+                      </span>
                     )}
                   </div>
                 );
-              }
 
-              return (
-                <div key={i} className="flex items-center justify-center">
-                  {clickable ? (
+                if (clickable) {
+                  return (
                     <motion.button
+                      key={i}
                       type="button"
                       onClick={() => onStepClick!(step)}
-                      animate={!filled ? { scale: [1, 1.12, 1], boxShadow: [`0 0 0 0px ${accentColor}66`, `0 0 0 8px ${accentColor}00`, `0 0 0 0px ${accentColor}66`] } : undefined}
+                      animate={!filled ? { boxShadow: [`0 0 0 0px ${accentColor}66`, `0 0 0 6px ${accentColor}00`, `0 0 0 0px ${accentColor}66`] } : undefined}
                       transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
                       whileHover={{ scale: 1.15 }}
                       whileTap={{ scale: 0.95 }}
-                      className={`relative ${stepBox} border-2 flex items-center justify-center ${stepTextSize} font-semibold cursor-pointer rounded-lg ${filled ? "stamp-emboss" : ""}`}
+                      className={`${stepBox} rounded-full border-2 flex items-center justify-center cursor-pointer ${reward ? "border-dashed" : ""}`}
                       style={commonStyle}
-                      aria-label={`Edit step ${step}`}>
-                      {slotInner}
-                    </motion.button>
-                  ) : (
-                    <motion.div
-                      key={isLast ? `stamp-${lastStamp}` : `slot-${i}`}
-                      initial={isLast ? { scale: 3, rotate: -18, opacity: 0 } : false}
-                      animate={isLast ? { scale: 1, rotate: 0, opacity: 1 } : undefined}
-                      transition={{ type: "spring", stiffness: 260, damping: 14 }}
-                      className={`relative ${stepBox} border-2 flex items-center justify-center ${stepTextSize} font-semibold rounded-lg ${filled ? "stamp-emboss" : ""}`}
-                      style={commonStyle}
+                      aria-label={reward ? `Edit reward on step ${step}` : `Edit step ${step}`}
                     >
-                      {slotInner}
-                    </motion.div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                      {content}
+                    </motion.button>
+                  );
+                }
 
+                return (
+                  <motion.div
+                    key={isLast ? `stamp-${lastStamp}` : `slot-${i}`}
+                    initial={isLast ? { scale: 3, rotate: -18, opacity: 0 } : false}
+                    animate={isLast ? { scale: 1, rotate: 0, opacity: 1 } : undefined}
+                    transition={{ type: "spring", stiffness: 260, damping: 14 }}
+                    className={`${stepBox} rounded-full border-2 flex items-center justify-center ${filled ? "stamp-emboss" : ""}`}
+                    style={commonStyle}
+                  >
+                    {content}
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Brand footer */}
+          <div className="mt-3 text-center">
+            <div className="border-t-2 mx-auto w-2/3 mb-1.5" style={{ borderColor: accentColor }} />
+            {businessName && (
+              <div className="font-display font-bold tracking-[0.2em] text-sm sm:text-lg leading-none" style={{ color: accentColor }}>
+                {businessName}
+              </div>
+            )}
+            {onSubtitleClick ? (
+              <button
+                type="button"
+                onClick={onSubtitleClick}
+                className={`${editable} block mx-auto mt-1 text-[9px] sm:text-[11px] tracking-[0.25em] uppercase opacity-80`}
+              >
+                {subtitle || <span className="italic opacity-60">Add subtitle</span>}
+              </button>
+            ) : subtitle ? (
+              <div className="mt-1 text-[9px] sm:text-[11px] tracking-[0.25em] uppercase opacity-80">{subtitle}</div>
+            ) : null}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
