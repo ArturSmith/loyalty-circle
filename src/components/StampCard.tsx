@@ -49,34 +49,27 @@ export function StampCard({
   const radius = shape === "square" ? "rounded-lg" : shape === "ticket" ? "rounded-none" : "rounded-3xl";
   
   // Limit max steps to 30
-  const normalizedSteps = Math.min(30, totalSteps);
+  const normalizedSteps = Math.min(30, Math.max(0, totalSteps));
 
   // Row can contain max 8 steps
-  const colsPerRow = Math.min(8, normalizedSteps);
+  const colsPerRow = Math.min(8, normalizedSteps || 1);
   const cols = Math.max(1, colsPerRow);
+  const rows = normalizedSteps > 0 ? Math.ceil(normalizedSteps / cols) : 0;
 
   // Size of steps item depends on max amount - smaller steps for more items
   const getStepSize = () => {
-    if (normalizedSteps <= 6) return "max-w-[48px]"; // Large
-    if (normalizedSteps <= 12) return "max-w-[40px]"; // Medium
-    if (normalizedSteps <= 20) return "max-w-[32px]"; // Small
-    return "max-w-[28px]"; // Extra small
+    if (normalizedSteps <= 6) return "max-w-[44px]"; // Large
+    if (normalizedSteps <= 12) return "max-w-[34px]"; // Medium
+    if (normalizedSteps <= 20) return "max-w-[28px]"; // Small
+    return "max-w-[22px]"; // Extra small
   };
-  
+
   const stepSize = getStepSize();
-  
-  // Get shape class for stamp items
-  const getStampShapeClass = () => {
-    switch (stampShape) {
-      case "square": return "rounded-lg";
-      case "diamond": return "rounded-none" + " transform -rotate-45";
-      case "heart": return "rounded-full";
-      default: return "rounded-full";
-    }
-  };
-  
-  const stampShapeClass = getStampShapeClass();
-  const stampShapeClassForDiamond = stampShape === "diamond" ? "rounded-none" : getStampShapeClass();
+  const stepTextSize = normalizedSteps <= 12 ? "text-[10px]" : "text-[9px]";
+  const rewardTextSize = normalizedSteps <= 12 ? "text-xs sm:text-sm" : "text-[10px] sm:text-xs";
+  const iconSize = normalizedSteps <= 12 ? "h-3.5 w-3.5" : "h-3 w-3";
+
+  const stampShapeClass = stampShape === "square" ? "rounded-lg" : stampShape === "diamond" ? "rounded-none transform -rotate-45" : "rounded-full";
 
   const editableClass = "rounded-md transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 cursor-pointer px-1 -mx-1";
 
@@ -122,7 +115,11 @@ export function StampCard({
 
         {hideSteps && <div className="flex-1" />}
         {!hideSteps && (
-          <div className="flex-1 grid gap-1.5 sm:gap-2 items-center mt-2" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
+          <div className="flex-1 grid gap-1.5 sm:gap-2 content-start items-center mt-2 min-w-0"
+            style={{
+              gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+              gridTemplateRows: rows > 0 ? `repeat(${rows}, auto)` : undefined,
+            }}>
             {Array.from({ length: normalizedSteps }).map((_, i) => {
               const step = i + 1;
               const filled = step <= stampsCount;
@@ -131,6 +128,7 @@ export function StampCard({
               const isActive = activeStep === step;
               const clickable = !!onStepClick;
               const inner = filled && Icon ? <Icon className="h-4 w-4" /> : reward ? <span className="leading-none">{reward.label}</span> : <span className="opacity-60">{step}</span>;
+              const slotInner = filled && Icon ? <Icon className={iconSize} /> : <span className={`opacity-60 ${stepTextSize}`}>{step}</span>;
               const commonStyle = {
                 borderColor: accentColor + (filled ? "" : isActive ? "" : "55"),
                 backgroundColor: filled ? accentColor : "transparent",
@@ -151,13 +149,13 @@ export function StampCard({
                         onClick={() => onStepClick!(step)}
                         whileHover={{ scale: 1.12 }}
                         whileTap={{ scale: 0.95 }}
-                        className={`relative aspect-square w-full ${stepSize} border-2 border-dashed flex items-center justify-center text-xs sm:text-sm font-bold cursor-pointer rounded-full ${isActive ? "ring-2" : ""}`}
+                        className={`relative aspect-square w-full min-w-0 ${stepSize} border-2 border-dashed flex items-center justify-center ${rewardTextSize} font-bold cursor-pointer rounded-full ${isActive ? "ring-2" : ""}`}
                         style={{ borderColor: accentColor + "88", color: accentColor, boxShadow: isActive ? `0 0 0 2px ${accentColor}` : undefined }}
                         aria-label={`Edit reward on step ${step}`}>
                         {inner}
                       </motion.button>
                     ) : (
-                      <div className="relative aspect-square w-full flex items-center justify-center text-xs sm:text-sm font-bold" style={{ color: accentColor }}>
+                      <div className={`relative aspect-square w-full min-w-0 flex items-center justify-center ${rewardTextSize} font-bold`} style={{ color: accentColor }}>
                         {inner}
                       </div>
                     )}
@@ -175,10 +173,10 @@ export function StampCard({
                       transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
                       whileHover={{ scale: 1.15 }}
                       whileTap={{ scale: 0.95 }}
-                      className={`relative aspect-square w-full ${stepSize} border-2 flex items-center justify-center text-[10px] font-semibold cursor-pointer ${shapeForStep === "diamond" ? "transform -rotate-45" : shapeForStep === "square" ? "rounded-lg" : "rounded-full"} ${filled ? "stamp-emboss" : ""}`}
+                      className={`relative aspect-square w-full min-w-0 ${stepSize} border-2 flex items-center justify-center ${stepTextSize} font-semibold cursor-pointer ${shapeForStep === "diamond" ? "transform -rotate-45" : shapeForStep === "square" ? "rounded-lg" : "rounded-full"} ${filled ? "stamp-emboss" : ""}`}
                       style={commonStyle}
                       aria-label={`Edit step ${step}`}>
-                      {shapeForStep === "diamond" ? <span className="transform rotate-45">{inner}</span> : inner}
+                      {shapeForStep === "diamond" ? <span className="transform rotate-45">{slotInner}</span> : slotInner}
                     </motion.button>
                   ) : (
                     <motion.div
@@ -186,10 +184,10 @@ export function StampCard({
                       initial={isLast ? { scale: 3, rotate: -18, opacity: 0 } : false}
                       animate={isLast ? { scale: 1, rotate: 0, opacity: 1 } : undefined}
                       transition={{ type: "spring", stiffness: 260, damping: 14 }}
-                      className={`relative aspect-square w-full ${stepSize} border-2 flex items-center justify-center text-[10px] font-semibold ${shapeForStep === "diamond" ? "transform -rotate-45" : shapeForStep === "square" ? "rounded-lg" : "rounded-full"} ${filled ? "stamp-emboss" : ""}`}
+                      className={`relative aspect-square w-full min-w-0 ${stepSize} border-2 flex items-center justify-center ${stepTextSize} font-semibold ${shapeForStep === "diamond" ? "transform -rotate-45" : shapeForStep === "square" ? "rounded-lg" : "rounded-full"} ${filled ? "stamp-emboss" : ""}`}
                       style={commonStyle}
                     >
-                      {shapeForStep === "diamond" ? <span className="transform rotate-45">{inner}</span> : inner}
+                      {shapeForStep === "diamond" ? <span className="transform rotate-45">{slotInner}</span> : slotInner}
                     </motion.div>
                   )}
                 </div>
