@@ -140,7 +140,7 @@ export function StampCard({
                 const isActive = activeStep === step;
                 const clickable = !!onStepClick;
 
-                const stepBox = "h-6 w-6 sm:h-9 sm:w-9";
+                const stepBox = "h-7 w-7 sm:h-10 sm:w-10";
                 const commonStyle = {
                   borderColor: accentColor,
                   backgroundColor: filled ? accentColor : "transparent",
