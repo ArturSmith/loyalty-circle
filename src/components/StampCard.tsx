@@ -147,13 +147,13 @@ export function StampCard({
                         onClick={() => onStepClick!(step)}
                         whileHover={{ scale: 1.12 }}
                         whileTap={{ scale: 0.95 }}
-                        className={`relative aspect-square w-full ${stepSize} border-2 border-dashed flex items-center justify-center text-xs sm:text-sm font-bold cursor-pointer rounded-full ${isActive ? "ring-2" : ""}`}
+                        className={`relative aspect-square w-full min-w-0 ${stepSize} border-2 border-dashed flex items-center justify-center text-[10px] sm:text-xs font-bold cursor-pointer rounded-full ${isActive ? "ring-2" : ""}`}
                         style={{ borderColor: accentColor + "88", color: accentColor, boxShadow: isActive ? `0 0 0 2px ${accentColor}` : undefined }}
                         aria-label={`Edit reward on step ${step}`}>
                         {inner}
                       </motion.button>
                     ) : (
-                      <div className="relative aspect-square w-full flex items-center justify-center text-xs sm:text-sm font-bold" style={{ color: accentColor }}>
+                      <div className="relative aspect-square w-full min-w-0 flex items-center justify-center text-[10px] sm:text-xs font-bold" style={{ color: accentColor }}>
                         {inner}
                       </div>
                     )}
