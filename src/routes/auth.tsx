@@ -25,6 +25,7 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [signupEmail, setSignupEmail] = useState<string | null>(null);
   const [mode, setMode] = useState<"password" | "signup" | "reset">("password");
 
   const intendedPath = redirect && redirect.startsWith("/") ? redirect : "/wallet";
@@ -89,8 +90,7 @@ function AuthPage() {
     setSending(false);
     if (error) { toast.error(error.message); return; }
     if (data.session) { goNext(); return; }
-    toast.success("Check your email to confirm your account");
-    setMode("password");
+    setSignupEmail(email);
     setPassword("");
   };
 
@@ -129,18 +129,42 @@ function AuthPage() {
         </div>
 
         <div className="mt-8 space-y-3">
-          <Button onClick={handleGoogle} className="w-full h-11" variant="outline">
-            <GoogleIcon /> Continue with Google
-          </Button>
-          <Button onClick={handleApple} className="w-full h-11" variant="outline">
-            <AppleIcon /> Continue with Apple
-          </Button>
+          {signupEmail ? (
+            <div className="rounded-xl border border-ink/10 bg-background/60 p-6 text-center space-y-4">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-mint/30 text-accent-foreground">
+                <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25H4.5a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 21.75 4.5H4.5A2.25 2.25 0 0 0 2.25 6.75m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="font-display text-lg font-semibold">Confirm your email</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  We sent a confirmation link to <span className="font-medium text-foreground">{signupEmail}</span>. Tap the link in the email to finish signing up.
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => { setSignupEmail(null); setMode("password"); setEmail(""); }}
+              >
+                Back to sign in
+              </Button>
+            </div>
+          ) : (
+            <>
+              <Button onClick={handleGoogle} className="w-full h-11" variant="outline">
+                <GoogleIcon /> Continue with Google
+              </Button>
+              <Button onClick={handleApple} className="w-full h-11" variant="outline">
+                <AppleIcon /> Continue with Apple
+              </Button>
 
-          <div className="flex items-center gap-3 py-2 text-xs text-muted-foreground">
-            <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
-          </div>
+              <div className="flex items-center gap-3 py-2 text-xs text-muted-foreground">
+                <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
+              </div>
 
-          {mode === "password" && (
+              {mode === "password" && (
             <form onSubmit={handlePassword} className="space-y-3">
               <Input
                 type="email"
@@ -238,13 +262,15 @@ function AuthPage() {
                 className="w-full text-xs"
                 onClick={() => { setMode("password"); setEmail(""); setPassword(""); }}
               >
-                Back to sign in
-              </Button>
-            </form>
+              Back to sign in
+            </Button>
+          </form>
           )}
-        </div>
+        </>
+      )}
+    </div>
 
-        <OrnamentDivider className="mt-8 w-full opacity-60" />
+    <OrnamentDivider className="mt-8 w-full opacity-60" />
         <p className="mt-4 text-center text-xs text-muted-foreground">
           By continuing you agree to fair use of our stamp cards.
         </p>
