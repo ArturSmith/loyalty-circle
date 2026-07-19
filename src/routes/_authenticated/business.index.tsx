@@ -11,7 +11,7 @@ import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { Plus, QrCode, ScanLine, Users, Stamp as StampIco, Wallet as WalletIcon, Pencil, Menu, Settings, LogOut, Download } from "lucide-react";
 import { StampCard } from "@/components/StampCard";
 import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Carousel, CarouselApi, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import QRCode from "qrcode";
 
 type Business = { id: string; name: string; logo_url: string | null; brand_color: string | null };
@@ -33,6 +33,8 @@ function BusinessDashboard() {
   const [stats, setStats] = useState({ stamps: 0, customers: 0, active: 0 });
   const [loading, setLoading] = useState(true);
   const [showQr, setShowQr] = useState(false);
+  const [api, setApi] = useState<CarouselApi>();
+  const [current, setCurrent] = useState(0);
   // create biz form
   const [name, setName] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
@@ -57,6 +59,12 @@ function BusinessDashboard() {
       setLoading(false);
     })();
   }, []);
+
+  useEffect(() => {
+    if (!api) return;
+    setCurrent(api.selectedScrollSnap());
+    api.on("select", () => setCurrent(api.selectedScrollSnap()));
+  }, [api]);
 
   const createBiz = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -206,7 +214,11 @@ function BusinessDashboard() {
         )}
 
         {tpls.length > 0 && (
-          <Carousel opts={{ align: "center" }} className="relative">
+          <Carousel
+            opts={{ align: "center" }}
+            setApi={(api) => setApi(api)}
+            className="relative"
+          >
             <CarouselContent className="-ml-0">
               {tpls.map((t) => (
                 <CarouselItem key={t.id} className="basis-full pl-0">
@@ -244,10 +256,18 @@ function BusinessDashboard() {
             </CarouselContent>
 
             {tpls.length > 1 && (
-              <>
-                <CarouselPrevious className="left-2 top-1/2 h-9 w-9 -translate-y-1/2 bg-background/90 shadow-md" />
-                <CarouselNext className="right-2 top-1/2 h-9 w-9 -translate-y-1/2 bg-background/90 shadow-md" />
-              </>
+              <div className="mt-4 flex justify-center gap-2">
+                {tpls.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => api?.scrollTo(i)}
+                    className={`h-2 rounded-full transition-all ${
+                      current === i ? "w-5 bg-foreground" : "w-2 bg-foreground/30"
+                    }`}
+                    aria-label={`Go to card ${i + 1}`}
+                  />
+                ))}
+              </div>
             )}
           </Carousel>
         )}
