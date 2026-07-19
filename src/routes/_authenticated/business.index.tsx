@@ -209,7 +209,7 @@ function BusinessDashboard() {
           <Carousel opts={{ align: "start" }} className="relative">
             <CarouselContent className="-ml-0 pr-5">
               {tpls.map((t) => (
-                <CarouselItem key={t.id} className="pl-5 basis-[88%] sm:basis-[72%] lg:basis-[62%]">
+                <CarouselItem key={t.id} className="basis-full pl-0">
                   <Link
                     to="/business/cards/$id"
                     params={{ id: t.id }}
