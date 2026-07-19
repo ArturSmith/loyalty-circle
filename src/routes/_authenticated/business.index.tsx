@@ -206,7 +206,11 @@ function BusinessDashboard() {
         )}
 
         {tpls.length > 0 && (
-          <Carousel opts={{ align: "center" }} className="relative">
+          <Carousel
+            opts={{ align: "center" }}
+            setApi={(api) => setApi(api)}
+            className="relative"
+          >
             <CarouselContent className="-ml-0">
               {tpls.map((t) => (
                 <CarouselItem key={t.id} className="basis-full pl-0">
@@ -244,10 +248,18 @@ function BusinessDashboard() {
             </CarouselContent>
 
             {tpls.length > 1 && (
-              <>
-                <CarouselPrevious className="left-2 top-1/2 h-9 w-9 -translate-y-1/2 bg-background/90 shadow-md" />
-                <CarouselNext className="right-2 top-1/2 h-9 w-9 -translate-y-1/2 bg-background/90 shadow-md" />
-              </>
+              <div className="mt-4 flex justify-center gap-2">
+                {tpls.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => api?.scrollTo(i)}
+                    className={`h-2 rounded-full transition-all ${
+                      current === i ? "w-5 bg-foreground" : "w-2 bg-foreground/30"
+                    }`}
+                    aria-label={`Go to card ${i + 1}`}
+                  />
+                ))}
+              </div>
             )}
           </Carousel>
         )}
