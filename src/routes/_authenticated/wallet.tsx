@@ -14,7 +14,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { getFrozenBusinessIds } from "@/utils/frozen-businesses.functions";
 
 type Instance = {
-  id: string; stamps_count: number; completed_at: string | null; created_at: string;
+  id: string; stamps_count: number; completed_at: string | null; created_at: string; order_index: number | null;
   template: {
     id: string; title: string; subtitle: string | null; total_steps: number; shape: CardShape; stamp_shape?: StampShape;
     bg_color: string; accent_color: string; text_color: string; stamp_icon: StampIconName;
@@ -56,10 +56,11 @@ function Wallet() {
     if (!u.user) { setInstances([]); setLoading(false); return; }
     const { data } = await supabase
       .from("card_instances")
-      .select(`id, stamps_count, completed_at, created_at,
+      .select(`id, stamps_count, completed_at, created_at, order_index,
         template:card_templates!inner(id, title, subtitle, total_steps, shape, stamp_shape, bg_color, accent_color, text_color, stamp_icon, logo_url, rewards,
           business:businesses!inner(id, name))`)
       .eq("customer_id", u.user.id)
+      .order("order_index", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false });
     const next = (data as unknown as Instance[]) ?? [];
     // Diff against previous state to celebrate any stamp increment for the current user
@@ -259,6 +260,16 @@ function Wallet() {
                               const idx = prev.findIndex((x) => x.id === inst.id);
                               if (idx < prev.length - 1) {
                                 const reordered = [...prev.slice(0, idx), ...prev.slice(idx + 1), prev[idx]];
+                                // Persist order to database
+                                (async () => {
+                                  const updates = reordered.map((card, i) => ({
+                                    id: card.id,
+                                    order_index: reordered.length - i, // Higher index = higher in list
+                                  }));
+                                  for (const update of updates) {
+                                    await supabase.from("card_instances").update({ order_index: update.order_index }).eq("id", update.id);
+                                  }
+                                })();
                                 return reordered;
                               }
                               return prev;
