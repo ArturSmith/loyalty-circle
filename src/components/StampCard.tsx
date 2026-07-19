@@ -72,7 +72,6 @@ export function StampCard({
           className="flex flex-col items-center justify-center gap-2 py-3 px-2 sm:py-4 sm:px-3 shrink-0"
           style={{ borderRight: `2px solid ${accentColor}`, width: "26%", minWidth: 78, maxWidth: 140 }}
         >
-          <div className="w-full border-t-2" style={{ borderColor: accentColor }} />
           {onTitleClick ? (
             <button
               type="button"
@@ -92,11 +91,10 @@ export function StampCard({
           )}
           <div
             className="font-display font-bold leading-none text-center"
-            style={{ color: accentColor, fontSize: "clamp(1.25rem, 6vw, 2.75rem)" }}
+            style={{ color: accentColor, fontSize: "clamp(1rem, 4.5vw, 1.75rem)" }}
           >
             {headlineReward ?? "—"}
           </div>
-          <div className="w-full border-t-2" style={{ borderColor: accentColor }} />
           {(() => {
             const inner = logoUrl ? (
               <img src={logoUrl} alt="" className="h-6 w-6 sm:h-8 sm:w-8 object-contain" />
@@ -191,7 +189,6 @@ export function StampCard({
 
           {/* Brand footer */}
           <div className="mt-3 text-center">
-            <div className="border-t-2 mx-auto w-2/3 mb-1.5" style={{ borderColor: accentColor }} />
             {businessName && (
               <div className="font-display font-bold tracking-[0.2em] text-sm sm:text-lg leading-none" style={{ color: accentColor }}>
                 {businessName}
