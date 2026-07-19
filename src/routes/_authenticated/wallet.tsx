@@ -239,14 +239,17 @@ function Wallet() {
                     top = expandedIndex * TIGHT + GAP + CARD_H + GAP + (i - expandedIndex - 1) * (TIGHT + 8);
                   }
                   const isFrozen = frozenBusinessIds.has(inst.template.business.id);
+                  // Stable z-index: expanded card always on top, others keep their stack order
+                  const zIndex = isExpanded ? 100 : instances.length - i;
                   return (
                     <motion.div
                       key={inst.id}
+                      layout
                       className="absolute inset-x-0"
                       initial={false}
-                      animate={{ y: top, scale: isExpanded ? 1 : 0.98 }}
-                      transition={{ type: "spring", stiffness: 260, damping: 30 }}
-                      style={{ zIndex: i + 1 }}
+                      animate={{ y: top, scale: isExpanded ? 1.02 : 1 }}
+                      transition={{ type: "spring", stiffness: 160, damping: 26, mass: 0.8 }}
+                      style={{ zIndex }}
                     >
                       <button
                         type="button"
@@ -255,25 +258,6 @@ function Wallet() {
                           if (isExpanded) {
                             setFlippedId(inst.id);
                           } else {
-                            // Move card to last position and expand it
-                            setInstances((prev) => {
-                              const idx = prev.findIndex((x) => x.id === inst.id);
-                              if (idx < prev.length - 1) {
-                                const reordered = [...prev.slice(0, idx), ...prev.slice(idx + 1), prev[idx]];
-                                // Persist order to database
-                                (async () => {
-                                  const updates = reordered.map((card, i) => ({
-                                    id: card.id,
-                                    order_index: reordered.length - i, // Higher index = higher in list
-                                  }));
-                                  for (const update of updates) {
-                                    await supabase.from("card_instances").update({ order_index: update.order_index }).eq("id", update.id);
-                                  }
-                                })();
-                                return reordered;
-                              }
-                              return prev;
-                            });
                             setExpandedId(inst.id);
                           }
                         }}
