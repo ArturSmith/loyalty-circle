@@ -141,7 +141,7 @@ function AuthPage() {
                 className="h-11"
               />
               <Button type="submit" disabled={sending} className="w-full h-11">
-                {sending ? "Signing in…" : "Email me a sign-in link"}
+                {sending ? "Signing in…" : "Sign in"}
               </Button>
               <Button
                 type="button"
