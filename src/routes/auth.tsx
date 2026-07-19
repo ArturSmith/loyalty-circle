@@ -76,6 +76,24 @@ function AuthPage() {
     goNext();
   };
 
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) return;
+    if (password.length < 6) { toast.error("Password must be at least 6 characters"); return; }
+    setSending(true);
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: window.location.origin + intendedPath },
+    });
+    setSending(false);
+    if (error) { toast.error(error.message); return; }
+    if (data.session) { goNext(); return; }
+    toast.success("Check your email to confirm your account");
+    setMode("password");
+    setPassword("");
+  };
+
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
