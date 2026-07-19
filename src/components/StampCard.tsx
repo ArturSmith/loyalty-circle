@@ -57,7 +57,7 @@ export function StampCard({
 
   return (
     <div
-      className={`relative w-full paper-grain ${disableShadow ? "" : "card-shadow"} ${radius} overflow-hidden`}
+      className={`relative w-full paper-grain ${disableShadow ? "" : "card-shadow"} ${radius} overflow-hidden min-h-[124px] sm:min-h-[172px]`}
       style={{ backgroundColor: bgColor, color: textColor }}
     >
       <div className="flex">
