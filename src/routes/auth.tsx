@@ -129,18 +129,42 @@ function AuthPage() {
         </div>
 
         <div className="mt-8 space-y-3">
-          <Button onClick={handleGoogle} className="w-full h-11" variant="outline">
-            <GoogleIcon /> Continue with Google
-          </Button>
-          <Button onClick={handleApple} className="w-full h-11" variant="outline">
-            <AppleIcon /> Continue with Apple
-          </Button>
+          {signupEmail ? (
+            <div className="rounded-xl border border-ink/10 bg-background/60 p-6 text-center space-y-4">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25H4.5a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 21.75 4.5H4.5A2.25 2.25 0 0 0 2.25 6.75m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="font-display text-lg font-semibold">Confirm your email</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  We sent a confirmation link to <span className="font-medium text-foreground">{signupEmail}</span>. Tap the link in the email to finish signing up.
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => { setSignupEmail(null); setMode("password"); setEmail(""); }}
+              >
+                Back to sign in
+              </Button>
+            </div>
+          ) : (
+            <>
+              <Button onClick={handleGoogle} className="w-full h-11" variant="outline">
+                <GoogleIcon /> Continue with Google
+              </Button>
+              <Button onClick={handleApple} className="w-full h-11" variant="outline">
+                <AppleIcon /> Continue with Apple
+              </Button>
 
-          <div className="flex items-center gap-3 py-2 text-xs text-muted-foreground">
-            <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
-          </div>
+              <div className="flex items-center gap-3 py-2 text-xs text-muted-foreground">
+                <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
+              </div>
 
-          {mode === "password" && (
+              {mode === "password" && (
             <form onSubmit={handlePassword} className="space-y-3">
               <Input
                 type="email"
