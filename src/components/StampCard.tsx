@@ -66,6 +66,7 @@ export function StampCard({
 
   const stepSize = getStepSize();
   const stepTextSize = normalizedSteps <= 12 ? "text-[10px]" : "text-[9px]";
+  const rewardTextSize = normalizedSteps <= 12 ? "text-xs sm:text-sm" : "text-[10px] sm:text-xs";
   const iconSize = normalizedSteps <= 12 ? "h-3.5 w-3.5" : "h-3 w-3";
 
   const stampShapeClass = stampShape === "square" ? "rounded-lg" : stampShape === "diamond" ? "rounded-none transform -rotate-45" : "rounded-full";
