@@ -122,13 +122,13 @@ export function StampCard({
           })()}
         </div>
 
-        {/* RIGHT — stamps + brand */}
-        <div className="flex-1 flex flex-col justify-between p-3 sm:p-4 min-w-0">
+        {/* RIGHT — stamps grid */}
+        <div className="flex-1 flex flex-col justify-center items-center p-3 sm:p-4 min-w-0">
           {hideSteps ? (
             <div className="min-h-[60px]" />
           ) : (
             <div
-              className="grid gap-2 sm:gap-2.5 content-start justify-items-center mx-auto"
+              className="grid gap-2 sm:gap-2.5 content-center justify-items-center mx-auto"
               style={{
                 gridTemplateColumns: `repeat(${cols}, minmax(0, auto))`,
                 gridTemplateRows: rows > 0 ? `repeat(${rows}, auto)` : undefined,
@@ -150,13 +150,44 @@ export function StampCard({
                   boxShadow: isActive ? `0 0 0 2px ${accentColor}` : undefined,
                 } as const;
 
-                const content = reward ? (
+                const rewardLabel = reward ? (
                   <span className="font-bold uppercase text-center px-0.5 leading-none" style={{ fontSize: "7px", lineHeight: 1 }}>
                     {reward.label}
                   </span>
-                ) : (
-                  <span className="font-bold text-[10px] sm:text-xs">{step}</span>
-                );
+                ) : null;
+
+                const numberLabel = <span className="font-bold text-[10px] sm:text-xs">{step}</span>;
+
+                if (reward) {
+                  if (clickable) {
+                    return (
+                      <motion.button
+                        key={i}
+                        type="button"
+                        onClick={() => onStepClick!(step)}
+                        whileHover={{ scale: 1.15 }}
+                        whileTap={{ scale: 0.95 }}
+                        className={`${stepBox} flex items-center justify-center cursor-pointer bg-transparent border-0`}
+                        style={{ color: accentColor }}
+                        aria-label={`Edit reward on step ${step}`}
+                      >
+                        {rewardLabel}
+                      </motion.button>
+                    );
+                  }
+                  return (
+                    <motion.div
+                      key={isLast ? `stamp-${lastStamp}` : `slot-${i}`}
+                      initial={isLast ? { scale: 3, rotate: -18, opacity: 0 } : false}
+                      animate={isLast ? { scale: 1, rotate: 0, opacity: 1 } : undefined}
+                      transition={{ type: "spring", stiffness: 260, damping: 14 }}
+                      className={`${stepBox} flex items-center justify-center`}
+                      style={{ color: accentColor }}
+                    >
+                      {rewardLabel}
+                    </motion.div>
+                  );
+                }
 
                 if (clickable) {
                   return (
@@ -168,11 +199,11 @@ export function StampCard({
                       transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
                       whileHover={{ scale: 1.15 }}
                       whileTap={{ scale: 0.95 }}
-                      className={`${stepBox} rounded-full border-2 flex items-center justify-center cursor-pointer ${reward ? "border-dashed" : ""}`}
+                      className={`${stepBox} rounded-full border-2 flex items-center justify-center cursor-pointer`}
                       style={commonStyle}
-                      aria-label={reward ? `Edit reward on step ${step}` : `Edit step ${step}`}
+                      aria-label={`Edit step ${step}`}
                     >
-                      {content}
+                      {numberLabel}
                     </motion.button>
                   );
                 }
@@ -186,7 +217,7 @@ export function StampCard({
                     className={`${stepBox} rounded-full border-2 flex items-center justify-center ${filled ? "stamp-emboss" : ""}`}
                     style={commonStyle}
                   >
-                    {content}
+                    {numberLabel}
                   </motion.div>
                 );
               })}
