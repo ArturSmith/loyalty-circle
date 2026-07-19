@@ -48,37 +48,27 @@ export function StampCard({
   const Icon = stampIcon ? (STAMP_ICONS[stampIcon] ?? Star) : null;
   const radius = shape === "square" ? "rounded-lg" : shape === "ticket" ? "rounded-none" : "rounded-3xl";
   
-  // Limit max steps to 30
-  const normalizedSteps = Math.min(30, Math.max(0, totalSteps));
+  const normalizedSteps = Math.max(0, totalSteps);
 
   // Row can contain max 8 steps
   const colsPerRow = Math.min(8, normalizedSteps || 1);
   const cols = Math.max(1, colsPerRow);
   const rows = normalizedSteps > 0 ? Math.ceil(normalizedSteps / cols) : 0;
 
-  // Size of steps item depends on max amount - smaller steps for more items
-  const getStepSize = () => {
-    if (normalizedSteps <= 6) return "max-w-[44px]"; // Large
-    if (normalizedSteps <= 12) return "max-w-[34px]"; // Medium
-    if (normalizedSteps <= 20) return "max-w-[28px]"; // Small
-    return "max-w-[22px]"; // Extra small
-  };
-
-  const stepSize = getStepSize();
-  const stepTextSize = normalizedSteps <= 12 ? "text-[10px]" : "text-[9px]";
-  const rewardTextSize = normalizedSteps <= 12 ? "text-xs sm:text-sm" : "text-[10px] sm:text-xs";
-  const iconSize = normalizedSteps <= 12 ? "h-3.5 w-3.5" : "h-3 w-3";
-
-  const stampShapeClass = stampShape === "square" ? "rounded-lg" : stampShape === "diamond" ? "rounded-none transform -rotate-45" : "rounded-full";
+  // Static square step size (does not shrink with more steps — card grows instead)
+  const stepBox = "h-9 w-9 sm:h-11 sm:w-11";
+  const stepTextSize = "text-[11px]";
+  const rewardTextSize = "text-xs sm:text-sm";
+  const iconSize = "h-4 w-4";
 
   const editableClass = "rounded-md transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 cursor-pointer px-1 -mx-1";
 
   return (
     <div
       className={`relative w-full paper-grain border-2 ${disableShadow ? "" : "card-shadow"} ${radius}`}
-      style={{ backgroundColor: bgColor, borderColor: accentColor + "22", color: textColor, aspectRatio: "1.586 / 1" }}
+      style={{ backgroundColor: bgColor, borderColor: accentColor + "22", color: textColor }}
     >
-      <div className="flex h-full flex-col p-4 sm:p-5">
+      <div className="flex flex-col p-4 sm:p-5">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             {onTitleClick ? (
@@ -113,12 +103,13 @@ export function StampCard({
           })()}
         </div>
 
-        {hideSteps && <div className="flex-1" />}
+        {hideSteps && <div className="mt-2" />}
         {!hideSteps && (
-          <div className="flex-1 grid gap-1.5 sm:gap-2 content-start items-center mt-2 min-w-0"
+          <div className="grid gap-1.5 sm:gap-2 content-start justify-items-center mt-4 min-w-0"
             style={{
-              gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+              gridTemplateColumns: `repeat(${cols}, minmax(0, auto))`,
               gridTemplateRows: rows > 0 ? `repeat(${rows}, auto)` : undefined,
+              justifyContent: "center",
             }}>
             {Array.from({ length: normalizedSteps }).map((_, i) => {
               const step = i + 1;
@@ -127,7 +118,7 @@ export function StampCard({
               const isLast = filled && step === stampsCount && lastStamp !== undefined;
               const isActive = activeStep === step;
               const clickable = !!onStepClick;
-              const inner = filled && Icon ? <Icon className="h-4 w-4" /> : reward ? <span className="leading-none">{reward.label}</span> : <span className="opacity-60">{step}</span>;
+              const inner = filled && Icon ? <Icon className={iconSize} /> : reward ? <span className="leading-none">{reward.label}</span> : <span className="opacity-60">{step}</span>;
               const slotInner = filled && Icon ? <Icon className={iconSize} /> : <span className={`opacity-60 ${stepTextSize}`}>{step}</span>;
               const commonStyle = {
                 borderColor: accentColor + (filled ? "" : isActive ? "" : "55"),
@@ -135,10 +126,7 @@ export function StampCard({
                 color: filled ? bgColor : accentColor,
                 boxShadow: isActive ? `0 0 0 2px ${accentColor}` : undefined,
               } as const;
-              
-              // Use circle shape for steps with rewards, use selected shape otherwise
-              const shapeForStep = reward ? "circle" : stampShape;
-              
+
               // For reward steps, show label; make clickable during card creation
               if (reward) {
                 return (
@@ -149,20 +137,20 @@ export function StampCard({
                         onClick={() => onStepClick!(step)}
                         whileHover={{ scale: 1.12 }}
                         whileTap={{ scale: 0.95 }}
-                        className={`relative aspect-square w-full min-w-0 ${stepSize} border-2 border-dashed flex items-center justify-center ${rewardTextSize} font-bold cursor-pointer rounded-full ${isActive ? "ring-2" : ""}`}
+                        className={`relative ${stepBox} border-2 border-dashed flex items-center justify-center ${rewardTextSize} font-bold cursor-pointer rounded-lg ${isActive ? "ring-2" : ""}`}
                         style={{ borderColor: accentColor + "88", color: accentColor, boxShadow: isActive ? `0 0 0 2px ${accentColor}` : undefined }}
                         aria-label={`Edit reward on step ${step}`}>
                         {inner}
                       </motion.button>
                     ) : (
-                      <div className={`relative aspect-square w-full min-w-0 flex items-center justify-center ${rewardTextSize} font-bold`} style={{ color: accentColor }}>
+                      <div className={`relative ${stepBox} flex items-center justify-center ${rewardTextSize} font-bold`} style={{ color: accentColor }}>
                         {inner}
                       </div>
                     )}
                   </div>
                 );
               }
-              
+
               return (
                 <div key={i} className="flex items-center justify-center">
                   {clickable ? (
@@ -173,10 +161,10 @@ export function StampCard({
                       transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
                       whileHover={{ scale: 1.15 }}
                       whileTap={{ scale: 0.95 }}
-                      className={`relative aspect-square w-full min-w-0 ${stepSize} border-2 flex items-center justify-center ${stepTextSize} font-semibold cursor-pointer ${shapeForStep === "diamond" ? "transform -rotate-45" : shapeForStep === "square" ? "rounded-lg" : "rounded-full"} ${filled ? "stamp-emboss" : ""}`}
+                      className={`relative ${stepBox} border-2 flex items-center justify-center ${stepTextSize} font-semibold cursor-pointer rounded-lg ${filled ? "stamp-emboss" : ""}`}
                       style={commonStyle}
                       aria-label={`Edit step ${step}`}>
-                      {shapeForStep === "diamond" ? <span className="transform rotate-45">{slotInner}</span> : slotInner}
+                      {slotInner}
                     </motion.button>
                   ) : (
                     <motion.div
@@ -184,10 +172,10 @@ export function StampCard({
                       initial={isLast ? { scale: 3, rotate: -18, opacity: 0 } : false}
                       animate={isLast ? { scale: 1, rotate: 0, opacity: 1 } : undefined}
                       transition={{ type: "spring", stiffness: 260, damping: 14 }}
-                      className={`relative aspect-square w-full min-w-0 ${stepSize} border-2 flex items-center justify-center ${stepTextSize} font-semibold ${shapeForStep === "diamond" ? "transform -rotate-45" : shapeForStep === "square" ? "rounded-lg" : "rounded-full"} ${filled ? "stamp-emboss" : ""}`}
+                      className={`relative ${stepBox} border-2 flex items-center justify-center ${stepTextSize} font-semibold rounded-lg ${filled ? "stamp-emboss" : ""}`}
                       style={commonStyle}
                     >
-                      {shapeForStep === "diamond" ? <span className="transform rotate-45">{slotInner}</span> : slotInner}
+                      {slotInner}
                     </motion.div>
                   )}
                 </div>
@@ -196,6 +184,7 @@ export function StampCard({
           </div>
         )}
       </div>
+
     </div>
   );
 }
