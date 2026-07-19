@@ -60,7 +60,7 @@ export function CardWizard({ templateId }: Props) {
   const [customColors, setCustomColors] = useState<{ bg: string; accent: string; text: string } | null>(null);
   const [icon, setIcon] = useState<StampIconName | null>(null);
   const [logoUrl, setLogoUrl] = useState("");
-  const [rewards, setRewards] = useState<Reward[]>([{ step: 5, label: "-50%" }, { step: 10, label: "FREE" }]);
+  const [rewards, setRewards] = useState<Reward[]>([]);
   const [active, setActive] = useState(true);
 
   useEffect(() => {
