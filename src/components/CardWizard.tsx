@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { StampCard, STAMP_ICONS } from "@/components/StampCard";
-import type { CardShape, Reward, StampIconName, StampShape } from "@/components/StampCard";
+import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
 import { ArrowLeft, ArrowRight, Check, Trash2 } from "lucide-react";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 
@@ -27,12 +27,6 @@ const SHAPES: { value: CardShape; label: string }[] = [
   { value: "ticket", label: "Ticket" },
 ];
 
-const STAMP_SHAPES: { value: StampShape; label: string }[] = [
-  { value: "circle", label: "Circle" },
-  { value: "square", label: "Square" },
-  { value: "diamond", label: "Diamond" },
-  { value: "heart", label: "Heart" },
-];
 
 const ICONS: StampIconName[] = ["scissors", "coffee", "sparkles", "star", "heart", "flame", "cookie", "wine"];
 
@@ -55,7 +49,6 @@ export function CardWizard({ templateId }: Props) {
   const [subtitle, setSubtitle] = useState("");
   const [totalSteps, setTotalSteps] = useState(10);
   const [shape, setShape] = useState<CardShape>("rounded");
-  const [stampShape, setStampShape] = useState<StampShape>("circle");
   const [preset, setPreset] = useState<number>(0);
   const [customColors, setCustomColors] = useState<{ bg: string; accent: string; text: string } | null>(null);
   const [icon, setIcon] = useState<StampIconName | null>(null);
@@ -75,7 +68,7 @@ export function CardWizard({ templateId }: Props) {
         const { data: t } = await supabase.from("card_templates").select("*").eq("id", templateId).maybeSingle();
         if (t) {
           const tpl = t as {
-            title: string; subtitle: string | null; total_steps: number; shape: CardShape; stamp_shape?: StampShape;
+            title: string; subtitle: string | null; total_steps: number; shape: CardShape;
             bg_color: string; accent_color: string; text_color: string; stamp_icon: StampIconName;
             logo_url: string | null; rewards: Reward[] | null; active: boolean;
           };
@@ -83,7 +76,6 @@ export function CardWizard({ templateId }: Props) {
           setSubtitle(tpl.subtitle ?? "");
           setTotalSteps(tpl.total_steps);
           setShape(tpl.shape);
-          setStampShape(tpl.stamp_shape ?? "circle");
           const pi = matchPreset(tpl.bg_color, tpl.accent_color, tpl.text_color);
           if (pi >= 0) setPreset(pi);
           else setCustomColors({ bg: tpl.bg_color, accent: tpl.accent_color, text: tpl.text_color });
@@ -105,7 +97,7 @@ export function CardWizard({ templateId }: Props) {
     const cleanRewards = rewards.filter((r) => r.step >= 1 && r.step <= totalSteps && r.label.trim().length > 0);
     const payload = {
       title, subtitle: subtitle || null,
-      total_steps: totalSteps, shape, stamp_shape: stampShape, bg_color: bg, accent_color: accent, text_color: text,
+      total_steps: totalSteps, shape, bg_color: bg, accent_color: accent, text_color: text,
       stamp_icon: icon ?? "star", logo_url: logoUrl || null, rewards: cleanRewards, active,
     };
     const { error } = isEdit && templateId
@@ -178,7 +170,7 @@ export function CardWizard({ templateId }: Props) {
 
       <div className="mt-6 rounded-2xl border-2 border-ink/10 bg-card p-4">
         <StampCard title={title || "Card title"} subtitle={subtitle} totalSteps={totalSteps} stampsCount={0}
-          shape={shape} stampShape={stampShape} bgColor={bg} accentColor={accent} textColor={text} stampIcon={icon}
+          shape={shape} bgColor={bg} accentColor={accent} textColor={text} stampIcon={icon}
           logoUrl={logoUrl || null} rewards={rewards} businessName="PREVIEW"
           hideSteps={step < 2}
           onStepClick={step === 2 ? openStepEditor : undefined}
@@ -378,17 +370,6 @@ export function CardWizard({ templateId }: Props) {
                     }}
                     className="mt-2 w-32"
                   />
-                </div>
-                <div>
-                  <Label>Stamp shape</Label>
-                  <div className="mt-2 flex gap-2">
-                    {STAMP_SHAPES.map((s) => (
-                      <button key={s.value} type="button" onClick={() => setStampShape(s.value)}
-                        className={`px-3 py-2 rounded-lg border-2 text-sm ${stampShape === s.value ? "border-ink bg-secondary" : "border-border"}`}>
-                        {s.label}
-                      </button>
-                    ))}
-                  </div>
                 </div>
                 <p className="text-sm text-muted-foreground">Tap a step on the preview above to set the benefit shown when the customer reaches it (e.g. "-50%" on step 5, "FREE" on step 10).</p>
               </div>
