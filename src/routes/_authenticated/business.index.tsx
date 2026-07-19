@@ -206,8 +206,8 @@ function BusinessDashboard() {
         )}
 
         {tpls.length > 0 && (
-          <Carousel opts={{ align: "start" }} className="relative">
-            <CarouselContent className="-ml-0 pr-5">
+          <Carousel opts={{ align: "center" }} className="relative">
+            <CarouselContent className="-ml-0">
               {tpls.map((t) => (
                 <CarouselItem key={t.id} className="basis-full pl-0">
                   <Link
