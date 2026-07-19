@@ -198,7 +198,7 @@ function BusinessDashboard() {
         <h2 className="font-display text-xl">Your cards</h2>
       </div>
 
-  <div className="mt-4 -mx-5 px-0">
+  <div className="mt-4">
         {tpls.length === 0 && (
           <div className="rounded-xl border-2 border-dashed border-border p-8 text-center text-sm text-muted-foreground">
             No cards yet. Create your first loyalty card to share with customers.
