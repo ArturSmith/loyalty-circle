@@ -171,7 +171,7 @@ export function StampCard({
                       transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
                       whileHover={{ scale: 1.15 }}
                       whileTap={{ scale: 0.95 }}
-                      className={`relative aspect-square w-full ${stepSize} border-2 flex items-center justify-center text-[10px] font-semibold cursor-pointer ${shapeForStep === "diamond" ? "transform -rotate-45" : shapeForStep === "square" ? "rounded-lg" : "rounded-full"} ${filled ? "stamp-emboss" : ""}`}
+                      className={`relative aspect-square w-full min-w-0 ${stepSize} border-2 flex items-center justify-center ${stepTextSize} font-semibold cursor-pointer ${shapeForStep === "diamond" ? "transform -rotate-45" : shapeForStep === "square" ? "rounded-lg" : "rounded-full"} ${filled ? "stamp-emboss" : ""}`}
                       style={commonStyle}
                       aria-label={`Edit step ${step}`}>
                       {shapeForStep === "diamond" ? <span className="transform rotate-45">{inner}</span> : inner}
