@@ -22,8 +22,10 @@ function AuthPage() {
   const navigate = useNavigate();
   const { redirect } = useSearch({ from: "/auth" });
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [mode, setMode] = useState<"magic" | "password" | "reset">("magic");
 
   const intendedPath = redirect && redirect.startsWith("/") ? redirect : "/wallet";
 
@@ -64,6 +66,30 @@ function AuthPage() {
     setSent(true);
   };
 
+  const handlePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) return;
+    setSending(true);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    setSending(false);
+    if (error) { toast.error(error.message); return; }
+    goNext();
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    setSending(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + "/auth/reset-password",
+    });
+    setSending(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Check your inbox for password reset link");
+    setMode("magic");
+    setEmail("");
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-10">
       <motion.div
@@ -96,12 +122,85 @@ function AuthPage() {
             <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
           </div>
 
-          {sent ? (
-            <div className="rounded-lg bg-secondary p-4 text-center text-sm">
-              Check your inbox — we sent a magic link to <strong>{email}</strong>.
-            </div>
-          ) : (
-            <form onSubmit={handleMagic} className="space-y-3">
+          {mode === "magic" && (
+            <>
+              {sent ? (
+                <div className="rounded-lg bg-secondary p-4 text-center text-sm">
+                  Check your inbox — we sent a magic link to <strong>{email}</strong>.
+                </div>
+              ) : (
+                <form onSubmit={handleMagic} className="space-y-3">
+                  <Input
+                    type="email"
+                    required
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="h-11"
+                  />
+                  <Button type="submit" disabled={sending} className="w-full h-11">
+                    {sending ? "Sending link…" : "Email me a sign-in link"}
+                  </Button>
+                </form>
+              )}
+              <div className="flex gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="flex-1 text-xs"
+                  onClick={() => { setMode("password"); setEmail(""); setSent(false); }}
+                >
+                  Password login
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="flex-1 text-xs"
+                  onClick={() => { setMode("reset"); setEmail(""); setSent(false); }}
+                >
+                  Forgot password
+                </Button>
+              </div>
+            </>
+          )}
+
+          {mode === "password" && (
+            <form onSubmit={handlePassword} className="space-y-3">
+              <Input
+                type="email"
+                required
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="h-11"
+              />
+              <Input
+                type="password"
+                required
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="h-11"
+              />
+              <Button type="submit" disabled={sending} className="w-full h-11">
+                {sending ? "Signing in…" : "Sign in with password"}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="w-full text-xs"
+                onClick={() => { setMode("magic"); setEmail(""); setPassword(""); setSent(false); }}
+              >
+                Back to magic link
+              </Button>
+            </form>
+          )}
+
+          {mode === "reset" && (
+            <form onSubmit={handleResetPassword} className="space-y-3">
               <Input
                 type="email"
                 required
@@ -111,7 +210,16 @@ function AuthPage() {
                 className="h-11"
               />
               <Button type="submit" disabled={sending} className="w-full h-11">
-                {sending ? "Sending link…" : "Email me a sign-in link"}
+                {sending ? "Sending reset link…" : "Send password reset link"}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="w-full text-xs"
+                onClick={() => { setMode("magic"); setEmail(""); setPassword(""); setSent(false); }}
+              >
+                Back to sign in
               </Button>
             </form>
           )}
