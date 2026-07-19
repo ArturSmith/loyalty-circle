@@ -157,7 +157,7 @@ export function StampCard({
                         {inner}
                       </motion.button>
                     ) : (
-                      <div className="relative aspect-square w-full flex items-center justify-center text-[10px] font-semibold" style={{ color: accentColor }}>
+                      <div className="relative aspect-square w-full flex items-center justify-center text-xs sm:text-sm font-bold" style={{ color: accentColor }}>
                         {inner}
                       </div>
                     )}
