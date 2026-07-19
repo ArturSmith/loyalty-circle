@@ -60,29 +60,33 @@ export function StampCard({
       className={`relative w-full paper-grain ${disableShadow ? "" : "card-shadow"} ${radius} overflow-hidden min-h-[124px] sm:min-h-[172px]`}
       style={{ backgroundColor: bgColor, color: textColor }}
     >
+      {/* TOP — centered title above the steps */}
+      <div className="w-full text-center pt-3 sm:pt-4 pb-1 px-4">
+        {onTitleClick ? (
+          <button
+            type="button"
+            onClick={onTitleClick}
+            className={`${editable} font-display font-bold tracking-widest text-sm sm:text-base leading-tight break-words`}
+            style={{ color: accentColor }}
+          >
+            {title}
+          </button>
+        ) : (
+          <div
+            className="font-display font-bold tracking-widest text-sm sm:text-base leading-tight break-words"
+            style={{ color: accentColor }}
+          >
+            {title}
+          </div>
+        )}
+      </div>
+
       <div className="flex">
         {/* LEFT — compact info panel */}
         <div
           className="flex flex-col items-center justify-center gap-2 py-3 px-2 sm:py-4 sm:px-3 shrink-0"
           style={{ width: "22%", minWidth: 70, maxWidth: 120 }}
         >
-          {onTitleClick ? (
-            <button
-              type="button"
-              onClick={onTitleClick}
-              className={`${editable} text-center font-display font-bold tracking-widest text-[11px] sm:text-sm leading-tight break-words w-full px-1`}
-              style={{ color: accentColor }}
-            >
-              {title}
-            </button>
-          ) : (
-            <div
-              className="text-center font-display font-bold tracking-widest text-[11px] sm:text-sm leading-tight break-words w-full px-1"
-              style={{ color: accentColor }}
-            >
-              {title}
-            </div>
-          )}
           {subtitle ? (
             onSubtitleClick ? (
               <button
