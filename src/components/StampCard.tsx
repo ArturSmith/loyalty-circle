@@ -70,7 +70,7 @@ export function StampCard({
         {/* LEFT — compact info panel */}
         <div
           className="flex flex-col items-center justify-center gap-2 py-3 px-2 sm:py-4 sm:px-3 shrink-0"
-          style={{ borderRight: `2px solid ${accentColor}`, width: "26%", minWidth: 78, maxWidth: 140 }}
+          style={{ width: "22%", minWidth: 70, maxWidth: 120 }}
         >
           {onTitleClick ? (
             <button
