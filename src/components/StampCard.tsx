@@ -54,10 +54,6 @@ export function StampCard({
   const cols = Math.max(1, Math.min(8, normalizedSteps || 1));
   const rows = normalizedSteps > 0 ? Math.ceil(normalizedSteps / cols) : 0;
 
-  // Headline reward: the last (highest-step) reward, used as the big number on the left
-  const headlineReward = rewards.length > 0
-    ? [...rewards].sort((a, b) => b.step - a.step)[0].label
-    : null;
 
   const editable = "rounded-md transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 cursor-pointer";
 
