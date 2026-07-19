@@ -114,10 +114,10 @@ export function StampCard({
 
         {hideSteps && <div className="flex-1" />}
         {!hideSteps && (
-          <div className="flex-1 grid gap-1.5 sm:gap-2 items-center mt-2 min-w-0"
+          <div className="flex-1 grid gap-1.5 sm:gap-2 content-center mt-2 min-w-0"
             style={{
               gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-              gridTemplateRows: rows > 0 ? `repeat(${rows}, minmax(0, 1fr))` : undefined,
+              gridTemplateRows: rows > 0 ? `repeat(${rows}, auto)` : undefined,
             }}>
             {Array.from({ length: normalizedSteps }).map((_, i) => {
               const step = i + 1;
