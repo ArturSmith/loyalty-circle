@@ -66,23 +66,6 @@ export function StampCard({
           className="flex flex-col items-center justify-center gap-2 py-3 px-2 sm:py-4 sm:px-3 shrink-0"
           style={{ width: "22%", minWidth: 70, maxWidth: 120 }}
         >
-          {onTitleClick ? (
-            <button
-              type="button"
-              onClick={onTitleClick}
-              className={`${editable} text-center font-display font-bold tracking-widest text-[11px] sm:text-sm leading-tight break-words w-full px-1`}
-              style={{ color: accentColor }}
-            >
-              {title}
-            </button>
-          ) : (
-            <div
-              className="text-center font-display font-bold tracking-widest text-[11px] sm:text-sm leading-tight break-words w-full px-1"
-              style={{ color: accentColor }}
-            >
-              {title}
-            </div>
-          )}
           {subtitle ? (
             onSubtitleClick ? (
               <button
@@ -120,8 +103,25 @@ export function StampCard({
           })()}
         </div>
 
-        {/* RIGHT — stamps grid */}
+        {/* RIGHT — title + stamps grid */}
         <div className="flex-1 flex flex-col justify-center items-center p-3 sm:p-4 min-w-0">
+          {onTitleClick ? (
+            <button
+              type="button"
+              onClick={onTitleClick}
+              className={`${editable} font-display font-bold tracking-widest text-sm sm:text-base leading-tight break-words text-center mb-2`}
+              style={{ color: accentColor }}
+            >
+              {title}
+            </button>
+          ) : (
+            <div
+              className="font-display font-bold tracking-widest text-sm sm:text-base leading-tight break-words text-center mb-2"
+              style={{ color: accentColor }}
+            >
+              {title}
+            </div>
+          )}
           {hideSteps ? (
             <div className="min-h-[60px]" />
           ) : (
