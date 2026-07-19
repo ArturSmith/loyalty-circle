@@ -262,13 +262,15 @@ function AuthPage() {
                 className="w-full text-xs"
                 onClick={() => { setMode("password"); setEmail(""); setPassword(""); }}
               >
-                Back to sign in
-              </Button>
-            </form>
+              Back to sign in
+            </Button>
+          </form>
           )}
-        </div>
+        </>
+      )}
+    </div>
 
-        <OrnamentDivider className="mt-8 w-full opacity-60" />
+    <OrnamentDivider className="mt-8 w-full opacity-60" />
         <p className="mt-4 text-center text-xs text-muted-foreground">
           By continuing you agree to fair use of our stamp cards.
         </p>
