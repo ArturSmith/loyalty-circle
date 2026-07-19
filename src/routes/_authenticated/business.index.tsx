@@ -11,7 +11,7 @@ import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { Plus, QrCode, ScanLine, Users, Stamp as StampIco, Wallet as WalletIcon, Pencil, Menu, Settings, LogOut, Download } from "lucide-react";
 import { StampCard } from "@/components/StampCard";
 import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Carousel, CarouselApi, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import QRCode from "qrcode";
 
 type Business = { id: string; name: string; logo_url: string | null; brand_color: string | null };
