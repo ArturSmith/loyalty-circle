@@ -56,7 +56,7 @@ export function StampCard({
   const rows = normalizedSteps > 0 ? Math.ceil(normalizedSteps / cols) : 0;
 
   // Static square step size (does not shrink with more steps — card grows instead)
-  const stepBox = "h-7 w-7 sm:h-9 sm:w-9";
+  const stepBox = "h-6 w-6 sm:h-9 sm:w-9";
   const stepTextSize = "text-[10px]";
   const rewardTextSize = "text-[11px] sm:text-xs";
   const iconSize = "h-3.5 w-3.5";
