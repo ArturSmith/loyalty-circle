@@ -86,7 +86,7 @@ function AuthPage() {
     setSending(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Check your inbox for password reset link");
-    setMode("magic");
+    setMode("password");
     setEmail("");
   };
 
