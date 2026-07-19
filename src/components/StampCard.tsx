@@ -103,8 +103,25 @@ export function StampCard({
           })()}
         </div>
 
-        {/* RIGHT — stamps grid */}
+        {/* RIGHT — title + stamps grid */}
         <div className="flex-1 flex flex-col justify-center items-center p-3 sm:p-4 min-w-0">
+          {onTitleClick ? (
+            <button
+              type="button"
+              onClick={onTitleClick}
+              className={`${editable} font-display font-bold tracking-widest text-sm sm:text-base leading-tight break-words text-center mb-2`}
+              style={{ color: accentColor }}
+            >
+              {title}
+            </button>
+          ) : (
+            <div
+              className="font-display font-bold tracking-widest text-sm sm:text-base leading-tight break-words text-center mb-2"
+              style={{ color: accentColor }}
+            >
+              {title}
+            </div>
+          )}
           {hideSteps ? (
             <div className="min-h-[60px]" />
           ) : (
