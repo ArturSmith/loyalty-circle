@@ -3,12 +3,13 @@ import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { StampCard, STAMP_ICONS } from "@/components/StampCard";
-import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
+import type { CardShape, Reward, StampIconName, StepSize } from "@/components/StampCard";
 import { ArrowLeft, ArrowRight, Check, Trash2 } from "lucide-react";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 
@@ -27,6 +28,11 @@ const SHAPES: { value: CardShape; label: string }[] = [
   { value: "ticket", label: "Ticket" },
 ];
 
+const STEP_SIZES: { value: StepSize; label: string }[] = [
+  { value: "small", label: "Small" },
+  { value: "medium", label: "Medium" },
+  { value: "large", label: "Large" },
+];
 
 const ICONS: StampIconName[] = ["scissors", "coffee", "sparkles", "star", "heart", "flame", "cookie", "wine"];
 
@@ -47,8 +53,10 @@ export function CardWizard({ templateId }: Props) {
 
   const [title, setTitle] = useState("Loyalty Card");
   const [subtitle, setSubtitle] = useState("");
+  const [description, setDescription] = useState("");
   const [totalSteps, setTotalSteps] = useState(10);
   const [shape, setShape] = useState<CardShape>("rounded");
+  const [stepSize, setStepSize] = useState<StepSize>("medium");
   const [preset, setPreset] = useState<number>(0);
   const [customColors, setCustomColors] = useState<{ bg: string; accent: string; text: string } | null>(null);
   const [icon, setIcon] = useState<StampIconName | null>(null);
@@ -68,14 +76,17 @@ export function CardWizard({ templateId }: Props) {
         const { data: t } = await supabase.from("card_templates").select("*").eq("id", templateId).maybeSingle();
         if (t) {
           const tpl = t as {
-            title: string; subtitle: string | null; total_steps: number; shape: CardShape;
+            title: string; subtitle: string | null; description: string | null;
+            total_steps: number; shape: CardShape; step_size: StepSize | null;
             bg_color: string; accent_color: string; text_color: string; stamp_icon: StampIconName;
             logo_url: string | null; rewards: Reward[] | null; active: boolean;
           };
           setTitle(tpl.title);
           setSubtitle(tpl.subtitle ?? "");
+          setDescription(tpl.description ?? "");
           setTotalSteps(tpl.total_steps);
           setShape(tpl.shape);
+          setStepSize(tpl.step_size ?? "medium");
           const pi = matchPreset(tpl.bg_color, tpl.accent_color, tpl.text_color);
           if (pi >= 0) setPreset(pi);
           else setCustomColors({ bg: tpl.bg_color, accent: tpl.accent_color, text: tpl.text_color });
@@ -96,8 +107,9 @@ export function CardWizard({ templateId }: Props) {
     setSaving(true);
     const cleanRewards = rewards.filter((r) => r.step >= 1 && r.step <= totalSteps && r.label.trim().length > 0);
     const payload = {
-      title, subtitle: subtitle || null,
-      total_steps: totalSteps, shape, bg_color: bg, accent_color: accent, text_color: text,
+      title, subtitle: subtitle || null, description: description || null,
+      total_steps: totalSteps, shape, step_size: stepSize,
+      bg_color: bg, accent_color: accent, text_color: text,
       stamp_icon: icon ?? "star", logo_url: logoUrl || null, rewards: cleanRewards, active,
     };
     const { error } = isEdit && templateId
@@ -119,9 +131,11 @@ export function CardWizard({ templateId }: Props) {
   };
 
   const stepsLabels = ["Basics", "Style", "Steps & rewards", "Review"];
+  const face = step >= 2 ? "stamps" : "info";
+
   const [editingStep, setEditingStep] = useState<number | null>(null);
   const [editingLabel, setEditingLabel] = useState("");
-  const [editingField, setEditingField] = useState<null | "title" | "subtitle" | "icon">(null);
+  const [editingField, setEditingField] = useState<null | "title" | "subtitle" | "description" | "icon">(null);
 
   const openStepEditor = (s: number) => {
     setEditingStep(s);
@@ -169,15 +183,17 @@ export function CardWizard({ templateId }: Props) {
       </div>
 
       <div className="mt-6 rounded-2xl border-2 border-ink/10 bg-card p-4">
-        <StampCard title={title || "Card title"} subtitle={subtitle} totalSteps={totalSteps} stampsCount={0}
-          shape={shape} bgColor={bg} accentColor={accent} textColor={text} stampIcon={icon}
-          logoUrl={logoUrl || null} rewards={rewards} businessName="PREVIEW"
-          hideSteps={step < 2}
+        <StampCard title={title || "Card title"} subtitle={subtitle} description={description}
+          totalSteps={totalSteps} stampsCount={0}
+          shape={shape} stepSize={stepSize} face={face}
+          bgColor={bg} accentColor={accent} textColor={text} stampIcon={icon}
+          logoUrl={logoUrl || null} rewards={rewards}
           onStepClick={step === 2 ? openStepEditor : undefined}
           activeStep={editingStep ?? undefined}
-          onTitleClick={() => { setEditingStep(null); setEditingField("title"); }}
-          onSubtitleClick={() => { setEditingStep(null); setEditingField("subtitle"); }}
-          onIconClick={() => { setEditingStep(null); setEditingField("icon"); }} />
+          onTitleClick={step < 2 ? () => { setEditingStep(null); setEditingField("title"); } : undefined}
+          onSubtitleClick={step < 2 ? () => { setEditingStep(null); setEditingField("subtitle"); } : undefined}
+          onDescriptionClick={step < 2 ? () => { setEditingStep(null); setEditingField("description"); } : undefined}
+          onIconClick={step < 2 ? () => { setEditingStep(null); setEditingField("icon"); } : undefined} />
 
         {editingField === "title" && (
           <div className="mt-4 rounded-xl border-2 border-ink/10 bg-secondary/50 p-3">
@@ -197,6 +213,16 @@ export function CardWizard({ templateId }: Props) {
                 placeholder="Optional"
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === "Escape") setEditingField(null); }} />
               <Button size="sm" onClick={() => setEditingField(null)}><Check className="h-4 w-4" /></Button>
+            </div>
+          </div>
+        )}
+        {editingField === "description" && (
+          <div className="mt-4 rounded-xl border-2 border-ink/10 bg-secondary/50 p-3">
+            <Label className="text-xs">Description</Label>
+            <div className="mt-2 flex flex-col gap-2">
+              <Textarea autoFocus value={description} onChange={(e) => setDescription(e.target.value)}
+                placeholder="Short description shown on the card front" rows={3} />
+              <Button size="sm" onClick={() => setEditingField(null)} className="self-end"><Check className="h-4 w-4" /></Button>
             </div>
           </div>
         )}
@@ -244,7 +270,7 @@ export function CardWizard({ templateId }: Props) {
             </div>
           </div>
         )}
-        {step === 2 && editingStep == null && editingField == null && (
+        {step === 2 && editingStep == null && (
           totalSteps > 0 ? (
             <p className="mt-3 text-center text-sm font-medium text-ink animate-pulse">Tap on step to set rewards</p>
           ) : (
@@ -252,7 +278,7 @@ export function CardWizard({ templateId }: Props) {
           )
         )}
         {step < 2 && editingField == null && (
-          <p className="mt-3 text-center text-xs text-muted-foreground">Tap the title, subtitle, or icon on the card to edit</p>
+          <p className="mt-3 text-center text-xs text-muted-foreground">Tap the title, subtitle, description or icon on the card to edit</p>
         )}
       </div>
 
@@ -268,6 +294,11 @@ export function CardWizard({ templateId }: Props) {
                 <div>
                   <Label>Subtitle (optional)</Label>
                   <Input value={subtitle} onChange={(e) => setSubtitle(e.target.value)} placeholder="10 klipp gratis" />
+                </div>
+                <div>
+                  <Label>Description (optional)</Label>
+                  <Textarea value={description} onChange={(e) => setDescription(e.target.value)}
+                    placeholder="A little context shown on the card front" rows={3} />
                 </div>
                 <div>
                   <Label>Logo (SVG, optional)</Label>
@@ -290,6 +321,17 @@ export function CardWizard({ templateId }: Props) {
                     {SHAPES.map((s) => (
                       <button key={s.value} type="button" onClick={() => setShape(s.value)}
                         className={`rounded-lg border-2 p-3 text-sm ${shape === s.value ? "border-ink bg-secondary" : "border-border"}`}>
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <Label>Step size</Label>
+                  <div className="mt-2 grid grid-cols-3 gap-2">
+                    {STEP_SIZES.map((s) => (
+                      <button key={s.value} type="button" onClick={() => setStepSize(s.value)}
+                        className={`rounded-lg border-2 p-3 text-sm ${stepSize === s.value ? "border-ink bg-secondary" : "border-border"}`}>
                         {s.label}
                       </button>
                     ))}
@@ -354,19 +396,16 @@ export function CardWizard({ templateId }: Props) {
             {step === 2 && (
               <div className="space-y-4">
                 <div>
-                  <Label>Total steps</Label>
+                  <Label>Total steps (max 32)</Label>
                   <Input
                     type="number"
                     min={0}
-                    max={30}
+                    max={32}
                     value={totalSteps}
                     onChange={(e) => {
                       const raw = Number(e.target.value);
-                      if (Number.isNaN(raw)) {
-                        setTotalSteps(0);
-                        return;
-                      }
-                      setTotalSteps(Math.min(30, Math.max(0, raw)));
+                      if (Number.isNaN(raw)) { setTotalSteps(0); return; }
+                      setTotalSteps(Math.min(32, Math.max(0, raw)));
                     }}
                     className="mt-2 w-32"
                   />

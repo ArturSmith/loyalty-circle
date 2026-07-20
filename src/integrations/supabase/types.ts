@@ -92,12 +92,14 @@ export type Database = {
           bg_color: string
           business_id: string
           created_at: string
+          description: string | null
           id: string
           logo_url: string | null
           rewards: Json
           shape: string
           stamp_icon: string
           stamp_shape: string
+          step_size: string
           subtitle: string | null
           text_color: string
           title: string
@@ -110,12 +112,14 @@ export type Database = {
           bg_color?: string
           business_id: string
           created_at?: string
+          description?: string | null
           id?: string
           logo_url?: string | null
           rewards?: Json
           shape?: string
           stamp_icon?: string
           stamp_shape?: string
+          step_size?: string
           subtitle?: string | null
           text_color?: string
           title: string
@@ -128,12 +132,14 @@ export type Database = {
           bg_color?: string
           business_id?: string
           created_at?: string
+          description?: string | null
           id?: string
           logo_url?: string | null
           rewards?: Json
           shape?: string
           stamp_icon?: string
           stamp_shape?: string
+          step_size?: string
           subtitle?: string | null
           text_color?: string
           title?: string

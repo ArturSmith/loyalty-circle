@@ -1,0 +1,1 @@
+ALTER TABLE public.card_templates ADD COLUMN IF NOT EXISTS description text; ALTER TABLE public.card_templates ADD COLUMN IF NOT EXISTS step_size text NOT NULL DEFAULT 'medium';

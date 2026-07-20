@@ -5,15 +5,24 @@ import type { LucideIcon } from "lucide-react";
 export type Reward = { step: number; label: string };
 export type CardShape = "rounded" | "square" | "ticket";
 export type StampIconName = "scissors" | "coffee" | "sparkles" | "star" | "heart" | "flame" | "cookie" | "wine";
+export type StepSize = "small" | "medium" | "large";
+export type CardFace = "info" | "stamps";
 
 export const STAMP_ICONS: Record<StampIconName, LucideIcon> = {
   scissors: Scissors, coffee: Coffee, sparkles: Sparkles, star: Star,
   heart: Heart, flame: Flame, cookie: Cookie, wine: Wine,
 };
 
+const SIZE: Record<StepSize, { tile: string; text: string; gap: string }> = {
+  small:  { tile: "h-6 w-6 sm:h-7 sm:w-7",   text: "text-[9px] sm:text-[10px]", gap: "gap-1 sm:gap-1.5" },
+  medium: { tile: "h-7 w-7 sm:h-9 sm:w-9",   text: "text-[10px] sm:text-xs",    gap: "gap-1.5 sm:gap-2" },
+  large:  { tile: "h-9 w-9 sm:h-11 sm:w-11", text: "text-xs sm:text-sm",        gap: "gap-2 sm:gap-2.5" },
+};
+
 export interface StampCardProps {
   title: string;
   subtitle?: string | null;
+  description?: string | null;
   totalSteps: number;
   stampsCount?: number;
   shape?: CardShape;
@@ -27,203 +36,211 @@ export interface StampCardProps {
   interactive?: boolean;
   lastStamp?: number;
   hideSteps?: boolean;
+  stepSize?: StepSize;
+  face?: CardFace;
   onStepClick?: (step: number) => void;
   activeStep?: number;
   onTitleClick?: () => void;
   onSubtitleClick?: () => void;
+  onDescriptionClick?: () => void;
   onIconClick?: () => void;
   disableShadow?: boolean;
 }
 
 export function StampCard({
-  title, subtitle, totalSteps, stampsCount = 0, shape = "rounded",
+  title, subtitle, description, totalSteps, stampsCount = 0, shape = "rounded",
   bgColor = "#faf8f2", accentColor = "#4b3a35", textColor = "#4b3a35",
-  stampIcon = null, logoUrl, rewards = [], businessName, lastStamp,
-  hideSteps = false, onStepClick, activeStep,
-  onTitleClick, onSubtitleClick, onIconClick,
+  stampIcon = null, logoUrl, rewards = [], lastStamp,
+  hideSteps = false, stepSize = "medium", face = "stamps",
+  onStepClick, activeStep,
+  onTitleClick, onSubtitleClick, onDescriptionClick, onIconClick,
   disableShadow = false,
 }: StampCardProps) {
   const Icon = stampIcon ? (STAMP_ICONS[stampIcon] ?? Star) : null;
   const radius = shape === "square" ? "rounded-xl" : shape === "ticket" ? "rounded-none" : "rounded-2xl";
-
   const normalizedSteps = Math.max(0, totalSteps);
-
-  // Max 8 steps per row; card grows vertically as needed
   const cols = Math.max(1, Math.min(8, normalizedSteps || 1));
   const rows = normalizedSteps > 0 ? Math.ceil(normalizedSteps / cols) : 0;
-
+  const size = SIZE[stepSize];
 
   const editable = "rounded-md transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 cursor-pointer";
 
+  // Static height fits ~4 rows of large tiles + padding
+  const heightCls = "h-[200px] sm:h-[240px]";
+
+  const InfoFace = (
+    <div
+      className="absolute inset-0 flex flex-col items-center justify-center text-center px-5 py-4 gap-2"
+      style={{ color: textColor }}
+    >
+      {(() => {
+        const inner = logoUrl ? (
+          <img src={logoUrl} alt="" className="h-14 w-14 sm:h-16 sm:w-16 object-contain" />
+        ) : Icon ? (
+          <Icon className="h-10 w-10 sm:h-12 sm:w-12" style={{ color: accentColor }} />
+        ) : (
+          <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full border-2" style={{ borderColor: accentColor }} />
+        );
+        return onIconClick ? (
+          <button type="button" onClick={onIconClick} className="rounded-full hover:ring-2 hover:ring-black/20 transition p-1" aria-label="Change logo or icon">
+            {inner}
+          </button>
+        ) : (
+          <div className="p-1">{inner}</div>
+        );
+      })()}
+      {onTitleClick ? (
+        <button
+          type="button"
+          onClick={onTitleClick}
+          className={`${editable} font-display font-bold tracking-widest text-lg sm:text-xl leading-tight break-words max-w-full`}
+          style={{ color: accentColor }}
+        >
+          {title}
+        </button>
+      ) : (
+        <div className="font-display font-bold tracking-widest text-lg sm:text-xl leading-tight break-words" style={{ color: accentColor }}>
+          {title}
+        </div>
+      )}
+      {(subtitle || onSubtitleClick) && (
+        onSubtitleClick ? (
+          <button type="button" onClick={onSubtitleClick} className={`${editable} text-xs sm:text-sm font-medium opacity-80 break-words max-w-full px-1`}>
+            {subtitle || "Add subtitle"}
+          </button>
+        ) : subtitle ? (
+          <div className="text-xs sm:text-sm font-medium opacity-80 break-words">{subtitle}</div>
+        ) : null
+      )}
+      {(description || onDescriptionClick) && (
+        onDescriptionClick ? (
+          <button type="button" onClick={onDescriptionClick} className={`${editable} text-[11px] sm:text-xs opacity-70 break-words max-w-full px-1 leading-snug`}>
+            {description || "Add description"}
+          </button>
+        ) : description ? (
+          <div className="text-[11px] sm:text-xs opacity-70 break-words leading-snug">{description}</div>
+        ) : null
+      )}
+    </div>
+  );
+
+  const StampsFace = (
+    <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
+      <div className="font-display font-bold tracking-widest text-sm sm:text-base leading-tight text-center mb-2 break-words" style={{ color: accentColor }}>
+        {title}
+      </div>
+      {hideSteps ? (
+        <div className="min-h-[80px]" />
+      ) : (
+        <div
+          className={`grid ${size.gap} content-center justify-items-center mx-auto`}
+          style={{
+            gridTemplateColumns: `repeat(${cols}, minmax(0, auto))`,
+            gridTemplateRows: rows > 0 ? `repeat(${rows}, auto)` : undefined,
+          }}
+        >
+          {Array.from({ length: normalizedSteps }).map((_, i) => {
+            const step = i + 1;
+            const filled = step <= stampsCount;
+            const reward = rewards.find((r) => r.step === step);
+            const isLast = filled && step === stampsCount && lastStamp !== undefined;
+            const isActive = activeStep === step;
+            const clickable = !!onStepClick;
+
+            const commonStyle = {
+              borderColor: accentColor,
+              backgroundColor: filled ? accentColor : "transparent",
+              color: filled ? bgColor : accentColor,
+              boxShadow: isActive ? `0 0 0 2px ${accentColor}` : undefined,
+            } as const;
+
+            const rewardLabel = (
+              <span className="font-bold uppercase text-center px-0.5 leading-none" style={{ fontSize: "7px", lineHeight: 1 }}>
+                {reward?.label}
+              </span>
+            );
+            const numberLabel = <span className={`font-bold ${size.text}`}>{step}</span>;
+
+            if (reward) {
+              if (clickable) {
+                return (
+                  <motion.button key={i} type="button" onClick={() => onStepClick!(step)}
+                    whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.95 }}
+                    className={`${size.tile} flex items-center justify-center cursor-pointer bg-transparent border-0`}
+                    style={{ color: accentColor }} aria-label={`Edit reward on step ${step}`}>
+                    {rewardLabel}
+                  </motion.button>
+                );
+              }
+              return (
+                <motion.div key={isLast ? `stamp-${lastStamp}` : `slot-${i}`}
+                  initial={isLast ? { scale: 3, rotate: -18, opacity: 0 } : false}
+                  animate={isLast ? { scale: 1, rotate: 0, opacity: 1 } : undefined}
+                  transition={{ type: "spring", stiffness: 260, damping: 14 }}
+                  className={`${size.tile} flex items-center justify-center`} style={{ color: accentColor }}>
+                  {rewardLabel}
+                </motion.div>
+              );
+            }
+
+            if (clickable) {
+              return (
+                <motion.button key={i} type="button" onClick={() => onStepClick!(step)}
+                  animate={!filled ? { boxShadow: [`0 0 0 0px ${accentColor}66`, `0 0 0 6px ${accentColor}00`, `0 0 0 0px ${accentColor}66`] } : undefined}
+                  transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+                  whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.95 }}
+                  className={`${size.tile} rounded-full border-2 flex items-center justify-center cursor-pointer`}
+                  style={commonStyle} aria-label={`Edit step ${step}`}>
+                  {numberLabel}
+                </motion.button>
+              );
+            }
+
+            return (
+              <motion.div key={isLast ? `stamp-${lastStamp}` : `slot-${i}`}
+                initial={isLast ? { scale: 3, rotate: -18, opacity: 0 } : false}
+                animate={isLast ? { scale: 1, rotate: 0, opacity: 1 } : undefined}
+                transition={{ type: "spring", stiffness: 260, damping: 14 }}
+                className={`${size.tile} rounded-full border-2 flex items-center justify-center ${filled ? "stamp-emboss" : ""}`}
+                style={commonStyle}>
+                {numberLabel}
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div
-      className={`relative w-full paper-grain ${disableShadow ? "" : "card-shadow"} ${radius} overflow-hidden min-h-[124px] sm:min-h-[172px]`}
-      style={{ backgroundColor: bgColor, color: textColor }}
+      className={`relative w-full ${heightCls}`}
+      style={{ perspective: "1200px" }}
     >
-      <div className="flex">
-        {/* LEFT — compact info panel */}
+      <motion.div
+        className="relative w-full h-full"
+        style={{ transformStyle: "preserve-3d" }}
+        animate={{ rotateY: face === "stamps" ? 180 : 0 }}
+        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+      >
         <div
-          className="flex flex-col items-center justify-center gap-2 py-3 px-2 sm:py-4 sm:px-3 shrink-0"
-          style={{ width: "22%", minWidth: 70, maxWidth: 120 }}
+          className={`absolute inset-0 paper-grain ${disableShadow ? "" : "card-shadow"} ${radius} overflow-hidden`}
+          style={{ backgroundColor: bgColor, color: textColor, backfaceVisibility: "hidden" }}
         >
-          {subtitle ? (
-            onSubtitleClick ? (
-              <button
-                type="button"
-                onClick={onSubtitleClick}
-                className={`${editable} text-center font-medium leading-tight break-words w-full px-1`}
-                style={{ color: textColor, fontSize: "clamp(9px, 2.5vw, 12px)" }}
-              >
-                {subtitle}
-              </button>
-            ) : (
-              <div
-                className="text-center font-medium leading-tight break-words w-full px-1"
-                style={{ color: textColor, fontSize: "clamp(9px, 2.5vw, 12px)" }}
-              >
-                {subtitle}
-              </div>
-            )
-          ) : null}
-          {(() => {
-            const inner = logoUrl ? (
-              <img src={logoUrl} alt="" className="h-6 w-6 sm:h-8 sm:w-8 object-contain" />
-            ) : Icon ? (
-              <Icon className="h-4 w-4 sm:h-5 sm:w-5" style={{ color: accentColor }} />
-            ) : (
-              <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full border-2" style={{ borderColor: accentColor }} />
-            );
-            return onIconClick ? (
-              <button type="button" onClick={onIconClick} className="rounded-full hover:ring-2 hover:ring-black/20 transition p-1" aria-label="Change logo or icon">
-                {inner}
-              </button>
-            ) : (
-              <div className="p-1">{inner}</div>
-            );
-          })()}
+          {InfoFace}
         </div>
-
-        {/* RIGHT — title + stamps grid */}
-        <div className="flex-1 flex flex-col justify-center items-center p-3 sm:p-4 min-w-0">
-          {onTitleClick ? (
-            <button
-              type="button"
-              onClick={onTitleClick}
-              className={`${editable} font-display font-bold tracking-widest text-sm sm:text-base leading-tight break-words text-center mb-2`}
-              style={{ color: accentColor }}
-            >
-              {title}
-            </button>
-          ) : (
-            <div
-              className="font-display font-bold tracking-widest text-sm sm:text-base leading-tight break-words text-center mb-2"
-              style={{ color: accentColor }}
-            >
-              {title}
-            </div>
-          )}
-          {hideSteps ? (
-            <div className="min-h-[60px]" />
-          ) : (
-            <div
-              className="grid gap-2 sm:gap-2.5 content-center justify-items-center mx-auto"
-              style={{
-                gridTemplateColumns: `repeat(${cols}, minmax(0, auto))`,
-                gridTemplateRows: rows > 0 ? `repeat(${rows}, auto)` : undefined,
-              }}
-            >
-              {Array.from({ length: normalizedSteps }).map((_, i) => {
-                const step = i + 1;
-                const filled = step <= stampsCount;
-                const reward = rewards.find((r) => r.step === step);
-                const isLast = filled && step === stampsCount && lastStamp !== undefined;
-                const isActive = activeStep === step;
-                const clickable = !!onStepClick;
-
-                const stepBox = "h-7 w-7 sm:h-10 sm:w-10";
-                const commonStyle = {
-                  borderColor: accentColor,
-                  backgroundColor: filled ? accentColor : "transparent",
-                  color: filled ? bgColor : accentColor,
-                  boxShadow: isActive ? `0 0 0 2px ${accentColor}` : undefined,
-                } as const;
-
-                const rewardLabel = reward ? (
-                  <span className="font-bold uppercase text-center px-0.5 leading-none" style={{ fontSize: "7px", lineHeight: 1 }}>
-                    {reward.label}
-                  </span>
-                ) : null;
-
-                const numberLabel = <span className="font-bold text-[10px] sm:text-xs">{step}</span>;
-
-                if (reward) {
-                  if (clickable) {
-                    return (
-                      <motion.button
-                        key={i}
-                        type="button"
-                        onClick={() => onStepClick!(step)}
-                        whileHover={{ scale: 1.15 }}
-                        whileTap={{ scale: 0.95 }}
-                        className={`${stepBox} flex items-center justify-center cursor-pointer bg-transparent border-0`}
-                        style={{ color: accentColor }}
-                        aria-label={`Edit reward on step ${step}`}
-                      >
-                        {rewardLabel}
-                      </motion.button>
-                    );
-                  }
-                  return (
-                    <motion.div
-                      key={isLast ? `stamp-${lastStamp}` : `slot-${i}`}
-                      initial={isLast ? { scale: 3, rotate: -18, opacity: 0 } : false}
-                      animate={isLast ? { scale: 1, rotate: 0, opacity: 1 } : undefined}
-                      transition={{ type: "spring", stiffness: 260, damping: 14 }}
-                      className={`${stepBox} flex items-center justify-center`}
-                      style={{ color: accentColor }}
-                    >
-                      {rewardLabel}
-                    </motion.div>
-                  );
-                }
-
-                if (clickable) {
-                  return (
-                    <motion.button
-                      key={i}
-                      type="button"
-                      onClick={() => onStepClick!(step)}
-                      animate={!filled ? { boxShadow: [`0 0 0 0px ${accentColor}66`, `0 0 0 6px ${accentColor}00`, `0 0 0 0px ${accentColor}66`] } : undefined}
-                      transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-                      whileHover={{ scale: 1.15 }}
-                      whileTap={{ scale: 0.95 }}
-                      className={`${stepBox} rounded-full border-2 flex items-center justify-center cursor-pointer`}
-                      style={commonStyle}
-                      aria-label={`Edit step ${step}`}
-                    >
-                      {numberLabel}
-                    </motion.button>
-                  );
-                }
-
-                return (
-                  <motion.div
-                    key={isLast ? `stamp-${lastStamp}` : `slot-${i}`}
-                    initial={isLast ? { scale: 3, rotate: -18, opacity: 0 } : false}
-                    animate={isLast ? { scale: 1, rotate: 0, opacity: 1 } : undefined}
-                    transition={{ type: "spring", stiffness: 260, damping: 14 }}
-                    className={`${stepBox} rounded-full border-2 flex items-center justify-center ${filled ? "stamp-emboss" : ""}`}
-                    style={commonStyle}
-                  >
-                    {numberLabel}
-                  </motion.div>
-                );
-              })}
-            </div>
-          )}
-
+        <div
+          className={`absolute inset-0 paper-grain ${disableShadow ? "" : "card-shadow"} ${radius} overflow-hidden`}
+          style={{
+            backgroundColor: bgColor,
+            color: textColor,
+            backfaceVisibility: "hidden",
+            transform: "rotateY(180deg)",
+          }}
+        >
+          {StampsFace}
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
