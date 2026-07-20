@@ -221,9 +221,9 @@ function BusinessDashboard() {
             setApi={(api) => setApi(api)}
             className="relative"
           >
-            <CarouselContent className="-ml-0">
+            <CarouselContent className="-ml-3">
               {tpls.map((t) => (
-                <CarouselItem key={t.id} className="basis-full pl-0">
+                <CarouselItem key={t.id} className="basis-full pl-3">
                   <Link
                     to="/business/cards/$id"
                     params={{ id: t.id }}
@@ -232,6 +232,7 @@ function BusinessDashboard() {
                     <StampCard
                       title={t.title}
                       subtitle={t.subtitle}
+                      description={t.description}
                       totalSteps={t.total_steps}
                       stampsCount={0}
                       shape={t.shape}
@@ -243,8 +244,10 @@ function BusinessDashboard() {
                       logoUrl={t.logo_url}
                       rewards={t.rewards ?? []}
                       businessName={biz.name}
+                      face="info"
                       disableShadow
                     />
+
                     <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-background/80 backdrop-blur px-2 py-1 text-[10px] font-medium shadow-sm opacity-0 group-hover:opacity-100 transition">
                       <Pencil className="h-3 w-3" /> Edit
                     </div>

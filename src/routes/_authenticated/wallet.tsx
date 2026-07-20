@@ -49,7 +49,9 @@ function Wallet() {
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [flippedId, setFlippedId] = useState<string | null>(null);
+  const [faceFlipped, setFaceFlipped] = useState<Set<string>>(new Set());
   const [celebration, setCelebration] = useState<Celebration | null>(null);
+
   const fetchFrozen = useServerFn(getFrozenBusinessIds);
 
   const load = useCallback(async () => {
@@ -248,52 +250,71 @@ function Wallet() {
                       transition={{ type: "spring", stiffness: 260, damping: 30 }}
                       style={{ zIndex: i + 1 }}
                     >
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (isExpanded) {
-                            setFlippedId(inst.id);
-                          } else {
-                            // Move card to last position and expand it
-                            setInstances((prev) => {
-                              const idx = prev.findIndex((x) => x.id === inst.id);
-                              if (idx < prev.length - 1) {
-                                const reordered = [...prev.slice(0, idx), ...prev.slice(idx + 1), prev[idx]];
-                                return reordered;
-                              }
-                              return prev;
+                      <motion.div
+                        drag="x"
+                        dragConstraints={{ left: 0, right: 0 }}
+                        dragElastic={0.35}
+                        dragSnapToOrigin
+                        onDragEnd={(_, info) => {
+                          if (Math.abs(info.offset.x) > 60) {
+                            setFaceFlipped((prev) => {
+                              const next = new Set(prev);
+                              if (next.has(inst.id)) next.delete(inst.id);
+                              else next.add(inst.id);
+                              return next;
                             });
-                            setExpandedId(inst.id);
                           }
                         }}
-                        className="relative block w-full text-left focus:outline-none drop-shadow-2xl"
-                        aria-label={isExpanded ? `Show QR for ${inst.template.title}` : `Open ${inst.template.title}`}
                       >
-                        <div className={isFrozen ? "relative" : undefined}>
-                          <StampCard
-                            title={inst.template.title}
-                            subtitle={inst.template.subtitle}
-                            totalSteps={inst.template.total_steps}
-                            stampsCount={inst.stamps_count}
-                            shape={inst.template.shape}
-                            stepSize={inst.template.step_size ?? "medium"}
-                            bgColor={inst.template.bg_color}
-                            accentColor={inst.template.accent_color}
-                            textColor={inst.template.text_color}
-                            stampIcon={inst.template.stamp_icon}
-                            logoUrl={inst.template.logo_url}
-                            rewards={inst.template.rewards}
-                            businessName={inst.template.business.name}
-                            lastStamp={inst.stamps_count}
-                          />
-                          {isFrozen && (
-                            <div className="pointer-events-none absolute top-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-sky-500/95 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white shadow-lg ring-1 ring-white/40 backdrop-blur">
-                              <Snowflake className="h-3 w-3" /> Frozen
-                            </div>
-                          )}
-                        </div>
-                      </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (isExpanded) {
+                              setFlippedId(inst.id);
+                            } else {
+                              setInstances((prev) => {
+                                const idx = prev.findIndex((x) => x.id === inst.id);
+                                if (idx < prev.length - 1) {
+                                  const reordered = [...prev.slice(0, idx), ...prev.slice(idx + 1), prev[idx]];
+                                  return reordered;
+                                }
+                                return prev;
+                              });
+                              setExpandedId(inst.id);
+                            }
+                          }}
+                          className="relative block w-full text-left focus:outline-none drop-shadow-2xl"
+                          aria-label={isExpanded ? `Show QR for ${inst.template.title}` : `Open ${inst.template.title}`}
+                        >
+                          <div className={isFrozen ? "relative" : undefined}>
+                            <StampCard
+                              title={inst.template.title}
+                              subtitle={inst.template.subtitle}
+                              description={inst.template.description}
+                              totalSteps={inst.template.total_steps}
+                              stampsCount={inst.stamps_count}
+                              shape={inst.template.shape}
+                              stepSize={inst.template.step_size ?? "medium"}
+                              bgColor={inst.template.bg_color}
+                              accentColor={inst.template.accent_color}
+                              textColor={inst.template.text_color}
+                              stampIcon={inst.template.stamp_icon}
+                              logoUrl={inst.template.logo_url}
+                              rewards={inst.template.rewards}
+                              businessName={inst.template.business.name}
+                              lastStamp={inst.stamps_count}
+                              face={faceFlipped.has(inst.id) ? "stamps" : "info"}
+                            />
+                            {isFrozen && (
+                              <div className="pointer-events-none absolute top-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-sky-500/95 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white shadow-lg ring-1 ring-white/40 backdrop-blur">
+                                <Snowflake className="h-3 w-3" /> Frozen
+                              </div>
+                            )}
+                          </div>
+                        </button>
+                      </motion.div>
+
                     </motion.div>
                   );
                 })}
@@ -301,8 +322,9 @@ function Wallet() {
             );
           })()}
           <p className="mt-4 text-center text-xs text-muted-foreground">
-            {expandedId ? "Tap the card again to show your QR" : "Tap a card to bring it forward"}
+            {expandedId ? "Tap again for QR · swipe to flip" : "Tap a card to bring it forward · swipe to flip"}
           </p>
+
         </div>
 
         </>
