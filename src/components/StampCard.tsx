@@ -65,8 +65,8 @@ export function StampCard({
 
   const editable = "rounded-md transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 cursor-pointer";
 
-  // Static height fits ~4 rows of large tiles + padding
-  const heightCls = "h-[200px] sm:h-[240px]";
+  // Credit-card aspect ratio (1.586:1)
+  const heightCls = "aspect-[1.586/1]";
 
   const InfoFace = (
     <div
