@@ -119,6 +119,7 @@ function CardDetails() {
           totalSteps={tpl.total_steps}
           stampsCount={0}
           shape={tpl.shape}
+          stepSize={tpl.step_size ?? "medium"}
           bgColor={tpl.bg_color}
           accentColor={tpl.accent_color}
           textColor={tpl.text_color}
