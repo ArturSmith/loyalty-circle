@@ -49,7 +49,9 @@ function Wallet() {
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [flippedId, setFlippedId] = useState<string | null>(null);
+  const [faceFlipped, setFaceFlipped] = useState<Set<string>>(new Set());
   const [celebration, setCelebration] = useState<Celebration | null>(null);
+
   const fetchFrozen = useServerFn(getFrozenBusinessIds);
 
   const load = useCallback(async () => {
