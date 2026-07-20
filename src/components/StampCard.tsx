@@ -61,7 +61,7 @@ export function StampCard({
   const normalizedSteps = Math.max(0, totalSteps);
   const cols = Math.max(1, Math.min(8, normalizedSteps || 1));
   const rows = normalizedSteps > 0 ? Math.ceil(normalizedSteps / cols) : 0;
-  const size = SIZE[stepSize];
+  void stepSize; void SIZE;
 
   const editable = "rounded-md transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 cursor-pointer";
 
