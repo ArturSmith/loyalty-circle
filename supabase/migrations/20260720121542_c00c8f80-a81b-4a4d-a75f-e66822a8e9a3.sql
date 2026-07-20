@@ -1,0 +1,1 @@
+ALTER TABLE public.card_templates DROP CONSTRAINT card_templates_total_steps_check; ALTER TABLE public.card_templates ADD CONSTRAINT card_templates_total_steps_check CHECK (total_steps >= 0 AND total_steps <= 32);
