@@ -125,18 +125,19 @@ export function StampCard({
   );
 
   const StampsFace = (
-    <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
-      <div className="font-display font-bold tracking-widest text-sm sm:text-base leading-tight text-center mb-2 break-words" style={{ color: accentColor }}>
-        {title}
-      </div>
+    <div className="absolute inset-0 flex items-center justify-center p-4">
       {hideSteps ? (
         <div className="min-h-[80px]" />
-      ) : (
+      ) : normalizedSteps > 0 ? (
         <div
-          className={`grid ${size.gap} content-center justify-items-center mx-auto`}
+          className="grid gap-[3%]"
           style={{
-            gridTemplateColumns: `repeat(${cols}, minmax(0, auto))`,
-            gridTemplateRows: rows > 0 ? `repeat(${rows}, auto)` : undefined,
+            gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))`,
+            aspectRatio: `${cols} / ${rows}`,
+            width: "100%",
+            maxHeight: "100%",
+            maxWidth: "100%",
+            containerType: "inline-size",
           }}
         >
           {Array.from({ length: normalizedSteps }).map((_, i) => {
@@ -154,20 +155,30 @@ export function StampCard({
               boxShadow: isActive ? `0 0 0 2px ${accentColor}` : undefined,
             } as const;
 
+            const tileBase = "aspect-square w-full rounded-full border-2 flex items-center justify-center";
+            const rewardTile = "aspect-square w-full flex items-center justify-center";
+
             const rewardLabel = (
-              <span className="font-bold uppercase text-center px-0.5 leading-none" style={{ fontSize: "7px", lineHeight: 1 }}>
+              <span
+                className="font-bold uppercase text-center leading-none px-0.5"
+                style={{ color: accentColor, fontSize: "clamp(7px, 3.2cqi, 13px)", lineHeight: 1 }}
+              >
                 {reward?.label}
               </span>
             );
-            const numberLabel = <span className={`font-bold ${size.text}`}>{step}</span>;
+            const numberLabel = (
+              <span className="font-bold" style={{ fontSize: "clamp(8px, 3.8cqi, 16px)" }}>
+                {step}
+              </span>
+            );
 
             if (reward) {
               if (clickable) {
                 return (
                   <motion.button key={i} type="button" onClick={() => onStepClick!(step)}
                     whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.95 }}
-                    className={`${size.tile} flex items-center justify-center cursor-pointer bg-transparent border-0`}
-                    style={{ color: accentColor }} aria-label={`Edit reward on step ${step}`}>
+                    className={`${rewardTile} cursor-pointer bg-transparent border-0`}
+                    aria-label={`Edit reward on step ${step}`}>
                     {rewardLabel}
                   </motion.button>
                 );
@@ -177,7 +188,7 @@ export function StampCard({
                   initial={isLast ? { scale: 3, rotate: -18, opacity: 0 } : false}
                   animate={isLast ? { scale: 1, rotate: 0, opacity: 1 } : undefined}
                   transition={{ type: "spring", stiffness: 260, damping: 14 }}
-                  className={`${size.tile} flex items-center justify-center`} style={{ color: accentColor }}>
+                  className={rewardTile}>
                   {rewardLabel}
                 </motion.div>
               );
@@ -189,7 +200,7 @@ export function StampCard({
                   animate={!filled ? { boxShadow: [`0 0 0 0px ${accentColor}66`, `0 0 0 6px ${accentColor}00`, `0 0 0 0px ${accentColor}66`] } : undefined}
                   transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
                   whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.95 }}
-                  className={`${size.tile} rounded-full border-2 flex items-center justify-center cursor-pointer`}
+                  className={`${tileBase} cursor-pointer`}
                   style={commonStyle} aria-label={`Edit step ${step}`}>
                   {numberLabel}
                 </motion.button>
@@ -201,16 +212,17 @@ export function StampCard({
                 initial={isLast ? { scale: 3, rotate: -18, opacity: 0 } : false}
                 animate={isLast ? { scale: 1, rotate: 0, opacity: 1 } : undefined}
                 transition={{ type: "spring", stiffness: 260, damping: 14 }}
-                className={`${size.tile} rounded-full border-2 flex items-center justify-center ${filled ? "stamp-emboss" : ""}`}
+                className={`${tileBase} ${filled ? "stamp-emboss" : ""}`}
                 style={commonStyle}>
                 {numberLabel}
               </motion.div>
             );
           })}
         </div>
-      )}
+      ) : null}
     </div>
   );
+
 
   return (
     <div
