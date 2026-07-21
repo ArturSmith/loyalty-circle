@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { StampCard } from "@/components/StampCard";
-import type { CardShape, Reward, StampIconName, StepSize } from "@/components/StampCard";
+import type { CardFace, CardShape, Reward, StampIconName, StepSize } from "@/components/StampCard";
 import { ArrowLeft, Pencil, Users, Stamp as StampIco, CheckCircle2, Calendar } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -37,6 +37,7 @@ function CardDetails() {
   const [stats, setStats] = useState({ users: 0, stamps: 0, completed: 0 });
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [face, setFace] = useState<CardFace>("info");
 
   useEffect(() => {
     (async () => {
@@ -127,6 +128,9 @@ function CardDetails() {
           logoUrl={tpl.logo_url}
           rewards={tpl.rewards ?? []}
           businessName={biz.name}
+          face={face}
+          showFlipButton
+          onFlip={() => setFace((f) => f === "info" ? "stamps" : "info")}
         />
       </motion.div>
 

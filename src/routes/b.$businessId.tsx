@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { StampCard } from "@/components/StampCard";
-import type { CardFace, CardShape, Reward, StampIconName, StepSize } from "@/components/StampCard";
+import type { CardShape, Reward, StampIconName, StepSize } from "@/components/StampCard";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
