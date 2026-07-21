@@ -45,6 +45,8 @@ export interface StampCardProps {
   onDescriptionClick?: () => void;
   onIconClick?: () => void;
   disableShadow?: boolean;
+  showFlipButton?: boolean;
+  onFlip?: () => void;
 }
 
 export function StampCard({
