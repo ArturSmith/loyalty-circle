@@ -37,10 +37,22 @@ function BusinessDashboard() {
   const [showQr, setShowQr] = useState(false);
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
+  const [flipped, setFlipped] = useState<Set<string>>(new Set());
   // create biz form
   const [name, setName] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
   const [creating, setCreating] = useState(false);
+
+  const toggleFlip = (id: string, e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    setFlipped((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   useEffect(() => {
     (async () => {
