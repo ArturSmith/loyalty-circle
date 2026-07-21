@@ -231,7 +231,11 @@ export function StampCard({
       {showFlipButton && onFlip && (
         <button
           type="button"
+          onPointerDown={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
           onClick={(e) => {
+            e.preventDefault();
             e.stopPropagation();
             onFlip();
           }}
