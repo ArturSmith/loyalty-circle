@@ -238,7 +238,6 @@ function BusinessDashboard() {
                       totalSteps={t.total_steps}
                       stampsCount={0}
                       shape={t.shape}
-                      stepSize={t.step_size ?? "medium"}
                       bgColor={t.bg_color}
                       accentColor={t.accent_color}
                       textColor={t.text_color}
