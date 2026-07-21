@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { StampCard } from "@/components/StampCard";
-import type { CardShape, Reward, StampIconName, StepSize } from "@/components/StampCard";
+import type { CardFace, CardShape, Reward, StampIconName, StepSize } from "@/components/StampCard";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -28,6 +28,7 @@ function BusinessPublic() {
   const [claiming, setClaiming] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [ownedTemplateIds, setOwnedTemplateIds] = useState<Map<string, string>>(new Map());
+  const [flippedTemplateId, setFlippedTemplateId] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -142,6 +143,9 @@ function BusinessPublic() {
                 stampIcon={t.stamp_icon}
                 logoUrl={t.logo_url}
                 rewards={t.rewards}
+                face={flippedTemplateId === t.id ? "stamps" : "info"}
+                showFlipButton
+                onFlip={() => setFlippedTemplateId((prev) => prev === t.id ? null : t.id)}
               />
             </button>
             <Button
