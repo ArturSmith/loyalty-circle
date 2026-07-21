@@ -28,6 +28,7 @@ function BusinessPublic() {
   const [claiming, setClaiming] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [ownedTemplateIds, setOwnedTemplateIds] = useState<Map<string, string>>(new Map());
+  const [flippedTemplateId, setFlippedTemplateId] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -142,6 +143,9 @@ function BusinessPublic() {
                 stampIcon={t.stamp_icon}
                 logoUrl={t.logo_url}
                 rewards={t.rewards}
+                face={flippedTemplateId === t.id ? "stamps" : "info"}
+                showFlipButton
+                onFlip={() => setFlippedTemplateId((prev) => prev === t.id ? null : t.id)}
               />
             </button>
             <Button

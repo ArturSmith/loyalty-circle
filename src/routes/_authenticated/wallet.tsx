@@ -305,6 +305,15 @@ function Wallet() {
                               businessName={inst.template.business.name}
                               lastStamp={inst.stamps_count}
                               face={faceFlipped.has(inst.id) ? "stamps" : "info"}
+                              showFlipButton
+                              onFlip={() => {
+                                setFaceFlipped((prev) => {
+                                  const next = new Set(prev);
+                                  if (next.has(inst.id)) next.delete(inst.id);
+                                  else next.add(inst.id);
+                                  return next;
+                                });
+                              }}
                             />
                             {isFrozen && (
                               <div className="pointer-events-none absolute top-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-sky-500/95 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white shadow-lg ring-1 ring-white/40 backdrop-blur">

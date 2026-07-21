@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Scissors, Coffee, Sparkles, Star, Heart, Flame, Cookie, Wine } from "lucide-react";
+import { Scissors, Coffee, Sparkles, Star, Heart, Flame, Cookie, Wine, RefreshCw } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export type Reward = { step: number; label: string };
@@ -45,6 +45,8 @@ export interface StampCardProps {
   onDescriptionClick?: () => void;
   onIconClick?: () => void;
   disableShadow?: boolean;
+  showFlipButton?: boolean;
+  onFlip?: () => void;
 }
 
 export function StampCard({
@@ -55,6 +57,8 @@ export function StampCard({
   onStepClick, activeStep,
   onTitleClick, onSubtitleClick, onDescriptionClick, onIconClick,
   disableShadow = false,
+  showFlipButton = false,
+  onFlip,
 }: StampCardProps) {
   const Icon = stampIcon ? (STAMP_ICONS[stampIcon] ?? Star) : null;
   const radius = shape === "square" ? "rounded-xl" : shape === "ticket" ? "rounded-none" : "rounded-2xl";
@@ -229,6 +233,19 @@ export function StampCard({
       className={`relative w-full ${heightCls}`}
       style={{ perspective: "1200px" }}
     >
+      {showFlipButton && onFlip && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onFlip();
+          }}
+          className="absolute top-2 right-2 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-background/80 backdrop-blur shadow-sm opacity-70 hover:opacity-100 hover:bg-background transition"
+          aria-label="Flip card"
+        >
+          <RefreshCw className="h-3.5 w-3.5" />
+        </button>
+      )}
       <motion.div
         className="relative w-full h-full"
         style={{ transformStyle: "preserve-3d" }}
