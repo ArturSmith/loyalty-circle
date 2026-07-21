@@ -256,13 +256,18 @@ function BusinessDashboard() {
                       logoUrl={t.logo_url}
                       rewards={t.rewards ?? []}
                       businessName={biz.name}
-                      face="info"
+                      face={flipped.has(t.id) ? "stamps" : "info"}
                       disableShadow
                     />
 
-                    <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-background/80 backdrop-blur px-2 py-1 text-[10px] font-medium shadow-sm opacity-0 group-hover:opacity-100 transition">
-                      <Pencil className="h-3 w-3" /> Edit
-                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => toggleFlip(t.id, e)}
+                      className="absolute top-2 right-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-background/80 backdrop-blur shadow-sm opacity-0 group-hover:opacity-100 transition hover:bg-background"
+                      aria-label="Flip card"
+                    >
+                      <RefreshCw className="h-3.5 w-3.5" />
+                    </button>
                     {!t.active && (
                       <div className="absolute top-2 left-2 rounded-full bg-background/80 backdrop-blur px-2 py-1 text-[10px] font-medium uppercase tracking-wider shadow-sm">
                         Paused
