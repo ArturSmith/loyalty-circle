@@ -5,18 +5,11 @@ import type { LucideIcon } from "lucide-react";
 export type Reward = { step: number; label: string };
 export type CardShape = "rounded" | "square" | "ticket";
 export type StampIconName = "scissors" | "coffee" | "sparkles" | "star" | "heart" | "flame" | "cookie" | "wine";
-export type StepSize = "small" | "medium" | "large";
 export type CardFace = "info" | "stamps";
 
 export const STAMP_ICONS: Record<StampIconName, LucideIcon> = {
   scissors: Scissors, coffee: Coffee, sparkles: Sparkles, star: Star,
   heart: Heart, flame: Flame, cookie: Cookie, wine: Wine,
-};
-
-const SIZE: Record<StepSize, { tile: string; text: string; gap: string }> = {
-  small:  { tile: "h-6 w-6 sm:h-7 sm:w-7",   text: "text-[9px] sm:text-[10px]", gap: "gap-1 sm:gap-1.5" },
-  medium: { tile: "h-7 w-7 sm:h-9 sm:w-9",   text: "text-[10px] sm:text-xs",    gap: "gap-1.5 sm:gap-2" },
-  large:  { tile: "h-9 w-9 sm:h-11 sm:w-11", text: "text-xs sm:text-sm",        gap: "gap-2 sm:gap-2.5" },
 };
 
 export interface StampCardProps {
@@ -36,7 +29,6 @@ export interface StampCardProps {
   interactive?: boolean;
   lastStamp?: number;
   hideSteps?: boolean;
-  stepSize?: StepSize;
   face?: CardFace;
   onStepClick?: (step: number) => void;
   activeStep?: number;
@@ -53,7 +45,7 @@ export function StampCard({
   title, subtitle, description, totalSteps, stampsCount = 0, shape = "rounded",
   bgColor = "#faf8f2", accentColor = "#4b3a35", textColor = "#4b3a35",
   stampIcon = null, logoUrl, rewards = [], lastStamp,
-  hideSteps = false, stepSize = "medium", face = "stamps",
+  hideSteps = false, face = "stamps",
   onStepClick, activeStep,
   onTitleClick, onSubtitleClick, onDescriptionClick, onIconClick,
   disableShadow = false,
@@ -65,7 +57,6 @@ export function StampCard({
   const normalizedSteps = Math.max(0, totalSteps);
   const cols = Math.max(1, Math.min(8, normalizedSteps || 1));
   const rows = normalizedSteps > 0 ? Math.ceil(normalizedSteps / cols) : 0;
-  void stepSize; void SIZE;
 
   const editable = "rounded-md transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 cursor-pointer";
 
