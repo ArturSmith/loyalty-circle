@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Scissors, Coffee, Sparkles, Star, Heart, Flame, Cookie, Wine } from "lucide-react";
+import { Scissors, Coffee, Sparkles, Star, Heart, Flame, Cookie, Wine, RefreshCw } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export type Reward = { step: number; label: string };
