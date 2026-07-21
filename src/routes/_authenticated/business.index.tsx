@@ -8,7 +8,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
-import { Plus, QrCode, ScanLine, Users, Stamp as StampIco, Wallet as WalletIcon, Pencil, Menu, Settings, LogOut, Download } from "lucide-react";
+import { Plus, QrCode, ScanLine, Users, Stamp as StampIco, Wallet as WalletIcon, Pencil, Menu, Settings, LogOut, Download, RefreshCw } from "lucide-react";
 import { StampCard } from "@/components/StampCard";
 import type { CardShape, Reward, StampIconName, StepSize } from "@/components/StampCard";
 import { Carousel, CarouselApi, CarouselContent, CarouselItem } from "@/components/ui/carousel";
@@ -37,10 +37,22 @@ function BusinessDashboard() {
   const [showQr, setShowQr] = useState(false);
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
+  const [flipped, setFlipped] = useState<Set<string>>(new Set());
   // create biz form
   const [name, setName] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
   const [creating, setCreating] = useState(false);
+
+  const toggleFlip = (id: string, e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    setFlipped((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   useEffect(() => {
     (async () => {
@@ -244,13 +256,18 @@ function BusinessDashboard() {
                       logoUrl={t.logo_url}
                       rewards={t.rewards ?? []}
                       businessName={biz.name}
-                      face="info"
+                      face={flipped.has(t.id) ? "stamps" : "info"}
                       disableShadow
                     />
 
-                    <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-background/80 backdrop-blur px-2 py-1 text-[10px] font-medium shadow-sm opacity-0 group-hover:opacity-100 transition">
-                      <Pencil className="h-3 w-3" /> Edit
-                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => toggleFlip(t.id, e)}
+                      className="absolute top-2 right-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-background/80 backdrop-blur shadow-sm opacity-0 group-hover:opacity-100 transition hover:bg-background"
+                      aria-label="Flip card"
+                    >
+                      <RefreshCw className="h-3.5 w-3.5" />
+                    </button>
                     {!t.active && (
                       <div className="absolute top-2 left-2 rounded-full bg-background/80 backdrop-blur px-2 py-1 text-[10px] font-medium uppercase tracking-wider shadow-sm">
                         Paused
