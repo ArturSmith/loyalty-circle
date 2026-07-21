@@ -57,6 +57,8 @@ export function StampCard({
   onStepClick, activeStep,
   onTitleClick, onSubtitleClick, onDescriptionClick, onIconClick,
   disableShadow = false,
+  showFlipButton = false,
+  onFlip,
 }: StampCardProps) {
   const Icon = stampIcon ? (STAMP_ICONS[stampIcon] ?? Star) : null;
   const radius = shape === "square" ? "rounded-xl" : shape === "ticket" ? "rounded-none" : "rounded-2xl";
