@@ -10,7 +10,7 @@ import { motion } from "framer-motion";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { Plus, QrCode, ScanLine, Users, Stamp as StampIco, Wallet as WalletIcon, Pencil, Menu, Settings, LogOut, Download } from "lucide-react";
 import { StampCard } from "@/components/StampCard";
-import type { CardShape, Reward, StampIconName, StepSize } from "@/components/StampCard";
+import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
 import { Carousel, CarouselApi, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import QRCode from "qrcode";
 
@@ -18,7 +18,7 @@ type Business = { id: string; name: string; logo_url: string | null; brand_color
 type Tpl = {
   id: string; title: string; subtitle: string | null; description: string | null;
   total_steps: number; active: boolean;
-  shape: CardShape; step_size: StepSize | null;
+  shape: CardShape;
   bg_color: string; accent_color: string; text_color: string;
   stamp_icon: StampIconName; logo_url: string | null; rewards: Reward[] | null;
 };
@@ -52,7 +52,7 @@ function BusinessDashboard() {
       setBiz(b as Business | null);
       if (b) {
         const [{ data: t }, { count: sCount }, { data: instRows }] = await Promise.all([
-          supabase.from("card_templates").select("id,title,subtitle,description,total_steps,active,shape,step_size,bg_color,accent_color,text_color,stamp_icon,logo_url,rewards").eq("business_id", b.id).order("created_at", { ascending: false }),
+          supabase.from("card_templates").select("id,title,subtitle,description,total_steps,active,shape,bg_color,accent_color,text_color,stamp_icon,logo_url,rewards").eq("business_id", b.id).order("created_at", { ascending: false }),
           supabase.from("stamps").select("id", { count: "exact", head: true }).eq("business_id", b.id),
           supabase.from("card_instances").select("customer_id, template:card_templates!inner(business_id)").eq("template.business_id", b.id),
         ]);
@@ -238,7 +238,6 @@ function BusinessDashboard() {
                       totalSteps={t.total_steps}
                       stampsCount={0}
                       shape={t.shape}
-                      stepSize={t.step_size ?? "medium"}
                       bgColor={t.bg_color}
                       accentColor={t.accent_color}
                       textColor={t.text_color}

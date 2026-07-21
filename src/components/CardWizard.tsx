@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { StampCard, STAMP_ICONS } from "@/components/StampCard";
-import type { CardShape, Reward, StampIconName, StepSize } from "@/components/StampCard";
+import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
 import { ArrowLeft, ArrowRight, Check, Trash2 } from "lucide-react";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 
@@ -26,12 +26,6 @@ const SHAPES: { value: CardShape; label: string }[] = [
   { value: "rounded", label: "Rounded" },
   { value: "square", label: "Square" },
   { value: "ticket", label: "Ticket" },
-];
-
-const STEP_SIZES: { value: StepSize; label: string }[] = [
-  { value: "small", label: "Small" },
-  { value: "medium", label: "Medium" },
-  { value: "large", label: "Large" },
 ];
 
 const ICONS: StampIconName[] = ["scissors", "coffee", "sparkles", "star", "heart", "flame", "cookie", "wine"];
@@ -56,7 +50,6 @@ export function CardWizard({ templateId }: Props) {
   const [description, setDescription] = useState("");
   const [totalSteps, setTotalSteps] = useState(10);
   const [shape, setShape] = useState<CardShape>("rounded");
-  const [stepSize, setStepSize] = useState<StepSize>("medium");
   const [preset, setPreset] = useState<number>(0);
   const [customColors, setCustomColors] = useState<{ bg: string; accent: string; text: string } | null>(null);
   const [icon, setIcon] = useState<StampIconName | null>(null);
@@ -77,7 +70,7 @@ export function CardWizard({ templateId }: Props) {
         if (t) {
           const tpl = t as {
             title: string; subtitle: string | null; description: string | null;
-            total_steps: number; shape: CardShape; step_size: StepSize | null;
+            total_steps: number; shape: CardShape;
             bg_color: string; accent_color: string; text_color: string; stamp_icon: StampIconName;
             logo_url: string | null; rewards: Reward[] | null; active: boolean;
           };
@@ -86,7 +79,6 @@ export function CardWizard({ templateId }: Props) {
           setDescription(tpl.description ?? "");
           setTotalSteps(tpl.total_steps);
           setShape(tpl.shape);
-          setStepSize(tpl.step_size ?? "medium");
           const pi = matchPreset(tpl.bg_color, tpl.accent_color, tpl.text_color);
           if (pi >= 0) setPreset(pi);
           else setCustomColors({ bg: tpl.bg_color, accent: tpl.accent_color, text: tpl.text_color });
@@ -108,7 +100,7 @@ export function CardWizard({ templateId }: Props) {
     const cleanRewards = rewards.filter((r) => r.step >= 1 && r.step <= totalSteps && r.label.trim().length > 0);
     const payload = {
       title, subtitle: subtitle || null, description: description || null,
-      total_steps: totalSteps, shape, step_size: stepSize,
+      total_steps: totalSteps, shape,
       bg_color: bg, accent_color: accent, text_color: text,
       stamp_icon: icon ?? "star", logo_url: logoUrl || null, rewards: cleanRewards, active,
     };
@@ -185,7 +177,7 @@ export function CardWizard({ templateId }: Props) {
       <div className="mt-6 rounded-2xl border-2 border-ink/10 bg-card p-4">
         <StampCard title={title || "Card title"} subtitle={subtitle} description={description}
           totalSteps={totalSteps} stampsCount={0}
-          shape={shape} stepSize={stepSize} face={face}
+          shape={shape} face={face}
           bgColor={bg} accentColor={accent} textColor={text} stampIcon={icon}
           logoUrl={logoUrl || null} rewards={rewards}
           onStepClick={step === 2 ? openStepEditor : undefined}
@@ -321,17 +313,6 @@ export function CardWizard({ templateId }: Props) {
                     {SHAPES.map((s) => (
                       <button key={s.value} type="button" onClick={() => setShape(s.value)}
                         className={`rounded-lg border-2 p-3 text-sm ${shape === s.value ? "border-ink bg-secondary" : "border-border"}`}>
-                        {s.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <Label>Step size</Label>
-                  <div className="mt-2 grid grid-cols-3 gap-2">
-                    {STEP_SIZES.map((s) => (
-                      <button key={s.value} type="button" onClick={() => setStepSize(s.value)}
-                        className={`rounded-lg border-2 p-3 text-sm ${stepSize === s.value ? "border-ink bg-secondary" : "border-border"}`}>
                         {s.label}
                       </button>
                     ))}
