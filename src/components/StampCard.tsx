@@ -138,6 +138,9 @@ export function StampCard({
           style={{
             gridTemplateColumns: `repeat(${cols}, minmax(0, calc((100% - 9%) / 4)))`,
             justifyContent: "center",
+            alignContent: "center",
+            justifyItems: "center",
+            alignItems: "center",
             aspectRatio: `${cols} / ${rows}`,
             width: "100%",
             maxHeight: "100%",
