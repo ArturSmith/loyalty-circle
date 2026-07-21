@@ -136,7 +136,8 @@ export function StampCard({
         <div
           className="grid gap-[3%]"
           style={{
-            gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))`,
+            gridTemplateColumns: `repeat(${cols}, minmax(0, calc((100% - 9%) / 4)))`,
+            justifyContent: "center",
             aspectRatio: `${cols} / ${rows}`,
             width: "100%",
             maxHeight: "100%",
