@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { StampCard } from "@/components/StampCard";
-import type { CardShape, Reward, StampIconName, StepSize } from "@/components/StampCard";
+import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
 import { QrDisplay } from "@/components/QrDisplay";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -17,7 +17,7 @@ type Instance = {
   id: string; stamps_count: number; completed_at: string | null; created_at: string;
   template: {
     id: string; title: string; subtitle: string | null; description: string | null;
-    total_steps: number; shape: CardShape; step_size: StepSize | null;
+    total_steps: number; shape: CardShape;
     bg_color: string; accent_color: string; text_color: string; stamp_icon: StampIconName;
     logo_url: string | null; rewards: Reward[];
     business: { id: string; name: string };
@@ -60,7 +60,7 @@ function Wallet() {
     const { data } = await supabase
       .from("card_instances")
       .select(`id, stamps_count, completed_at, created_at,
-        template:card_templates!inner(id, title, subtitle, description, total_steps, shape, step_size, bg_color, accent_color, text_color, stamp_icon, logo_url, rewards,
+        template:card_templates!inner(id, title, subtitle, description, total_steps, shape, bg_color, accent_color, text_color, stamp_icon, logo_url, rewards,
           business:businesses!inner(id, name))`)
       .eq("customer_id", u.user.id)
       .order("created_at", { ascending: false });
