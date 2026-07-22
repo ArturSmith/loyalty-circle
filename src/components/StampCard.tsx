@@ -44,12 +44,12 @@ export interface StampCardProps {
 }
 
 export function StampCard({
-  title, subtitle, description, totalSteps, stampsCount = 0, shape = "rounded",
+  title, subtitle, description, cornerTitle, totalSteps, stampsCount = 0, shape = "rounded",
   bgColor = "#faf8f2", accentColor = "#4b3a35", textColor = "#4b3a35",
   stampIcon = null, logoUrl, rewards = [], lastStamp,
   hideSteps = false, face = "stamps",
   onStepClick, activeStep,
-  onTitleClick, onSubtitleClick, onDescriptionClick, onIconClick,
+  onTitleClick, onSubtitleClick, onDescriptionClick, onIconClick, onCornerTitleClick,
   disableShadow = false,
   showFlipButton = false,
   onFlip,
