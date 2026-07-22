@@ -61,7 +61,7 @@ function Wallet() {
     const { data } = await supabase
       .from("card_instances")
       .select(`id, stamps_count, completed_at, created_at,
-        template:card_templates!inner(id, title, subtitle, description, total_steps, shape, bg_color, accent_color, text_color, stamp_icon, logo_url, rewards,
+        template:card_templates!inner(id, title, subtitle, description, corner_title, total_steps, shape, bg_color, accent_color, text_color, stamp_icon, logo_url, rewards,
           business:businesses!inner(id, name))`)
       .eq("customer_id", u.user.id)
       .order("created_at", { ascending: false });
