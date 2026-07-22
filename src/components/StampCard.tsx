@@ -65,6 +65,8 @@ export function StampCard({
   // Credit-card aspect ratio (1.586:1)
   const heightCls = "aspect-[1.586/1]";
 
+  const displayedCornerTitle = (cornerTitle ?? title) || "";
+
   const InfoFace = (
     <div
       className="absolute inset-0 flex flex-col items-center justify-center text-center px-5 py-4 gap-2"
