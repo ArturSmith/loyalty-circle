@@ -17,6 +17,7 @@ import QRCode from "qrcode";
 type Business = { id: string; name: string; logo_url: string | null; brand_color: string | null };
 type Tpl = {
   id: string; title: string; subtitle: string | null; description: string | null;
+  corner_title: string | null;
   total_steps: number; active: boolean;
   shape: CardShape;
   bg_color: string; accent_color: string; text_color: string;
@@ -235,6 +236,7 @@ function BusinessDashboard() {
                       title={t.title}
                       subtitle={t.subtitle}
                       description={t.description}
+                      cornerTitle={t.corner_title}
                       totalSteps={t.total_steps}
                       stampsCount={0}
                       shape={t.shape}

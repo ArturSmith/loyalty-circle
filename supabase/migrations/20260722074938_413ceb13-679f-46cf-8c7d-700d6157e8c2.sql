@@ -1,0 +1,1 @@
+ALTER TABLE public.card_templates ADD COLUMN IF NOT EXISTS corner_title TEXT;

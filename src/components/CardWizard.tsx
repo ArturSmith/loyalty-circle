@@ -48,6 +48,7 @@ export function CardWizard({ templateId }: Props) {
   const [title, setTitle] = useState("Loyalty Card");
   const [subtitle, setSubtitle] = useState("");
   const [description, setDescription] = useState("");
+  const [cornerTitle, setCornerTitle] = useState<string | null>(null);
   const [totalSteps, setTotalSteps] = useState(10);
   const [shape, setShape] = useState<CardShape>("rounded");
   const [preset, setPreset] = useState<number>(0);
@@ -70,6 +71,7 @@ export function CardWizard({ templateId }: Props) {
         if (t) {
           const tpl = t as {
             title: string; subtitle: string | null; description: string | null;
+            corner_title: string | null;
             total_steps: number; shape: CardShape;
             bg_color: string; accent_color: string; text_color: string; stamp_icon: StampIconName;
             logo_url: string | null; rewards: Reward[] | null; active: boolean;
@@ -77,6 +79,7 @@ export function CardWizard({ templateId }: Props) {
           setTitle(tpl.title);
           setSubtitle(tpl.subtitle ?? "");
           setDescription(tpl.description ?? "");
+          setCornerTitle(tpl.corner_title);
           setTotalSteps(tpl.total_steps);
           setShape(tpl.shape);
           const pi = matchPreset(tpl.bg_color, tpl.accent_color, tpl.text_color);
@@ -100,6 +103,7 @@ export function CardWizard({ templateId }: Props) {
     const cleanRewards = rewards.filter((r) => r.step >= 1 && r.step <= totalSteps && r.label.trim().length > 0);
     const payload = {
       title, subtitle: subtitle || null, description: description || null,
+      corner_title: cornerTitle,
       total_steps: totalSteps, shape,
       bg_color: bg, accent_color: accent, text_color: text,
       stamp_icon: icon ?? "star", logo_url: logoUrl || null, rewards: cleanRewards, active,
@@ -127,7 +131,7 @@ export function CardWizard({ templateId }: Props) {
 
   const [editingStep, setEditingStep] = useState<number | null>(null);
   const [editingLabel, setEditingLabel] = useState("");
-  const [editingField, setEditingField] = useState<null | "title" | "subtitle" | "description" | "icon">(null);
+  const [editingField, setEditingField] = useState<null | "title" | "subtitle" | "description" | "icon" | "cornerTitle">(null);
 
   const openStepEditor = (s: number) => {
     setEditingStep(s);
@@ -176,6 +180,7 @@ export function CardWizard({ templateId }: Props) {
 
       <div className="mt-6 rounded-2xl border-2 border-ink/10 bg-card p-4">
         <StampCard title={title || "Card title"} subtitle={subtitle} description={description}
+          cornerTitle={cornerTitle}
           totalSteps={totalSteps} stampsCount={0}
           shape={shape} face={face}
           bgColor={bg} accentColor={accent} textColor={text} stampIcon={icon}
@@ -185,7 +190,8 @@ export function CardWizard({ templateId }: Props) {
           onTitleClick={step < 2 ? () => { setEditingStep(null); setEditingField("title"); } : undefined}
           onSubtitleClick={step < 2 ? () => { setEditingStep(null); setEditingField("subtitle"); } : undefined}
           onDescriptionClick={step < 2 ? () => { setEditingStep(null); setEditingField("description"); } : undefined}
-          onIconClick={step < 2 ? () => { setEditingStep(null); setEditingField("icon"); } : undefined} />
+          onIconClick={step < 2 ? () => { setEditingStep(null); setEditingField("icon"); } : undefined}
+          onCornerTitleClick={step < 2 ? () => { setEditingStep(null); setEditingField("cornerTitle"); } : undefined} />
 
         {editingField === "title" && (
           <div className="mt-4 rounded-xl border-2 border-ink/10 bg-secondary/50 p-3">
@@ -195,6 +201,19 @@ export function CardWizard({ templateId }: Props) {
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === "Escape") setEditingField(null); }} />
               <Button size="sm" onClick={() => setEditingField(null)}><Check className="h-4 w-4" /></Button>
             </div>
+          </div>
+        )}
+        {editingField === "cornerTitle" && (
+          <div className="mt-4 rounded-xl border-2 border-ink/10 bg-secondary/50 p-3">
+            <Label className="text-xs">Corner title (top-left)</Label>
+            <div className="mt-2 flex gap-2">
+              <Input autoFocus value={cornerTitle ?? ""} onChange={(e) => setCornerTitle(e.target.value)}
+                placeholder={title || "Defaults to main title"}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === "Escape") setEditingField(null); }} />
+              <Button size="sm" variant="ghost" onClick={() => setCornerTitle(null)} title="Reset to title">Reset</Button>
+              <Button size="sm" onClick={() => setEditingField(null)}><Check className="h-4 w-4" /></Button>
+            </div>
+            <p className="mt-1 text-[10px] text-muted-foreground">Leave empty or reset to use the main title.</p>
           </div>
         )}
         {editingField === "subtitle" && (

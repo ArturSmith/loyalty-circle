@@ -16,6 +16,7 @@ export interface StampCardProps {
   title: string;
   subtitle?: string | null;
   description?: string | null;
+  cornerTitle?: string | null;
   totalSteps: number;
   stampsCount?: number;
   shape?: CardShape;
@@ -36,18 +37,19 @@ export interface StampCardProps {
   onSubtitleClick?: () => void;
   onDescriptionClick?: () => void;
   onIconClick?: () => void;
+  onCornerTitleClick?: () => void;
   disableShadow?: boolean;
   showFlipButton?: boolean;
   onFlip?: () => void;
 }
 
 export function StampCard({
-  title, subtitle, description, totalSteps, stampsCount = 0, shape = "rounded",
+  title, subtitle, description, cornerTitle, totalSteps, stampsCount = 0, shape = "rounded",
   bgColor = "#faf8f2", accentColor = "#4b3a35", textColor = "#4b3a35",
   stampIcon = null, logoUrl, rewards = [], lastStamp,
   hideSteps = false, face = "stamps",
   onStepClick, activeStep,
-  onTitleClick, onSubtitleClick, onDescriptionClick, onIconClick,
+  onTitleClick, onSubtitleClick, onDescriptionClick, onIconClick, onCornerTitleClick,
   disableShadow = false,
   showFlipButton = false,
   onFlip,
@@ -63,11 +65,32 @@ export function StampCard({
   // Credit-card aspect ratio (1.586:1)
   const heightCls = "aspect-[1.586/1]";
 
+  const displayedCornerTitle = (cornerTitle ?? title) || "";
+
   const InfoFace = (
     <div
       className="absolute inset-0 flex flex-col items-center justify-center text-center px-5 py-4 gap-2"
       style={{ color: textColor }}
     >
+      {(displayedCornerTitle || onCornerTitleClick) && (
+        onCornerTitleClick ? (
+          <button
+            type="button"
+            onClick={onCornerTitleClick}
+            className="absolute top-3 left-4 text-[11px] sm:text-xs font-semibold tracking-wide max-w-[60%] truncate text-left rounded-md hover:bg-black/5 transition px-1 -mx-1"
+            style={{ color: "rgba(0,0,0,0.7)" }}
+          >
+            {displayedCornerTitle || "Add corner title"}
+          </button>
+        ) : displayedCornerTitle ? (
+          <div
+            className="absolute top-3 left-4 text-[11px] sm:text-xs font-semibold tracking-wide max-w-[60%] truncate text-left"
+            style={{ color: "rgba(0,0,0,0.7)" }}
+          >
+            {displayedCornerTitle}
+          </div>
+        ) : null
+      )}
       {(() => {
         const inner = logoUrl ? (
           <img src={logoUrl} alt="" className="h-14 w-14 sm:h-16 sm:w-16 object-contain" />
