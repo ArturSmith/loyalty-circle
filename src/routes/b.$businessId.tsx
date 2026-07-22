@@ -10,6 +10,7 @@ import { OrnamentDivider } from "@/components/OrnamentDivider";
 
 type Template = {
   id: string; business_id: string; title: string; subtitle: string | null; description: string | null;
+  corner_title: string | null;
   total_steps: number; shape: CardShape;
   bg_color: string; accent_color: string; text_color: string;
   stamp_icon: StampIconName; logo_url: string | null; rewards: Reward[]; active: boolean;
