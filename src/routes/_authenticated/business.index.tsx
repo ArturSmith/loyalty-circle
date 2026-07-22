@@ -17,6 +17,7 @@ import QRCode from "qrcode";
 type Business = { id: string; name: string; logo_url: string | null; brand_color: string | null };
 type Tpl = {
   id: string; title: string; subtitle: string | null; description: string | null;
+  corner_title: string | null;
   total_steps: number; active: boolean;
   shape: CardShape;
   bg_color: string; accent_color: string; text_color: string;
