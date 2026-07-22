@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 
 type Tpl = {
   id: string; business_id: string; title: string; subtitle: string | null; description: string | null;
+  corner_title: string | null;
   total_steps: number; active: boolean; shape: CardShape;
   bg_color: string; accent_color: string; text_color: string; stamp_icon: StampIconName;
   logo_url: string | null; rewards: Reward[] | null; created_at: string;
