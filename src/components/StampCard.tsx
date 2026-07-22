@@ -16,6 +16,7 @@ export interface StampCardProps {
   title: string;
   subtitle?: string | null;
   description?: string | null;
+  cornerTitle?: string | null;
   totalSteps: number;
   stampsCount?: number;
   shape?: CardShape;
@@ -36,6 +37,7 @@ export interface StampCardProps {
   onSubtitleClick?: () => void;
   onDescriptionClick?: () => void;
   onIconClick?: () => void;
+  onCornerTitleClick?: () => void;
   disableShadow?: boolean;
   showFlipButton?: boolean;
   onFlip?: () => void;
