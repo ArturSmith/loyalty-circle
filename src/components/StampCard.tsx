@@ -72,6 +72,25 @@ export function StampCard({
       className="absolute inset-0 flex flex-col items-center justify-center text-center px-5 py-4 gap-2"
       style={{ color: textColor }}
     >
+      {(displayedCornerTitle || onCornerTitleClick) && (
+        onCornerTitleClick ? (
+          <button
+            type="button"
+            onClick={onCornerTitleClick}
+            className="absolute top-3 left-4 text-[11px] sm:text-xs font-semibold tracking-wide max-w-[60%] truncate text-left rounded-md hover:bg-black/5 transition px-1 -mx-1"
+            style={{ color: "rgba(0,0,0,0.7)" }}
+          >
+            {displayedCornerTitle || "Add corner title"}
+          </button>
+        ) : displayedCornerTitle ? (
+          <div
+            className="absolute top-3 left-4 text-[11px] sm:text-xs font-semibold tracking-wide max-w-[60%] truncate text-left"
+            style={{ color: "rgba(0,0,0,0.7)" }}
+          >
+            {displayedCornerTitle}
+          </div>
+        ) : null
+      )}
       {(() => {
         const inner = logoUrl ? (
           <img src={logoUrl} alt="" className="h-14 w-14 sm:h-16 sm:w-16 object-contain" />
