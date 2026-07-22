@@ -180,6 +180,7 @@ export function CardWizard({ templateId }: Props) {
 
       <div className="mt-6 rounded-2xl border-2 border-ink/10 bg-card p-4">
         <StampCard title={title || "Card title"} subtitle={subtitle} description={description}
+          cornerTitle={cornerTitle}
           totalSteps={totalSteps} stampsCount={0}
           shape={shape} face={face}
           bgColor={bg} accentColor={accent} textColor={text} stampIcon={icon}
@@ -189,7 +190,8 @@ export function CardWizard({ templateId }: Props) {
           onTitleClick={step < 2 ? () => { setEditingStep(null); setEditingField("title"); } : undefined}
           onSubtitleClick={step < 2 ? () => { setEditingStep(null); setEditingField("subtitle"); } : undefined}
           onDescriptionClick={step < 2 ? () => { setEditingStep(null); setEditingField("description"); } : undefined}
-          onIconClick={step < 2 ? () => { setEditingStep(null); setEditingField("icon"); } : undefined} />
+          onIconClick={step < 2 ? () => { setEditingStep(null); setEditingField("icon"); } : undefined}
+          onCornerTitleClick={step < 2 ? () => { setEditingStep(null); setEditingField("cornerTitle"); } : undefined} />
 
         {editingField === "title" && (
           <div className="mt-4 rounded-xl border-2 border-ink/10 bg-secondary/50 p-3">
@@ -199,6 +201,19 @@ export function CardWizard({ templateId }: Props) {
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === "Escape") setEditingField(null); }} />
               <Button size="sm" onClick={() => setEditingField(null)}><Check className="h-4 w-4" /></Button>
             </div>
+          </div>
+        )}
+        {editingField === "cornerTitle" && (
+          <div className="mt-4 rounded-xl border-2 border-ink/10 bg-secondary/50 p-3">
+            <Label className="text-xs">Corner title (top-left)</Label>
+            <div className="mt-2 flex gap-2">
+              <Input autoFocus value={cornerTitle ?? ""} onChange={(e) => setCornerTitle(e.target.value)}
+                placeholder={title || "Defaults to main title"}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === "Escape") setEditingField(null); }} />
+              <Button size="sm" variant="ghost" onClick={() => setCornerTitle(null)} title="Reset to title">Reset</Button>
+              <Button size="sm" onClick={() => setEditingField(null)}><Check className="h-4 w-4" /></Button>
+            </div>
+            <p className="mt-1 text-[10px] text-muted-foreground">Leave empty or reset to use the main title.</p>
           </div>
         )}
         {editingField === "subtitle" && (
