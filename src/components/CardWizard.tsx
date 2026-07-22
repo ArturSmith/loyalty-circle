@@ -131,7 +131,7 @@ export function CardWizard({ templateId }: Props) {
 
   const [editingStep, setEditingStep] = useState<number | null>(null);
   const [editingLabel, setEditingLabel] = useState("");
-  const [editingField, setEditingField] = useState<null | "title" | "subtitle" | "description" | "icon">(null);
+  const [editingField, setEditingField] = useState<null | "title" | "subtitle" | "description" | "icon" | "cornerTitle">(null);
 
   const openStepEditor = (s: number) => {
     setEditingStep(s);
