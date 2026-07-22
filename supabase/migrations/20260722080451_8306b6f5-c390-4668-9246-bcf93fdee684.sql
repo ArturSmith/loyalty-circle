@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.guard_card_instance_update() FROM PUBLIC, anon, authenticated;
