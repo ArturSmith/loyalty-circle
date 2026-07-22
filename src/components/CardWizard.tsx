@@ -48,6 +48,7 @@ export function CardWizard({ templateId }: Props) {
   const [title, setTitle] = useState("Loyalty Card");
   const [subtitle, setSubtitle] = useState("");
   const [description, setDescription] = useState("");
+  const [cornerTitle, setCornerTitle] = useState<string | null>(null);
   const [totalSteps, setTotalSteps] = useState(10);
   const [shape, setShape] = useState<CardShape>("rounded");
   const [preset, setPreset] = useState<number>(0);
