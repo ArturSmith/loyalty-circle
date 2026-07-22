@@ -103,6 +103,7 @@ export function CardWizard({ templateId }: Props) {
     const cleanRewards = rewards.filter((r) => r.step >= 1 && r.step <= totalSteps && r.label.trim().length > 0);
     const payload = {
       title, subtitle: subtitle || null, description: description || null,
+      corner_title: cornerTitle,
       total_steps: totalSteps, shape,
       bg_color: bg, accent_color: accent, text_color: text,
       stamp_icon: icon ?? "star", logo_url: logoUrl || null, rewards: cleanRewards, active,
