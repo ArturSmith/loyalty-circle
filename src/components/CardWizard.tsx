@@ -71,6 +71,7 @@ export function CardWizard({ templateId }: Props) {
         if (t) {
           const tpl = t as {
             title: string; subtitle: string | null; description: string | null;
+            corner_title: string | null;
             total_steps: number; shape: CardShape;
             bg_color: string; accent_color: string; text_color: string; stamp_icon: StampIconName;
             logo_url: string | null; rewards: Reward[] | null; active: boolean;
@@ -78,6 +79,7 @@ export function CardWizard({ templateId }: Props) {
           setTitle(tpl.title);
           setSubtitle(tpl.subtitle ?? "");
           setDescription(tpl.description ?? "");
+          setCornerTitle(tpl.corner_title);
           setTotalSteps(tpl.total_steps);
           setShape(tpl.shape);
           const pi = matchPreset(tpl.bg_color, tpl.accent_color, tpl.text_color);
