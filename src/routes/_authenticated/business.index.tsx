@@ -308,3 +308,23 @@ function Stat({ icon: Icon, label, value }: { icon: typeof QrCode; label: string
     </div>
   );
 }
+
+function PlanBadge() {
+  const access = useBusinessAccess();
+  if (access.loading) return null;
+  if (access.isSubscribed) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
+        <Sparkles className="h-3 w-3" /> Pro
+      </span>
+    );
+  }
+  if (access.reason === "trialing" && access.trialDaysLeft != null) {
+    return (
+      <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+        Trial
+      </span>
+    );
+  }
+  return null;
+}
