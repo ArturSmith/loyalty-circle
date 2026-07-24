@@ -41,6 +41,16 @@ function SubscribePage() {
         navigate({ to: "/auth", search: { redirect: "/subscribe" } });
         return;
       }
+      // Remember where to send the user after payment — default to business dashboard.
+      try {
+        const prev = document.referrer && new URL(document.referrer).origin === window.location.origin
+          ? new URL(document.referrer).pathname + new URL(document.referrer).search
+          : "/business";
+        const returnTo = prev && prev !== "/subscribe" && prev.startsWith("/") ? prev : "/business";
+        sessionStorage.setItem("post_checkout_return", returnTo);
+      } catch {
+        sessionStorage.setItem("post_checkout_return", "/business");
+      }
       await initializePaddle();
       const paddlePriceId = await getPaddlePriceId("business_monthly");
       window.Paddle.Checkout.open({
@@ -49,7 +59,7 @@ function SubscribePage() {
         customData: { userId: u.user.id },
         settings: {
           displayMode: "overlay",
-          successUrl: `${window.location.origin}/business?checkout=success`,
+          successUrl: `${window.location.origin}/checkout/success`,
           allowLogout: false,
           variant: "one-page",
         },

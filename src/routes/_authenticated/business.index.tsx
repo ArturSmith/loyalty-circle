@@ -8,7 +8,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
-import { Plus, QrCode, ScanLine, Users, Stamp as StampIco, Wallet as WalletIcon, Pencil, Menu, Settings, LogOut, Download } from "lucide-react";
+import { Plus, QrCode, ScanLine, Users, Stamp as StampIco, Wallet as WalletIcon, Pencil, Menu, Settings, LogOut, Download, CreditCard, Sparkles } from "lucide-react";
+import { useBusinessAccess } from "@/hooks/useBusinessAccess";
 import { StampCard } from "@/components/StampCard";
 import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
 import { Carousel, CarouselApi, CarouselContent, CarouselItem } from "@/components/ui/carousel";
@@ -139,7 +140,10 @@ function BusinessDashboard() {
       <header className="flex items-center justify-between">
         <div>
           <p className="text-xs uppercase tracking-widest text-muted-foreground">Dashboard</p>
-          <h1 className="font-display text-3xl font-extrabold tracking-tight">{biz.name}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-3xl font-extrabold tracking-tight">{biz.name}</h1>
+            <PlanBadge />
+          </div>
         </div>
         <Sheet>
           <SheetTrigger asChild>
@@ -153,6 +157,11 @@ function BusinessDashboard() {
               <Link to="/business/edit" className="w-full">
                 <Button variant="ghost" className="w-full justify-start gap-3">
                   <Settings className="h-4 w-4" /> Edit business info
+                </Button>
+              </Link>
+              <Link to="/settings/billing" className="w-full">
+                <Button variant="ghost" className="w-full justify-start gap-3">
+                  <CreditCard className="h-4 w-4" /> Billing & plan
                 </Button>
               </Link>
               <Link to="/wallet" className="w-full">
@@ -298,4 +307,24 @@ function Stat({ icon: Icon, label, value }: { icon: typeof QrCode; label: string
       <div className="text-[11px] uppercase tracking-widest text-muted-foreground">{label}</div>
     </div>
   );
+}
+
+function PlanBadge() {
+  const access = useBusinessAccess();
+  if (access.loading) return null;
+  if (access.isSubscribed) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
+        <Sparkles className="h-3 w-3" /> Pro
+      </span>
+    );
+  }
+  if (access.reason === "trialing" && access.trialDaysLeft != null) {
+    return (
+      <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+        Trial
+      </span>
+    );
+  }
+  return null;
 }

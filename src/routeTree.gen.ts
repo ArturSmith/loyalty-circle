@@ -14,6 +14,7 @@ import { Route as ForBusinessRouteImport } from './routes/for-business'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CheckoutSuccessRouteImport } from './routes/checkout.success'
 import { Route as BBusinessIdRouteImport } from './routes/b.$businessId'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
 import { Route as AuthenticatedSubscribeRouteImport } from './routes/_authenticated/subscribe'
@@ -21,6 +22,7 @@ import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated/s
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedBusinessRouteImport } from './routes/_authenticated/business'
 import { Route as AuthenticatedBusinessIndexRouteImport } from './routes/_authenticated/business.index'
+import { Route as AuthenticatedSettingsBillingRouteImport } from './routes/_authenticated/settings.billing'
 import { Route as AuthenticatedBusinessScanRouteImport } from './routes/_authenticated/business.scan'
 import { Route as AuthenticatedBusinessEditRouteImport } from './routes/_authenticated/business.edit'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
@@ -50,6 +52,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutSuccessRoute = CheckoutSuccessRouteImport.update({
+  id: '/checkout/success',
+  path: '/checkout/success',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BBusinessIdRoute = BBusinessIdRouteImport.update({
@@ -87,6 +94,12 @@ const AuthenticatedBusinessIndexRoute =
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedBusinessRoute,
+  } as any)
+const AuthenticatedSettingsBillingRoute =
+  AuthenticatedSettingsBillingRouteImport.update({
+    id: '/settings/billing',
+    path: '/settings/billing',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedBusinessScanRoute =
   AuthenticatedBusinessScanRouteImport.update({
@@ -136,8 +149,10 @@ export interface FileRoutesByFullPath {
   '/subscribe': typeof AuthenticatedSubscribeRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/b/$businessId': typeof BBusinessIdRoute
+  '/checkout/success': typeof CheckoutSuccessRoute
   '/business/edit': typeof AuthenticatedBusinessEditRoute
   '/business/scan': typeof AuthenticatedBusinessScanRoute
+  '/settings/billing': typeof AuthenticatedSettingsBillingRoute
   '/business/': typeof AuthenticatedBusinessIndexRoute
   '/business/cards/new': typeof AuthenticatedBusinessCardsNewRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -154,8 +169,10 @@ export interface FileRoutesByTo {
   '/subscribe': typeof AuthenticatedSubscribeRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/b/$businessId': typeof BBusinessIdRoute
+  '/checkout/success': typeof CheckoutSuccessRoute
   '/business/edit': typeof AuthenticatedBusinessEditRoute
   '/business/scan': typeof AuthenticatedBusinessScanRoute
+  '/settings/billing': typeof AuthenticatedSettingsBillingRoute
   '/business': typeof AuthenticatedBusinessIndexRoute
   '/business/cards/new': typeof AuthenticatedBusinessCardsNewRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -175,8 +192,10 @@ export interface FileRoutesById {
   '/_authenticated/subscribe': typeof AuthenticatedSubscribeRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/b/$businessId': typeof BBusinessIdRoute
+  '/checkout/success': typeof CheckoutSuccessRoute
   '/_authenticated/business/edit': typeof AuthenticatedBusinessEditRoute
   '/_authenticated/business/scan': typeof AuthenticatedBusinessScanRoute
+  '/_authenticated/settings/billing': typeof AuthenticatedSettingsBillingRoute
   '/_authenticated/business/': typeof AuthenticatedBusinessIndexRoute
   '/_authenticated/business/cards/new': typeof AuthenticatedBusinessCardsNewRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -196,8 +215,10 @@ export interface FileRouteTypes {
     | '/subscribe'
     | '/wallet'
     | '/b/$businessId'
+    | '/checkout/success'
     | '/business/edit'
     | '/business/scan'
+    | '/settings/billing'
     | '/business/'
     | '/business/cards/new'
     | '/api/public/payments/webhook'
@@ -214,8 +235,10 @@ export interface FileRouteTypes {
     | '/subscribe'
     | '/wallet'
     | '/b/$businessId'
+    | '/checkout/success'
     | '/business/edit'
     | '/business/scan'
+    | '/settings/billing'
     | '/business'
     | '/business/cards/new'
     | '/api/public/payments/webhook'
@@ -234,8 +257,10 @@ export interface FileRouteTypes {
     | '/_authenticated/subscribe'
     | '/_authenticated/wallet'
     | '/b/$businessId'
+    | '/checkout/success'
     | '/_authenticated/business/edit'
     | '/_authenticated/business/scan'
+    | '/_authenticated/settings/billing'
     | '/_authenticated/business/'
     | '/_authenticated/business/cards/new'
     | '/api/public/payments/webhook'
@@ -250,6 +275,7 @@ export interface RootRouteChildren {
   ForBusinessRoute: typeof ForBusinessRoute
   ForCustomersRoute: typeof ForCustomersRoute
   BBusinessIdRoute: typeof BBusinessIdRoute
+  CheckoutSuccessRoute: typeof CheckoutSuccessRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
@@ -288,6 +314,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout/success': {
+      id: '/checkout/success'
+      path: '/checkout/success'
+      fullPath: '/checkout/success'
+      preLoaderRoute: typeof CheckoutSuccessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/b/$businessId': {
@@ -338,6 +371,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/business/'
       preLoaderRoute: typeof AuthenticatedBusinessIndexRouteImport
       parentRoute: typeof AuthenticatedBusinessRoute
+    }
+    '/_authenticated/settings/billing': {
+      id: '/_authenticated/settings/billing'
+      path: '/settings/billing'
+      fullPath: '/settings/billing'
+      preLoaderRoute: typeof AuthenticatedSettingsBillingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/business/scan': {
       id: '/_authenticated/business/scan'
@@ -414,6 +454,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedScanRoute: typeof AuthenticatedScanRoute
   AuthenticatedSubscribeRoute: typeof AuthenticatedSubscribeRoute
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
+  AuthenticatedSettingsBillingRoute: typeof AuthenticatedSettingsBillingRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -422,6 +463,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedScanRoute: AuthenticatedScanRoute,
   AuthenticatedSubscribeRoute: AuthenticatedSubscribeRoute,
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
+  AuthenticatedSettingsBillingRoute: AuthenticatedSettingsBillingRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -434,6 +476,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForBusinessRoute: ForBusinessRoute,
   ForCustomersRoute: ForCustomersRoute,
   BBusinessIdRoute: BBusinessIdRoute,
+  CheckoutSuccessRoute: CheckoutSuccessRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
