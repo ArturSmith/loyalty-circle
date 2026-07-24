@@ -42,24 +42,26 @@ function BillingSettings() {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [invoiceLoadingId, setInvoiceLoadingId] = useState<string | null>(null);
 
-  const loadTransactions = async (after?: string) => {
-    try {
+  const loadTransactions = useCallback(
+    async (after?: string) => {
       const res = await txFn({ data: { environment: getPaddleEnvironment(), after } });
       const page = res as { items: Tx[]; nextCursor: string | null };
       setTxs((prev) => (after ? [...(prev ?? []), ...page.items] : page.items));
       setNextCursor(page.nextCursor);
-    } catch (e) {
-      console.error(e);
-      toast.error("Could not load invoice history.");
-    }
-  };
+    },
+    [txFn]
+  );
 
   useEffect(() => {
     if (!access.isSubscribed) return;
     setTxLoading(true);
     loadTransactions()
+      .catch((e) => {
+        console.error(e);
+        toast.error("Could not load invoice history.");
+      })
       .finally(() => setTxLoading(false));
-  }, [access.isSubscribed, txFn]);
+  }, [access.isSubscribed, loadTransactions]);
 
   const openPortal = () => {
     // Open the tab synchronously in the click handler so it isn't popup-blocked.
