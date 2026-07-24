@@ -47,7 +47,7 @@ export const getBillingPortalUrl = createServerFn({ method: "POST" })
 
 export const listTransactions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { environment: PaddleEnv }) => data)
+  .inputValidator((data: { environment: PaddleEnv; after?: string }) => data)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: sub } = await supabase
@@ -59,23 +59,32 @@ export const listTransactions = createServerFn({ method: "GET" })
       .limit(1)
       .maybeSingle();
 
-    if (!sub?.paddle_customer_id) return [];
+    if (!sub?.paddle_customer_id) return { items: [], nextCursor: null as string | null };
 
-    const res = await gatewayFetch(
-      data.environment,
-      `/transactions?customer_id=${encodeURIComponent(sub.paddle_customer_id)}&per_page=50&order_by=billed_at[DESC]`
-    );
-    const json = (await res.json()) as { data?: any[] };
+    const url = new URL(`/transactions`, "https://api.paddle.com");
+    url.searchParams.set("customer_id", sub.paddle_customer_id);
+    url.searchParams.set("per_page", "25");
+    url.searchParams.set("order_by", "billed_at[DESC]");
+    if (data.after) url.searchParams.set("after", data.after);
+
+    const res = await gatewayFetch(data.environment, `${url.pathname}${url.search}`);
+    const json = (await res.json()) as {
+      data?: any[];
+      meta?: { pagination?: { next?: string; has_more?: boolean } };
+    };
     const items = json.data ?? [];
-    return items.map((t) => ({
-      id: t.id as string,
-      status: t.status as string,
-      billedAt: (t.billed_at ?? t.created_at) as string | null,
-      currency: t.currency_code as string,
-      total: t.details?.totals?.total as string | undefined,
-      invoiceNumber: t.invoice_number as string | null,
-      invoiceId: t.invoice_id as string | null,
-    }));
+    return {
+      items: items.map((t) => ({
+        id: t.id as string,
+        status: t.status as string,
+        billedAt: (t.billed_at ?? t.created_at) as string | null,
+        currency: t.currency_code as string,
+        total: t.details?.totals?.total as string | undefined,
+        invoiceNumber: t.invoice_number as string | null,
+        invoiceId: t.invoice_id as string | null,
+      })),
+      nextCursor: json.meta?.pagination?.next ?? null,
+    };
   });
 
 export const getInvoicePdfUrl = createServerFn({ method: "POST" })
