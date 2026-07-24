@@ -1,11 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ExternalLink, Sparkles, CreditCard, Calendar, XCircle } from "lucide-react";
+import { ChevronLeft, ExternalLink, Sparkles, CreditCard, Calendar, XCircle, FileText, Download } from "lucide-react";
 import { toast } from "sonner";
 import { useBusinessAccess } from "@/hooks/useBusinessAccess";
-import { getBillingPortalUrl } from "@/utils/payments.functions";
+import { getBillingPortalUrl, listTransactions, getInvoicePdfUrl } from "@/utils/payments.functions";
 import { getPaddleEnvironment } from "@/lib/paddle";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 
@@ -19,24 +19,75 @@ export const Route = createFileRoute("/_authenticated/settings/billing")({
   component: BillingSettings,
 });
 
+type Tx = {
+  id: string;
+  status: string;
+  billedAt: string | null;
+  currency: string;
+  total?: string;
+  invoiceNumber: string | null;
+  invoiceId: string | null;
+};
+
 function BillingSettings() {
   const navigate = useNavigate();
   const access = useBusinessAccess();
   const portalFn = useServerFn(getBillingPortalUrl);
+  const txFn = useServerFn(listTransactions);
+  const invoiceFn = useServerFn(getInvoicePdfUrl);
   const [opening, setOpening] = useState(false);
+  const [txs, setTxs] = useState<Tx[] | null>(null);
+  const [txLoading, setTxLoading] = useState(false);
+  const [invoiceLoadingId, setInvoiceLoadingId] = useState<string | null>(null);
 
-  const openPortal = async () => {
+  useEffect(() => {
+    if (!access.isSubscribed) return;
+    setTxLoading(true);
+    txFn({ data: { environment: getPaddleEnvironment() } })
+      .then((rows) => setTxs(rows as Tx[]))
+      .catch((e) => {
+        console.error(e);
+        toast.error("Could not load invoice history.");
+      })
+      .finally(() => setTxLoading(false));
+  }, [access.isSubscribed, txFn]);
+
+  const openPortal = () => {
+    // Open the tab synchronously in the click handler so it isn't popup-blocked.
+    const win = window.open("about:blank", "_blank", "noopener,noreferrer");
     setOpening(true);
-    try {
-      const res = await portalFn({ data: { environment: getPaddleEnvironment() } });
-      if (res.overviewUrl) window.open(res.overviewUrl, "_blank", "noopener,noreferrer");
-      else toast.error("Could not open the billing portal.");
-    } catch (e: any) {
-      console.error(e);
-      toast.error(e?.message ?? "Could not open the billing portal.");
-    } finally {
-      setOpening(false);
-    }
+    portalFn({ data: { environment: getPaddleEnvironment() } })
+      .then((res) => {
+        if (res.overviewUrl) {
+          if (win) win.location.href = res.overviewUrl;
+          else window.location.href = res.overviewUrl;
+        } else {
+          win?.close();
+          toast.error("Could not open the billing portal.");
+        }
+      })
+      .catch((e: any) => {
+        console.error(e);
+        win?.close();
+        toast.error(e?.message ?? "Could not open the billing portal.");
+      })
+      .finally(() => setOpening(false));
+  };
+
+  const openInvoice = (transactionId: string) => {
+    const win = window.open("about:blank", "_blank", "noopener,noreferrer");
+    setInvoiceLoadingId(transactionId);
+    invoiceFn({ data: { transactionId, environment: getPaddleEnvironment() } })
+      .then((url) => {
+        if (win) win.location.href = url;
+        else window.location.href = url;
+      })
+      .catch((e: any) => {
+        console.error(e);
+        win?.close();
+        toast.error(e?.message ?? "Could not open invoice.");
+      })
+      .finally(() => setInvoiceLoadingId(null));
   };
 
   const planLabel = access.isSubscribed
@@ -65,7 +116,7 @@ function BillingSettings() {
         <div className="w-9" />
       </header>
 
-      <div className="flex-1 px-6 py-4 max-w-md mx-auto w-full">
+      <div className="flex-1 px-6 py-4 max-w-md mx-auto w-full pb-16">
         <OrnamentDivider className="w-32 mx-auto opacity-60" />
 
         <div className="mt-6 rounded-2xl border-2 border-ink/10 bg-card paper-grain card-shadow p-6">
@@ -109,7 +160,7 @@ function BillingSettings() {
           {access.isSubscribed ? (
             <Button onClick={openPortal} disabled={opening} className="w-full h-12">
               <CreditCard className="h-4 w-4" />
-              {opening ? "Opening…" : "Manage payments & invoices"}
+              {opening ? "Opening…" : "Manage payments"}
               <ExternalLink className="h-3.5 w-3.5 opacity-70" />
             </Button>
           ) : (
@@ -121,12 +172,82 @@ function BillingSettings() {
             </Link>
           )}
           <p className="text-center text-[11px] text-muted-foreground">
-            Payments and invoices are handled by our payment provider. You'll be taken to a secure page in a new tab.
+            Payments are handled by our payment provider. Manage opens in a new tab.
           </p>
         </div>
+
+        {access.isSubscribed && (
+          <div className="mt-8">
+            <h2 className="font-display text-lg font-semibold mb-3">Invoice history</h2>
+            <div className="rounded-2xl border-2 border-ink/10 bg-card paper-grain card-shadow overflow-hidden">
+              {txLoading && (
+                <p className="p-4 text-sm text-muted-foreground text-center">Loading…</p>
+              )}
+              {!txLoading && txs && txs.length === 0 && (
+                <p className="p-4 text-sm text-muted-foreground text-center">No invoices yet.</p>
+              )}
+              {!txLoading && txs && txs.length > 0 && (
+                <ul className="divide-y divide-ink/5">
+                  {txs.map((t) => {
+                    const date = t.billedAt ? new Date(t.billedAt) : null;
+                    const amount = t.total
+                      ? formatMoney(t.total, t.currency)
+                      : "—";
+                    const paid = t.status === "completed" || t.status === "paid";
+                    return (
+                      <li key={t.id} className="flex items-center gap-3 p-4">
+                        <div className="rounded-lg bg-secondary p-2">
+                          <FileText className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-medium truncate">
+                              {t.invoiceNumber ?? "Draft invoice"}
+                            </p>
+                            {!paid && (
+                              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground bg-secondary px-1.5 py-0.5 rounded">
+                                {t.status}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {date ? date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }) : "—"}
+                            {" · "}
+                            {amount}
+                          </p>
+                        </div>
+                        {paid && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Download invoice"
+                            disabled={invoiceLoadingId === t.id}
+                            onClick={() => openInvoice(t.id)}
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
+}
+
+function formatMoney(minor: string, currency: string) {
+  const n = Number(minor);
+  if (!Number.isFinite(n)) return `${minor} ${currency}`;
+  try {
+    return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(n / 100);
+  } catch {
+    return `${(n / 100).toFixed(2)} ${currency}`;
+  }
 }
 
 function Row({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
