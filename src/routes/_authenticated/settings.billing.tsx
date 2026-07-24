@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ExternalLink, Sparkles, CreditCard, Calendar, XCircle, FileText, Download } from "lucide-react";
@@ -38,19 +38,30 @@ function BillingSettings() {
   const [opening, setOpening] = useState(false);
   const [txs, setTxs] = useState<Tx[] | null>(null);
   const [txLoading, setTxLoading] = useState(false);
+  const [txLoadingMore, setTxLoadingMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [invoiceLoadingId, setInvoiceLoadingId] = useState<string | null>(null);
+
+  const loadTransactions = useCallback(
+    async (after?: string) => {
+      const res = await txFn({ data: { environment: getPaddleEnvironment(), after } });
+      const page = res as { items: Tx[]; nextCursor: string | null };
+      setTxs((prev) => (after ? [...(prev ?? []), ...page.items] : page.items));
+      setNextCursor(page.nextCursor);
+    },
+    [txFn]
+  );
 
   useEffect(() => {
     if (!access.isSubscribed) return;
     setTxLoading(true);
-    txFn({ data: { environment: getPaddleEnvironment() } })
-      .then((rows) => setTxs(rows as Tx[]))
+    loadTransactions()
       .catch((e) => {
         console.error(e);
         toast.error("Could not load invoice history.");
       })
       .finally(() => setTxLoading(false));
-  }, [access.isSubscribed, txFn]);
+  }, [access.isSubscribed, loadTransactions]);
 
   const openPortal = () => {
     // Open the tab synchronously in the click handler so it isn't popup-blocked.
@@ -179,7 +190,7 @@ function BillingSettings() {
         {access.isSubscribed && (
           <div className="mt-8">
             <h2 className="font-display text-lg font-semibold mb-3">Invoice history</h2>
-            <div className="rounded-2xl border-2 border-ink/10 bg-card paper-grain card-shadow overflow-hidden">
+            <div className="rounded-2xl border-2 border-ink/10 bg-card paper-grain card-shadow overflow-hidden flex flex-col max-h-[60vh]">
               {txLoading && (
                 <p className="p-4 text-sm text-muted-foreground text-center">Loading…</p>
               )}
@@ -187,50 +198,72 @@ function BillingSettings() {
                 <p className="p-4 text-sm text-muted-foreground text-center">No invoices yet.</p>
               )}
               {!txLoading && txs && txs.length > 0 && (
-                <ul className="divide-y divide-ink/5">
-                  {txs.map((t) => {
-                    const date = t.billedAt ? new Date(t.billedAt) : null;
-                    const amount = t.total
-                      ? formatMoney(t.total, t.currency)
-                      : "—";
-                    const paid = t.status === "completed" || t.status === "paid";
-                    return (
-                      <li key={t.id} className="flex items-center gap-3 p-4">
-                        <div className="rounded-lg bg-secondary p-2">
-                          <FileText className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm font-medium truncate">
-                              {t.invoiceNumber ?? "Draft invoice"}
-                            </p>
-                            {!paid && (
-                              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground bg-secondary px-1.5 py-0.5 rounded">
-                                {t.status}
-                              </span>
-                            )}
+                <>
+                  <ul className="divide-y divide-ink/5 overflow-y-auto flex-1">
+                    {txs.map((t) => {
+                      const date = t.billedAt ? new Date(t.billedAt) : null;
+                      const amount = t.total
+                        ? formatMoney(t.total, t.currency)
+                        : "—";
+                      const paid = t.status === "completed" || t.status === "paid";
+                      return (
+                        <li key={t.id} className="flex items-center gap-3 p-4">
+                          <div className="rounded-lg bg-secondary p-2">
+                            <FileText className="h-4 w-4 text-muted-foreground" />
                           </div>
-                          <p className="text-xs text-muted-foreground">
-                            {date ? date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }) : "—"}
-                            {" · "}
-                            {amount}
-                          </p>
-                        </div>
-                        {paid && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            title="Download invoice"
-                            disabled={invoiceLoadingId === t.id}
-                            onClick={() => openInvoice(t.id)}
-                          >
-                            <Download className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-medium truncate">
+                                {t.invoiceNumber ?? "Draft invoice"}
+                              </p>
+                              {!paid && (
+                                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground bg-secondary px-1.5 py-0.5 rounded">
+                                  {t.status}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              {date ? date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }) : "—"}
+                              {" · "}
+                              {amount}
+                            </p>
+                          </div>
+                          {paid && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title="Download invoice"
+                              disabled={invoiceLoadingId === t.id}
+                              onClick={() => openInvoice(t.id)}
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  {nextCursor && (
+                    <div className="border-t border-ink/5 p-3">
+                      <Button
+                        variant="ghost"
+                        className="w-full"
+                        disabled={txLoadingMore}
+                        onClick={() => {
+                          setTxLoadingMore(true);
+                          loadTransactions(nextCursor)
+                            .catch((e) => {
+                              console.error(e);
+                              toast.error("Could not load more invoices.");
+                            })
+                            .finally(() => setTxLoadingMore(false));
+                        }}
+                      >
+                        {txLoadingMore ? "Loading…" : "Load more invoices"}
+                      </Button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
