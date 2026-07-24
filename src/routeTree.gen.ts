@@ -14,6 +14,7 @@ import { Route as ForBusinessRouteImport } from './routes/for-business'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CheckoutSuccessRouteImport } from './routes/checkout.success'
 import { Route as BBusinessIdRouteImport } from './routes/b.$businessId'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
 import { Route as AuthenticatedSubscribeRouteImport } from './routes/_authenticated/subscribe'
@@ -50,6 +51,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutSuccessRoute = CheckoutSuccessRouteImport.update({
+  id: '/checkout/success',
+  path: '/checkout/success',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BBusinessIdRoute = BBusinessIdRouteImport.update({
@@ -136,6 +142,7 @@ export interface FileRoutesByFullPath {
   '/subscribe': typeof AuthenticatedSubscribeRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/b/$businessId': typeof BBusinessIdRoute
+  '/checkout/success': typeof CheckoutSuccessRoute
   '/business/edit': typeof AuthenticatedBusinessEditRoute
   '/business/scan': typeof AuthenticatedBusinessScanRoute
   '/business/': typeof AuthenticatedBusinessIndexRoute
@@ -154,6 +161,7 @@ export interface FileRoutesByTo {
   '/subscribe': typeof AuthenticatedSubscribeRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/b/$businessId': typeof BBusinessIdRoute
+  '/checkout/success': typeof CheckoutSuccessRoute
   '/business/edit': typeof AuthenticatedBusinessEditRoute
   '/business/scan': typeof AuthenticatedBusinessScanRoute
   '/business': typeof AuthenticatedBusinessIndexRoute
@@ -175,6 +183,7 @@ export interface FileRoutesById {
   '/_authenticated/subscribe': typeof AuthenticatedSubscribeRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/b/$businessId': typeof BBusinessIdRoute
+  '/checkout/success': typeof CheckoutSuccessRoute
   '/_authenticated/business/edit': typeof AuthenticatedBusinessEditRoute
   '/_authenticated/business/scan': typeof AuthenticatedBusinessScanRoute
   '/_authenticated/business/': typeof AuthenticatedBusinessIndexRoute
@@ -196,6 +205,7 @@ export interface FileRouteTypes {
     | '/subscribe'
     | '/wallet'
     | '/b/$businessId'
+    | '/checkout/success'
     | '/business/edit'
     | '/business/scan'
     | '/business/'
@@ -214,6 +224,7 @@ export interface FileRouteTypes {
     | '/subscribe'
     | '/wallet'
     | '/b/$businessId'
+    | '/checkout/success'
     | '/business/edit'
     | '/business/scan'
     | '/business'
@@ -234,6 +245,7 @@ export interface FileRouteTypes {
     | '/_authenticated/subscribe'
     | '/_authenticated/wallet'
     | '/b/$businessId'
+    | '/checkout/success'
     | '/_authenticated/business/edit'
     | '/_authenticated/business/scan'
     | '/_authenticated/business/'
@@ -250,6 +262,7 @@ export interface RootRouteChildren {
   ForBusinessRoute: typeof ForBusinessRoute
   ForCustomersRoute: typeof ForCustomersRoute
   BBusinessIdRoute: typeof BBusinessIdRoute
+  CheckoutSuccessRoute: typeof CheckoutSuccessRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
@@ -288,6 +301,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout/success': {
+      id: '/checkout/success'
+      path: '/checkout/success'
+      fullPath: '/checkout/success'
+      preLoaderRoute: typeof CheckoutSuccessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/b/$businessId': {
@@ -434,18 +454,9 @@ const rootRouteChildren: RootRouteChildren = {
   ForBusinessRoute: ForBusinessRoute,
   ForCustomersRoute: ForCustomersRoute,
   BBusinessIdRoute: BBusinessIdRoute,
+  CheckoutSuccessRoute: CheckoutSuccessRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
