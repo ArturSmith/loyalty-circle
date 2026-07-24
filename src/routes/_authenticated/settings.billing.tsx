@@ -38,17 +38,26 @@ function BillingSettings() {
   const [opening, setOpening] = useState(false);
   const [txs, setTxs] = useState<Tx[] | null>(null);
   const [txLoading, setTxLoading] = useState(false);
+  const [txLoadingMore, setTxLoadingMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [invoiceLoadingId, setInvoiceLoadingId] = useState<string | null>(null);
+
+  const loadTransactions = async (after?: string) => {
+    try {
+      const res = await txFn({ data: { environment: getPaddleEnvironment(), after } });
+      const page = res as { items: Tx[]; nextCursor: string | null };
+      setTxs((prev) => (after ? [...(prev ?? []), ...page.items] : page.items));
+      setNextCursor(page.nextCursor);
+    } catch (e) {
+      console.error(e);
+      toast.error("Could not load invoice history.");
+    }
+  };
 
   useEffect(() => {
     if (!access.isSubscribed) return;
     setTxLoading(true);
-    txFn({ data: { environment: getPaddleEnvironment() } })
-      .then((rows) => setTxs(rows as Tx[]))
-      .catch((e) => {
-        console.error(e);
-        toast.error("Could not load invoice history.");
-      })
+    loadTransactions()
       .finally(() => setTxLoading(false));
   }, [access.isSubscribed, txFn]);
 
