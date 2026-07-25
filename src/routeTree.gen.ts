@@ -9,8 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ForCustomersRouteImport } from './routes/for-customers'
-import { Route as ForBusinessRouteImport } from './routes/for-business'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -30,16 +28,6 @@ import { Route as AuthenticatedBusinessCardsNewRouteImport } from './routes/_aut
 import { Route as AuthenticatedBusinessCardsIdIndexRouteImport } from './routes/_authenticated/business.cards.$id.index'
 import { Route as AuthenticatedBusinessCardsIdEditRouteImport } from './routes/_authenticated/business.cards.$id.edit'
 
-const ForCustomersRoute = ForCustomersRouteImport.update({
-  id: '/for-customers',
-  path: '/for-customers',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ForBusinessRoute = ForBusinessRouteImport.update({
-  id: '/for-business',
-  path: '/for-business',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -141,8 +129,6 @@ const AuthenticatedBusinessCardsIdEditRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/for-business': typeof ForBusinessRoute
-  '/for-customers': typeof ForCustomersRoute
   '/business': typeof AuthenticatedBusinessRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
   '/scan': typeof AuthenticatedScanRoute
@@ -162,8 +148,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/for-business': typeof ForBusinessRoute
-  '/for-customers': typeof ForCustomersRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/scan': typeof AuthenticatedScanRoute
   '/subscribe': typeof AuthenticatedSubscribeRoute
@@ -184,8 +168,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
-  '/for-business': typeof ForBusinessRoute
-  '/for-customers': typeof ForCustomersRoute
   '/_authenticated/business': typeof AuthenticatedBusinessRouteWithChildren
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/scan': typeof AuthenticatedScanRoute
@@ -207,8 +189,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
-    | '/for-business'
-    | '/for-customers'
     | '/business'
     | '/profile'
     | '/scan'
@@ -228,8 +208,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
-    | '/for-business'
-    | '/for-customers'
     | '/profile'
     | '/scan'
     | '/subscribe'
@@ -249,8 +227,6 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
-    | '/for-business'
-    | '/for-customers'
     | '/_authenticated/business'
     | '/_authenticated/profile'
     | '/_authenticated/scan'
@@ -272,8 +248,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
-  ForBusinessRoute: typeof ForBusinessRoute
-  ForCustomersRoute: typeof ForCustomersRoute
   BBusinessIdRoute: typeof BBusinessIdRoute
   CheckoutSuccessRoute: typeof CheckoutSuccessRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -281,20 +255,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/for-customers': {
-      id: '/for-customers'
-      path: '/for-customers'
-      fullPath: '/for-customers'
-      preLoaderRoute: typeof ForCustomersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/for-business': {
-      id: '/for-business'
-      path: '/for-business'
-      fullPath: '/for-business'
-      preLoaderRoute: typeof ForBusinessRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -473,8 +433,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
-  ForBusinessRoute: ForBusinessRoute,
-  ForCustomersRoute: ForCustomersRoute,
   BBusinessIdRoute: BBusinessIdRoute,
   CheckoutSuccessRoute: CheckoutSuccessRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
