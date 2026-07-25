@@ -26,7 +26,7 @@ type Tpl = {
 };
 
 export const Route = createFileRoute("/_authenticated/business/")({
-  head: () => ({ meta: [{ title: "Business dashboard — Stempel" }] }),
+  head: () => ({ meta: [{ title: "Business dashboard — Clubcarder" }] }),
   component: BusinessDashboard,
 });
 

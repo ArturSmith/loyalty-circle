@@ -12,7 +12,7 @@ import { useBusinessAccess } from "@/hooks/useBusinessAccess";
 export const Route = createFileRoute("/_authenticated/subscribe")({
   head: () => ({
     meta: [
-      { title: "Subscribe — Stempel Business" },
+      { title: "Subscribe — Clubcarder Business" },
       { name: "description", content: "Unlock unlimited digital loyalty cards for your business." },
     ],
   }),
@@ -90,7 +90,7 @@ function SubscribePage() {
           <div className="text-center">
             <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
               <Sparkles className="h-3.5 w-3.5" />
-              Stempel Business
+              Clubcarder Business
             </div>
             <h1 className="mt-4 font-display text-3xl font-semibold">
               Grow your regulars
@@ -133,7 +133,7 @@ function SubscribePage() {
             <div className="mt-8 rounded-lg bg-secondary p-4 text-center text-sm">
               You're subscribed. {access.cancelAtPeriodEnd && access.currentPeriodEnd
                 ? `Access continues until ${access.currentPeriodEnd.toLocaleDateString()}.`
-                : "Thanks for supporting Stempel."}
+                : "Thanks for supporting Clubcarder."}
             </div>
           ) : access.reason === "no-business" ? (
             <Button

@@ -26,7 +26,7 @@ type Instance = {
 };
 
 export const Route = createFileRoute("/_authenticated/wallet")({
-  head: () => ({ meta: [{ title: "My Wallet — Stempel" }] }),
+  head: () => ({ meta: [{ title: "My Wallet — Clubcarder" }] }),
   component: Wallet,
 });
 

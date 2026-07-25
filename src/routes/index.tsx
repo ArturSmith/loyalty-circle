@@ -15,7 +15,7 @@ export const Route = createFileRoute("/")({
   },
   head: () => ({
     meta: [
-      { title: "Stempel — Digital loyalty cards for local businesses" },
+      { title: "Clubcarder — Digital loyalty cards for local businesses" },
       { name: "description", content: "Beautiful digital stamp cards to replace paper punch cards. For cafés, salons, bakeries, and shops." },
     ],
   }),
@@ -35,7 +35,7 @@ function Landing() {
           <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[image:var(--gradient-primary)] text-white sticker-shadow">
             <Stamp className="h-4 w-4" />
           </div>
-          <span className="font-display text-xl font-extrabold tracking-tight">Stempel</span>
+          <span className="font-display text-xl font-extrabold tracking-tight">Clubcarder</span>
         </div>
         <Link to="/auth">
           <Button variant="ghost" size="sm" className="rounded-full">

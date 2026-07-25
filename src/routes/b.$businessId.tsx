@@ -17,7 +17,7 @@ type Template = {
 };
 
 export const Route = createFileRoute("/b/$businessId")({
-  head: () => ({ meta: [{ title: "Claim your card — Stempel" }] }),
+  head: () => ({ meta: [{ title: "Claim your card — Clubcarder" }] }),
   component: BusinessPublic,
 });
 

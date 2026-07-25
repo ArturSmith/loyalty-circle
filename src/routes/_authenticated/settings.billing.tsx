@@ -12,8 +12,8 @@ import { OrnamentDivider } from "@/components/OrnamentDivider";
 export const Route = createFileRoute("/_authenticated/settings/billing")({
   head: () => ({
     meta: [
-      { title: "Billing & plan — Stempel" },
-      { name: "description", content: "Manage your Stempel subscription, plan, and billing." },
+      { title: "Billing & plan — Clubcarder" },
+      { name: "description", content: "Manage your Clubcarder subscription, plan, and billing." },
     ],
   }),
   component: BillingSettings,
@@ -102,7 +102,7 @@ function BillingSettings() {
   };
 
   const planLabel = access.isSubscribed
-    ? "Stempel Business — Pro"
+    ? "Clubcarder Business — Pro"
     : access.reason === "trialing"
       ? "Free trial"
       : "No active plan";

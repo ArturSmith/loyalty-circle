@@ -18,9 +18,9 @@ import type { LucideIcon } from "lucide-react";
 export const Route = createFileRoute("/for-customers")({
   head: () => ({
     meta: [
-      { title: "For customers — Stempel" },
+      { title: "For customers — Clubcarder" },
       { name: "description", content: "Keep every digital stamp card in one place. Collect stamps, track rewards, and never lose a punch card again." },
-      { property: "og:title", content: "For customers — Stempel" },
+      { property: "og:title", content: "For customers — Clubcarder" },
       { property: "og:description", content: "Keep every digital stamp card in one place. Collect stamps, track rewards, and never lose a punch card again." },
       { property: "og:type", content: "website" },
     ],
@@ -90,7 +90,7 @@ function ForCustomersPage() {
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6">
         <Link to="/" className="flex items-center gap-2">
           <Wallet className="h-5 w-5" />
-          <span className="font-display text-xl font-semibold">Stempel</span>
+          <span className="font-display text-xl font-semibold">Clubcarder</span>
         </Link>
         <Link to="/auth">
           <Button size="sm">Open my wallet</Button>
@@ -116,7 +116,7 @@ function ForCustomersPage() {
               Never lose a punch card again.
             </h1>
             <p className="mt-4 max-w-xl text-lg text-muted-foreground">
-              Stempel turns every paper loyalty card into a digital one that
+              Clubcarder turns every paper loyalty card into a digital one that
               lives on your phone. Collect stamps, track rewards, and enjoy the
               perks of being a regular.
             </p>
@@ -149,7 +149,7 @@ function ForCustomersPage() {
           <div className="mb-12 text-center">
             <OrnamentDivider className="mx-auto mb-5 w-32" />
             <h2 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-              Why customers love Stempel
+              Why customers love Clubcarder
             </h2>
           </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -177,7 +177,7 @@ function ForCustomersPage() {
       </main>
 
       <footer className="mx-auto max-w-6xl px-6 py-10 text-center text-xs text-muted-foreground">
-        © Stempel
+        © Clubcarder
       </footer>
     </div>
   );
