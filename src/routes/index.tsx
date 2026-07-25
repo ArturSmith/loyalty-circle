@@ -138,7 +138,7 @@ function Landing() {
               <Link to="/auth">
                 <Button size="lg" className="h-12 px-8">Get started</Button>
               </Link>
-              <a href="#for-business">
+              <a href="#for-customers">
                 <Button size="lg" variant="outline" className="h-12 px-8">
                   See how it works <ArrowRight className="ml-1 h-4 w-4" />
                 </Button>
@@ -156,30 +156,8 @@ function Landing() {
           </motion.div>
         </section>
 
-        {/* FOR BUSINESSES */}
-        <section id="for-business" className="mt-20 scroll-mt-24">
-          <div className="mb-10 text-center">
-            <OrnamentDivider className="mx-auto mb-5 w-32" />
-            <span className="inline-flex items-center gap-1.5 rounded-full glass-panel px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-primary">
-              <Store className="h-3 w-3" /> For businesses
-            </span>
-            <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-              Everything you need to run a loyalty program
-            </h2>
-            <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">
-              Design a card once, hand it out with a QR, and turn first-time visitors into regulars.
-            </p>
-          </div>
-          <BenefitGrid items={businessBenefits} />
-          <div className="mt-8 text-center">
-            <Link to="/auth">
-              <Button size="lg" className="h-12 px-8">Create your first card</Button>
-            </Link>
-          </div>
-        </section>
-
         {/* FOR CUSTOMERS */}
-        <section id="for-customers" className="mt-24 scroll-mt-24">
+        <section id="for-customers" className="mt-20 scroll-mt-24">
           <div className="mb-10 text-center">
             <OrnamentDivider className="mx-auto mb-5 w-32" />
             <span className="inline-flex items-center gap-1.5 rounded-full glass-panel px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-primary">
@@ -196,6 +174,28 @@ function Landing() {
           <div className="mt-8 text-center">
             <Link to="/auth">
               <Button size="lg" className="h-12 px-8">Open my wallet</Button>
+            </Link>
+          </div>
+        </section>
+
+        {/* FOR BUSINESSES */}
+        <section id="for-business" className="mt-24 scroll-mt-24">
+          <div className="mb-10 text-center">
+            <OrnamentDivider className="mx-auto mb-5 w-32" />
+            <span className="inline-flex items-center gap-1.5 rounded-full glass-panel px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-primary">
+              <Store className="h-3 w-3" /> For businesses
+            </span>
+            <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+              Everything you need to run a loyalty program
+            </h2>
+            <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">
+              Design a card once, hand it out with a QR, and turn first-time visitors into regulars.
+            </p>
+          </div>
+          <BenefitGrid items={businessBenefits} />
+          <div className="mt-8 text-center">
+            <Link to="/auth">
+              <Button size="lg" className="h-12 px-8">Create your first card</Button>
             </Link>
           </div>
         </section>
