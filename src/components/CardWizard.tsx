@@ -187,6 +187,7 @@ export function CardWizard({ templateId }: Props) {
           cornerTitle={cornerTitle}
           totalSteps={totalSteps} stampsCount={0}
           shape={shape} face={face}
+          gridCols={gridCols}
           bgColor={bg} accentColor={accent} textColor={text} stampIcon={icon}
           logoUrl={logoUrl || null} rewards={rewards}
           onStepClick={step === 2 ? openStepEditor : undefined}
