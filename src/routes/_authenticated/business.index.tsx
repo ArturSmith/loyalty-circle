@@ -133,7 +133,10 @@ function BusinessDashboard() {
     );
   }
 
-  const bizUrl = typeof window !== "undefined" ? `${window.location.origin}/b/${biz.id}` : `/b/${biz.id}`;
+  // Always point QR codes at the published site so scanners never hit the
+  // Lovable editor preview (which requires a Lovable login).
+  const PUBLIC_SITE_URL = "https://loyalty-circle.lovable.app";
+  const bizUrl = `${PUBLIC_SITE_URL}/b/${biz.id}`;
 
   return (
     <div className="min-h-screen px-5 py-6 max-w-3xl mx-auto">
