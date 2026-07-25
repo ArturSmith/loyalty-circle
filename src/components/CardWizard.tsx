@@ -56,6 +56,7 @@ export function CardWizard({ templateId }: Props) {
   const [icon, setIcon] = useState<StampIconName | null>(null);
   const [logoUrl, setLogoUrl] = useState("");
   const [rewards, setRewards] = useState<Reward[]>([]);
+  const [gridCols, setGridCols] = useState<number | null>(null);
   const [active, setActive] = useState(true);
 
   useEffect(() => {
