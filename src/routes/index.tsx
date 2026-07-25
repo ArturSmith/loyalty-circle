@@ -1,7 +1,24 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { motion } from "framer-motion";
+import { OrnamentDivider } from "@/components/OrnamentDivider";
+import { WalletStack } from "@/components/WalletStack";
+import type { StampCardProps } from "@/components/StampCard";
 import { Button } from "@/components/ui/button";
-import { CreditCard, Store, Wallet, ArrowRight, Sparkles } from "lucide-react";
+import {
+  CreditCard,
+  Sparkles,
+  QrCode,
+  Palette,
+  Users,
+  Gift,
+  TrendingUp,
+  Bell,
+  Wallet,
+  Smartphone,
+  ShieldCheck,
+  Store,
+  ArrowRight,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -15,128 +32,198 @@ export const Route = createFileRoute("/")({
   },
   head: () => ({
     meta: [
-      { title: "Clubcarder — Digital loyalty cards for local businesses" },
-      { name: "description", content: "Beautiful digital stamp cards to replace paper punch cards. For cafés, salons, bakeries, and shops." },
+      { title: "Clubcarder — Digital loyalty cards that live in every pocket" },
+      { name: "description", content: "Clubcarder replaces paper punch cards with beautiful digital stamp cards. Great for cafés, salons, and shops — loved by their regulars." },
+      { property: "og:title", content: "Clubcarder — Digital loyalty cards" },
+      { property: "og:description", content: "Replace paper punch cards with digital ones. Businesses design them, customers collect them." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Landing,
 });
 
+const heroCards: StampCardProps[] = [
+  {
+    title: "Café Nord", subtitle: "10th coffee on the house", totalSteps: 10, stampsCount: 7,
+    stampIcon: "coffee", bgColor: "#f5efe4", accentColor: "#4a2c1a", textColor: "#4a2c1a",
+    rewards: [{ step: 5, label: "-50%" }, { step: 10, label: "FREE" }], businessName: "CAFÉ NORD",
+  },
+  {
+    title: "Bloom & Wild", subtitle: "Bouquet on us at 8", totalSteps: 8, stampsCount: 4,
+    stampIcon: "heart", bgColor: "#f7e9ee", accentColor: "#8a2a4a", textColor: "#8a2a4a",
+    rewards: [{ step: 8, label: "FREE" }], businessName: "BLOOM & WILD", shape: "rounded",
+  },
+  {
+    title: "Forge Gym", subtitle: "Free session at 10", totalSteps: 10, stampsCount: 6,
+    stampIcon: "flame", bgColor: "#1a1a1f", accentColor: "#f5b73a", textColor: "#f5f2e8",
+    rewards: [{ step: 10, label: "FREE" }], businessName: "FORGE GYM",
+  },
+  {
+    title: "Vinbar 22", subtitle: "Glass on us at 6", totalSteps: 6, stampsCount: 2,
+    stampIcon: "wine", bgColor: "#2a1a24", accentColor: "#e8b4c0", textColor: "#f5e6ea",
+    rewards: [{ step: 6, label: "FREE" }], businessName: "VINBAR 22",
+  },
+];
+
+const businessBenefits = [
+  { icon: QrCode, title: "QR-based stamping", body: "Customers scan your business QR to claim a card. You scan theirs to stamp it. No hardware needed." },
+  { icon: Palette, title: "Your brand, your card", body: "Choose colors, shapes, stamp icons, rewards, and wording — every card feels like your shop." },
+  { icon: Users, title: "Know your regulars", body: "See who has your cards, how close they are to a reward, and which offers bring them back." },
+  { icon: Gift, title: "Flexible rewards", body: "Set discounts, freebies, or milestones at any step. Run any punch-card rule you can imagine." },
+  { icon: TrendingUp, title: "Grow repeat visits", body: "Digital cards live on the customer’s phone, so they’re never lost and always top of mind." },
+  { icon: Bell, title: "Easy to share", body: "Display your QR at the counter, on receipts, or online. One scan puts your card in their wallet." },
+];
+
+const customerBenefits = [
+  { icon: Wallet, title: "All cards in one place", body: "No more paper cards crammed in your wallet. Every stamp card lives neatly on your phone." },
+  { icon: QrCode, title: "Scan to collect", body: "Point your camera at a shop’s QR code to grab their card. It takes seconds and works on any phone." },
+  { icon: Gift, title: "Rewards you can see", body: "Watch your stamps add up and see exactly how close you are to your next freebie." },
+  { icon: Bell, title: "Never miss a reward", body: "Your progress is always up to date. No faded stamps, no ‘lost card, no free coffee’ moments." },
+  { icon: Smartphone, title: "No app to install", body: "Open the site, scan, and go. Your cards are saved to your account and accessible anywhere." },
+  { icon: ShieldCheck, title: "You’re in control", body: "Each card is yours. You decide which to keep, and businesses can only stamp with your permission." },
+];
+
 function Landing() {
   return (
-    <div className="relative flex min-h-screen flex-col overflow-hidden">
+    <div className="relative min-h-screen overflow-hidden">
       {/* Iridescent floating blobs */}
       <div aria-hidden className="pointer-events-none absolute -top-24 -left-16 h-72 w-72 rounded-full bg-[oklch(0.82_0.16_300/0.45)] blur-3xl" />
-      <div aria-hidden className="pointer-events-none absolute -bottom-24 -right-16 h-80 w-80 rounded-full bg-[oklch(0.86_0.14_195/0.45)] blur-3xl" />
-      <div aria-hidden className="pointer-events-none absolute top-1/3 right-1/4 h-56 w-56 rounded-full bg-[oklch(0.88_0.14_340/0.35)] blur-3xl" />
+      <div aria-hidden className="pointer-events-none absolute top-1/4 -right-16 h-80 w-80 rounded-full bg-[oklch(0.86_0.14_195/0.45)] blur-3xl" />
+      <div aria-hidden className="pointer-events-none absolute bottom-0 left-1/3 h-56 w-56 rounded-full bg-[oklch(0.88_0.14_340/0.35)] blur-3xl" />
 
       <header className="relative mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6">
-        <div className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[image:var(--gradient-primary)] text-white sticker-shadow rotate-[-8deg]">
             <CreditCard className="h-4 w-4" />
           </div>
           <span className="font-display text-xl font-extrabold tracking-tight">Clubcarder</span>
-        </div>
-        <Link to="/auth">
-          <Button variant="ghost" size="sm" className="rounded-full">
-            Sign in
-          </Button>
         </Link>
+        <div className="flex items-center gap-2">
+          <Link to="/auth">
+            <Button variant="ghost" size="sm" className="rounded-full">Sign in</Button>
+          </Link>
+          <Link to="/auth" className="hidden sm:block">
+            <Button size="sm" className="rounded-full">Get started</Button>
+          </Link>
+        </div>
       </header>
 
-      <main className="relative flex flex-1 items-center justify-center px-6 py-8">
-        <div className="mx-auto w-full max-w-3xl">
+      <main className="relative mx-auto max-w-6xl px-6 pb-16">
+        {/* HERO — intro */}
+        <section className="grid items-center gap-12 py-10 lg:grid-cols-2 lg:py-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-center"
           >
             <span className="inline-flex items-center gap-1.5 rounded-full glass-panel px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-primary">
-              <Sparkles className="h-3 w-3" /> Welcome
+              <Sparkles className="h-3 w-3" /> Meet Clubcarder
             </span>
             <h1 className="mt-4 font-display text-5xl font-extrabold leading-[0.95] tracking-tight sm:text-6xl">
-              Who are<br />
-              <span className="text-iridescent italic">you today?</span>
+              Loyalty cards that <span className="text-iridescent italic">live in every pocket.</span>
             </h1>
-            <p className="mt-4 text-muted-foreground">Pick the path that fits you.</p>
+            <p className="mt-5 max-w-xl text-lg text-muted-foreground">
+              Clubcarder replaces paper punch cards with beautiful digital stamp cards.
+              Businesses design them in minutes, customers collect them with a scan —
+              and nobody ever loses a free coffee again.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link to="/auth">
+                <Button size="lg" className="h-12 px-8">Get started</Button>
+              </Link>
+              <a href="#for-business">
+                <Button size="lg" variant="outline" className="h-12 px-8">
+                  See how it works <ArrowRight className="ml-1 h-4 w-4" />
+                </Button>
+              </a>
+            </div>
           </motion.div>
 
-          {/* Broken grid choice cards */}
-          <div className="mt-12 flex flex-col gap-5 sm:mt-14">
-            <ChoiceCard
-              to="/for-business"
-              tag="Merchant"
-              title="I run a business"
-              description="Create digital stamp cards, share them with customers, and track loyalty — no paper, no hassle."
-              icon={Store}
-              variant="lilac"
-              offset="left"
-            />
-            <ChoiceCard
-              to="/for-customers"
-              tag="Collector"
-              title="I am a customer"
-              description="Collect stamps, track rewards, and keep every loyalty card in one place on your phone."
-              icon={Wallet}
-              variant="iris"
-              offset="right"
-            />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="mx-auto w-full max-w-sm lg:mx-0 lg:ml-auto"
+          >
+            <WalletStack cards={heroCards} />
+          </motion.div>
+        </section>
+
+        {/* FOR BUSINESSES */}
+        <section id="for-business" className="mt-20 scroll-mt-24">
+          <div className="mb-10 text-center">
+            <OrnamentDivider className="mx-auto mb-5 w-32" />
+            <span className="inline-flex items-center gap-1.5 rounded-full glass-panel px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-primary">
+              <Store className="h-3 w-3" /> For businesses
+            </span>
+            <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+              Everything you need to run a loyalty program
+            </h2>
+            <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">
+              Design a card once, hand it out with a QR, and turn first-time visitors into regulars.
+            </p>
           </div>
-        </div>
+          <BenefitGrid items={businessBenefits} />
+          <div className="mt-8 text-center">
+            <Link to="/auth">
+              <Button size="lg" className="h-12 px-8">Create your first card</Button>
+            </Link>
+          </div>
+        </section>
+
+        {/* FOR CUSTOMERS */}
+        <section id="for-customers" className="mt-24 scroll-mt-24">
+          <div className="mb-10 text-center">
+            <OrnamentDivider className="mx-auto mb-5 w-32" />
+            <span className="inline-flex items-center gap-1.5 rounded-full glass-panel px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-primary">
+              <Wallet className="h-3 w-3" /> For customers
+            </span>
+            <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+              Never lose a punch card again
+            </h2>
+            <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">
+              Collect stamps, track rewards, and keep every loyalty card in one place — right on your phone.
+            </p>
+          </div>
+          <BenefitGrid items={customerBenefits} />
+          <div className="mt-8 text-center">
+            <Link to="/auth">
+              <Button size="lg" className="h-12 px-8">Open my wallet</Button>
+            </Link>
+          </div>
+        </section>
       </main>
+
+      <footer className="relative mx-auto max-w-6xl px-6 py-10 text-center text-xs text-muted-foreground">
+        © Clubcarder
+      </footer>
     </div>
   );
 }
 
-type ChoiceVariant = "lilac" | "iris";
-
-function ChoiceCard({
-  to,
-  tag,
-  title,
-  description,
-  icon: Icon,
-  variant,
-  offset,
-}: {
-  to: "/for-business" | "/for-customers";
-  tag: string;
-  title: string;
-  description: string;
-  icon: LucideIcon;
-  variant: ChoiceVariant;
-  offset: "left" | "right";
-}) {
-  const gradient = variant === "lilac" ? "var(--gradient-lilac)" : "var(--gradient-iris)";
-  const tagTone = variant === "lilac" ? "text-[oklch(0.5_0.22_285)]" : "text-[oklch(0.55_0.2_340)]";
-  const shift = offset === "left" ? "sm:-ml-4 -rotate-[1.5deg]" : "sm:ml-8 rotate-[1.5deg]";
-
+function BenefitGrid({ items }: { items: { icon: LucideIcon; title: string; body: string }[] }) {
   return (
-    <Link to={to} className={`block ${shift}`}>
-      <motion.div
-        whileHover={{ y: -6, rotate: 0 }}
-        whileTap={{ scale: 0.98 }}
-        transition={{ type: "spring", stiffness: 260, damping: 20 }}
-        className="relative overflow-hidden rounded-3xl p-6 sm:p-8 sticker-shadow border border-white/70"
-        style={{ backgroundImage: gradient }}
-      >
-        <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-white/40 blur-2xl" />
-        <div className="relative flex items-start gap-5">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/70 backdrop-blur-md text-foreground sticker-shadow">
-            <Icon className="h-6 w-6" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <span className={`block text-[10px] font-bold uppercase tracking-[0.2em] ${tagTone}`}>{tag}</span>
-            <h2 className="mt-1 font-display text-2xl font-extrabold leading-tight text-foreground">{title}</h2>
-            <p className="mt-2 text-sm text-foreground/70">{description}</p>
-            <div className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-foreground">
-              Learn more
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {items.map((benefit, i) => {
+        const Icon = benefit.icon;
+        return (
+          <motion.div
+            key={benefit.title}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.5, delay: (i % 3) * 0.08 }}
+            className="rounded-2xl border border-border/70 bg-secondary/30 p-6"
+          >
+            <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
+              <Icon className="h-4 w-4" />
             </div>
-          </div>
-        </div>
-      </motion.div>
-    </Link>
+            <h3 className="font-display text-xl font-semibold">{benefit.title}</h3>
+            <p className="mt-2 text-sm text-muted-foreground">{benefit.body}</p>
+          </motion.div>
+        );
+      })}
+    </div>
   );
 }
