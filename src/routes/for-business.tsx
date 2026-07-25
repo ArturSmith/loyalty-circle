@@ -13,6 +13,7 @@ import {
   Bell,
   ArrowLeft,
   Store,
+  CreditCard,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -90,7 +91,9 @@ function ForBusinessPage() {
     <div className="min-h-screen">
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6">
         <Link to="/" className="flex items-center gap-2">
-          <Store className="h-5 w-5" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[image:var(--gradient-primary)] text-white sticker-shadow rotate-[-8deg]">
+            <CreditCard className="h-4 w-4" />
+          </div>
           <span className="font-display text-xl font-semibold">Clubcarder</span>
         </Link>
         <Link to="/auth">
