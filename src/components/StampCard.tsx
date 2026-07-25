@@ -49,6 +49,7 @@ export function StampCard({
   bgColor = "#faf8f2", accentColor = "#4b3a35", textColor = "#4b3a35",
   stampIcon = null, logoUrl, rewards = [], lastStamp,
   hideSteps = false, face = "stamps",
+  gridCols = null,
   onStepClick, activeStep,
   onTitleClick, onSubtitleClick, onDescriptionClick, onIconClick, onCornerTitleClick,
   disableShadow = false,
@@ -58,7 +59,8 @@ export function StampCard({
   const Icon = stampIcon ? (STAMP_ICONS[stampIcon] ?? Star) : null;
   const radius = shape === "square" ? "rounded-xl" : shape === "ticket" ? "rounded-none" : "rounded-2xl";
   const normalizedSteps = Math.max(0, totalSteps);
-  const cols = Math.max(1, Math.min(8, normalizedSteps || 1));
+  const autoCols = Math.max(1, Math.min(8, normalizedSteps || 1));
+  const cols = gridCols && gridCols > 0 ? Math.max(1, Math.min(8, gridCols)) : autoCols;
   const rows = normalizedSteps > 0 ? Math.ceil(normalizedSteps / cols) : 0;
 
   const editable = "rounded-md transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 cursor-pointer";
