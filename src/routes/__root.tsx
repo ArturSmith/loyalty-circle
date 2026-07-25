@@ -59,6 +59,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:description", content: "Beautiful digital stamp cards to replace paper punch cards. For cafés, salons, bakeries, and shops." },
       { property: "og:image", content: "https://clubcarder.com/og-image.png" },
       { name: "twitter:image", content: "https://clubcarder.com/og-image.png" },
+      { name: "google-site-verification", content: "dpZKGJdqkJtPq4B2JNyOdjl3adDrK1_iEunPoHK8kXM" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
