@@ -1,7 +1,7 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
-import { WalletStack } from "@/components/WalletStack";
+import { CardPager } from "@/components/CardPager";
 import type { StampCardProps } from "@/components/StampCard";
 import { Button } from "@/components/ui/button";
 import {
@@ -152,7 +152,7 @@ function Landing() {
             transition={{ duration: 0.6, delay: 0.15 }}
             className="mx-auto w-full max-w-sm lg:mx-0 lg:ml-auto"
           >
-            <WalletStack cards={heroCards} />
+            <CardPager cards={heroCards} />
           </motion.div>
         </section>
 
