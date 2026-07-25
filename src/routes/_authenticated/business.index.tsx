@@ -22,7 +22,7 @@ type Tpl = {
   total_steps: number; active: boolean;
   shape: CardShape;
   bg_color: string; accent_color: string; text_color: string;
-  stamp_icon: StampIconName; logo_url: string | null; rewards: Reward[] | null;
+  stamp_icon: StampIconName; logo_url: string | null; rewards: Reward[] | null; grid_cols: number | null;
 };
 
 export const Route = createFileRoute("/_authenticated/business/")({
