@@ -20,7 +20,7 @@ type Instance = {
     corner_title: string | null;
     total_steps: number; shape: CardShape;
     bg_color: string; accent_color: string; text_color: string; stamp_icon: StampIconName;
-    logo_url: string | null; rewards: Reward[];
+    logo_url: string | null; rewards: Reward[]; grid_cols: number | null;
     business: { id: string; name: string };
   };
 };
