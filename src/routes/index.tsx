@@ -1,6 +1,7 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
+import { Logo } from "@/components/Logo";
 import { WalletShowcase } from "@/components/WalletShowcase";
 import type { StampCardProps } from "@/components/StampCard";
 import { Button } from "@/components/ui/button";
