@@ -31,6 +31,7 @@ export interface StampCardProps {
   lastStamp?: number;
   hideSteps?: boolean;
   face?: CardFace;
+  gridCols?: number | null;
   onStepClick?: (step: number) => void;
   activeStep?: number;
   onTitleClick?: () => void;
