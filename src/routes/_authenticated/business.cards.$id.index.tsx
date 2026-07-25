@@ -122,6 +122,7 @@ function CardDetails() {
           totalSteps={tpl.total_steps}
           stampsCount={0}
           shape={tpl.shape}
+          gridCols={tpl.grid_cols}
           bgColor={tpl.bg_color}
           accentColor={tpl.accent_color}
           textColor={tpl.text_color}
