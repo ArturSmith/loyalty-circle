@@ -46,27 +46,27 @@ export const Route = createFileRoute("/")({
 
 const heroCards: StampCardProps[] = [
   {
-    title: "CAFÉ NORD", cornerTitle: "Café Nord", subtitle: "10th coffee on the house",
-    totalSteps: 10, stampsCount: 7, stampIcon: "coffee",
+    title: "CAFÉ NORD", cornerTitle: "Café Nord", subtitle: "Every 8th cup of coffee is free",
+    totalSteps: 8, stampsCount: 5, stampIcon: "coffee",
     bgColor: "#f5efe4", accentColor: "#4a2c1a", textColor: "#4a2c1a",
-    rewards: [{ step: 5, label: "-50%" }, { step: 10, label: "FREE" }],
+    rewards: [{ step: 8, label: "FREE" }],
     businessName: "CAFÉ NORD", face: "info",
   },
   {
-    title: "BLOOM & WILD", cornerTitle: "Bloom & Wild", subtitle: "Bouquet on us at 8",
-    totalSteps: 8, stampsCount: 4, stampIcon: "heart",
-    bgColor: "#f7e9ee", accentColor: "#8a2a4a", textColor: "#8a2a4a",
-    rewards: [{ step: 8, label: "FREE" }], businessName: "BLOOM & WILD",
+    title: "THE COOKIE JAR", cornerTitle: "The Cookie Jar", subtitle: "Every 6th cookie is free",
+    totalSteps: 6, stampsCount: 3, stampIcon: "cookie",
+    bgColor: "#fff4e6", accentColor: "#8a4b12", textColor: "#5c3a1e",
+    rewards: [{ step: 6, label: "FREE" }], businessName: "THE COOKIE JAR",
     shape: "rounded", face: "info",
   },
   {
-    title: "FORGE GYM", cornerTitle: "Forge Gym", subtitle: "Free session at 10",
+    title: "FORGE GYM", cornerTitle: "Forge Gym", subtitle: "Free session every 10 visits",
     totalSteps: 10, stampsCount: 6, stampIcon: "flame",
     bgColor: "#1a1a1f", accentColor: "#f5b73a", textColor: "#f5f2e8",
     rewards: [{ step: 10, label: "FREE" }], businessName: "FORGE GYM", face: "info",
   },
   {
-    title: "VINBAR 22", cornerTitle: "Vinbar 22", subtitle: "Glass on us at 6",
+    title: "VINBAR 22", cornerTitle: "Vinbar 22", subtitle: "Every 6th glass of wine is on us",
     totalSteps: 6, stampsCount: 2, stampIcon: "wine",
     bgColor: "#2a1a24", accentColor: "#e8b4c0", textColor: "#f5e6ea",
     rewards: [{ step: 6, label: "FREE" }], businessName: "VINBAR 22", face: "info",
