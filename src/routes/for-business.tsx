@@ -19,9 +19,9 @@ import type { LucideIcon } from "lucide-react";
 export const Route = createFileRoute("/for-business")({
   head: () => ({
     meta: [
-      { title: "For businesses — Stempel" },
+      { title: "For businesses — Clubcarder" },
       { name: "description", content: "Create digital stamp cards for your customers. Track visits, reward loyalty, and grow your business." },
-      { property: "og:title", content: "For businesses — Stempel" },
+      { property: "og:title", content: "For businesses — Clubcarder" },
       { property: "og:description", content: "Create digital stamp cards for your customers. Track visits, reward loyalty, and grow your business." },
       { property: "og:type", content: "website" },
     ],
@@ -91,7 +91,7 @@ function ForBusinessPage() {
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6">
         <Link to="/" className="flex items-center gap-2">
           <Store className="h-5 w-5" />
-          <span className="font-display text-xl font-semibold">Stempel</span>
+          <span className="font-display text-xl font-semibold">Clubcarder</span>
         </Link>
         <Link to="/auth">
           <Button size="sm">Get started</Button>
@@ -178,7 +178,7 @@ function ForBusinessPage() {
       </main>
 
       <footer className="mx-auto max-w-6xl px-6 py-10 text-center text-xs text-muted-foreground">
-        © Stempel
+        © Clubcarder
       </footer>
     </div>
   );

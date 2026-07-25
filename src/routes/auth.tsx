@@ -14,7 +14,7 @@ const searchSchema = z.object({ redirect: z.string().optional() }).catch({ redir
 
 export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
-  head: () => ({ meta: [{ title: "Sign in — Stempel" }, { name: "description", content: "Sign in to collect stamps and manage your loyalty cards." }] }),
+  head: () => ({ meta: [{ title: "Sign in — Clubcarder" }, { name: "description", content: "Sign in to collect stamps and manage your loyalty cards." }] }),
   component: AuthPage,
 });
 
@@ -124,7 +124,7 @@ function AuthPage() {
             Back
           </Link>
           <OrnamentDivider className="my-3 w-32" />
-          <h1 className="font-display text-3xl font-semibold">Welcome to Stempel</h1>
+          <h1 className="font-display text-3xl font-semibold">Welcome to Clubcarder</h1>
           <p className="mt-2 text-sm text-muted-foreground">Sign in to collect stamps and unlock rewards.</p>
         </div>
 

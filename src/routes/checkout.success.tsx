@@ -8,8 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/checkout/success")({
   head: () => ({
     meta: [
-      { title: "Welcome to Pro — Stempel" },
-      { name: "description", content: "Your Stempel Business subscription is active." },
+      { title: "Welcome to Pro — Clubcarder" },
+      { name: "description", content: "Your Clubcarder Business subscription is active." },
     ],
   }),
   component: CheckoutSuccessPage,

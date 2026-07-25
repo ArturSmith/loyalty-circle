@@ -9,7 +9,7 @@ import { ArrowLeft, Check, Sparkles } from "lucide-react";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 
 export const Route = createFileRoute("/_authenticated/business/scan")({
-  head: () => ({ meta: [{ title: "Scan customer — Stempel" }] }),
+  head: () => ({ meta: [{ title: "Scan customer — Clubcarder" }] }),
   component: ScanPage,
 });
 
@@ -24,7 +24,7 @@ function ScanPage() {
   const onScan = useCallback(async (text: string) => {
     if (busy || paused) return;
     const m = text.match(/^stempel:card:([0-9a-f-]+)$/i);
-    if (!m) { toast.error("Not a Stempel card QR"); return; }
+    if (!m) { toast.error("Not a Clubcarder card QR"); return; }
     setBusy(true); setPaused(true);
     const { data, error } = await supabase.rpc("add_stamp", { _card_instance_id: m[1] });
     setBusy(false);
