@@ -76,6 +76,7 @@ export function CardWizard({ templateId }: Props) {
             total_steps: number; shape: CardShape;
             bg_color: string; accent_color: string; text_color: string; stamp_icon: StampIconName;
             logo_url: string | null; rewards: Reward[] | null; active: boolean;
+            grid_cols: number | null;
           };
           setTitle(tpl.title);
           setSubtitle(tpl.subtitle ?? "");
@@ -89,6 +90,7 @@ export function CardWizard({ templateId }: Props) {
           setIcon(tpl.stamp_icon);
           setLogoUrl(tpl.logo_url ?? "");
           setRewards(tpl.rewards ?? []);
+          setGridCols(tpl.grid_cols ?? null);
           setActive(tpl.active);
         }
         setLoading(false);
