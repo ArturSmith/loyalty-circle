@@ -145,25 +145,27 @@ export function StampCard({
     </div>
   );
 
+  const gapPct = 3;
+  const tileSize = `min(calc((100cqw - ${(cols - 1) * gapPct}cqw) / ${cols}), calc((100cqh - ${(rows - 1) * gapPct}cqh) / ${Math.max(1, rows)}))`;
+
   const StampsFace = (
-    <div className="absolute inset-0 flex items-center justify-center p-4">
+    <div
+      className="absolute inset-0 flex items-center justify-center p-4"
+      style={{ containerType: "size" }}
+    >
       {hideSteps ? (
         <div className="min-h-[80px]" />
       ) : normalizedSteps > 0 ? (
         <div
-          className="grid gap-[3%]"
+          className="grid"
           style={{
-            gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+            gridTemplateColumns: `repeat(${cols}, ${tileSize})`,
+            gridAutoRows: tileSize,
+            gap: `${gapPct}cqw`,
             justifyContent: "center",
             alignContent: "center",
             justifyItems: "center",
             alignItems: "center",
-            aspectRatio: `${cols} / ${rows}`,
-            width: "auto",
-            height: "auto",
-            maxHeight: "100%",
-            maxWidth: "100%",
-            containerType: "inline-size",
           }}
         >
           {Array.from({ length: normalizedSteps }).map((_, i) => {
