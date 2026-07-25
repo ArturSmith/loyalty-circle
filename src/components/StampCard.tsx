@@ -59,8 +59,10 @@ export function StampCard({
   const Icon = stampIcon ? (STAMP_ICONS[stampIcon] ?? Star) : null;
   const radius = shape === "square" ? "rounded-xl" : shape === "ticket" ? "rounded-none" : "rounded-2xl";
   const normalizedSteps = Math.max(0, totalSteps);
-  const autoCols = Math.max(1, Math.min(8, normalizedSteps || 1));
-  const cols = gridCols && gridCols > 0 ? Math.max(1, Math.min(8, gridCols)) : autoCols;
+  const maxRows = 4;
+  const autoCols = Math.max(1, Math.min(8, Math.ceil((normalizedSteps || 1) / maxRows)));
+  const requestedCols = gridCols && gridCols > 0 ? Math.max(1, Math.min(8, gridCols)) : autoCols;
+  const cols = normalizedSteps > 0 ? Math.max(requestedCols, Math.ceil(normalizedSteps / maxRows)) : requestedCols;
   const rows = normalizedSteps > 0 ? Math.ceil(normalizedSteps / cols) : 0;
 
   const editable = "rounded-md transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 cursor-pointer";
