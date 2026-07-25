@@ -415,6 +415,27 @@ export function CardWizard({ templateId }: Props) {
                     className="mt-2 w-32"
                   />
                 </div>
+                <div>
+                  <Label>Grid layout</Label>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Pick columns per row. Rows are calculated automatically.
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <button type="button" onClick={() => setGridCols(null)}
+                      className={`rounded-lg border-2 px-3 py-2 text-xs ${gridCols == null ? "border-ink bg-secondary" : "border-border"}`}>
+                      Auto
+                    </button>
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((c) => {
+                      const rows = totalSteps > 0 ? Math.ceil(totalSteps / c) : 0;
+                      return (
+                        <button key={c} type="button" onClick={() => setGridCols(c)}
+                          className={`rounded-lg border-2 px-3 py-2 text-xs ${gridCols === c ? "border-ink bg-secondary" : "border-border"}`}>
+                          {c}{rows > 0 ? ` × ${rows}` : ""}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
                 <p className="text-sm text-muted-foreground">Tap a step on the preview above to set the benefit shown when the customer reaches it (e.g. "-50%" on step 5, "FREE" on step 10).</p>
               </div>
             )}
