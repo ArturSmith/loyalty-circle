@@ -94,6 +94,7 @@ export type Database = {
           corner_title: string | null
           created_at: string
           description: string | null
+          grid_cols: number | null
           id: string
           logo_url: string | null
           rewards: Json
@@ -115,6 +116,7 @@ export type Database = {
           corner_title?: string | null
           created_at?: string
           description?: string | null
+          grid_cols?: number | null
           id?: string
           logo_url?: string | null
           rewards?: Json
@@ -136,6 +138,7 @@ export type Database = {
           corner_title?: string | null
           created_at?: string
           description?: string | null
+          grid_cols?: number | null
           id?: string
           logo_url?: string | null
           rewards?: Json
