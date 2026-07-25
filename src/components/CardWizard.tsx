@@ -110,6 +110,7 @@ export function CardWizard({ templateId }: Props) {
       total_steps: totalSteps, shape,
       bg_color: bg, accent_color: accent, text_color: text,
       stamp_icon: icon ?? "star", logo_url: logoUrl || null, rewards: cleanRewards, active,
+      grid_cols: gridCols,
     };
     const { error } = isEdit && templateId
       ? await supabase.from("card_templates").update(payload).eq("id", templateId)
