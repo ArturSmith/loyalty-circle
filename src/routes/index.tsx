@@ -152,7 +152,7 @@ function Landing() {
             transition={{ duration: 0.6, delay: 0.15 }}
             className="mx-auto w-full max-w-sm lg:mx-0 lg:ml-auto"
           >
-            <CardPager cards={heroCards} />
+            <WalletShowcase cards={heroCards} />
           </motion.div>
         </section>
 
