@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
+import { Logo } from "@/components/Logo";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { z } from "zod";
@@ -123,6 +124,7 @@ function AuthPage() {
             <ArrowLeft className="h-4 w-4" />
             Back
           </Link>
+          <Logo className="h-14 w-14 rotate-[-8deg] drop-shadow-md" />
           <OrnamentDivider className="my-3 w-32" />
           <h1 className="font-display text-3xl font-semibold">Welcome to Clubcarder</h1>
           <p className="mt-2 text-sm text-muted-foreground">Sign in to collect stamps and unlock rewards.</p>

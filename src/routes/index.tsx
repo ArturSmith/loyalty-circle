@@ -1,6 +1,7 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
+import { Logo } from "@/components/Logo";
 import { WalletShowcase } from "@/components/WalletShowcase";
 import type { StampCardProps } from "@/components/StampCard";
 import { Button } from "@/components/ui/button";
@@ -100,9 +101,7 @@ function Landing() {
 
       <header className="relative mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6">
         <Link to="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[image:var(--gradient-primary)] text-white sticker-shadow rotate-[-8deg]">
-            <CreditCard className="h-4 w-4" />
-          </div>
+          <Logo className="h-9 w-9 rotate-[-8deg] drop-shadow-md" />
           <span className="font-display text-xl font-extrabold tracking-tight">Clubcarder</span>
         </Link>
         <div className="flex items-center gap-2">
