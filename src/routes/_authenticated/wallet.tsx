@@ -297,6 +297,7 @@ function Wallet() {
                               totalSteps={inst.template.total_steps}
                               stampsCount={inst.stamps_count}
                               shape={inst.template.shape}
+                              gridCols={inst.template.grid_cols}
                               bgColor={inst.template.bg_color}
                               accentColor={inst.template.accent_color}
                               textColor={inst.template.text_color}
