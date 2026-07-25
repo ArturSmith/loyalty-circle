@@ -157,7 +157,7 @@ function Wallet() {
 
       <header className="relative flex items-center justify-between px-5 py-4">
         <h1 className="font-display text-3xl font-extrabold tracking-tight">
-          My <span className="text-iridescent italic">cards</span>
+          My cards
         </h1>
         <Sheet>
           <SheetTrigger asChild>

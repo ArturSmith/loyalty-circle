@@ -127,7 +127,7 @@ function Landing() {
               <Sparkles className="h-3 w-3" /> Meet Clubcarder
             </span>
             <h1 className="mt-4 font-display text-5xl font-extrabold leading-[0.95] tracking-tight sm:text-6xl">
-              Loyalty cards that <span className="text-iridescent italic">live in every pocket.</span>
+              Loyalty cards that live in every pocket.
             </h1>
             <p className="mt-5 max-w-xl text-lg text-muted-foreground">
               Clubcarder replaces paper punch cards with beautiful digital stamp cards.
