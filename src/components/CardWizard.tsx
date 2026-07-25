@@ -418,19 +418,20 @@ export function CardWizard({ templateId }: Props) {
                 <div>
                   <Label>Grid layout</Label>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Pick columns per row. Rows are calculated automatically.
+                    Pick columns per row. Rows are calculated automatically (max 4 rows).
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     <button type="button" onClick={() => setGridCols(null)}
                       className={`rounded-lg border-2 px-3 py-2 text-xs ${gridCols == null ? "border-ink bg-secondary" : "border-border"}`}>
                       Auto
                     </button>
-                    {[1, 2, 3, 4, 5, 6, 7, 8].map((c) => {
-                      const rows = totalSteps > 0 ? Math.ceil(totalSteps / c) : 0;
+                    {totalSteps > 0 && Array.from({ length: 8 - Math.min(7, Math.ceil(totalSteps / 4) - 1) }, (_, i) => {
+                      const c = Math.ceil(totalSteps / 4) + i;
+                      const rows = Math.ceil(totalSteps / c);
                       return (
                         <button key={c} type="button" onClick={() => setGridCols(c)}
                           className={`rounded-lg border-2 px-3 py-2 text-xs ${gridCols === c ? "border-ink bg-secondary" : "border-border"}`}>
-                          {c}{rows > 0 ? ` × ${rows}` : ""}
+                          {c} × {rows}
                         </button>
                       );
                     })}
