@@ -56,6 +56,7 @@ export function CardWizard({ templateId }: Props) {
   const [icon, setIcon] = useState<StampIconName | null>(null);
   const [logoUrl, setLogoUrl] = useState("");
   const [rewards, setRewards] = useState<Reward[]>([]);
+  const [gridCols, setGridCols] = useState<number | null>(null);
   const [active, setActive] = useState(true);
 
   useEffect(() => {
@@ -75,6 +76,7 @@ export function CardWizard({ templateId }: Props) {
             total_steps: number; shape: CardShape;
             bg_color: string; accent_color: string; text_color: string; stamp_icon: StampIconName;
             logo_url: string | null; rewards: Reward[] | null; active: boolean;
+            grid_cols: number | null;
           };
           setTitle(tpl.title);
           setSubtitle(tpl.subtitle ?? "");
@@ -88,6 +90,7 @@ export function CardWizard({ templateId }: Props) {
           setIcon(tpl.stamp_icon);
           setLogoUrl(tpl.logo_url ?? "");
           setRewards(tpl.rewards ?? []);
+          setGridCols(tpl.grid_cols ?? null);
           setActive(tpl.active);
         }
         setLoading(false);
@@ -107,6 +110,7 @@ export function CardWizard({ templateId }: Props) {
       total_steps: totalSteps, shape,
       bg_color: bg, accent_color: accent, text_color: text,
       stamp_icon: icon ?? "star", logo_url: logoUrl || null, rewards: cleanRewards, active,
+      grid_cols: gridCols,
     };
     const { error } = isEdit && templateId
       ? await supabase.from("card_templates").update(payload).eq("id", templateId)
@@ -183,6 +187,7 @@ export function CardWizard({ templateId }: Props) {
           cornerTitle={cornerTitle}
           totalSteps={totalSteps} stampsCount={0}
           shape={shape} face={face}
+          gridCols={gridCols}
           bgColor={bg} accentColor={accent} textColor={text} stampIcon={icon}
           logoUrl={logoUrl || null} rewards={rewards}
           onStepClick={step === 2 ? openStepEditor : undefined}
@@ -409,6 +414,27 @@ export function CardWizard({ templateId }: Props) {
                     }}
                     className="mt-2 w-32"
                   />
+                </div>
+                <div>
+                  <Label>Grid layout</Label>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Pick columns per row. Rows are calculated automatically.
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <button type="button" onClick={() => setGridCols(null)}
+                      className={`rounded-lg border-2 px-3 py-2 text-xs ${gridCols == null ? "border-ink bg-secondary" : "border-border"}`}>
+                      Auto
+                    </button>
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((c) => {
+                      const rows = totalSteps > 0 ? Math.ceil(totalSteps / c) : 0;
+                      return (
+                        <button key={c} type="button" onClick={() => setGridCols(c)}
+                          className={`rounded-lg border-2 px-3 py-2 text-xs ${gridCols === c ? "border-ink bg-secondary" : "border-border"}`}>
+                          {c}{rows > 0 ? ` × ${rows}` : ""}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
                 <p className="text-sm text-muted-foreground">Tap a step on the preview above to set the benefit shown when the customer reaches it (e.g. "-50%" on step 5, "FREE" on step 10).</p>
               </div>

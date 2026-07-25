@@ -22,7 +22,7 @@ type Tpl = {
   total_steps: number; active: boolean;
   shape: CardShape;
   bg_color: string; accent_color: string; text_color: string;
-  stamp_icon: StampIconName; logo_url: string | null; rewards: Reward[] | null;
+  stamp_icon: StampIconName; logo_url: string | null; rewards: Reward[] | null; grid_cols: number | null;
 };
 
 export const Route = createFileRoute("/_authenticated/business/")({
@@ -54,7 +54,7 @@ function BusinessDashboard() {
       setBiz(b as Business | null);
       if (b) {
         const [{ data: t }, { count: sCount }, { data: instRows }] = await Promise.all([
-          supabase.from("card_templates").select("id,title,subtitle,description,total_steps,active,shape,bg_color,accent_color,text_color,stamp_icon,logo_url,rewards").eq("business_id", b.id).order("created_at", { ascending: false }),
+          supabase.from("card_templates").select("id,title,subtitle,description,corner_title,total_steps,active,shape,bg_color,accent_color,text_color,stamp_icon,logo_url,rewards,grid_cols").eq("business_id", b.id).order("created_at", { ascending: false }),
           supabase.from("stamps").select("id", { count: "exact", head: true }).eq("business_id", b.id),
           supabase.from("card_instances").select("customer_id, template:card_templates!inner(business_id)").eq("template.business_id", b.id),
         ]);
@@ -249,6 +249,7 @@ function BusinessDashboard() {
                       totalSteps={t.total_steps}
                       stampsCount={0}
                       shape={t.shape}
+                      gridCols={t.grid_cols}
                       bgColor={t.bg_color}
                       accentColor={t.accent_color}
                       textColor={t.text_color}

@@ -20,7 +20,7 @@ type Instance = {
     corner_title: string | null;
     total_steps: number; shape: CardShape;
     bg_color: string; accent_color: string; text_color: string; stamp_icon: StampIconName;
-    logo_url: string | null; rewards: Reward[];
+    logo_url: string | null; rewards: Reward[]; grid_cols: number | null;
     business: { id: string; name: string };
   };
 };
@@ -61,7 +61,7 @@ function Wallet() {
     const { data } = await supabase
       .from("card_instances")
       .select(`id, stamps_count, completed_at, created_at,
-        template:card_templates!inner(id, title, subtitle, description, corner_title, total_steps, shape, bg_color, accent_color, text_color, stamp_icon, logo_url, rewards,
+        template:card_templates!inner(id, title, subtitle, description, corner_title, total_steps, shape, bg_color, accent_color, text_color, stamp_icon, logo_url, rewards, grid_cols,
           business:businesses!inner(id, name))`)
       .eq("customer_id", u.user.id)
       .order("created_at", { ascending: false });
@@ -297,6 +297,7 @@ function Wallet() {
                               totalSteps={inst.template.total_steps}
                               stampsCount={inst.stamps_count}
                               shape={inst.template.shape}
+                              gridCols={inst.template.grid_cols}
                               bgColor={inst.template.bg_color}
                               accentColor={inst.template.accent_color}
                               textColor={inst.template.text_color}

@@ -13,7 +13,7 @@ type Template = {
   corner_title: string | null;
   total_steps: number; shape: CardShape;
   bg_color: string; accent_color: string; text_color: string;
-  stamp_icon: StampIconName; logo_url: string | null; rewards: Reward[]; active: boolean;
+  stamp_icon: StampIconName; logo_url: string | null; rewards: Reward[]; active: boolean; grid_cols: number | null;
 };
 
 export const Route = createFileRoute("/b/$businessId")({
@@ -138,6 +138,7 @@ function BusinessPublic() {
                 totalSteps={t.total_steps}
                 stampsCount={0}
                 shape={t.shape}
+                gridCols={t.grid_cols}
                 bgColor={t.bg_color}
                 accentColor={t.accent_color}
                 textColor={t.text_color}

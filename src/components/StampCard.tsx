@@ -31,6 +31,7 @@ export interface StampCardProps {
   lastStamp?: number;
   hideSteps?: boolean;
   face?: CardFace;
+  gridCols?: number | null;
   onStepClick?: (step: number) => void;
   activeStep?: number;
   onTitleClick?: () => void;
@@ -48,6 +49,7 @@ export function StampCard({
   bgColor = "#faf8f2", accentColor = "#4b3a35", textColor = "#4b3a35",
   stampIcon = null, logoUrl, rewards = [], lastStamp,
   hideSteps = false, face = "stamps",
+  gridCols = null,
   onStepClick, activeStep,
   onTitleClick, onSubtitleClick, onDescriptionClick, onIconClick, onCornerTitleClick,
   disableShadow = false,
@@ -57,7 +59,8 @@ export function StampCard({
   const Icon = stampIcon ? (STAMP_ICONS[stampIcon] ?? Star) : null;
   const radius = shape === "square" ? "rounded-xl" : shape === "ticket" ? "rounded-none" : "rounded-2xl";
   const normalizedSteps = Math.max(0, totalSteps);
-  const cols = Math.max(1, Math.min(8, normalizedSteps || 1));
+  const autoCols = Math.max(1, Math.min(8, normalizedSteps || 1));
+  const cols = gridCols && gridCols > 0 ? Math.max(1, Math.min(8, gridCols)) : autoCols;
   const rows = normalizedSteps > 0 ? Math.ceil(normalizedSteps / cols) : 0;
 
   const editable = "rounded-md transition-colors hover:bg-black/5 focus:outline-none focus:ring-2 cursor-pointer";
@@ -142,24 +145,27 @@ export function StampCard({
     </div>
   );
 
+  const gapPct = 3;
+  const tileSize = `min(calc((100cqw - ${(cols - 1) * gapPct}cqw) / ${cols}), calc((100cqh - ${(rows - 1) * gapPct}cqh) / ${Math.max(1, rows)}))`;
+
   const StampsFace = (
-    <div className="absolute inset-0 flex items-center justify-center p-4">
+    <div
+      className="absolute inset-0 flex items-center justify-center p-4"
+      style={{ containerType: "size" }}
+    >
       {hideSteps ? (
         <div className="min-h-[80px]" />
       ) : normalizedSteps > 0 ? (
         <div
-          className="grid gap-[3%]"
+          className="grid"
           style={{
-            gridTemplateColumns: `repeat(${cols}, minmax(0, calc((100% - 9%) / 4)))`,
+            gridTemplateColumns: `repeat(${cols}, ${tileSize})`,
+            gridAutoRows: tileSize,
+            gap: `${gapPct}cqw`,
             justifyContent: "center",
             alignContent: "center",
             justifyItems: "center",
             alignItems: "center",
-            aspectRatio: `${cols} / ${rows}`,
-            width: "100%",
-            maxHeight: "100%",
-            maxWidth: "100%",
-            containerType: "inline-size",
           }}
         >
           {Array.from({ length: normalizedSteps }).map((_, i) => {

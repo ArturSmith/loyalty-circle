@@ -12,7 +12,7 @@ type Tpl = {
   corner_title: string | null;
   total_steps: number; active: boolean; shape: CardShape;
   bg_color: string; accent_color: string; text_color: string; stamp_icon: StampIconName;
-  logo_url: string | null; rewards: Reward[] | null; created_at: string;
+  logo_url: string | null; rewards: Reward[] | null; created_at: string; grid_cols: number | null;
 };
 type Biz = { id: string; name: string; owner_id: string };
 type Customer = {
@@ -122,6 +122,7 @@ function CardDetails() {
           totalSteps={tpl.total_steps}
           stampsCount={0}
           shape={tpl.shape}
+          gridCols={tpl.grid_cols}
           bgColor={tpl.bg_color}
           accentColor={tpl.accent_color}
           textColor={tpl.text_color}
