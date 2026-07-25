@@ -13,6 +13,7 @@ import {
   Bell,
   ArrowLeft,
   Store,
+  CreditCard,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
