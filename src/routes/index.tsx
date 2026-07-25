@@ -32,8 +32,8 @@ function Landing() {
 
       <header className="relative mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6">
         <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[image:var(--gradient-primary)] text-white sticker-shadow">
-            <Stamp className="h-4 w-4" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[image:var(--gradient-primary)] text-white sticker-shadow rotate-[-8deg]">
+            <CreditCard className="h-4 w-4" />
           </div>
           <span className="font-display text-xl font-extrabold tracking-tight">Clubcarder</span>
         </div>
