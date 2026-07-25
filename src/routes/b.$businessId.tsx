@@ -13,7 +13,7 @@ type Template = {
   corner_title: string | null;
   total_steps: number; shape: CardShape;
   bg_color: string; accent_color: string; text_color: string;
-  stamp_icon: StampIconName; logo_url: string | null; rewards: Reward[]; active: boolean;
+  stamp_icon: StampIconName; logo_url: string | null; rewards: Reward[]; active: boolean; grid_cols: number | null;
 };
 
 export const Route = createFileRoute("/b/$businessId")({
