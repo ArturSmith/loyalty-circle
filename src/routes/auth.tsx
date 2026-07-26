@@ -32,17 +32,18 @@ function AuthPage() {
 
   const explicitRedirect = redirect && redirect.startsWith("/") ? redirect : null;
 
-  const resolveDest = async () => explicitRedirect ?? (await getDefaultHome());
-
-  const goNext = async () => {
-    const dest = await resolveDest();
-    navigate({ to: dest });
+  // If an explicit redirect was requested, honor it. Otherwise let __root
+  // route the user to /business or /wallet based on account type once the
+  // session is available.
+  const goNext = () => {
+    if (explicitRedirect) navigate({ to: explicitRedirect });
   };
 
-  const stashRedirect = async () => {
-    const dest = await resolveDest();
-    try { sessionStorage.setItem("post_auth_redirect", dest); } catch {}
+  const stashRedirect = () => {
+    if (!explicitRedirect) return;
+    try { sessionStorage.setItem("post_auth_redirect", explicitRedirect); } catch {}
   };
+
 
 
   const handleGoogle = async () => {
