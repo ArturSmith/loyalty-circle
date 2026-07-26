@@ -10,6 +10,7 @@ import { Logo } from "@/components/Logo";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { z } from "zod";
+import { getDefaultHome } from "@/lib/defaultHome";
 
 const searchSchema = z.object({ redirect: z.string().optional() }).catch({ redirect: undefined });
 
@@ -29,15 +30,20 @@ function AuthPage() {
   const [signupEmail, setSignupEmail] = useState<string | null>(null);
   const [mode, setMode] = useState<"password" | "signup" | "reset">("password");
 
-  const intendedPath = redirect && redirect.startsWith("/") ? redirect : "/wallet";
+  const explicitRedirect = redirect && redirect.startsWith("/") ? redirect : null;
 
-  const goNext = () => {
-    navigate({ to: intendedPath });
+  const resolveDest = async () => explicitRedirect ?? (await getDefaultHome());
+
+  const goNext = async () => {
+    const dest = await resolveDest();
+    navigate({ to: dest });
   };
 
-  const stashRedirect = () => {
-    try { sessionStorage.setItem("post_auth_redirect", intendedPath); } catch {}
+  const stashRedirect = async () => {
+    const dest = await resolveDest();
+    try { sessionStorage.setItem("post_auth_redirect", dest); } catch {}
   };
+
 
   const handleGoogle = async () => {
     stashRedirect();
