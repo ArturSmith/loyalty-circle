@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Logo } from "@/components/Logo";
-import { ArrowLeft, CreditCard, QrCode, Wallet, Store, Gift, ShieldCheck } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, CreditCard, QrCode, Wallet, Store, Gift, ShieldCheck, Palette, TrendingUp, Users } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 export const Route = createFileRoute("/help")({
   ssr: false,
@@ -17,7 +19,9 @@ export const Route = createFileRoute("/help")({
   component: HelpPage,
 });
 
-const faqs = [
+type Faq = { icon: LucideIcon; q: string; a: string };
+
+const customerFaqs: Faq[] = [
   {
     icon: Wallet,
     q: "How do I collect stamps?",
@@ -29,8 +33,21 @@ const faqs = [
     a: "Once you fill in all steps on a card, the reward becomes available. Show your completed card at the business to redeem it, then tap 'Renew card' to start over.",
   },
   {
+    icon: QrCode,
+    q: "How do I add a new card?",
+    a: "Scan the business's QR code with your phone camera or from the Scan screen. The card appears in your wallet instantly and starts empty.",
+  },
+  {
+    icon: ShieldCheck,
+    q: "Is my data safe?",
+    a: "Yes. Only you can see your own wallet, and stamps can't be forged — they're recorded server-side each time a business scans your card.",
+  },
+];
+
+const businessFaqs: Faq[] = [
+  {
     icon: Store,
-    q: "How do I create a loyalty card for my business?",
+    q: "How do I create a loyalty card?",
     a: "Sign up, start a Business account (14-day free trial), open the dashboard and tap 'New card'. Set your titles, colors and icon, choose the number of steps, and add rewards.",
   },
   {
@@ -39,14 +56,24 @@ const faqs = [
     a: "Every business has a shareable QR code on the dashboard. Print it, display it at your counter, or share the link — customers scan it to see and add your cards.",
   },
   {
+    icon: Palette,
+    q: "Can I customize the card design?",
+    a: "Yes — pick colors, upload your SVG logo or choose an icon, set the grid layout (up to 32 steps), and mark reward steps by tapping them in the live preview.",
+  },
+  {
+    icon: TrendingUp,
+    q: "Can I see analytics?",
+    a: "Open any card from the dashboard to see how many customers hold it, their progress, and a live activity feed of stamps and redemptions.",
+  },
+  {
+    icon: Users,
+    q: "How do I add a stamp to a customer's card?",
+    a: "Tap 'Scan customer' on the dashboard and scan the QR code they show you. The stamp is added instantly and they see a celebration animation.",
+  },
+  {
     icon: CreditCard,
     q: "What happens if I stop my subscription?",
     a: "Existing customers keep their cards and can still redeem rewards they've earned. New stamps pause until you resume your subscription.",
-  },
-  {
-    icon: ShieldCheck,
-    q: "Is my data safe?",
-    a: "Yes. Only you can see your own wallet, and businesses can only see stamps for their own cards. Stamps can't be forged — they're recorded server-side when scanned.",
   },
 ];
 
@@ -64,22 +91,35 @@ function HelpPage() {
         <h1 className="font-display text-4xl font-semibold tracking-tight sm:text-5xl">Help Center</h1>
         <p className="mt-3 text-muted-foreground">Quick answers about using Clubcarder. Can't find what you need? <Link to="/contact" className="underline">Contact us</Link>.</p>
 
-        <div className="mt-10 space-y-4">
-          {faqs.map(({ icon: Icon, q, a }) => (
-            <div key={q} className="rounded-2xl border border-border/70 bg-secondary/30 p-6">
-              <div className="flex items-start gap-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                  <Icon className="h-4 w-4" />
-                </div>
-                <div>
-                  <h2 className="font-display text-lg font-semibold">{q}</h2>
-                  <p className="mt-1.5 text-sm text-muted-foreground">{a}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+        <Tabs defaultValue="customer" className="mt-8">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="customer">For customers</TabsTrigger>
+            <TabsTrigger value="business">For business</TabsTrigger>
+          </TabsList>
+          <TabsContent value="customer" className="mt-6 space-y-4">
+            {customerFaqs.map((f) => <FaqCard key={f.q} {...f} />)}
+          </TabsContent>
+          <TabsContent value="business" className="mt-6 space-y-4">
+            {businessFaqs.map((f) => <FaqCard key={f.q} {...f} />)}
+          </TabsContent>
+        </Tabs>
       </main>
+    </div>
+  );
+}
+
+function FaqCard({ icon: Icon, q, a }: Faq) {
+  return (
+    <div className="rounded-2xl border border-border/70 bg-secondary/30 p-6">
+      <div className="flex items-start gap-4">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+          <Icon className="h-4 w-4" />
+        </div>
+        <div>
+          <h2 className="font-display text-lg font-semibold">{q}</h2>
+          <p className="mt-1.5 text-sm text-muted-foreground">{a}</p>
+        </div>
+      </div>
     </div>
   );
 }
