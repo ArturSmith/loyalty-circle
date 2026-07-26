@@ -135,7 +135,7 @@ function BusinessDashboard() {
 
   // Always point QR codes at the published site so scanners never hit the
   // Lovable editor preview (which requires a Lovable login).
-  const PUBLIC_SITE_URL = "https://loyalty-circle.lovable.app";
+  const PUBLIC_SITE_URL = "https://clubcarder.com";
   const bizUrl = `${PUBLIC_SITE_URL}/b/${biz.id}`;
 
   return (
