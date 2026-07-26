@@ -150,7 +150,7 @@ function BusinessDashboard() {
         </div>
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full glass-panel" title="Menu"><Menu className="h-5 w-5" /></Button>
+            <Button variant="ghost" size="icon" aria-label="Open menu" className="rounded-full glass-panel" title="Menu"><Menu className="h-5 w-5" /></Button>
           </SheetTrigger>
           <SheetContent side="right" className="w-64">
             <SheetHeader className="text-left">
