@@ -161,7 +161,7 @@ function Wallet() {
         </h1>
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" title="Menu" className="rounded-full glass-panel"><Menu className="h-5 w-5" /></Button>
+            <Button variant="ghost" size="icon" aria-label="Open menu" title="Menu" className="rounded-full glass-panel"><Menu className="h-5 w-5" /></Button>
           </SheetTrigger>
           <SheetContent side="right" className="w-64">
             <SheetHeader className="text-left">
