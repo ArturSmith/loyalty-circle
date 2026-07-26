@@ -22,13 +22,15 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { getDefaultHome } from "@/lib/defaultHome";
 
 export const Route = createFileRoute("/")({
   ssr: false,
   beforeLoad: async () => {
     const { data, error } = await supabase.auth.getUser();
     if (!error && data.user) {
-      throw redirect({ to: "/wallet" });
+      const dest = await getDefaultHome(data.user.id);
+      throw redirect({ to: dest });
     }
   },
   head: () => ({
