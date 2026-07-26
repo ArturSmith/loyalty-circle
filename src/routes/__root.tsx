@@ -95,19 +95,31 @@ function RootComponent() {
       router.invalidate();
       if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
       if (event === "SIGNED_IN") {
-        try {
-          const dest = sessionStorage.getItem("post_auth_redirect");
-          if (dest && dest.startsWith("/")) {
-            sessionStorage.removeItem("post_auth_redirect");
-            if (window.location.pathname !== dest) {
+        (async () => {
+          try {
+            let dest: string | null = null;
+            try {
+              const stashed = sessionStorage.getItem("post_auth_redirect");
+              if (stashed && stashed.startsWith("/")) {
+                sessionStorage.removeItem("post_auth_redirect");
+                dest = stashed;
+              }
+            } catch {}
+            const path = window.location.pathname;
+            if (!dest && (path === "/" || path === "/auth")) {
+              const { getDefaultHome } = await import("@/lib/defaultHome");
+              dest = await getDefaultHome();
+            }
+            if (dest && window.location.pathname !== dest) {
               router.navigate({ to: dest });
             }
-          }
-        } catch {}
+          } catch {}
+        })();
       }
     });
     return () => data.subscription.unsubscribe();
   }, [queryClient, router]);
+
 
   return (
     <QueryClientProvider client={queryClient}>
