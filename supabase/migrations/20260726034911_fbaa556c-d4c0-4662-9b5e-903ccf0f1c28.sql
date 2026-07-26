@@ -1,0 +1,1 @@
+GRANT SELECT ON public.card_templates TO anon;
