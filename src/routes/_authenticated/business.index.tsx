@@ -172,6 +172,16 @@ function BusinessDashboard() {
                   <WalletIcon className="h-4 w-4" /> My wallet
                 </Button>
               </Link>
+              <Link to="/help" className="w-full">
+                <Button variant="ghost" className="w-full justify-start gap-3">
+                  <HelpCircle className="h-4 w-4" /> Help
+                </Button>
+              </Link>
+              <Link to="/contact" className="w-full">
+                <Button variant="ghost" className="w-full justify-start gap-3">
+                  <Mail className="h-4 w-4" /> Contact us
+                </Button>
+              </Link>
               <Button variant="ghost" className="w-full justify-start gap-3" onClick={signOut}>
                 <LogOut className="h-4 w-4" /> Sign out
               </Button>
