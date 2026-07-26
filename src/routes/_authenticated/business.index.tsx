@@ -8,7 +8,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
-import { Plus, QrCode, ScanLine, Users, Stamp as StampIco, Wallet as WalletIcon, Pencil, Menu, Settings, LogOut, Download, CreditCard, Sparkles } from "lucide-react";
+import { Plus, QrCode, ScanLine, Users, Stamp as StampIco, Wallet as WalletIcon, Pencil, Menu, Settings, LogOut, Download, CreditCard, Sparkles, HelpCircle, Mail } from "lucide-react";
 import { useBusinessAccess } from "@/hooks/useBusinessAccess";
 import { StampCard } from "@/components/StampCard";
 import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
@@ -170,6 +170,16 @@ function BusinessDashboard() {
               <Link to="/wallet" className="w-full">
                 <Button variant="ghost" className="w-full justify-start gap-3">
                   <WalletIcon className="h-4 w-4" /> My wallet
+                </Button>
+              </Link>
+              <Link to="/help" className="w-full">
+                <Button variant="ghost" className="w-full justify-start gap-3">
+                  <HelpCircle className="h-4 w-4" /> Help
+                </Button>
+              </Link>
+              <Link to="/contact" className="w-full">
+                <Button variant="ghost" className="w-full justify-start gap-3">
+                  <Mail className="h-4 w-4" /> Contact us
                 </Button>
               </Link>
               <Button variant="ghost" className="w-full justify-start gap-3" onClick={signOut}>

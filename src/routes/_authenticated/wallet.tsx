@@ -7,7 +7,7 @@ import { QrDisplay } from "@/components/QrDisplay";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Gift, LogOut, Menu, RotateCcw, ScanLine, Snowflake, Sparkles, Store, Trash2, User, X } from "lucide-react";
+import { Check, Gift, HelpCircle, LogOut, Mail, Menu, RotateCcw, ScanLine, Snowflake, Sparkles, Store, Trash2, User, X } from "lucide-react";
 import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { useServerFn } from "@tanstack/react-start";
@@ -176,6 +176,16 @@ function Wallet() {
               <Link to="/business" className="w-full">
                 <Button variant="ghost" className="w-full justify-start gap-3">
                   <Store className="h-4 w-4" /> Business dashboard
+                </Button>
+              </Link>
+              <Link to="/help" className="w-full">
+                <Button variant="ghost" className="w-full justify-start gap-3">
+                  <HelpCircle className="h-4 w-4" /> Help
+                </Button>
+              </Link>
+              <Link to="/contact" className="w-full">
+                <Button variant="ghost" className="w-full justify-start gap-3">
+                  <Mail className="h-4 w-4" /> Contact us
                 </Button>
               </Link>
               <Button variant="ghost" className="w-full justify-start gap-3" onClick={signOut}>
