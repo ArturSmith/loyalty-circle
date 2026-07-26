@@ -164,7 +164,7 @@ export function CardWizard({ templateId }: Props) {
   return (
     <div className="min-h-screen px-4 py-6 max-w-2xl mx-auto">
       <header className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => step === 0 ? navigate({ to: "/business" }) : setStep(step - 1)}>
+        <Button variant="ghost" size="icon" aria-label={step === 0 ? "Back to business dashboard" : "Previous step"} onClick={() => step === 0 ? navigate({ to: "/business" }) : setStep(step - 1)}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1">
@@ -172,7 +172,7 @@ export function CardWizard({ templateId }: Props) {
           <h1 className="font-display text-2xl font-semibold">{stepsLabels[step]}</h1>
         </div>
         {isEdit && (
-          <Button variant="ghost" size="icon" className="text-destructive" onClick={remove} title="Delete card">
+          <Button variant="ghost" size="icon" aria-label="Delete card" className="text-destructive" onClick={remove} title="Delete card">
             <Trash2 className="h-4 w-4" />
           </Button>
         )}
