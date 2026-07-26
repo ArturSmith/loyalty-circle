@@ -201,6 +201,10 @@ function Landing() {
       </main>
 
       <footer className="relative mx-auto max-w-6xl px-6 py-10 text-center text-xs text-muted-foreground">
+        <div className="mb-3 flex items-center justify-center gap-5">
+          <Link to="/help" className="hover:text-foreground">Help</Link>
+          <Link to="/contact" className="hover:text-foreground">Contact</Link>
+        </div>
         © Clubcarder
       </footer>
     </div>
