@@ -265,7 +265,7 @@ export function CardWizard({ templateId }: Props) {
                 onChange={async (e) => { const f = e.target.files?.[0]; if (f) await handleLogoUpload(f); }} />
               {logoUrl && (
                 <div className="mt-2 flex items-center gap-2">
-                  <img src={logoUrl} alt="logo" className="h-8 w-8 rounded-full ring-1 ring-black/10 bg-white p-0.5" />
+                  <img src={logoUrl} alt="Business logo preview" className="h-8 w-8 rounded-full ring-1 ring-black/10 bg-white p-0.5" />
                   <Button variant="ghost" size="sm" onClick={() => setLogoUrl("")}>Remove</Button>
                 </div>
               )}
@@ -322,7 +322,7 @@ export function CardWizard({ templateId }: Props) {
                     onChange={async (e) => { const f = e.target.files?.[0]; if (f) await handleLogoUpload(f); }} />
                   {logoUrl && (
                     <div className="mt-2 flex items-center gap-2">
-                      <img src={logoUrl} alt="logo" className="h-10 w-10 rounded-full ring-1 ring-black/10 bg-white p-1" />
+                      <img src={logoUrl} alt="Business logo preview" className="h-10 w-10 rounded-full ring-1 ring-black/10 bg-white p-1" />
                       <Button variant="ghost" size="sm" onClick={() => setLogoUrl("")}>Remove</Button>
                     </div>
                   )}
