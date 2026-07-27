@@ -150,10 +150,16 @@ function Wallet() {
         <h1 className="font-display text-3xl font-extrabold tracking-tight">
           My cards
         </h1>
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" aria-label="Open menu" title="Menu" className="rounded-full glass-panel"><Menu className="h-5 w-5" /></Button>
-          </SheetTrigger>
+        <div className="flex items-center gap-2">
+          <Link to="/scan">
+            <Button variant="ghost" size="icon" aria-label="Scan QR code" title="Scan QR" className="rounded-full glass-panel">
+              <ScanLine className="h-5 w-5" />
+            </Button>
+          </Link>
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" aria-label="Open menu" title="Menu" className="rounded-full glass-panel"><Menu className="h-5 w-5" /></Button>
+            </SheetTrigger>
           <SheetContent side="right" className="w-64">
             <SheetHeader className="text-left">
               <SheetTitle className="font-display">Menu</SheetTitle>
@@ -185,6 +191,7 @@ function Wallet() {
             </nav>
           </SheetContent>
         </Sheet>
+        </div>
       </header>
 
       {instances.length === 0 ? (
@@ -205,11 +212,6 @@ function Wallet() {
           </motion.div>
           <h2 className="mt-8 font-display text-3xl font-extrabold">No cards yet</h2>
           <p className="mt-2 text-sm text-muted-foreground max-w-xs">Scan a business's QR to add your first loyalty card.</p>
-          <Link to="/scan" className="mt-8 w-full max-w-xs">
-            <Button size="lg" className="w-full h-14 gap-2 text-base rounded-2xl bg-[image:var(--gradient-primary)] text-white sticker-shadow border-0 hover:opacity-95">
-              <ScanLine className="h-5 w-5" /> Scan QR
-            </Button>
-          </Link>
         </div>
       ) : (
         <>
