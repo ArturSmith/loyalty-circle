@@ -1,6 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createClient } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { StampCard } from "@/components/StampCard";
 import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
 import { Button } from "@/components/ui/button";
@@ -15,6 +17,50 @@ type Template = {
   bg_color: string; accent_color: string; text_color: string;
   stamp_icon: StampIconName; logo_url: string | null; rewards: Reward[]; active: boolean; grid_cols: number | null;
 };
+
+function isNewSupabaseApiKey(value: string): boolean {
+  return value.startsWith("sb_publishable_") || value.startsWith("sb_secret_");
+}
+
+function createPublicFetch(supabaseKey: string): typeof fetch {
+  return (input, init) => {
+    const headers = new Headers(
+      typeof Request !== "undefined" && input instanceof Request ? input.headers : undefined,
+    );
+
+    if (init?.headers) {
+      new Headers(init.headers).forEach((value, key) => headers.set(key, value));
+    }
+
+    if (isNewSupabaseApiKey(supabaseKey) && headers.get("Authorization") === `Bearer ${supabaseKey}`) {
+      headers.delete("Authorization");
+    }
+
+    headers.set("apikey", supabaseKey);
+    return fetch(input, { ...init, headers });
+  };
+}
+
+function createPublicSupabaseClient() {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+  const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error("Missing backend configuration");
+  }
+
+  return createClient<Database>(supabaseUrl, supabaseKey, {
+    global: { fetch: createPublicFetch(supabaseKey) },
+    auth: {
+      storage: undefined,
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  });
+}
+
+const publicSupabase = createPublicSupabaseClient();
 
 export const Route = createFileRoute("/b/$businessId")({
   head: () => ({ meta: [{ title: "Claim your card — Clubcarder" }] }),
@@ -35,8 +81,8 @@ function BusinessPublic() {
   useEffect(() => {
     (async () => {
       const [{ data: t }, { data: b }, { data: u }] = await Promise.all([
-        supabase.from("card_templates").select("*").eq("business_id", businessId).eq("active", true).order("created_at"),
-        supabase.rpc("get_business_public", { _id: businessId }),
+        publicSupabase.from("card_templates").select("*").eq("business_id", businessId).eq("active", true).order("created_at"),
+        publicSupabase.rpc("get_business_public", { _id: businessId }),
         supabase.auth.getUser(),
       ]);
       setTemplates((t as Template[] | null) ?? []);
