@@ -76,27 +76,72 @@ export const getWalletCards = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     try {
-      // Use service_role (admin) to fetch all customer's card instances
-      // This bypasses RLS and ensures we can fetch the data
-      const { data: rows, error } = await supabaseAdmin
+      // Fetch card instances with template IDs only (simpler query)
+      const { data: instanceData, error: instanceError } = await supabaseAdmin
         .from("card_instances")
-        .select(`id, stamps_count, completed_at, created_at,
-          template:card_templates(id, title, subtitle, description, corner_title, total_steps, shape, bg_color, accent_color, text_color, stamp_icon, logo_url, rewards, grid_cols,
-            business:businesses(id, name))`)
+        .select(`id, stamps_count, completed_at, created_at, template_id`)
         .eq("customer_id", context.userId)
         .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("Error fetching wallet cards:", error);
-        throw error;
+      if (instanceError) {
+        console.error("Error fetching card instances:", instanceError);
+        throw instanceError;
       }
 
-      // Filter to only include complete records with all required data
-      const instances = ((rows ?? []) as unknown as WalletInstance[]).filter(
-        (instance) => instance.template && instance.template.business && instance.template.business.id
-      );
-      
-      const businessIds = Array.from(new Set(instances.map((instance) => instance.template.business.id)));
+      if (!instanceData || instanceData.length === 0) {
+        return { instances: [], frozenBusinessIds: [] };
+      }
+
+      // Get template IDs
+      const templateIds = Array.from(new Set(instanceData.map((inst: any) => inst.template_id)));
+
+      // Fetch templates with business data
+      const { data: templateData, error: templateError } = await supabaseAdmin
+        .from("card_templates")
+        .select(`id, title, subtitle, description, corner_title, total_steps, shape, bg_color, accent_color, text_color, stamp_icon, logo_url, rewards, grid_cols, business_id,
+          business:businesses(id, name)`)
+        .in("id", templateIds);
+
+      if (templateError) {
+        console.error("Error fetching templates:", templateError);
+        throw templateError;
+      }
+
+      // Create a map of templates for quick lookup
+      const templateMap = new Map((templateData ?? []).map((t: any) => [t.id, t]));
+
+      // Merge template data into instances
+      const instances: WalletInstance[] = instanceData
+        .map((inst: any) => {
+          const template = templateMap.get(inst.template_id);
+          if (!template || !template.business?.id) return null;
+          return {
+            id: inst.id,
+            stamps_count: inst.stamps_count,
+            completed_at: inst.completed_at,
+            created_at: inst.created_at,
+            template: {
+              id: template.id,
+              title: template.title,
+              subtitle: template.subtitle,
+              description: template.description,
+              corner_title: template.corner_title,
+              total_steps: template.total_steps,
+              shape: template.shape,
+              bg_color: template.bg_color,
+              accent_color: template.accent_color,
+              text_color: template.text_color,
+              stamp_icon: template.stamp_icon,
+              logo_url: template.logo_url,
+              rewards: template.rewards,
+              grid_cols: template.grid_cols,
+              business: template.business,
+            },
+          };
+        })
+        .filter((inst: any) => inst !== null);
+
+      const businessIds = Array.from(new Set(instances.map((inst) => inst.template.business.id)));
 
       if (businessIds.length === 0) {
         return { instances, frozenBusinessIds: [] };
