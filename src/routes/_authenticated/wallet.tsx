@@ -83,9 +83,11 @@ function Wallet() {
       });
       setFrozenBusinessIds(new Set(nextFrozenBusinessIds));
     } catch (error) {
+      console.error("Error loading wallet cards:", error);
       setInstances([]);
       setFrozenBusinessIds(new Set());
-      toast.error("Couldn't load your cards", { description: error instanceof Error ? error.message : "Please try again." });
+      const errorMessage = error instanceof Error ? error.message : "Please try again.";
+      toast.error("Couldn't load your cards", { description: errorMessage });
     } finally {
       setLoading(false);
     }
@@ -385,15 +387,33 @@ function Wallet() {
           const remove = async () => {
             if (!inst) return;
             if (!window.confirm(`Remove "${inst.template.title}" from your wallet? This cannot be undone.`)) return;
-            const { error } = await supabase.from("card_instances").delete().eq("id", inst.id);
-            if (error) {
-              toast.error("Couldn't remove card", { description: error.message });
+            
+            // Verify user is authenticated before attempting delete
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+              toast.error("Not authenticated", { description: "Please sign in again to remove cards." });
               return;
             }
+            
+            // First attempt the delete
+            const { error: deleteError } = await supabase.from("card_instances").delete().eq("id", inst.id).eq("customer_id", user.id);
+            if (deleteError) {
+              console.error("Delete error:", deleteError);
+              toast.error("Couldn't remove card", { description: deleteError.message });
+              return;
+            }
+            
+            // Delete was successful, now reload
             toast.success("Card removed from your wallet");
             setFlippedId(null);
             setExpandedId(null);
-            load();
+            
+            try {
+              await load();
+            } catch (loadError) {
+              console.error("Load error after delete:", loadError);
+              toast.error("Card removed but couldn't refresh wallet", { description: loadError instanceof Error ? loadError.message : "Please refresh the page." });
+            }
           };
           return (
           <motion.div

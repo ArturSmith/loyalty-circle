@@ -75,31 +75,42 @@ export const getWalletCards = createServerFn({ method: "GET" })
   .handler(async ({ context }): Promise<{ instances: WalletInstance[]; frozenBusinessIds: string[] }> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const { data: rows, error } = await supabaseAdmin
-      .from("card_instances")
-      .select(`id, stamps_count, completed_at, created_at,
-        template:card_templates!inner(id, title, subtitle, description, corner_title, total_steps, shape, bg_color, accent_color, text_color, stamp_icon, logo_url, rewards, grid_cols,
-          business:businesses!inner(id, name))`)
-      .eq("customer_id", context.userId)
-      .order("created_at", { ascending: false });
+    try {
+      const { data: rows, error } = await supabaseAdmin
+        .from("card_instances")
+        .select(`id, stamps_count, completed_at, created_at,
+          template:card_templates!inner(id, title, subtitle, description, corner_title, total_steps, shape, bg_color, accent_color, text_color, stamp_icon, logo_url, rewards, grid_cols,
+            business:businesses!inner(id, name))`)
+        .eq("customer_id", context.userId)
+        .order("created_at", { ascending: false });
 
-    if (error) throw error;
+      if (error) {
+        console.error("Error fetching wallet cards:", error);
+        throw error;
+      }
 
-    const instances = ((rows ?? []) as unknown as WalletInstance[]).filter((instance) => Boolean(instance.template?.business?.id));
-    const businessIds = Array.from(new Set(instances.map((instance) => instance.template.business.id)));
+      const instances = ((rows ?? []) as unknown as WalletInstance[]).filter((instance) => Boolean(instance.template?.business?.id));
+      const businessIds = Array.from(new Set(instances.map((instance) => instance.template.business.id)));
 
-    if (businessIds.length === 0) {
-      return { instances, frozenBusinessIds: [] };
+      if (businessIds.length === 0) {
+        return { instances, frozenBusinessIds: [] };
+      }
+
+      const { data: frozenRows, error: frozenError } = await supabaseAdmin.rpc("get_frozen_business_ids", {
+        _ids: businessIds,
+      });
+
+      if (frozenError) {
+        console.error("Error fetching frozen business IDs:", frozenError);
+        throw frozenError;
+      }
+
+      return {
+        instances,
+        frozenBusinessIds: (frozenRows ?? []).map((row: { business_id: string }) => row.business_id),
+      };
+    } catch (error) {
+      console.error("getWalletCards error:", error);
+      throw new Error(`Failed to load wallet cards: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
-
-    const { data: frozenRows, error: frozenError } = await supabaseAdmin.rpc("get_frozen_business_ids", {
-      _ids: businessIds,
-    });
-
-    if (frozenError) throw frozenError;
-
-    return {
-      instances,
-      frozenBusinessIds: (frozenRows ?? []).map((row: { business_id: string }) => row.business_id),
-    };
   });
