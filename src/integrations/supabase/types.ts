@@ -286,6 +286,17 @@ export type Database = {
         Args: { _business_created_at: string; _owner_id: string }
         Returns: boolean
       }
+      get_business_public: {
+        Args: { _id: string }
+        Returns: {
+          brand_color: string
+          created_at: string
+          id: string
+          logo_url: string
+          name: string
+          slug: string
+        }[]
+      }
       get_frozen_business_ids: {
         Args: { _ids: string[] }
         Returns: {
