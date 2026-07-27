@@ -107,10 +107,14 @@ function BusinessPublic() {
   return (
     <div className="min-h-screen px-4 py-10">
       <div className="mx-auto max-w-md text-center">
-        <h1 className="mt-4 font-display text-3xl font-semibold">Loyalty cards</h1>
+        {business?.logo_url ? (
+          <img src={business.logo_url} alt={`${business.name} logo`} className="mx-auto h-16 w-16 rounded-full object-cover" />
+        ) : null}
+        <h1 className="mt-4 font-display text-3xl font-semibold">{business?.name ?? "Loyalty cards"}</h1>
         <p className="mt-2 text-sm text-muted-foreground">Choose a loyalty card to add to your wallet.</p>
         <OrnamentDivider className="w-40 mx-auto my-6 opacity-60" />
       </div>
+
 
       <div className="mx-auto max-w-md space-y-6">
         {templates.map((t, i) => {
