@@ -160,13 +160,6 @@ export type Database = {
             referencedRelation: "businesses"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "card_templates_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "businesses_public"
-            referencedColumns: ["id"]
-          },
         ]
       }
       profiles: {
@@ -224,13 +217,6 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "stamps_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "businesses_public"
             referencedColumns: ["id"]
           },
           {
@@ -292,39 +278,24 @@ export type Database = {
       }
     }
     Views: {
-      businesses_public: {
-        Row: {
-          brand_color: string | null
-          created_at: string | null
-          id: string | null
-          logo_url: string | null
-          name: string | null
-          slug: string | null
-        }
-        Insert: {
-          brand_color?: string | null
-          created_at?: string | null
-          id?: string | null
-          logo_url?: string | null
-          name?: string | null
-          slug?: string | null
-        }
-        Update: {
-          brand_color?: string | null
-          created_at?: string | null
-          id?: string | null
-          logo_url?: string | null
-          name?: string | null
-          slug?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       add_stamp: { Args: { _card_instance_id: string }; Returns: Json }
       business_has_access: {
         Args: { _business_created_at: string; _owner_id: string }
         Returns: boolean
+      }
+      get_business_public: {
+        Args: { _id: string }
+        Returns: {
+          brand_color: string
+          created_at: string
+          id: string
+          logo_url: string
+          name: string
+          slug: string
+        }[]
       }
       get_frozen_business_ids: {
         Args: { _ids: string[] }
