@@ -76,11 +76,13 @@ export const getWalletCards = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     try {
+      // Use service_role (admin) to fetch all customer's card instances
+      // This bypasses RLS and ensures we can fetch the data
       const { data: rows, error } = await supabaseAdmin
         .from("card_instances")
         .select(`id, stamps_count, completed_at, created_at,
-          template:card_templates!inner(id, title, subtitle, description, corner_title, total_steps, shape, bg_color, accent_color, text_color, stamp_icon, logo_url, rewards, grid_cols,
-            business:businesses!inner(id, name))`)
+          template:card_templates(id, title, subtitle, description, corner_title, total_steps, shape, bg_color, accent_color, text_color, stamp_icon, logo_url, rewards, grid_cols,
+            business:businesses(id, name))`)
         .eq("customer_id", context.userId)
         .order("created_at", { ascending: false });
 
@@ -89,7 +91,11 @@ export const getWalletCards = createServerFn({ method: "GET" })
         throw error;
       }
 
-      const instances = ((rows ?? []) as unknown as WalletInstance[]).filter((instance) => Boolean(instance.template?.business?.id));
+      // Filter to only include complete records with all required data
+      const instances = ((rows ?? []) as unknown as WalletInstance[]).filter(
+        (instance) => instance.template && instance.template.business && instance.template.business.id
+      );
+      
       const businessIds = Array.from(new Set(instances.map((instance) => instance.template.business.id)));
 
       if (businessIds.length === 0) {
