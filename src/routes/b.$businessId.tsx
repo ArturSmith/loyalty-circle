@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
+import { useServerFn } from "@tanstack/react-start";
+import { claimCardToWallet } from "@/utils/cards.functions";
 
 type Template = {
   id: string; business_id: string; title: string; subtitle: string | null; description: string | null;
@@ -70,6 +72,7 @@ export const Route = createFileRoute("/b/$businessId")({
 function BusinessPublic() {
   const { businessId } = Route.useParams();
   const navigate = useNavigate();
+  const claimCard = useServerFn(claimCardToWallet);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [business, setBusiness] = useState<{ id: string; name: string; logo_url: string | null; brand_color: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -111,16 +114,21 @@ function BusinessPublic() {
       return;
     }
     setClaiming(templateId);
-    const { data: existing } = await supabase.from("card_instances").select("id").eq("template_id", templateId).eq("customer_id", userId).maybeSingle();
-    if (existing) {
+    try {
+      const result = await claimCard({ data: { templateId } });
+      setOwnedTemplateIds((prev) => {
+        const next = new Map(prev);
+        next.set(templateId, result.instanceId);
+        return next;
+      });
+      try { sessionStorage.setItem("open_card_id", result.instanceId); } catch {}
+      toast.success(result.alreadyOwned ? "Card is already in your wallet" : "Card added to your wallet");
       navigate({ to: "/wallet" });
-      return;
+    } catch (error) {
+      toast.error("Couldn't add card", { description: error instanceof Error ? error.message : "Please try again." });
+    } finally {
+      setClaiming(null);
     }
-    const { error } = await supabase.from("card_instances").insert({ template_id: templateId, customer_id: userId });
-    setClaiming(null);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Card added to your wallet");
-    navigate({ to: "/wallet" });
   };
 
   // Auto-claim after signing in via redirect back
@@ -180,9 +188,16 @@ function BusinessPublic() {
           };
           return (
           <motion.div key={t.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}>
-            <button
-              type="button"
+            <div
+              role="button"
+              tabIndex={0}
               onClick={handleCardClick}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  handleCardClick();
+                }
+              }}
               className="block w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-2xl"
               aria-label={ownedInstanceId ? `Open ${t.title} in your wallet` : userId ? `Add ${t.title} to your wallet` : `Sign in to add ${t.title}`}
             >
@@ -204,7 +219,7 @@ function BusinessPublic() {
                 showFlipButton
                 onFlip={() => setFlippedTemplateId((prev) => prev === t.id ? null : t.id)}
               />
-            </button>
+            </div>
             <Button
               className="mt-3 w-full h-11"
               disabled={claiming === t.id}

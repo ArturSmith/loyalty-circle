@@ -11,19 +11,9 @@ import { Check, Gift, HelpCircle, LogOut, Mail, Menu, RotateCcw, ScanLine, Snowf
 import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { useServerFn } from "@tanstack/react-start";
-import { getFrozenBusinessIds } from "@/utils/frozen-businesses.functions";
+import { getWalletCards, type WalletInstance } from "@/utils/cards.functions";
 
-type Instance = {
-  id: string; stamps_count: number; completed_at: string | null; created_at: string;
-  template: {
-    id: string; title: string; subtitle: string | null; description: string | null;
-    corner_title: string | null;
-    total_steps: number; shape: CardShape;
-    bg_color: string; accent_color: string; text_color: string; stamp_icon: StampIconName;
-    logo_url: string | null; rewards: Reward[]; grid_cols: number | null;
-    business: { id: string; name: string };
-  };
-};
+type Instance = WalletInstance;
 
 export const Route = createFileRoute("/_authenticated/wallet")({
   head: () => ({ meta: [{ title: "My Wallet — Clubcarder" }] }),
@@ -53,62 +43,53 @@ function Wallet() {
   const [faceFlipped, setFaceFlipped] = useState<Set<string>>(new Set());
   const [celebration, setCelebration] = useState<Celebration | null>(null);
 
-  const fetchFrozen = useServerFn(getFrozenBusinessIds);
+  const fetchWallet = useServerFn(getWalletCards);
 
   const load = useCallback(async () => {
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) { setInstances([]); setLoading(false); return; }
-    const { data } = await supabase
-      .from("card_instances")
-      .select(`id, stamps_count, completed_at, created_at,
-        template:card_templates!inner(id, title, subtitle, description, corner_title, total_steps, shape, bg_color, accent_color, text_color, stamp_icon, logo_url, rewards, grid_cols,
-          business:businesses!inner(id, name))`)
-      .eq("customer_id", u.user.id)
-      .order("created_at", { ascending: false });
-    const next = (data as unknown as Instance[]) ?? [];
-    // Diff against previous state to celebrate any stamp increment for the current user
-    setInstances((prev) => {
-      const prevMap = new Map(prev.map((p) => [p.id, p.stamps_count]));
-      for (const inst of next) {
-        const before = prevMap.get(inst.id);
-        if (before !== undefined && inst.stamps_count > before) {
-          const rewards = (inst.template.rewards ?? []) as Reward[];
-          const unlocked = rewards.find((r) => r.step === inst.stamps_count) ?? null;
-          const upcoming = rewards
-            .filter((r) => r.step > inst.stamps_count)
-            .sort((a, b) => a.step - b.step)[0] ?? null;
-          const stepsToNext = upcoming
-            ? upcoming.step - inst.stamps_count
-            : inst.stamps_count < inst.template.total_steps
-            ? inst.template.total_steps - inst.stamps_count
-            : null;
-          setCelebration({
-            instanceId: inst.id,
-            title: inst.template.title,
-            businessName: inst.template.business.name,
-            stampsCount: inst.stamps_count,
-            totalSteps: inst.template.total_steps,
-            stepsToNext,
-            nextReward: upcoming,
-            unlockedReward: unlocked,
-            completed: inst.stamps_count >= inst.template.total_steps,
-            accentColor: inst.template.accent_color,
-          });
-          break;
+    try {
+      const { instances: next, frozenBusinessIds: nextFrozenBusinessIds } = await fetchWallet();
+      // Diff against previous state to celebrate any stamp increment for the current user
+      setInstances((prev) => {
+        const prevMap = new Map(prev.map((p) => [p.id, p.stamps_count]));
+        for (const inst of next) {
+          const before = prevMap.get(inst.id);
+          if (before !== undefined && inst.stamps_count > before) {
+            const rewards = (inst.template.rewards ?? []) as Reward[];
+            const unlocked = rewards.find((r) => r.step === inst.stamps_count) ?? null;
+            const upcoming = rewards
+              .filter((r) => r.step > inst.stamps_count)
+              .sort((a, b) => a.step - b.step)[0] ?? null;
+            const stepsToNext = upcoming
+              ? upcoming.step - inst.stamps_count
+              : inst.stamps_count < inst.template.total_steps
+              ? inst.template.total_steps - inst.stamps_count
+              : null;
+            setCelebration({
+              instanceId: inst.id,
+              title: inst.template.title,
+              businessName: inst.template.business.name,
+              stampsCount: inst.stamps_count,
+              totalSteps: inst.template.total_steps,
+              stepsToNext,
+              nextReward: upcoming,
+              unlockedReward: unlocked,
+              completed: inst.stamps_count >= inst.template.total_steps,
+              accentColor: inst.template.accent_color,
+            });
+            break;
+          }
         }
-      }
-      return next;
-    });
-    // Check which businesses are frozen (subscription lapsed)
-    const bizIds = Array.from(new Set(next.map((i) => i.template.business.id)));
-    if (bizIds.length > 0) {
-      const frozen = await fetchFrozen({ data: { ids: bizIds } });
-      setFrozenBusinessIds(new Set(frozen));
-    } else {
+        return next;
+      });
+      setFrozenBusinessIds(new Set(nextFrozenBusinessIds));
+    } catch (error) {
+      setInstances([]);
       setFrozenBusinessIds(new Set());
+      toast.error("Couldn't load your cards", { description: error instanceof Error ? error.message : "Please try again." });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  }, [fetchFrozen]);
+  }, [fetchWallet]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -127,10 +108,20 @@ function Wallet() {
 
   // Realtime: refresh when stamps come in for any card the user owns
   useEffect(() => {
-    const channel = supabase.channel("wallet-stamps")
-      .on("postgres_changes", { event: "*", schema: "public", table: "card_instances" }, () => load())
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.auth.getUser();
+      const userId = data.user?.id;
+      if (cancelled || !userId) return;
+      channel = supabase.channel(`wallet-stamps:${userId}`)
+        .on("postgres_changes", { event: "*", schema: "public", table: "card_instances", filter: `customer_id=eq.${userId}` }, () => load())
+        .subscribe();
+    })();
+    return () => {
+      cancelled = true;
+      if (channel) supabase.removeChannel(channel);
+    };
   }, [load]);
 
   // Auto-dismiss celebration
@@ -277,10 +268,29 @@ function Wallet() {
                           }
                         }}
                       >
-                        <button
-                          type="button"
+                        <div
+                          role="button"
+                          tabIndex={0}
                           onClick={(e) => {
                             e.stopPropagation();
+                            if (isExpanded) {
+                              setFlippedId(inst.id);
+                            } else {
+                              setInstances((prev) => {
+                                const idx = prev.findIndex((x) => x.id === inst.id);
+                                if (idx < prev.length - 1) {
+                                  const reordered = [...prev.slice(0, idx), ...prev.slice(idx + 1), prev[idx]];
+                                  return reordered;
+                                }
+                                return prev;
+                              });
+                              setExpandedId(inst.id);
+                            }
+                          }}
+                          onKeyDown={(event) => {
+                            if (event.key !== "Enter" && event.key !== " ") return;
+                            event.preventDefault();
+                            event.stopPropagation();
                             if (isExpanded) {
                               setFlippedId(inst.id);
                             } else {
@@ -333,7 +343,7 @@ function Wallet() {
                               </div>
                             )}
                           </div>
-                        </button>
+                        </div>
                       </motion.div>
 
                     </motion.div>
