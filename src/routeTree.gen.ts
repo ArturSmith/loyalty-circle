@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as RefundsRouteImport } from './routes/refunds'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -40,6 +41,11 @@ const TermsRoute = TermsRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RefundsRoute = RefundsRouteImport.update({
+  id: '/refunds',
+  path: '/refunds',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HelpRoute = HelpRouteImport.update({
@@ -155,6 +161,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/help': typeof HelpRoute
+  '/refunds': typeof RefundsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/business': typeof AuthenticatedBusinessRouteWithChildren
@@ -178,6 +185,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/help': typeof HelpRoute
+  '/refunds': typeof RefundsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -202,6 +210,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/help': typeof HelpRoute
+  '/refunds': typeof RefundsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/_authenticated/business': typeof AuthenticatedBusinessRouteWithChildren
@@ -227,6 +236,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/help'
+    | '/refunds'
     | '/sitemap.xml'
     | '/terms'
     | '/business'
@@ -250,6 +260,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/help'
+    | '/refunds'
     | '/sitemap.xml'
     | '/terms'
     | '/profile'
@@ -273,6 +284,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/help'
+    | '/refunds'
     | '/sitemap.xml'
     | '/terms'
     | '/_authenticated/business'
@@ -298,6 +310,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
   HelpRoute: typeof HelpRoute
+  RefundsRoute: typeof RefundsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   BBusinessIdRoute: typeof BBusinessIdRoute
@@ -319,6 +332,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/refunds': {
+      id: '/refunds'
+      path: '/refunds'
+      fullPath: '/refunds'
+      preLoaderRoute: typeof RefundsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/help': {
@@ -515,6 +535,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,
   HelpRoute: HelpRoute,
+  RefundsRoute: RefundsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   BBusinessIdRoute: BBusinessIdRoute,
