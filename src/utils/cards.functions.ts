@@ -139,7 +139,7 @@ export const getWalletCards = createServerFn({ method: "GET" })
             },
           };
         })
-        .filter((inst: any) => inst !== null);
+        .filter((inst): inst is WalletInstance => inst !== null);
 
       const businessIds = Array.from(new Set(instances.map((inst) => inst.template.business.id)));
 
