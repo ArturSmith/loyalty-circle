@@ -203,12 +203,17 @@ function Landing() {
       </main>
 
       <footer className="relative mx-auto max-w-6xl px-6 py-10 text-center text-xs text-muted-foreground">
-        <div className="mb-3 flex items-center justify-center gap-5">
+        <div className="mb-3 flex flex-wrap items-center justify-center gap-4">
+          <Link to="/pricing" className="hover:text-foreground">Pricing</Link>
+          <Link to="/terms" className="hover:text-foreground">Terms</Link>
+          <Link to="/refunds" className="hover:text-foreground">Refunds</Link>
+          <Link to="/privacy" className="hover:text-foreground">Privacy</Link>
           <Link to="/help" className="hover:text-foreground">Help</Link>
           <Link to="/contact" className="hover:text-foreground">Contact</Link>
         </div>
-        © Clubcarder
+        © Muzaev AS · Clubcarder
       </footer>
+
     </div>
   );
 }
