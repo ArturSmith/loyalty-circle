@@ -1,12 +1,13 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChevronLeft, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
+import { AppBar } from "@/components/AppBar";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({ meta: [{ title: "Profile — Clubcarder" }] }),
@@ -60,13 +61,7 @@ function Profile() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="flex items-center justify-between px-5 py-4">
-        <Link to="/wallet">
-          <Button variant="ghost" size="icon"><ChevronLeft className="h-5 w-5" /></Button>
-        </Link>
-        <h1 className="font-display text-2xl font-semibold">Profile</h1>
-        <div className="w-9" />
-      </header>
+      <AppBar variant="simple" title="Profile" backHref="/wallet" />
 
       <div className="flex-1 px-6 py-4 max-w-md mx-auto w-full">
         {loading ? (

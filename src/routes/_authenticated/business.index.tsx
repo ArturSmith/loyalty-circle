@@ -14,6 +14,7 @@ import { StampCard } from "@/components/StampCard";
 import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
 import { Carousel, CarouselApi, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import QRCode from "qrcode";
+import { AppBar } from "@/components/AppBar";
 
 type Business = { id: string; name: string; logo_url: string | null; brand_color: string | null };
 type Tpl = {
@@ -139,58 +140,56 @@ function BusinessDashboard() {
   const bizUrl = `${PUBLIC_SITE_URL}/b/${biz.id}`;
 
   return (
-    <div className="min-h-screen px-5 py-6 max-w-3xl mx-auto">
-      <header className="flex items-center justify-between">
-        <div>
-          <p className="text-xs uppercase tracking-widest text-muted-foreground">Dashboard</p>
-          <div className="flex items-center gap-2">
-            <h1 className="font-display text-3xl font-extrabold tracking-tight">{biz.name}</h1>
-            <PlanBadge />
-          </div>
-        </div>
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" aria-label="Open menu" className="rounded-full glass-panel" title="Menu"><Menu className="h-5 w-5" /></Button>
-          </SheetTrigger>
-          <SheetContent side="right" className="w-64">
-            <SheetHeader className="text-left">
-              <SheetTitle className="font-display">Menu</SheetTitle>
-            </SheetHeader>
-            <nav className="mt-8 flex flex-col gap-2">
-              <Link to="/business/edit" className="w-full">
-                <Button variant="ghost" className="w-full justify-start gap-3">
-                  <Settings className="h-4 w-4" /> Edit business info
+    <div className="min-h-screen flex flex-col">
+      <AppBar 
+        variant="branded"
+        title={biz.name}
+        subtitle="Dashboard"
+        rightAction={
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" aria-label="Open menu" className="rounded-full glass-panel" title="Menu"><Menu className="h-5 w-5" /></Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-64">
+              <SheetHeader className="text-left">
+                <SheetTitle className="font-display">Menu</SheetTitle>
+              </SheetHeader>
+              <nav className="mt-8 flex flex-col gap-2">
+                <Link to="/business/edit" className="w-full">
+                  <Button variant="ghost" className="w-full justify-start gap-3">
+                    <Settings className="h-4 w-4" /> Edit business info
+                  </Button>
+                </Link>
+                <Link to="/settings/billing" className="w-full">
+                  <Button variant="ghost" className="w-full justify-start gap-3">
+                    <CreditCard className="h-4 w-4" /> Billing & plan
+                  </Button>
+                </Link>
+                <Link to="/wallet" className="w-full">
+                  <Button variant="ghost" className="w-full justify-start gap-3">
+                    <WalletIcon className="h-4 w-4" /> My wallet
+                  </Button>
+                </Link>
+                <Link to="/help" className="w-full">
+                  <Button variant="ghost" className="w-full justify-start gap-3">
+                    <HelpCircle className="h-4 w-4" /> Help
+                  </Button>
+                </Link>
+                <Link to="/contact" className="w-full">
+                  <Button variant="ghost" className="w-full justify-start gap-3">
+                    <Mail className="h-4 w-4" /> Contact us
+                  </Button>
+                </Link>
+                <Button variant="ghost" className="w-full justify-start gap-3" onClick={signOut}>
+                  <LogOut className="h-4 w-4" /> Sign out
                 </Button>
-              </Link>
-              <Link to="/settings/billing" className="w-full">
-                <Button variant="ghost" className="w-full justify-start gap-3">
-                  <CreditCard className="h-4 w-4" /> Billing & plan
-                </Button>
-              </Link>
-              <Link to="/wallet" className="w-full">
-                <Button variant="ghost" className="w-full justify-start gap-3">
-                  <WalletIcon className="h-4 w-4" /> My wallet
-                </Button>
-              </Link>
-              <Link to="/help" className="w-full">
-                <Button variant="ghost" className="w-full justify-start gap-3">
-                  <HelpCircle className="h-4 w-4" /> Help
-                </Button>
-              </Link>
-              <Link to="/contact" className="w-full">
-                <Button variant="ghost" className="w-full justify-start gap-3">
-                  <Mail className="h-4 w-4" /> Contact us
-                </Button>
-              </Link>
-              <Button variant="ghost" className="w-full justify-start gap-3" onClick={signOut}>
-                <LogOut className="h-4 w-4" /> Sign out
-              </Button>
-            </nav>
-          </SheetContent>
-        </Sheet>
-      </header>
+              </nav>
+            </SheetContent>
+          </Sheet>
+        }
+      />
 
-      <div className="mt-6 grid grid-cols-3 gap-2">
+      <div className="flex-1 px-5 py-6 max-w-3xl mx-auto w-full">
         <Button variant="outline" onClick={() => setShowQr((v) => !v)} className="h-auto flex-col gap-1.5 py-3 rounded-2xl glass-panel">
           <QrCode className="h-5 w-5" />
           <span className="text-xs font-semibold">Business QR</span>

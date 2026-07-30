@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { QrScanner } from "@/components/QrScanner";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Check, Sparkles } from "lucide-react";
+import { Check, Sparkles } from "lucide-react";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
+import { AppBar } from "@/components/AppBar";
 
 export const Route = createFileRoute("/_authenticated/business/scan")({
   head: () => ({ meta: [{ title: "Scan customer — Clubcarder" }] }),
@@ -36,13 +37,12 @@ function ScanPage() {
 
   return (
     <div className="min-h-screen px-4 py-6 max-w-md mx-auto">
-      <header className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate({ to: "/business" })}><ArrowLeft className="h-4 w-4" /></Button>
-        <div>
-          <p className="text-xs uppercase tracking-widest text-muted-foreground">Scan to stamp</p>
-          <h1 className="font-display text-2xl font-semibold">Point at customer's QR</h1>
-        </div>
-      </header>
+      <AppBar
+        variant="simple"
+        title="Point at customer's QR"
+        subtitle="Scan to stamp"
+        backHref="/business"
+      />
 
       <div className="mt-6">
         <QrScanner onScan={onScan} paused={paused} />
