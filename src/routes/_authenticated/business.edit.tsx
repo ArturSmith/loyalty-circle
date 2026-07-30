@@ -1,11 +1,11 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { AppBar } from "@/components/AppBar";
+import { ChevronLeft } from "lucide-react";
 
 type Business = { id: string; name: string; logo_url: string | null; brand_color: string | null };
 
@@ -60,7 +60,13 @@ function EditBusiness() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <AppBar variant="simple" title="Edit business" backHref="/business" />
+      <header className="flex items-center justify-between px-5 py-4">
+        <Link to="/business">
+          <Button variant="ghost" size="icon" className="rounded-full glass-panel"><ChevronLeft className="h-5 w-5" /></Button>
+        </Link>
+        <h1 className="font-display text-2xl font-extrabold tracking-tight">Edit business</h1>
+        <div className="w-9" />
+      </header>
 
       <form onSubmit={save} className="flex-1 px-6 py-4 max-w-md mx-auto w-full">
         <div className="space-y-5">

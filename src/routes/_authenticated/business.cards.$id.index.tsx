@@ -4,9 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { StampCard } from "@/components/StampCard";
 import type { CardFace, CardShape, Reward, StampIconName } from "@/components/StampCard";
-import { Pencil, Users, Stamp as StampIco, CheckCircle2, Calendar } from "lucide-react";
+import { ArrowLeft, Pencil, Users, Stamp as StampIco, CheckCircle2, Calendar } from "lucide-react";
 import { motion } from "framer-motion";
-import { AppBar } from "@/components/AppBar";
 
 type Tpl = {
   id: string; business_id: string; title: string; subtitle: string | null; description: string | null;
@@ -102,44 +101,42 @@ function CardDetails() {
   const fmtDT = (d: string | null) => d ? new Date(d).toLocaleString(undefined, { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "—";
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <AppBar 
-        variant="simple" 
-        title="Card details"
-        backHref="/business"
-        rightAction={
-          <Link to="/business/cards/$id/edit" params={{ id: tpl.id }}>
-            <Button size="sm" className="rounded-full gap-2">
-              <Pencil className="h-4 w-4" /> Edit
-            </Button>
-          </Link>
-        }
-      />
+    <div className="min-h-screen px-5 py-6 max-w-3xl mx-auto">
+      <header className="flex items-center justify-between">
+        <Button variant="ghost" size="icon" onClick={() => navigate({ to: "/business" })} className="rounded-full glass-panel">
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <p className="text-xs uppercase tracking-widest text-muted-foreground">Card details</p>
+        <Link to="/business/cards/$id/edit" params={{ id: tpl.id }}>
+          <Button size="sm" className="rounded-full gap-2">
+            <Pencil className="h-4 w-4" /> Edit
+          </Button>
+        </Link>
+      </header>
 
-      <div className="flex-1 px-5 py-6 max-w-3xl mx-auto w-full">
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-          <StampCard
-            title={tpl.title}
-            subtitle={tpl.subtitle}
-            cornerTitle={tpl.corner_title}
-            totalSteps={tpl.total_steps}
-            stampsCount={0}
-            shape={tpl.shape}
-            gridCols={tpl.grid_cols}
-            bgColor={tpl.bg_color}
-            accentColor={tpl.accent_color}
-            textColor={tpl.text_color}
-            stampIcon={tpl.stamp_icon}
-            logoUrl={tpl.logo_url}
-            rewards={tpl.rewards ?? []}
-            businessName={biz.name}
-            face={face}
-            showFlipButton
-            onFlip={() => setFace((f) => f === "info" ? "stamps" : "info")}
-          />
-        </motion.div>
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mt-6">
+        <StampCard
+          title={tpl.title}
+          subtitle={tpl.subtitle}
+          cornerTitle={tpl.corner_title}
+          totalSteps={tpl.total_steps}
+          stampsCount={0}
+          shape={tpl.shape}
+          gridCols={tpl.grid_cols}
+          bgColor={tpl.bg_color}
+          accentColor={tpl.accent_color}
+          textColor={tpl.text_color}
+          stampIcon={tpl.stamp_icon}
+          logoUrl={tpl.logo_url}
+          rewards={tpl.rewards ?? []}
+          businessName={biz.name}
+          face={face}
+          showFlipButton
+          onFlip={() => setFace((f) => f === "info" ? "stamps" : "info")}
+        />
+      </motion.div>
 
-        <div className="mt-5 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+      <div className="mt-5 flex items-center justify-center gap-2 text-sm text-muted-foreground">
         <Calendar className="h-4 w-4" />
         <span>Created {fmt(tpl.created_at)}</span>
         <span className="mx-1">•</span>
@@ -190,7 +187,6 @@ function CardDetails() {
             </div>
           </div>
         ))}
-      </div>
       </div>
     </div>
   );

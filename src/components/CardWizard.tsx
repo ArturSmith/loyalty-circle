@@ -10,9 +10,8 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { StampCard, STAMP_ICONS } from "@/components/StampCard";
 import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
-import { ArrowRight, Check, Trash2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Trash2 } from "lucide-react";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
-import { AppBar } from "@/components/AppBar";
 
 const PRESETS = [
   { bg: "#faf7ee", accent: "#1a1a2e", text: "#1a1a2e" },
@@ -163,24 +162,27 @@ export function CardWizard({ templateId }: Props) {
   if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>;
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <AppBar 
-        variant="simple" 
-        title={stepsLabels[step]}
-        subtitle={`Step ${step + 1} / ${stepsLabels.length}${isEdit ? " · Editing" : ""}`}
-        onBackClick={() => step === 0 ? navigate({ to: "/business" }) : setStep(step - 1)}
-        rightAction={isEdit ? (
+    <div className="min-h-screen px-4 py-6 max-w-2xl mx-auto">
+      <header className="flex items-center gap-3">
+        <Button variant="ghost" size="icon" aria-label={step === 0 ? "Back to business dashboard" : "Previous step"} onClick={() => step === 0 ? navigate({ to: "/business" }) : setStep(step - 1)}>
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <div className="flex-1">
+          <p className="text-xs uppercase tracking-widest text-muted-foreground">Step {step + 1} / {stepsLabels.length}{isEdit ? " · Editing" : ""}</p>
+          <h1 className="font-display text-2xl font-semibold">{stepsLabels[step]}</h1>
+        </div>
+        {isEdit && (
           <Button variant="ghost" size="icon" aria-label="Delete card" className="text-destructive" onClick={remove} title="Delete card">
             <Trash2 className="h-4 w-4" />
           </Button>
-        ) : undefined}
-      />
+        )}
+      </header>
 
-      <div className="h-1 rounded-full bg-secondary overflow-hidden">
+      <div className="mt-4 h-1 rounded-full bg-secondary overflow-hidden">
         <motion.div className="h-full bg-ink" animate={{ width: `${((step + 1) / stepsLabels.length) * 100}%` }} />
       </div>
 
-      <div className="flex-1 px-4 py-6 max-w-2xl mx-auto w-full">
+      <div className="mt-6 rounded-2xl border-2 border-ink/10 bg-card p-4">
         <StampCard title={title || "Card title"} subtitle={subtitle} description={description}
           cornerTitle={cornerTitle}
           totalSteps={totalSteps} stampsCount={0}
