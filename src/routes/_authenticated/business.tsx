@@ -22,6 +22,7 @@ function BusinessLayout() {
   }
 
   if (!access.hasAccess) {
+    const needsSeats = access.reason === "needs-more-seats";
     return (
       <div className="min-h-screen bg-background px-4 py-10">
         <div className="mx-auto max-w-md">
@@ -34,10 +35,12 @@ function BusinessLayout() {
               <Lock className="h-5 w-5" />
             </div>
             <h1 className="mt-4 font-display text-2xl font-semibold">
-              Your free trial has ended
+              {needsSeats ? "Add a subscription for this business" : "Your free trial has ended"}
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Subscribe to keep issuing stamps, adding customers, and running your loyalty program.
+              {needsSeats
+                ? `Each business needs its own subscription. You have ${access.businessCount} business${access.businessCount === 1 ? "" : "es"} and ${access.seatCount} subscription${access.seatCount === 1 ? "" : "s"}.`
+                : "Subscribe to keep issuing stamps, adding customers, and running your loyalty program."}
             </p>
             <OrnamentDivider className="my-5 w-32 mx-auto opacity-60" />
             <div className="flex items-baseline justify-center gap-1">
@@ -49,7 +52,7 @@ function BusinessLayout() {
               className="mt-6 w-full h-12 text-base"
             >
               <Sparkles className="h-4 w-4" />
-              Subscribe now
+              {needsSeats ? "Add subscription" : "Subscribe now"}
             </Button>
             <button
               onClick={() => navigate({ to: "/wallet" })}
@@ -65,6 +68,17 @@ function BusinessLayout() {
 
   return (
     <>
+      {access.isPastDue && (
+        <div className="w-full bg-destructive/10 border-b border-destructive/30 px-4 py-2 text-center text-xs text-destructive">
+          <strong>Payment failed.</strong> Update your card to avoid losing access.{" "}
+          <button
+            onClick={() => navigate({ to: "/settings/billing" })}
+            className="font-medium underline underline-offset-2"
+          >
+            Update payment method
+          </button>
+        </div>
+      )}
       {access.reason === "trialing" && access.trialDaysLeft != null && (
         <div className="w-full bg-primary/10 border-b border-primary/20 px-4 py-2 text-center text-xs">
           <span className="text-foreground">
@@ -93,3 +107,4 @@ function BusinessLayout() {
     </>
   );
 }
+
