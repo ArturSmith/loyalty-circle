@@ -133,25 +133,25 @@ function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-10">
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-sm rounded-2xl border-2 border-ink/10 bg-card paper-grain card-shadow p-8"
-      >
-        <div className="relative flex flex-col items-center text-center">
-          <Link
-            to="/"
-            className="absolute left-0 top-0 inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
+    <div className="min-h-screen px-4 py-10">
+      <div className="mx-auto w-full max-w-sm">
+        <Button variant="ghost" className="mb-3 -ml-2 gap-2 text-muted-foreground" asChild>
+          <Link to="/">
             <ArrowLeft className="h-4 w-4" />
             Back
           </Link>
-          <Logo className="h-14 w-14 rotate-[-8deg] drop-shadow-md" />
-          <OrnamentDivider className="my-3 w-32" />
-          <h1 className="font-display text-3xl font-semibold">Welcome to ClubCarder</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Sign in to collect stamps and unlock rewards.</p>
-        </div>
+        </Button>
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full rounded-2xl border-2 border-ink/10 bg-card paper-grain card-shadow p-8"
+        >
+          <div className="flex flex-col items-center text-center">
+            <Logo className="h-14 w-14 rotate-[-8deg] drop-shadow-md" />
+            <OrnamentDivider className="my-3 w-32" />
+            <h1 className="font-display text-3xl font-semibold">Welcome to ClubCarder</h1>
+            <p className="mt-2 text-sm text-muted-foreground">Sign in to collect stamps and unlock rewards.</p>
+          </div>
 
         <div className="mt-8 space-y-3">
           {signupEmail ? (
