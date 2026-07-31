@@ -196,12 +196,7 @@ function Wallet() {
   return (
     <div className="relative min-h-screen flex flex-col overflow-hidden">
       <header className="relative flex items-center justify-between px-5 py-4">
-        <div className="min-w-0">
-          <p className="text-sm text-muted-foreground truncate">
-            Hello{profile?.displayName ? `, ${profile.displayName.split(" ")[0]}` : ""} 👋
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3 min-w-0">
           <Link to="/profile" aria-label="Open your profile">
             <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full glass-panel border border-white/60 text-xs font-bold">
               {profile?.avatarUrl ? (
@@ -211,6 +206,11 @@ function Wallet() {
               )}
             </span>
           </Link>
+          <p className="text-sm text-muted-foreground truncate">
+            Hello{profile?.displayName ? `, ${profile.displayName.split(" ")[0]}` : ""} 👋
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
           <Link to="/scan">
             <Button variant="ghost" size="icon" aria-label="Scan QR code" title="Scan QR" className="rounded-full glass-panel">
               <ScanLine className="h-5 w-5" />
