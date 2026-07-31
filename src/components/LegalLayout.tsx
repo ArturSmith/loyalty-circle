@@ -20,7 +20,7 @@ export function LegalLayout({
       <header className="mx-auto flex max-w-3xl items-center justify-between px-6 py-6">
         <Link to="/" className="flex items-center gap-2">
           <Logo className="h-8 w-8" />
-          <span className="font-display text-lg font-semibold">Clubcarder</span>
+          <span className="font-display text-lg font-semibold">ClubCarder</span>
         </Link>
         <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Home

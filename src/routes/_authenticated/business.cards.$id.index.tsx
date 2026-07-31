@@ -6,6 +6,7 @@ import { StampCard } from "@/components/StampCard";
 import type { CardFace, CardShape, Reward, StampIconName } from "@/components/StampCard";
 import { ArrowLeft, Pencil, Users, Stamp as StampIco, CheckCircle2, Calendar } from "lucide-react";
 import { motion } from "framer-motion";
+import { resolveAvatarUrls } from "@/lib/avatar";
 
 type Tpl = {
   id: string; business_id: string; title: string; subtitle: string | null; description: string | null;
@@ -26,7 +27,7 @@ type Customer = {
 };
 
 export const Route = createFileRoute("/_authenticated/business/cards/$id/")({
-  head: () => ({ meta: [{ title: "Card details — Clubcarder" }] }),
+  head: () => ({ meta: [{ title: "Card details — ClubCarder" }] }),
   component: CardDetails,
 });
 
@@ -67,12 +68,14 @@ function CardDetails() {
         if (!lastMap.has(s.card_instance_id)) lastMap.set(s.card_instance_id, s.created_at);
       }
 
+      const avatarMap = await resolveAvatarUrls((profiles ?? []).map(p => p.avatar_url));
+
       const list: Customer[] = rows.map(r => {
         const p = profMap.get(r.customer_id);
         return {
           customer_id: r.customer_id,
           display_name: p?.display_name ?? null,
-          avatar_url: p?.avatar_url ?? null,
+          avatar_url: p?.avatar_url ? (avatarMap.get(p.avatar_url) ?? null) : null,
           stamps_count: r.stamps_count,
           completed_at: r.completed_at,
           last_stamp_at: lastMap.get(r.id) ?? null,
@@ -118,6 +121,7 @@ function CardDetails() {
         <StampCard
           title={tpl.title}
           subtitle={tpl.subtitle}
+          description={tpl.description}
           cornerTitle={tpl.corner_title}
           totalSteps={tpl.total_steps}
           stampsCount={0}

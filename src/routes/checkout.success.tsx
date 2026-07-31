@@ -9,8 +9,8 @@ import { getPaddleEnvironment } from "@/lib/paddle";
 export const Route = createFileRoute("/checkout/success")({
   head: () => ({
     meta: [
-      { title: "Welcome to Pro — Clubcarder" },
-      { name: "description", content: "Your Clubcarder Business subscription is active." },
+      { title: "Welcome to Pro — ClubCarder" },
+      { name: "description", content: "Your ClubCarder Business subscription is active." },
     ],
   }),
   component: CheckoutSuccessPage,

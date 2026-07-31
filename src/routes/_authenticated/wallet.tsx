@@ -13,11 +13,13 @@ import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { getPaddleEnvironment } from "@/lib/paddle";
 import { useServerFn } from "@tanstack/react-start";
 import { getWalletCards, type WalletInstance } from "@/utils/cards.functions";
+import { useProfile } from "@/hooks/useProfile";
+import { initialsFrom } from "@/lib/avatar";
 
 type Instance = WalletInstance;
 
 export const Route = createFileRoute("/_authenticated/wallet")({
-  head: () => ({ meta: [{ title: "My Wallet — Clubcarder" }] }),
+  head: () => ({ meta: [{ title: "My Wallet — ClubCarder" }] }),
   component: Wallet,
 });
 
@@ -45,6 +47,7 @@ function Wallet() {
   const [celebration, setCelebration] = useState<Celebration | null>(null);
 
   const fetchWallet = useServerFn(getWalletCards);
+  const { profile, loading: profileLoading } = useProfile();
 
   const load = useCallback(async () => {
     try {
@@ -171,10 +174,24 @@ function Wallet() {
       <div aria-hidden className="pointer-events-none absolute -bottom-24 -right-16 h-72 w-72 rounded-full bg-[oklch(0.86_0.14_195/0.4)] blur-3xl" />
 
       <header className="relative flex items-center justify-between px-5 py-4">
-        <h1 className="font-display text-3xl font-extrabold tracking-tight">
-          My cards
-        </h1>
+        <div className="min-w-0">
+          <p className="text-sm text-muted-foreground truncate">
+            Hello{profile?.displayName ? `, ${profile.displayName.split(" ")[0]}` : ""} 👋
+          </p>
+          <h1 className="font-display text-3xl font-extrabold tracking-tight">
+            My cards
+          </h1>
+        </div>
         <div className="flex items-center gap-2">
+          <Link to="/profile" aria-label="Open your profile">
+            <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full glass-panel border border-white/60 text-xs font-bold">
+              {profile?.avatarUrl ? (
+                <img src={profile.avatarUrl} alt="Your profile picture" className="h-full w-full object-cover" />
+              ) : (
+                initialsFrom(profile?.displayName, profile?.email)
+              )}
+            </span>
+          </Link>
           <Link to="/scan">
             <Button variant="ghost" size="icon" aria-label="Scan QR code" title="Scan QR" className="rounded-full glass-panel">
               <ScanLine className="h-5 w-5" />
@@ -196,7 +213,7 @@ function Wallet() {
               </Link>
               <Link to="/business" className="w-full">
                 <Button variant="ghost" className="w-full justify-start gap-3">
-                  <Store className="h-4 w-4" /> Business dashboard
+                  <Store className="h-4 w-4" /> {profile?.hasBusiness ? "Business dashboard" : "Start a business"}
                 </Button>
               </Link>
               <Link to="/help" className="w-full">
@@ -386,6 +403,32 @@ function Wallet() {
 
         </>
       )}
+
+      {!profileLoading && !profile?.hasBusiness && (
+        <div className="relative px-5 pb-10 pt-2">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mx-auto max-w-md rounded-2xl glass-panel border border-white/60 p-5 text-center"
+          >
+            <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground">
+              <Store className="h-5 w-5" />
+            </div>
+            <h2 className="mt-3 font-display text-xl font-bold">Own a business?</h2>
+            <p className="mt-1.5 text-sm text-muted-foreground">
+              Are you the owner of a company and would like to start a loyalty program?
+              Start your business profile and create your own customized loyalty card.
+            </p>
+            <Link to="/business" className="mt-4 block">
+              <Button className="w-full h-11 gap-2">
+                <Sparkles className="h-4 w-4" /> Start my business profile
+              </Button>
+            </Link>
+          </motion.div>
+        </div>
+      )}
+
+
 
       <AnimatePresence>
         {flippedId && (() => {

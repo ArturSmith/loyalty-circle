@@ -4,10 +4,10 @@ import { LegalLayout, LegalSection, SELLER_NAME, SUPPORT_EMAIL } from "@/compone
 export const Route = createFileRoute("/privacy")({
   head: () => ({
     meta: [
-      { title: "Privacy Notice — Clubcarder" },
-      { name: "description", content: "How Muzaev AS collects, uses, shares, and protects personal data in Clubcarder digital loyalty cards." },
-      { property: "og:title", content: "Privacy Notice — Clubcarder" },
-      { property: "og:description", content: "What data Clubcarder collects, why, who it is shared with, and your rights." },
+      { title: "Privacy Notice — ClubCarder" },
+      { name: "description", content: "How Muzaev AS collects, uses, shares, and protects personal data in ClubCarder digital loyalty cards." },
+      { property: "og:title", content: "Privacy Notice — ClubCarder" },
+      { property: "og:description", content: "What data ClubCarder collects, why, who it is shared with, and your rights." },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://clubcarder.com/privacy" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -21,9 +21,9 @@ function PrivacyPage() {
   return (
     <LegalLayout title="Privacy Notice" updated="30 July 2026">
       <p>
-        This notice explains how <strong className="text-foreground">{SELLER_NAME}</strong>, the operator of Clubcarder
+        This notice explains how <strong className="text-foreground">{SELLER_NAME}</strong>, the operator of ClubCarder
         (clubcarder.com), handles personal data. {SELLER_NAME} is the data controller for the personal data described
-        here. This page is maintained by {SELLER_NAME} to answer common privacy questions about Clubcarder.
+        here. This page is maintained by {SELLER_NAME} to answer common privacy questions about ClubCarder.
       </p>
 
       <LegalSection heading="What we collect and why">

@@ -4,10 +4,10 @@ import { LegalLayout, LegalSection, SELLER_NAME, SUPPORT_EMAIL } from "@/compone
 export const Route = createFileRoute("/terms")({
   head: () => ({
     meta: [
-      { title: "Terms & Conditions — Clubcarder" },
-      { name: "description", content: "The terms and conditions for using Clubcarder digital loyalty cards, operated by Muzaev AS." },
-      { property: "og:title", content: "Terms & Conditions — Clubcarder" },
-      { property: "og:description", content: "Terms governing the use of Clubcarder by businesses and customers." },
+      { title: "Terms & Conditions — ClubCarder" },
+      { name: "description", content: "The terms and conditions for using ClubCarder digital loyalty cards, operated by Muzaev AS." },
+      { property: "og:title", content: "Terms & Conditions — ClubCarder" },
+      { property: "og:description", content: "Terms governing the use of ClubCarder by businesses and customers." },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://clubcarder.com/terms" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -21,16 +21,16 @@ function TermsPage() {
   return (
     <LegalLayout title="Terms & Conditions" updated="30 July 2026">
       <p>
-        Clubcarder is operated by <strong className="text-foreground">{SELLER_NAME}</strong> ("we", "us", "Clubcarder").
-        These Terms & Conditions govern your use of the Clubcarder website and service at clubcarder.com. By creating an
-        account or continuing to use the service, you agree to these terms. If you are using Clubcarder on behalf of a
+        ClubCarder is operated by <strong className="text-foreground">{SELLER_NAME}</strong> ("we", "us", "ClubCarder").
+        These Terms & Conditions govern your use of the ClubCarder website and service at clubcarder.com. By creating an
+        account or continuing to use the service, you agree to these terms. If you are using ClubCarder on behalf of a
         business, you confirm you have authority to bind that business; if you use it as an individual, you confirm you
         are of legal age in your country.
       </p>
 
       <LegalSection heading="1. The service">
         <p>
-          Clubcarder provides digital loyalty stamp cards. Businesses design cards and stamp them by scanning customer
+          ClubCarder provides digital loyalty stamp cards. Businesses design cards and stamp them by scanning customer
           QR codes; customers collect stamps and redeem rewards. Business features are offered on a paid subscription
           with a free trial period. Customer accounts are free.
         </p>
@@ -40,27 +40,27 @@ function TermsPage() {
         <ul>
           <li>You must provide accurate information and keep it up to date.</li>
           <li>You are responsible for keeping your credentials confidential and for all activity under your account.</li>
-          <li>Rewards, offers, and their fulfilment are the sole responsibility of the issuing business, not Clubcarder.</li>
+          <li>Rewards, offers, and their fulfilment are the sole responsibility of the issuing business, not ClubCarder.</li>
         </ul>
       </LegalSection>
 
       <LegalSection heading="3. Acceptable use">
         <p>You must not misuse the service. In particular, you must not:</p>
         <ul>
-          <li>use Clubcarder for any unlawful purpose, or for fraud, spam, or deceptive offers;</li>
+          <li>use ClubCarder for any unlawful purpose, or for fraud, spam, or deceptive offers;</li>
           <li>infringe the intellectual property or privacy rights of others, including uploading logos or artwork you have no right to use;</li>
           <li>interfere with the security or integrity of the service — no malware, probing, scraping, or circumventing technical limits;</li>
           <li>reverse engineer, resell, or redistribute the service.</li>
         </ul>
         <p>
-          If you believe content on Clubcarder infringes your rights, contact us at <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a> and
+          If you believe content on ClubCarder infringes your rights, contact us at <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a> and
           we will review and remove infringing material. Repeat infringers lose access.
         </p>
       </LegalSection>
 
       <LegalSection heading="4. Licence and intellectual property">
         <p>
-          We grant you a limited, non-exclusive, non-transferable right to use Clubcarder within your selected plan.
+          We grant you a limited, non-exclusive, non-transferable right to use ClubCarder within your selected plan.
           {" "}{SELLER_NAME} retains all ownership of the service, its software, documentation, and branding. You keep
           ownership of the content you upload, and grant us a limited licence to host and process it solely to provide
           the service.
@@ -69,7 +69,7 @@ function TermsPage() {
 
       <LegalSection heading="5. Service level">
         <p>
-          We work to keep Clubcarder available and reliable, but we do not guarantee uninterrupted or error-free
+          We work to keep ClubCarder available and reliable, but we do not guarantee uninterrupted or error-free
           operation. To the fullest extent permitted by law, all implied warranties, including merchantability and
           fitness for a particular purpose, are disclaimed.
         </p>

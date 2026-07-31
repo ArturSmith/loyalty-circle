@@ -10,7 +10,7 @@ import { ChevronLeft } from "lucide-react";
 type Business = { id: string; name: string; logo_url: string | null; brand_color: string | null };
 
 export const Route = createFileRoute("/_authenticated/business/edit")({
-  head: () => ({ meta: [{ title: "Edit business — Clubcarder" }] }),
+  head: () => ({ meta: [{ title: "Edit business — ClubCarder" }] }),
   component: EditBusiness,
 });
 

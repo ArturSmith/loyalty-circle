@@ -65,7 +65,7 @@ function createPublicSupabaseClient() {
 const publicSupabase = createPublicSupabaseClient();
 
 export const Route = createFileRoute("/b/$businessId")({
-  head: () => ({ meta: [{ title: "Claim your card — Clubcarder" }] }),
+  head: () => ({ meta: [{ title: "Claim your card — ClubCarder" }] }),
   component: BusinessPublic,
 });
 
