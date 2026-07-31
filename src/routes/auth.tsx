@@ -25,6 +25,8 @@ function AuthPage() {
   const { redirect } = useSearch({ from: "/auth" });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [dob, setDob] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [signupEmail, setSignupEmail] = useState<string | null>(null);
