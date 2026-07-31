@@ -373,10 +373,9 @@ function Wallet() {
           const isFrozen = !!inst && frozenBusinessIds.has(inst.template.business.id);
           const renew = async () => {
             if (!inst) return;
-            const { error } = await supabase
-              .from("card_instances")
-              .update({ stamps_count: 0, completed_at: null })
-              .eq("id", inst.id);
+            const { error } = await supabase.rpc("renew_card", {
+              _card_instance_id: inst.id,
+            });
             if (error) {
               toast.error("Couldn't renew card", { description: error.message });
               return;
