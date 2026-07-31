@@ -291,6 +291,11 @@ function Wallet() {
 
       <DiscoverStrip />
 
+      <section className="relative px-5 pt-6" aria-label="My cards">
+        <div className="mx-auto max-w-md">
+          <h1 className="font-display text-3xl font-extrabold tracking-tight">My cards</h1>
+        </div>
+      </section>
 
       {instances.length === 0 ? (
         <div className="relative flex-1 flex flex-col items-center justify-center px-6 text-center">
