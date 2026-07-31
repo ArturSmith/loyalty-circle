@@ -234,6 +234,29 @@ function AuthPage() {
           {mode === "signup" && (
             <form onSubmit={handleSignUp} className="space-y-3">
               <Input
+                type="text"
+                required
+                maxLength={80}
+                autoComplete="name"
+                placeholder="Full name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="h-11"
+              />
+              <div className="space-y-1">
+                <label htmlFor="dob" className="px-1 text-xs text-muted-foreground">Date of birth</label>
+                <Input
+                  id="dob"
+                  type="date"
+                  required
+                  max={new Date().toISOString().slice(0, 10)}
+                  autoComplete="bday"
+                  value={dob}
+                  onChange={(e) => setDob(e.target.value)}
+                  className="h-11"
+                />
+              </div>
+              <Input
                 type="email"
                 required
                 placeholder="you@example.com"
