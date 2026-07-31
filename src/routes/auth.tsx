@@ -335,7 +335,8 @@ function AuthPage() {
         <p className="mt-4 text-center text-xs text-muted-foreground">
           By continuing you agree to fair use of our stamp cards.
         </p>
-      </motion.div>
+        </motion.div>
+      </div>
     </div>
   );
 }
