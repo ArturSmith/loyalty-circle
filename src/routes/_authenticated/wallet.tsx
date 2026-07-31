@@ -195,17 +195,11 @@ function Wallet() {
 
   return (
     <div className="relative min-h-screen flex flex-col overflow-hidden">
-      <div aria-hidden className="pointer-events-none absolute -top-20 -left-16 h-64 w-64 rounded-full bg-[oklch(0.82_0.16_300/0.4)] blur-3xl" />
-      <div aria-hidden className="pointer-events-none absolute -bottom-24 -right-16 h-72 w-72 rounded-full bg-[oklch(0.86_0.14_195/0.4)] blur-3xl" />
-
       <header className="relative flex items-center justify-between px-5 py-4">
         <div className="min-w-0">
           <p className="text-sm text-muted-foreground truncate">
             Hello{profile?.displayName ? `, ${profile.displayName.split(" ")[0]}` : ""} 👋
           </p>
-          <h1 className="font-display text-3xl font-extrabold tracking-tight">
-            My cards
-          </h1>
         </div>
         <div className="flex items-center gap-2">
           <Link to="/profile" aria-label="Open your profile">
