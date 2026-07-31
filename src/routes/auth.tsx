@@ -90,12 +90,24 @@ function AuthPage() {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) return;
+    const name = fullName.trim();
+    if (name.length < 2 || name.length > 80) { toast.error("Please enter your name (2–80 characters)"); return; }
+    if (!dob) { toast.error("Please enter your date of birth"); return; }
+    const dobDate = new Date(dob + "T00:00:00");
+    if (Number.isNaN(dobDate.getTime())) { toast.error("Invalid date of birth"); return; }
+    const now = new Date();
+    const age = (now.getTime() - dobDate.getTime()) / (365.25 * 24 * 3600 * 1000);
+    if (age < 13) { toast.error("You must be at least 13 years old"); return; }
+    if (age > 120) { toast.error("Please enter a valid date of birth"); return; }
     if (password.length < 6) { toast.error("Password must be at least 6 characters"); return; }
     setSending(true);
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: window.location.origin + (explicitRedirect ?? "/") },
+      options: {
+        emailRedirectTo: window.location.origin + (explicitRedirect ?? "/"),
+        data: { full_name: name, date_of_birth: dob },
+      },
     });
     setSending(false);
     if (error) { toast.error(error.message); return; }
