@@ -68,7 +68,7 @@ export function DiscoverStrip() {
     <section className="relative px-5 pt-2 pb-3" aria-label="Discover nearby loyalty cards">
       <Link to="/discover" className="mx-auto flex max-w-md items-center justify-between gap-2">
         <h2 className="flex items-center gap-2 font-display text-lg font-bold">
-          <Compass className="h-4 w-4" /> {coords ? "Nearby cards" : "Discover cards"}
+          <Compass className="h-4 w-4" /> {coords ? "Nearby cards" : "Discover loyalty programs"}
         </h2>
         <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-muted-foreground">
           See all <ChevronRight className="h-3.5 w-3.5" />
