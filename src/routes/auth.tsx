@@ -115,7 +115,7 @@ function AuthPage() {
     if (error) { toast.error(error.message); return; }
     if (data.session) { goNext(); return; }
     setSignupEmail(email);
-    setPassword("");
+    setPassword(""); setConfirmPassword("");
   };
 
   const handleResetPassword = async (e: React.FormEvent) => {
@@ -216,7 +216,7 @@ function AuthPage() {
                   variant="ghost"
                   size="sm"
                   className="text-xs"
-                  onClick={() => { setMode("reset"); setPassword(""); }}
+                  onClick={() => { setMode("reset"); setPassword(""); setConfirmPassword(""); }}
                 >
                   Forgot password?
                 </Button>
@@ -225,7 +225,7 @@ function AuthPage() {
                   variant="ghost"
                   size="sm"
                   className="text-xs"
-                  onClick={() => { setMode("signup"); setPassword(""); }}
+                  onClick={() => { setMode("signup"); setPassword(""); setConfirmPassword(""); }}
                 >
                   Create account
                 </Button>
@@ -296,7 +296,7 @@ function AuthPage() {
                 variant="ghost"
                 size="sm"
                 className="w-full text-xs"
-                onClick={() => { setMode("password"); setPassword(""); }}
+                onClick={() => { setMode("password"); setPassword(""); setConfirmPassword(""); }}
               >
                 Already have an account? Sign in
               </Button>
@@ -321,7 +321,7 @@ function AuthPage() {
                 variant="ghost"
                 size="sm"
                 className="w-full text-xs"
-                onClick={() => { setMode("password"); setEmail(""); setPassword(""); }}
+                onClick={() => { setMode("password"); setEmail(""); setPassword(""); setConfirmPassword(""); }}
               >
               Back to sign in
             </Button>
