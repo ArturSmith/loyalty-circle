@@ -319,7 +319,7 @@ function Wallet() {
       ) : (
         <>
         <div
-          className="relative flex-1 overflow-y-auto px-4 pb-6"
+          className="relative mt-4 flex-1 overflow-y-auto px-4 pb-6"
           onClick={() => setExpandedId(null)}
         >
           {(() => {
