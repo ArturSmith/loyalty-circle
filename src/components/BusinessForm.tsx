@@ -1,7 +1,16 @@
+import { useRef, useState } from "react";
+import { ImagePlus, Loader2, X } from "lucide-react";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+
+const LOGO_BUCKET = "business-logos";
+const TEN_YEARS = 60 * 60 * 24 * 365 * 10;
+
 
 export type BusinessDetails = {
   name: string;
@@ -114,6 +123,35 @@ export function BusinessForm({ value, onChange }: Props) {
   const set = <K extends keyof BusinessDetails>(key: K, v: BusinessDetails[K]) =>
     onChange({ ...value, [key]: v });
 
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const onPickLogo = async (file: File) => {
+    if (!file.type.startsWith("image/")) { toast.error("Please choose an image file"); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error("Image must be under 5 MB"); return; }
+    setUploading(true);
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      const uid = auth.user?.id;
+      if (!uid) { toast.error("Please sign in again"); return; }
+      const ext = (file.name.split(".").pop() || "png").toLowerCase();
+      const path = `${uid}/logo-${Date.now()}.${ext}`;
+      const { error } = await supabase.storage
+        .from(LOGO_BUCKET)
+        .upload(path, file, { upsert: true, contentType: file.type });
+      if (error) { toast.error(error.message); return; }
+      const { data: signed, error: signErr } = await supabase.storage
+        .from(LOGO_BUCKET)
+        .createSignedUrl(path, TEN_YEARS);
+      if (signErr || !signed?.signedUrl) { toast.error(signErr?.message ?? "Could not read the uploaded logo"); return; }
+      set("logo_url", signed.signedUrl);
+      toast.success("Logo uploaded");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+
   return (
     <div className="space-y-7">
       <section className="space-y-4">
@@ -144,16 +182,41 @@ export function BusinessForm({ value, onChange }: Props) {
           </Select>
         </div>
         <div>
-          <Label htmlFor="biz-logo">Logo URL</Label>
-          <Input
-            id="biz-logo"
-            maxLength={500}
-            value={value.logo_url}
-            onChange={(e) => set("logo_url", e.target.value)}
-            placeholder="https://…"
-            className="mt-1.5"
-          />
+          <Label>Logo</Label>
+          <div className="mt-1.5 flex items-center gap-3">
+            <div className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-border bg-muted/40 flex items-center justify-center">
+              {value.logo_url ? (
+                <img src={value.logo_url} alt="Business logo" className="h-full w-full object-cover" />
+              ) : (
+                <ImagePlus className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  e.target.value = "";
+                  if (f) void onPickLogo(f);
+                }}
+              />
+              <Button type="button" variant="outline" size="sm" disabled={uploading} onClick={() => fileRef.current?.click()}>
+                {uploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ImagePlus className="mr-2 h-4 w-4" />}
+                {value.logo_url ? "Replace logo" : "Upload logo"}
+              </Button>
+              {value.logo_url && (
+                <Button type="button" variant="ghost" size="sm" onClick={() => set("logo_url", "")}>
+                  <X className="mr-2 h-4 w-4" /> Remove
+                </Button>
+              )}
+            </div>
+          </div>
+          <p className="mt-1.5 text-xs text-muted-foreground">PNG, JPG or SVG, up to 5 MB.</p>
         </div>
+
         <div>
           <Label htmlFor="biz-color">Brand color</Label>
           <div className="mt-1.5 flex gap-2">
