@@ -38,6 +38,9 @@ type Celebration = {
   accentColor: string;
 };
 
+const BUSINESS_CTA_KEY = "cc_business_cta_hidden_until";
+const BUSINESS_CTA_SNOOZE_MS = 7 * 24 * 60 * 60 * 1000;
+
 function Wallet() {
   const navigate = useNavigate();
   const [instances, setInstances] = useState<Instance[]>([]);
@@ -47,9 +50,28 @@ function Wallet() {
   const [flippedId, setFlippedId] = useState<string | null>(null);
   const [faceFlipped, setFaceFlipped] = useState<Set<string>>(new Set());
   const [celebration, setCelebration] = useState<Celebration | null>(null);
+  const [businessCtaHidden, setBusinessCtaHidden] = useState(true);
 
   const fetchWallet = useServerFn(getWalletCards);
   const { profile, loading: profileLoading } = useProfile();
+
+  useEffect(() => {
+    try {
+      const until = Number(window.localStorage.getItem(BUSINESS_CTA_KEY) ?? 0);
+      setBusinessCtaHidden(Number.isFinite(until) && until > Date.now());
+    } catch {
+      setBusinessCtaHidden(false);
+    }
+  }, []);
+
+  const dismissBusinessCta = useCallback(() => {
+    setBusinessCtaHidden(true);
+    try {
+      window.localStorage.setItem(BUSINESS_CTA_KEY, String(Date.now() + BUSINESS_CTA_SNOOZE_MS));
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   const load = useCallback(async () => {
     try {
@@ -237,18 +259,26 @@ function Wallet() {
         </div>
       </header>
 
-      {!profileLoading && !profile?.hasBusiness && (
+      {!profileLoading && !profile?.hasBusiness && !businessCtaHidden && (
         <div className="relative px-5 pt-2 pb-4">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mx-auto max-w-md rounded-2xl glass-panel border border-white/60 p-4 text-left"
+            className="relative mx-auto max-w-md rounded-2xl glass-panel border border-white/60 p-4 text-left"
           >
+            <button
+              type="button"
+              onClick={dismissBusinessCta}
+              aria-label="Hide this suggestion for a week"
+              className="absolute right-2 top-2 rounded-full p-1.5 text-muted-foreground hover:bg-white/60 hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
             <div className="flex items-start gap-4">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
                 <Store className="h-5 w-5" />
               </div>
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 pr-6">
                 <h2 className="font-display text-lg font-bold">Own a business?</h2>
                 <p className="mt-0.5 text-sm text-muted-foreground leading-snug">
                   Start your business profile and create your own customized loyalty card.
@@ -263,6 +293,7 @@ function Wallet() {
           </motion.div>
         </div>
       )}
+
 
       {instances.length === 0 ? (
         <div className="relative flex-1 flex flex-col items-center justify-center px-6 text-center">
