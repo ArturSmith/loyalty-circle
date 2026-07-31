@@ -133,209 +133,28 @@ function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-10">
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-sm rounded-2xl border-2 border-ink/10 bg-card paper-grain card-shadow p-8"
-      >
-        <div className="relative flex flex-col items-center text-center">
-          <Link
-            to="/"
-            className="absolute left-0 top-0 inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
+    <div className="min-h-screen px-4 py-10">
+      <div className="mx-auto w-full max-w-sm">
+        <Button variant="ghost" className="mb-3 -ml-2 gap-2 text-muted-foreground" asChild>
+          <Link to="/">
             <ArrowLeft className="h-4 w-4" />
             Back
           </Link>
-          <Logo className="h-14 w-14 rotate-[-8deg] drop-shadow-md" />
-          <OrnamentDivider className="my-3 w-32" />
-          <h1 className="font-display text-3xl font-semibold">Welcome to ClubCarder</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Sign in to collect stamps and unlock rewards.</p>
-        </div>
-
-        <div className="mt-8 space-y-3">
-          {signupEmail ? (
-            <div className="rounded-xl border border-ink/10 bg-background/60 p-6 text-center space-y-4">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-mint/30 text-accent-foreground">
-                <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25H4.5a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 21.75 4.5H4.5A2.25 2.25 0 0 0 2.25 6.75m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
-                </svg>
-              </div>
-              <div>
-                <h2 className="font-display text-lg font-semibold">Confirm your email</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  We sent a confirmation link to <span className="font-medium text-foreground">{signupEmail}</span>. Tap the link in the email to finish signing up.
-                </p>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={() => { setSignupEmail(null); setMode("password"); setEmail(""); }}
-              >
-                Back to sign in
-              </Button>
-            </div>
-          ) : (
-            <>
-              <Button onClick={handleGoogle} className="w-full h-11" variant="outline">
-                <GoogleIcon /> Continue with Google
-              </Button>
-              <Button onClick={handleApple} className="w-full h-11" variant="outline">
-                <AppleIcon /> Continue with Apple
-              </Button>
-
-              <div className="flex items-center gap-3 py-2 text-xs text-muted-foreground">
-                <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
-              </div>
-
-              {mode === "password" && (
-            <form onSubmit={handlePassword} className="space-y-3">
-              <Input
-                type="email"
-                required
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-11"
-              />
-              <Input
-                type="password"
-                required
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="h-11"
-              />
-              <Button type="submit" disabled={sending} className="w-full h-11">
-                {sending ? "Signing in…" : "Sign in"}
-              </Button>
-              <div className="flex items-center justify-between gap-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="text-xs"
-                  onClick={() => { setMode("reset"); setPassword(""); setConfirmPassword(""); }}
-                >
-                  Forgot password?
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="text-xs"
-                  onClick={() => { setMode("signup"); setPassword(""); setConfirmPassword(""); }}
-                >
-                  Create account
-                </Button>
-              </div>
-            </form>
-          )}
-
-          {mode === "signup" && (
-            <form onSubmit={handleSignUp} className="space-y-3">
-              <Input
-                type="text"
-                required
-                maxLength={80}
-                autoComplete="name"
-                placeholder="Full name"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                className="h-11"
-              />
-              <div className="space-y-1">
-                <label htmlFor="dob" className="px-1 text-xs text-muted-foreground">Date of birth</label>
-                <Input
-                  id="dob"
-                  type="date"
-                  required
-                  max={new Date().toISOString().slice(0, 10)}
-                  autoComplete="bday"
-                  value={dob}
-                  onChange={(e) => setDob(e.target.value)}
-                  className="h-11"
-                />
-              </div>
-              <Input
-                type="email"
-                required
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-11"
-              />
-              <Input
-                type="password"
-                required
-                minLength={6}
-                placeholder="Password (min. 6 characters)"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="h-11"
-              />
-              <Input
-                type="password"
-                required
-                minLength={6}
-                placeholder="Confirm password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="h-11"
-                aria-invalid={confirmPassword.length > 0 && confirmPassword !== password}
-              />
-              {confirmPassword.length > 0 && confirmPassword !== password && (
-                <p className="-mt-2 text-xs text-destructive">Passwords don't match</p>
-              )}
-              <Button type="submit" disabled={sending} className="w-full h-11">
-                {sending ? "Creating account…" : "Sign up"}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="w-full text-xs"
-                onClick={() => { setMode("password"); setPassword(""); setConfirmPassword(""); }}
-              >
-                Already have an account? Sign in
-              </Button>
-            </form>
-          )}
-
-          {mode === "reset" && (
-            <form onSubmit={handleResetPassword} className="space-y-3">
-              <Input
-                type="email"
-                required
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-11"
-              />
-              <Button type="submit" disabled={sending} className="w-full h-11">
-                {sending ? "Sending reset link…" : "Send password reset link"}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="w-full text-xs"
-                onClick={() => { setMode("password"); setEmail(""); setPassword(""); setConfirmPassword(""); }}
-              >
-              Back to sign in
-            </Button>
-          </form>
-          )}
-        </>
-      )}
-    </div>
-
-    <OrnamentDivider className="mt-8 w-full opacity-60" />
+        </Button>
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full rounded-2xl border-2 border-ink/10 bg-card paper-grain card-shadow p-8"
+        >
+          <div className="flex flex-col items-center text-center">
+            <Logo className="h-14 w-14 rotate-[-8deg] drop-shadow-md" />
+...
+        <OrnamentDivider className="mt-8 w-full opacity-60" />
         <p className="mt-4 text-center text-xs text-muted-foreground">
           By continuing you agree to fair use of our stamp cards.
         </p>
       </motion.div>
+      </div>
     </div>
   );
 }
