@@ -235,6 +235,33 @@ function Wallet() {
         </div>
       </header>
 
+      {!profileLoading && !profile?.hasBusiness && (
+        <div className="relative px-5 pt-2 pb-4">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mx-auto max-w-md rounded-2xl glass-panel border border-white/60 p-4 text-left"
+          >
+            <div className="flex items-start gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                <Store className="h-5 w-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h2 className="font-display text-lg font-bold">Own a business?</h2>
+                <p className="mt-0.5 text-sm text-muted-foreground leading-snug">
+                  Start your business profile and create your own customized loyalty card.
+                </p>
+                <Link to="/business" className="mt-3 block">
+                  <Button size="sm" className="gap-2">
+                    <Sparkles className="h-4 w-4" /> Start my business profile
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
       {instances.length === 0 ? (
         <div className="relative flex-1 flex flex-col items-center justify-center px-6 text-center">
           <motion.div
@@ -257,7 +284,7 @@ function Wallet() {
       ) : (
         <>
         <div
-          className="relative flex-1 overflow-y-auto px-4 pb-10"
+          className="relative flex-1 overflow-y-auto px-4 pb-6"
           onClick={() => setExpandedId(null)}
         >
           {(() => {
@@ -402,30 +429,6 @@ function Wallet() {
         </div>
 
         </>
-      )}
-
-      {!profileLoading && !profile?.hasBusiness && (
-        <div className="relative px-5 pb-10 pt-2">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mx-auto max-w-md rounded-2xl glass-panel border border-white/60 p-5 text-center"
-          >
-            <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground">
-              <Store className="h-5 w-5" />
-            </div>
-            <h2 className="mt-3 font-display text-xl font-bold">Own a business?</h2>
-            <p className="mt-1.5 text-sm text-muted-foreground">
-              Are you the owner of a company and would like to start a loyalty program?
-              Start your business profile and create your own customized loyalty card.
-            </p>
-            <Link to="/business" className="mt-4 block">
-              <Button className="w-full h-11 gap-2">
-                <Sparkles className="h-4 w-4" /> Start my business profile
-              </Button>
-            </Link>
-          </motion.div>
-        </div>
       )}
 
 
