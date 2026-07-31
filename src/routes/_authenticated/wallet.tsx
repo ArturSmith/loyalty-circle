@@ -15,6 +15,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { getWalletCards, type WalletInstance } from "@/utils/cards.functions";
 import { useProfile } from "@/hooks/useProfile";
 import { initialsFrom } from "@/lib/avatar";
+import { BusinessInfoPanel } from "@/components/BusinessInfoPanel";
+
 
 type Instance = WalletInstance;
 
@@ -530,6 +532,8 @@ function Wallet() {
                 <QrDisplay value={`stempel:card:${flippedId}`} size={260} />
               </div>
               <OrnamentDivider className="w-40 mx-auto mt-6 opacity-70" />
+              {inst && <BusinessInfoPanel business={inst.template.business} />}
+
               {isCompleted && (
                 <Button
                   onClick={renew}

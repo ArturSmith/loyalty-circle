@@ -14,6 +14,14 @@ import { StampCard } from "@/components/StampCard";
 import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
 import { Carousel, CarouselApi, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import QRCode from "qrcode";
+import {
+  BusinessForm,
+  businessDetailsToPayload,
+  emptyBusinessDetails,
+  isBusinessDetailsValid,
+  type BusinessDetails,
+} from "@/components/BusinessForm";
+
 
 type Business = { id: string; name: string; logo_url: string | null; brand_color: string | null };
 type Tpl = {
@@ -41,9 +49,9 @@ function BusinessDashboard() {
   const [current, setCurrent] = useState(0);
   const [flipped, setFlipped] = useState<Set<string>>(new Set());
   // create biz form
-  const [name, setName] = useState("");
-  const [logoUrl, setLogoUrl] = useState("");
+  const [details, setDetails] = useState<BusinessDetails>(emptyBusinessDetails);
   const [creating, setCreating] = useState(false);
+
 
 
   useEffect(() => {
@@ -74,17 +82,22 @@ function BusinessDashboard() {
 
   const createBiz = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isBusinessDetailsValid(details)) {
+      toast.error("Please fill in name, category and full address");
+      return;
+    }
     setCreating(true);
     const { data: u } = await supabase.auth.getUser();
-    if (!u.user) return;
+    if (!u.user) { setCreating(false); return; }
     const { data, error } = await supabase.from("businesses").insert({
-      owner_id: u.user.id, name, logo_url: logoUrl || null,
+      owner_id: u.user.id, ...businessDetailsToPayload(details),
     }).select().maybeSingle();
     setCreating(false);
     if (error) { toast.error(error.message); return; }
     setBiz(data as Business);
     toast.success("Business created");
   };
+
 
   const signOut = async () => {
     await supabase.auth.signOut();
@@ -115,23 +128,25 @@ function BusinessDashboard() {
 
   if (!biz) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 py-10">
+      <div className="min-h-screen px-4 py-10">
         <motion.form initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} onSubmit={createBiz}
-          className="w-full max-w-sm rounded-2xl border-2 border-ink/10 bg-card paper-grain card-shadow p-8">
+          className="mx-auto w-full max-w-md rounded-2xl border-2 border-ink/10 bg-card paper-grain card-shadow p-7">
           <div className="text-center">
             <OrnamentDivider className="w-32 mx-auto opacity-70" />
             <h1 className="font-display text-2xl mt-3">Create your business</h1>
-            <p className="text-sm text-muted-foreground mt-1">Just a name and (optional) logo URL to start.</p>
+            <p className="text-sm text-muted-foreground mt-1">Tell customers who you are and where to find you.</p>
           </div>
-          <div className="mt-6 space-y-3">
-            <Input required placeholder="Business name" value={name} onChange={(e) => setName(e.target.value)} />
-            <Input placeholder="Logo URL (optional)" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} />
-            <Button type="submit" className="w-full h-11" disabled={creating || !name}>{creating ? "Creating…" : "Create business"}</Button>
+          <div className="mt-7">
+            <BusinessForm value={details} onChange={setDetails} />
           </div>
+          <Button type="submit" className="mt-8 w-full h-11" disabled={creating}>
+            {creating ? "Creating…" : "Create business"}
+          </Button>
         </motion.form>
       </div>
     );
   }
+
 
   // Always point QR codes at the published site so scanners never hit the
   // Lovable editor preview (which requires a Lovable login).
