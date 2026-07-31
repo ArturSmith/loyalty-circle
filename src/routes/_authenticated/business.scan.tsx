@@ -128,7 +128,29 @@ function ScanPage() {
             </motion.div>
           </motion.div>
         )}
+
+        {rejection && !result && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-ink/85 backdrop-blur-md flex items-center justify-center p-6">
+            <motion.div initial={{ scale: 0.7, y: 30 }} animate={{ scale: 1, y: 0 }}
+              transition={{ type: "spring", damping: 18, stiffness: 220 }}
+              className="w-full max-w-sm rounded-3xl bg-paper paper-grain card-shadow p-8 text-center">
+              <motion.div initial={{ scale: 0, rotate: 20 }} animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: "spring", damping: 12, stiffness: 200 }}
+                className="mx-auto h-20 w-20 rounded-full bg-destructive/15 text-destructive flex items-center justify-center">
+                <XCircle className="h-9 w-9" />
+              </motion.div>
+              <h2 className="font-display text-3xl mt-4">{rejection.title}</h2>
+              <p className="mt-2 text-sm text-muted-foreground">{rejection.message}</p>
+              <Button className="mt-6 w-full h-11" onClick={reset}>Scan another card</Button>
+              <Button variant="ghost" className="mt-2 w-full h-10" onClick={() => navigate({ to: "/business" })}>
+                Back to dashboard
+              </Button>
+            </motion.div>
+          </motion.div>
+        )}
       </AnimatePresence>
+
     </div>
   );
 }
