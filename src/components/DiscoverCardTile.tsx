@@ -2,13 +2,21 @@ import { Link } from "@tanstack/react-router";
 import { MapPin, Store } from "lucide-react";
 import { formatDistance, type DiscoverCard } from "@/lib/discover";
 
-export function DiscoverCardTile({ card, compact = false }: { card: DiscoverCard; compact?: boolean }) {
+export function DiscoverCardTile({
+  card,
+  compact = false,
+  className = "",
+}: {
+  card: DiscoverCard;
+  compact?: boolean;
+  className?: string;
+}) {
   const distance = formatDistance(card.distance_km);
   return (
     <Link
       to="/b/$businessId"
       params={{ businessId: card.business_id }}
-      className="group block shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-2xl"
+      className={`group block shrink-0 rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${className}`}
       style={{ width: compact ? 190 : 220 }}
       aria-label={`${card.title} by ${card.business_name}`}
     >

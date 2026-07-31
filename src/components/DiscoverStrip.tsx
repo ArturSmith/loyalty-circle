@@ -65,8 +65,8 @@ export function DiscoverStrip() {
   if (!loading && cards.length === 0) return null;
 
   return (
-    <section className="relative px-5 pt-2 pb-4" aria-label="Discover nearby loyalty cards">
-      <Link to="/discover" className="mx-auto flex max-w-md items-center justify-between gap-2">
+    <section className="relative pt-2 pb-4" aria-label="Discover nearby loyalty cards">
+      <Link to="/discover" className="mx-auto flex max-w-md items-center justify-between gap-2 px-5">
         <h2 className="flex items-center gap-2 font-display text-lg font-bold">
           <Compass className="h-4 w-4" /> {coords ? "Nearby loyalty programs" : "Discover loyalty programs"}
         </h2>
@@ -81,9 +81,14 @@ export function DiscoverStrip() {
       >
         {loading
           ? Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-[116px] w-[190px] shrink-0 animate-pulse rounded-2xl bg-white/50" />
+              <div
+                key={i}
+                className="h-[116px] w-[190px] shrink-0 animate-pulse rounded-2xl bg-white/50 first:ml-5 last:mr-5"
+              />
             ))
-          : cards.map((card) => <DiscoverCardTile key={card.template_id} card={card} compact />)}
+          : cards.map((card) => (
+              <DiscoverCardTile key={card.template_id} card={card} compact className="first:ml-5 last:mr-5" />
+            ))}
       </div>
     </section>
   );

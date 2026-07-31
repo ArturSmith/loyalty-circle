@@ -118,9 +118,9 @@ function Discover() {
           {groups.map((group) => (
             <section key={group.category} aria-label={group.category}>
               <h2 className="px-5 font-display text-lg font-bold">{group.category}</h2>
-              <div className="mt-2 flex gap-3 overflow-x-auto px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <div className="mt-2 flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {group.cards.map((card) => (
-                  <DiscoverCardTile key={card.template_id} card={card} />
+                  <DiscoverCardTile key={card.template_id} card={card} className="first:ml-5 last:mr-5" />
                 ))}
               </div>
             </section>
