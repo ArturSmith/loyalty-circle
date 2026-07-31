@@ -294,6 +294,8 @@ function Wallet() {
         </div>
       )}
 
+      <DiscoverStrip />
+
 
       {instances.length === 0 ? (
         <div className="relative flex-1 flex flex-col items-center justify-center px-6 text-center">
