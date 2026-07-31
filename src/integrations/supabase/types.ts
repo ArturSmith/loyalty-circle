@@ -16,34 +16,73 @@ export type Database = {
     Tables: {
       businesses: {
         Row: {
+          address_line1: string | null
+          address_line2: string | null
           brand_color: string | null
+          category: string | null
+          city: string | null
+          country: string | null
           created_at: string
+          description: string | null
           id: string
+          latitude: number | null
           logo_url: string | null
+          longitude: number | null
           name: string
           owner_id: string
+          phone: string | null
+          postal_code: string | null
+          region: string | null
           slug: string | null
           updated_at: string
+          website: string | null
+          welcome_message: string | null
         }
         Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
           brand_color?: string | null
+          category?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
+          description?: string | null
           id?: string
+          latitude?: number | null
           logo_url?: string | null
+          longitude?: number | null
           name: string
           owner_id: string
+          phone?: string | null
+          postal_code?: string | null
+          region?: string | null
           slug?: string | null
           updated_at?: string
+          website?: string | null
+          welcome_message?: string | null
         }
         Update: {
+          address_line1?: string | null
+          address_line2?: string | null
           brand_color?: string | null
+          category?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
+          description?: string | null
           id?: string
+          latitude?: number | null
           logo_url?: string | null
+          longitude?: number | null
           name?: string
           owner_id?: string
+          phone?: string | null
+          postal_code?: string | null
+          region?: string | null
           slug?: string | null
           updated_at?: string
+          website?: string | null
+          welcome_message?: string | null
         }
         Relationships: []
       }
@@ -307,12 +346,25 @@ export type Database = {
       get_business_public: {
         Args: { _id: string }
         Returns: {
+          address_line1: string
+          address_line2: string
           brand_color: string
+          category: string
+          city: string
+          country: string
           created_at: string
+          description: string
           id: string
+          latitude: number
           logo_url: string
+          longitude: number
           name: string
+          phone: string
+          postal_code: string
+          region: string
           slug: string
+          website: string
+          welcome_message: string
         }[]
       }
       get_frozen_business_ids:
