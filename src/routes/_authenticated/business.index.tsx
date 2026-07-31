@@ -129,20 +129,25 @@ function BusinessDashboard() {
   if (!biz) {
     return (
       <div className="min-h-screen px-4 py-10">
-        <motion.form initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} onSubmit={createBiz}
-          className="mx-auto w-full max-w-md rounded-2xl border-2 border-ink/10 bg-card paper-grain card-shadow p-7">
-          <div className="text-center">
-            <OrnamentDivider className="w-32 mx-auto opacity-70" />
-            <h1 className="font-display text-2xl mt-3">Create your business</h1>
-            <p className="text-sm text-muted-foreground mt-1">Tell customers who you are and where to find you.</p>
-          </div>
-          <div className="mt-7">
-            <BusinessForm value={details} onChange={setDetails} />
-          </div>
-          <Button type="submit" className="mt-8 w-full h-11" disabled={creating}>
-            {creating ? "Creating…" : "Create business"}
+        <div className="mx-auto w-full max-w-md">
+          <Button variant="ghost" className="mb-3 -ml-2 gap-2 text-muted-foreground" onClick={() => navigate({ to: "/wallet" })}>
+            <ArrowLeft className="h-4 w-4" /> Back
           </Button>
-        </motion.form>
+          <motion.form initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} onSubmit={createBiz}
+            className="rounded-2xl border-2 border-ink/10 bg-card paper-grain card-shadow p-7">
+            <div className="text-center">
+              <OrnamentDivider className="w-32 mx-auto opacity-70" />
+              <h1 className="font-display text-2xl mt-3">Create your business</h1>
+              <p className="text-sm text-muted-foreground mt-1">Tell customers who you are and where to find you.</p>
+            </div>
+            <div className="mt-7">
+              <BusinessForm value={details} onChange={setDetails} />
+            </div>
+            <Button type="submit" className="mt-8 w-full h-11" disabled={creating}>
+              {creating ? "Creating…" : "Create business"}
+            </Button>
+          </motion.form>
+        </div>
       </div>
     );
   }
