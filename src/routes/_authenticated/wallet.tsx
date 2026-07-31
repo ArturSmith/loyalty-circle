@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { StampCard } from "@/components/StampCard";
 import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
@@ -48,6 +48,7 @@ function Wallet() {
   const [frozenBusinessIds, setFrozenBusinessIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [frontId, setFrontId] = useState<string | null>(null);
   const [flippedId, setFlippedId] = useState<string | null>(null);
   const [faceFlipped, setFaceFlipped] = useState<Set<string>>(new Set());
   const [celebration, setCelebration] = useState<Celebration | null>(null);
@@ -55,6 +56,13 @@ function Wallet() {
 
   const fetchWallet = useServerFn(getWalletCards);
   const { profile, loading: profileLoading } = useProfile();
+
+  const displayInstances = useMemo(() => {
+    if (!frontId) return instances;
+    const idx = instances.findIndex((i) => i.id === frontId);
+    if (idx === -1) return instances;
+    return [...instances.slice(0, idx), ...instances.slice(idx + 1), instances[idx]];
+  }, [instances, frontId]);
 
   useEffect(() => {
     try {
@@ -331,15 +339,15 @@ function Wallet() {
             const PEEK = 56;
             const TIGHT = 34;
             const GAP = 14;
-            const expandedIndex = expandedId ? instances.findIndex((x) => x.id === expandedId) : -1;
+            const expandedIndex = expandedId ? displayInstances.findIndex((x) => x.id === expandedId) : -1;
             const totalHeight =
               expandedIndex >= 0
-                ? expandedIndex * TIGHT + CARD_H + GAP + Math.max(0, instances.length - expandedIndex - 1) * (TIGHT + 8) + 40
-                : (instances.length - 1) * PEEK + CARD_H + 40;
+                ? expandedIndex * TIGHT + CARD_H + GAP + Math.max(0, displayInstances.length - expandedIndex - 1) * (TIGHT + 8) + 40
+                : (displayInstances.length - 1) * PEEK + CARD_H + 40;
 
             return (
               <div className="relative mx-auto max-w-md" style={{ height: totalHeight }}>
-                {instances.map((inst, i) => {
+                {displayInstances.map((inst, i) => {
                   const isExpanded = i === expandedIndex;
                   let top: number;
                   if (expandedIndex < 0) {
@@ -385,6 +393,7 @@ function Wallet() {
                             if (isExpanded) {
                               setFlippedId(inst.id);
                             } else {
+                              setFrontId(inst.id);
                               setExpandedId(inst.id);
                             }
                           }}
@@ -395,14 +404,7 @@ function Wallet() {
                             if (isExpanded) {
                               setFlippedId(inst.id);
                             } else {
-                              setInstances((prev) => {
-                                const idx = prev.findIndex((x) => x.id === inst.id);
-                                if (idx < prev.length - 1) {
-                                  const reordered = [...prev.slice(0, idx), ...prev.slice(idx + 1), prev[idx]];
-                                  return reordered;
-                                }
-                                return prev;
-                              });
+                              setFrontId(inst.id);
                               setExpandedId(inst.id);
                             }
                           }}
