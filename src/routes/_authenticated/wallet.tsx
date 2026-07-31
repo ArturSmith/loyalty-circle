@@ -15,6 +15,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { getWalletCards, type WalletInstance } from "@/utils/cards.functions";
 import { useProfile } from "@/hooks/useProfile";
 import { initialsFrom } from "@/lib/avatar";
+import { BusinessInfoPanel } from "@/components/BusinessInfoPanel";
+
 
 type Instance = WalletInstance;
 
