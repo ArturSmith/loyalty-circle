@@ -530,6 +530,8 @@ function Wallet() {
                 <QrDisplay value={`stempel:card:${flippedId}`} size={260} />
               </div>
               <OrnamentDivider className="w-40 mx-auto mt-6 opacity-70" />
+              {inst && <BusinessInfoPanel business={inst.template.business} />}
+
               {isCompleted && (
                 <Button
                   onClick={renew}
