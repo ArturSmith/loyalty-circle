@@ -168,6 +168,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          trial_started_at: string | null
           updated_at: string
         }
         Insert: {
@@ -175,6 +176,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id: string
+          trial_started_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -182,6 +184,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          trial_started_at?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -281,11 +284,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      add_stamp: { Args: { _card_instance_id: string }; Returns: Json }
+      account_trial_active: { Args: { _user_id: string }; Returns: boolean }
+      active_subscription_count: {
+        Args: { _env?: string; _user_id: string }
+        Returns: number
+      }
+      add_stamp:
+        | { Args: { _card_instance_id: string }; Returns: Json }
+        | { Args: { _card_instance_id: string; _env?: string }; Returns: Json }
       business_has_access: {
         Args: { _business_created_at: string; _owner_id: string }
         Returns: boolean
       }
+      business_has_access_v2: {
+        Args: { _business_id: string; _env?: string }
+        Returns: boolean
+      }
+      business_slot_rank: { Args: { _business_id: string }; Returns: number }
       get_business_public: {
         Args: { _id: string }
         Returns: {
@@ -297,12 +312,19 @@ export type Database = {
           slug: string
         }[]
       }
-      get_frozen_business_ids: {
-        Args: { _ids: string[] }
-        Returns: {
-          business_id: string
-        }[]
-      }
+      get_frozen_business_ids:
+        | {
+            Args: { _ids: string[] }
+            Returns: {
+              business_id: string
+            }[]
+          }
+        | {
+            Args: { _env?: string; _ids: string[] }
+            Returns: {
+              business_id: string
+            }[]
+          }
       has_active_subscription: {
         Args: { check_env?: string; user_uuid: string }
         Returns: boolean
