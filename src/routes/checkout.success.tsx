@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { getPaddleEnvironment } from "@/lib/paddle";
 
 export const Route = createFileRoute("/checkout/success")({
   head: () => ({
