@@ -92,7 +92,7 @@ function Discover() {
       </header>
 
       {!coords && asked && (
-        <div className="mx-auto mt-4 flex max-w-3xl items-center justify-between gap-3 rounded-2xl glass-panel border border-white/60 px-4 py-3">
+        <div className="mx-auto mt-4 flex max-w-3xl items-center justify-between gap-3 rounded-2xl glass-panel border border-white/60 px-4 py-3 md:px-5">
           <p className="text-sm text-muted-foreground">Share your location to sort cards by what's closest.</p>
           <Button size="sm" variant="secondary" className="gap-2 shrink-0" onClick={request}>
             <MapPin className="h-4 w-4" /> Use location
