@@ -15,11 +15,39 @@ export const Route = createFileRoute("/_authenticated/business/scan")({
 });
 
 type Result = { stamps_count: number; total_steps: number; reward: { step: number; label: string } | null; completed: boolean };
+type Rejection = { title: string; message: string };
+
+function describeError(raw: string): Rejection {
+  const msg = (raw || "").toLowerCase();
+  if (msg.includes("not authorized")) {
+    return {
+      title: "Not your card",
+      message: "This loyalty card belongs to a different business, so you can't stamp it.",
+    };
+  }
+  if (msg.includes("card not found")) {
+    return { title: "Card not found", message: "This QR doesn't match any active card. Ask the customer to reopen it." };
+  }
+  if (msg.includes("card is full")) {
+    return { title: "Card is full", message: "Every step is stamped. Give the reward, then the customer can renew the card." };
+  }
+  if (msg.includes("please wait")) {
+    return { title: "Just stamped", message: "This card was stamped a moment ago. Wait a few seconds before stamping again." };
+  }
+  if (msg.includes("subscription required")) {
+    return { title: "Stamping paused", message: "This business isn't covered by an active subscription. Renew to resume stamping." };
+  }
+  if (msg.includes("auth required")) {
+    return { title: "Signed out", message: "Your session expired. Sign in again to keep stamping." };
+  }
+  return { title: "Couldn't stamp", message: raw || "Something went wrong. Try scanning again." };
+}
 
 function ScanPage() {
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
+  const [rejection, setRejection] = useState<Rejection | null>(null);
   const [paused, setPaused] = useState(false);
 
   const onScan = useCallback(async (text: string) => {
@@ -27,16 +55,22 @@ function ScanPage() {
     const m = text.match(/^stempel:card:([0-9a-f-]+)$/i);
     if (!m) { toast.error("Not a Clubcarder card QR"); return; }
     setBusy(true); setPaused(true);
-    const { data, error } = await supabase.rpc("add_stamp", {
-      _card_instance_id: m[1],
-      _env: getPaddleEnvironment(),
-    });
-    setBusy(false);
-    if (error) { toast.error(error.message); setTimeout(() => setPaused(false), 1500); return; }
-    setResult(data as unknown as Result);
+    try {
+      const { data, error } = await supabase.rpc("add_stamp", {
+        _card_instance_id: m[1],
+        _env: getPaddleEnvironment(),
+      });
+      if (error) { setRejection(describeError(error.message)); return; }
+      setResult(data as unknown as Result);
+    } catch (e) {
+      setRejection(describeError(e instanceof Error ? e.message : ""));
+    } finally {
+      setBusy(false);
+    }
   }, [busy, paused]);
 
-  const reset = () => { setResult(null); setPaused(false); };
+  const reset = () => { setResult(null); setRejection(null); setPaused(false); };
+
 
   return (
     <div className="min-h-screen px-4 py-6 max-w-md mx-auto">
