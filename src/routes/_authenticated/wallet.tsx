@@ -196,7 +196,16 @@ function Wallet() {
   return (
     <div className="relative min-h-screen flex flex-col overflow-hidden">
       <header className="relative flex items-center justify-between px-5 py-4">
-        <div className="min-w-0">
+        <div className="flex items-center gap-3 min-w-0">
+          <Link to="/profile" aria-label="Open your profile">
+            <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full glass-panel border border-white/60 text-xs font-bold">
+              {profile?.avatarUrl ? (
+                <img src={profile.avatarUrl} alt="Your profile picture" className="h-full w-full object-cover" />
+              ) : (
+                initialsFrom(profile?.displayName, profile?.email)
+              )}
+            </span>
+          </Link>
           <p className="text-sm text-muted-foreground truncate">
             Hello{profile?.displayName ? `, ${profile.displayName.split(" ")[0]}` : ""} 👋
           </p>
