@@ -343,6 +343,35 @@ export type Database = {
         Returns: boolean
       }
       business_slot_rank: { Args: { _business_id: string }; Returns: number }
+      discover_cards: {
+        Args: { _lat?: number; _limit?: number; _lng?: number; _q?: string }
+        Returns: {
+          accent_color: string
+          bg_color: string
+          business_id: string
+          business_logo_url: string
+          business_name: string
+          category: string
+          city: string
+          corner_title: string
+          country: string
+          created_at: string
+          description: string
+          distance_km: number
+          grid_cols: number
+          latitude: number
+          logo_url: string
+          longitude: number
+          rewards: Json
+          shape: string
+          stamp_icon: string
+          subtitle: string
+          template_id: string
+          text_color: string
+          title: string
+          total_steps: number
+        }[]
+      }
       get_business_public: {
         Args: { _id: string }
         Returns: {
