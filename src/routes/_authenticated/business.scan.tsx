@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Check, Sparkles } from "lucide-react";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
+import { getPaddleEnvironment } from "@/lib/paddle";
 
 export const Route = createFileRoute("/_authenticated/business/scan")({
   head: () => ({ meta: [{ title: "Scan customer — Clubcarder" }] }),
