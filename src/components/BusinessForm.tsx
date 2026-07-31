@@ -123,6 +123,35 @@ export function BusinessForm({ value, onChange }: Props) {
   const set = <K extends keyof BusinessDetails>(key: K, v: BusinessDetails[K]) =>
     onChange({ ...value, [key]: v });
 
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const onPickLogo = async (file: File) => {
+    if (!file.type.startsWith("image/")) { toast.error("Please choose an image file"); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error("Image must be under 5 MB"); return; }
+    setUploading(true);
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      const uid = auth.user?.id;
+      if (!uid) { toast.error("Please sign in again"); return; }
+      const ext = (file.name.split(".").pop() || "png").toLowerCase();
+      const path = `${uid}/logo-${Date.now()}.${ext}`;
+      const { error } = await supabase.storage
+        .from(LOGO_BUCKET)
+        .upload(path, file, { upsert: true, contentType: file.type });
+      if (error) { toast.error(error.message); return; }
+      const { data: signed, error: signErr } = await supabase.storage
+        .from(LOGO_BUCKET)
+        .createSignedUrl(path, TEN_YEARS);
+      if (signErr || !signed?.signedUrl) { toast.error(signErr?.message ?? "Could not read the uploaded logo"); return; }
+      set("logo_url", signed.signedUrl);
+      toast.success("Logo uploaded");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+
   return (
     <div className="space-y-7">
       <section className="space-y-4">
