@@ -1,7 +1,16 @@
+import { useRef, useState } from "react";
+import { ImagePlus, Loader2, X } from "lucide-react";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+
+const LOGO_BUCKET = "business-logos";
+const TEN_YEARS = 60 * 60 * 24 * 365 * 10;
+
 
 export type BusinessDetails = {
   name: string;
