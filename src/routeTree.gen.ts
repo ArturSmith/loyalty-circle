@@ -30,6 +30,8 @@ import { Route as AuthenticatedBusinessIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedSettingsBillingRouteImport } from './routes/_authenticated/settings.billing'
 import { Route as AuthenticatedBusinessScanRouteImport } from './routes/_authenticated/business.scan'
 import { Route as AuthenticatedBusinessEditRouteImport } from './routes/_authenticated/business.edit'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as AuthenticatedBusinessCardsNewRouteImport } from './routes/_authenticated/business.cards.new'
 import { Route as AuthenticatedBusinessCardsIdIndexRouteImport } from './routes/_authenticated/business.cards.$id.index'
@@ -143,6 +145,16 @@ const AuthenticatedBusinessEditRoute =
     path: '/edit',
     getParentRoute: () => AuthenticatedBusinessRoute,
   } as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -191,6 +203,8 @@ export interface FileRoutesByFullPath {
   '/business/': typeof AuthenticatedBusinessIndexRoute
   '/business/cards/new': typeof AuthenticatedBusinessCardsNewRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/business/cards/$id/edit': typeof AuthenticatedBusinessCardsIdEditRoute
   '/business/cards/$id/': typeof AuthenticatedBusinessCardsIdIndexRoute
 }
@@ -216,6 +230,8 @@ export interface FileRoutesByTo {
   '/business': typeof AuthenticatedBusinessIndexRoute
   '/business/cards/new': typeof AuthenticatedBusinessCardsNewRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/business/cards/$id/edit': typeof AuthenticatedBusinessCardsIdEditRoute
   '/business/cards/$id': typeof AuthenticatedBusinessCardsIdIndexRoute
 }
@@ -244,6 +260,8 @@ export interface FileRoutesById {
   '/_authenticated/business/': typeof AuthenticatedBusinessIndexRoute
   '/_authenticated/business/cards/new': typeof AuthenticatedBusinessCardsNewRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/_authenticated/business/cards/$id/edit': typeof AuthenticatedBusinessCardsIdEditRoute
   '/_authenticated/business/cards/$id/': typeof AuthenticatedBusinessCardsIdIndexRoute
 }
@@ -272,6 +290,8 @@ export interface FileRouteTypes {
     | '/business/'
     | '/business/cards/new'
     | '/api/public/payments/webhook'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/business/cards/$id/edit'
     | '/business/cards/$id/'
   fileRoutesByTo: FileRoutesByTo
@@ -297,6 +317,8 @@ export interface FileRouteTypes {
     | '/business'
     | '/business/cards/new'
     | '/api/public/payments/webhook'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/business/cards/$id/edit'
     | '/business/cards/$id'
   id:
@@ -324,6 +346,8 @@ export interface FileRouteTypes {
     | '/_authenticated/business/'
     | '/_authenticated/business/cards/new'
     | '/api/public/payments/webhook'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/_authenticated/business/cards/$id/edit'
     | '/_authenticated/business/cards/$id/'
   fileRoutesById: FileRoutesById
@@ -342,6 +366,8 @@ export interface RootRouteChildren {
   BBusinessIdRoute: typeof BBusinessIdRoute
   CheckoutSuccessRoute: typeof CheckoutSuccessRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
+  LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
+  LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -493,6 +519,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBusinessEditRouteImport
       parentRoute: typeof AuthenticatedBusinessRoute
     }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
       path: '/api/public/payments/webhook'
@@ -583,7 +623,19 @@ const rootRouteChildren: RootRouteChildren = {
   BBusinessIdRoute: BBusinessIdRoute,
   CheckoutSuccessRoute: CheckoutSuccessRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
+  LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
+  LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
