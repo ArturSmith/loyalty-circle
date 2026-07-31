@@ -171,9 +171,14 @@ function Wallet() {
       <div aria-hidden className="pointer-events-none absolute -bottom-24 -right-16 h-72 w-72 rounded-full bg-[oklch(0.86_0.14_195/0.4)] blur-3xl" />
 
       <header className="relative flex items-center justify-between px-5 py-4">
-        <h1 className="font-display text-3xl font-extrabold tracking-tight">
-          My cards
-        </h1>
+        <div className="min-w-0">
+          <p className="text-sm text-muted-foreground truncate">
+            Hello{profile?.displayName ? `, ${profile.displayName.split(" ")[0]}` : ""} 👋
+          </p>
+          <h1 className="font-display text-3xl font-extrabold tracking-tight">
+            My cards
+          </h1>
+        </div>
         <div className="flex items-center gap-2">
           <Link to="/scan">
             <Button variant="ghost" size="icon" aria-label="Scan QR code" title="Scan QR" className="rounded-full glass-panel">
