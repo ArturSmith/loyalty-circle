@@ -38,6 +38,9 @@ type Celebration = {
   accentColor: string;
 };
 
+const BUSINESS_CTA_KEY = "cc_business_cta_hidden_until";
+const BUSINESS_CTA_SNOOZE_MS = 7 * 24 * 60 * 60 * 1000;
+
 function Wallet() {
   const navigate = useNavigate();
   const [instances, setInstances] = useState<Instance[]>([]);
