@@ -293,7 +293,9 @@ function Wallet() {
 
       <section className="relative px-5 pt-6" aria-label="My cards">
         <div className="mx-auto max-w-md">
-          <h1 className="font-display text-3xl font-extrabold tracking-tight">My cards</h1>
+          <h1 className="flex items-center gap-2 font-display text-lg font-bold">
+            <CreditCard className="h-4 w-4" /> My cards
+          </h1>
         </div>
       </section>
 
