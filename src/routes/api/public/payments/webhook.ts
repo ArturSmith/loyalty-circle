@@ -13,11 +13,51 @@ function getSupabase() {
   return _supabase;
 }
 
+/** Fall back to matching an existing customer, then to the Paddle customer's email. */
+async function resolveUserId(data: any, env: PaddleEnv): Promise<string | null> {
+  const fromCustomData = data?.customData?.userId;
+  if (fromCustomData) return fromCustomData as string;
+
+  const supabase = getSupabase();
+
+  // 1. Same Paddle customer already linked to a user?
+  if (data?.customerId) {
+    const { data: existing } = await supabase
+      .from("subscriptions")
+      .select("user_id")
+      .eq("paddle_customer_id", data.customerId)
+      .eq("environment", env)
+      .limit(1)
+      .maybeSingle();
+    if (existing?.user_id) return existing.user_id as string;
+  }
+
+  // 2. Match on the Paddle customer's email address.
+  try {
+    if (!data?.customerId) return null;
+    const { gatewayFetch } = await import("@/lib/paddle.server");
+    const res = await gatewayFetch(env, `/customers/${encodeURIComponent(data.customerId)}`);
+    const json = (await res.json()) as { data?: { email?: string } };
+    const email = json.data?.email?.toLowerCase();
+    if (!email) return null;
+    const { data: list } = await supabase.auth.admin.listUsers({ page: 1, perPage: 200 });
+    const match = list?.users?.find((u: any) => u.email?.toLowerCase() === email);
+    return match?.id ?? null;
+  } catch (e) {
+    console.error("resolveUserId fallback failed", e);
+    return null;
+  }
+}
+
 async function handleSubscriptionCreated(data: any, env: PaddleEnv) {
-  const { id, customerId, items, status, currentBillingPeriod, customData } = data;
-  const userId = customData?.userId;
+  const { id, customerId, items, status, currentBillingPeriod, scheduledChange } = data;
+  const userId = await resolveUserId(data, env);
   if (!userId) {
-    console.error("No userId in customData");
+    console.error("ORPHANED SUBSCRIPTION: could not resolve a user", {
+      subscriptionId: id,
+      customerId,
+      env,
+    });
     return;
   }
   const item = items[0];
@@ -41,6 +81,7 @@ async function handleSubscriptionCreated(data: any, env: PaddleEnv) {
       status,
       current_period_start: currentBillingPeriod?.startsAt,
       current_period_end: currentBillingPeriod?.endsAt,
+      cancel_at_period_end: scheduledChange?.action === "cancel",
       environment: env,
       updated_at: new Date().toISOString(),
     },
@@ -49,30 +90,53 @@ async function handleSubscriptionCreated(data: any, env: PaddleEnv) {
 }
 
 async function handleSubscriptionUpdated(data: any, env: PaddleEnv) {
-  const { id, status, currentBillingPeriod, scheduledChange } = data;
+  const { id, status, currentBillingPeriod, scheduledChange, items } = data;
+  const item = items?.[0];
+  const priceId = item?.price?.importMeta?.externalId;
+  const productId = item?.product?.importMeta?.externalId;
+
+  const patch: Record<string, unknown> = {
+    status,
+    current_period_start: currentBillingPeriod?.startsAt,
+    current_period_end: currentBillingPeriod?.endsAt,
+    cancel_at_period_end: scheduledChange?.action === "cancel",
+    updated_at: new Date().toISOString(),
+  };
+  // Keep the plan in sync when the subscription's items change.
+  if (priceId) patch.price_id = priceId;
+  if (productId) patch.product_id = productId;
+
+  const { data: rows } = await getSupabase()
+    .from("subscriptions")
+    .update(patch)
+    .eq("paddle_subscription_id", id)
+    .eq("environment", env)
+    .select("id");
+
+  // The update event can arrive before created (or after a missed created).
+  if (!rows || rows.length === 0) {
+    await handleSubscriptionCreated(data, env);
+  }
+}
+
+async function handleSubscriptionCanceled(data: any, env: PaddleEnv) {
+  const { id, currentBillingPeriod, canceledAt, scheduledChange } = data;
+  // Preserve the paid-through date so the grace period is bounded and correct.
+  const periodEnd =
+    currentBillingPeriod?.endsAt ?? scheduledChange?.effectiveAt ?? canceledAt ?? new Date().toISOString();
+
   await getSupabase()
     .from("subscriptions")
     .update({
-      status,
-      current_period_start: currentBillingPeriod?.startsAt,
-      current_period_end: currentBillingPeriod?.endsAt,
-      cancel_at_period_end: scheduledChange?.action === "cancel",
+      status: "canceled",
+      current_period_end: periodEnd,
+      cancel_at_period_end: true,
       updated_at: new Date().toISOString(),
     })
     .eq("paddle_subscription_id", id)
     .eq("environment", env);
 }
 
-async function handleSubscriptionCanceled(data: any, env: PaddleEnv) {
-  await getSupabase()
-    .from("subscriptions")
-    .update({
-      status: "canceled",
-      updated_at: new Date().toISOString(),
-    })
-    .eq("paddle_subscription_id", data.id)
-    .eq("environment", env);
-}
 
 async function handleWebhook(req: Request, env: PaddleEnv) {
   const event = await verifyWebhook(req, env);
