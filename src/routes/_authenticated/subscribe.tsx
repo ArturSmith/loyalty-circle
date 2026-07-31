@@ -108,6 +108,11 @@ function SubscribePage() {
                 You have <strong className="text-foreground">{access.trialDaysLeft} day{access.trialDaysLeft === 1 ? "" : "s"}</strong> left in your free trial.
               </p>
             )}
+            {access.reason === "needs-more-seats" && (
+              <p className="mt-2 text-xs text-destructive">
+                {access.businessCount} business{access.businessCount === 1 ? "" : "es"} · {access.seatCount} subscription{access.seatCount === 1 ? "" : "s"}. Each business needs its own plan.
+              </p>
+            )}
             {access.reason === "trial-expired" && (
               <p className="mt-2 text-xs text-destructive">
                 Your free trial has ended. Subscribe to keep your business active.
@@ -129,9 +134,22 @@ function SubscribePage() {
             ))}
           </ul>
 
-          {access.isSubscribed ? (
+          {access.uncoveredCount > 0 ? (
+            <Button
+              onClick={startCheckout}
+              disabled={loading}
+              className="mt-8 w-full h-12 text-base"
+            >
+              {loading
+                ? "Opening checkout…"
+                : access.seatCount > 0
+                  ? "Add another subscription — $19/month"
+                  : "Subscribe — $19/month"}
+            </Button>
+          ) : access.isSubscribed ? (
             <div className="mt-8 rounded-lg bg-secondary p-4 text-center text-sm">
-              You're subscribed. {access.cancelAtPeriodEnd && access.currentPeriodEnd
+              You're subscribed to {access.seatCount} business plan{access.seatCount === 1 ? "" : "s"}.{" "}
+              {access.cancelAtPeriodEnd && access.currentPeriodEnd
                 ? `Access continues until ${access.currentPeriodEnd.toLocaleDateString()}.`
                 : "Thanks for supporting Clubcarder."}
             </div>

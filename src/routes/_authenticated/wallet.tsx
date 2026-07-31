@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Check, Gift, HelpCircle, LogOut, Mail, Menu, RotateCcw, ScanLine, Snowflake, Sparkles, Store, Trash2, User, X } from "lucide-react";
 import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
+import { getPaddleEnvironment } from "@/lib/paddle";
 import { useServerFn } from "@tanstack/react-start";
 import { getWalletCards, type WalletInstance } from "@/utils/cards.functions";
 
@@ -47,7 +48,7 @@ function Wallet() {
 
   const load = useCallback(async () => {
     try {
-      const { instances: next, frozenBusinessIds: nextFrozenBusinessIds } = await fetchWallet();
+      const { instances: next, frozenBusinessIds: nextFrozenBusinessIds } = await fetchWallet({ data: { environment: getPaddleEnvironment() } });
       // Diff against previous state to celebrate any stamp increment for the current user
       setInstances((prev) => {
         const prevMap = new Map(prev.map((p) => [p.id, p.stamps_count]));
