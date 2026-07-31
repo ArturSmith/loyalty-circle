@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { getPaddleEnvironment } from "@/lib/paddle";
 
 export const Route = createFileRoute("/checkout/success")({
   head: () => ({
@@ -33,27 +34,50 @@ function CheckoutSuccessPage() {
     };
 
     const target = readReturn();
+    const env = getPaddleEnvironment();
 
-    // Poll briefly for the session to be present, then navigate.
+    // Wait for the session AND for the payment webhook to land, so the user
+    // isn't bounced back into the paywall right after paying.
     const tick = async () => {
       if (cancelled) return;
-      const { data } = await supabase.auth.getUser();
       attempts += 1;
-      if (data.user) {
+      const { data } = await supabase.auth.getUser();
+
+      if (!data.user) {
+        if (attempts > 20) {
+          navigate({ to: "/auth", search: { redirect: target }, replace: true });
+          return;
+        }
+        setTimeout(tick, 400);
+        return;
+      }
+
+      const { data: subs } = await supabase
+        .from("subscriptions")
+        .select("id,status,current_period_end")
+        .eq("user_id", data.user.id)
+        .eq("environment", env)
+        .in("status", ["active", "trialing", "past_due"])
+        .limit(1);
+
+      if ((subs?.length ?? 0) > 0) {
         toast.success("Welcome to Pro! Your subscription is active.");
         navigate({ to: target, replace: true });
         return;
       }
-      if (attempts > 10) {
-        // Fall back to auth with intended path
-        navigate({ to: "/auth", search: { redirect: target }, replace: true });
+
+      if (attempts > 30) {
+        // ~12s. Payment succeeded but confirmation is slow — send them on anyway.
+        toast.success("Payment received. Your plan will activate in a moment.");
+        navigate({ to: target, replace: true });
         return;
       }
-      setTimeout(tick, 250);
+      setTimeout(tick, 400);
     };
     tick();
     return () => { cancelled = true; };
   }, [navigate]);
+
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
