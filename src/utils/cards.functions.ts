@@ -22,7 +22,22 @@ export type WalletInstance = {
     logo_url: string | null;
     rewards: Reward[];
     grid_cols: number | null;
-    business: { id: string; name: string };
+    business: {
+      id: string;
+      name: string;
+      logo_url: string | null;
+      category: string | null;
+      description: string | null;
+      welcome_message: string | null;
+      phone: string | null;
+      website: string | null;
+      address_line1: string | null;
+      address_line2: string | null;
+      city: string | null;
+      postal_code: string | null;
+      region: string | null;
+      country: string | null;
+    };
   };
 };
 
@@ -102,7 +117,7 @@ export const getWalletCards = createServerFn({ method: "GET" })
       const { data: templateData, error: templateError } = await supabaseAdmin
         .from("card_templates")
         .select(`id, title, subtitle, description, corner_title, total_steps, shape, bg_color, accent_color, text_color, stamp_icon, logo_url, rewards, grid_cols, business_id,
-          business:businesses(id, name)`)
+          business:businesses(id, name, logo_url, category, description, welcome_message, phone, website, address_line1, address_line2, city, postal_code, region, country)`)
         .in("id", templateIds);
 
       if (templateError) {
