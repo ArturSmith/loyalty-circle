@@ -57,6 +57,13 @@ function Wallet() {
   const fetchWallet = useServerFn(getWalletCards);
   const { profile, loading: profileLoading } = useProfile();
 
+  const displayInstances = useMemo(() => {
+    if (!frontId) return instances;
+    const idx = instances.findIndex((i) => i.id === frontId);
+    if (idx === -1) return instances;
+    return [...instances.slice(0, idx), ...instances.slice(idx + 1), instances[idx]];
+  }, [instances, frontId]);
+
   useEffect(() => {
     try {
       const until = Number(window.localStorage.getItem(BUSINESS_CTA_KEY) ?? 0);
