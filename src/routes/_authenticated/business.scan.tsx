@@ -26,7 +26,10 @@ function ScanPage() {
     const m = text.match(/^stempel:card:([0-9a-f-]+)$/i);
     if (!m) { toast.error("Not a Clubcarder card QR"); return; }
     setBusy(true); setPaused(true);
-    const { data, error } = await supabase.rpc("add_stamp", { _card_instance_id: m[1] });
+    const { data, error } = await supabase.rpc("add_stamp", {
+      _card_instance_id: m[1],
+      _env: getPaddleEnvironment(),
+    });
     setBusy(false);
     if (error) { toast.error(error.message); setTimeout(() => setPaused(false), 1500); return; }
     setResult(data as unknown as Result);
