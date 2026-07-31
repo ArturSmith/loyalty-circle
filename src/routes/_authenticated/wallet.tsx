@@ -47,9 +47,28 @@ function Wallet() {
   const [flippedId, setFlippedId] = useState<string | null>(null);
   const [faceFlipped, setFaceFlipped] = useState<Set<string>>(new Set());
   const [celebration, setCelebration] = useState<Celebration | null>(null);
+  const [businessCtaHidden, setBusinessCtaHidden] = useState(true);
 
   const fetchWallet = useServerFn(getWalletCards);
   const { profile, loading: profileLoading } = useProfile();
+
+  useEffect(() => {
+    try {
+      const until = Number(window.localStorage.getItem(BUSINESS_CTA_KEY) ?? 0);
+      setBusinessCtaHidden(Number.isFinite(until) && until > Date.now());
+    } catch {
+      setBusinessCtaHidden(false);
+    }
+  }, []);
+
+  const dismissBusinessCta = useCallback(() => {
+    setBusinessCtaHidden(true);
+    try {
+      window.localStorage.setItem(BUSINESS_CTA_KEY, String(Date.now() + BUSINESS_CTA_SNOOZE_MS));
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   const load = useCallback(async () => {
     try {
