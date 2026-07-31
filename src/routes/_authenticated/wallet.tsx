@@ -109,7 +109,8 @@ function Wallet() {
     }
   }, [loading, instances]);
 
-  // Realtime: refresh when stamps come in for any card the user owns
+  // Realtime: refresh when stamps come in for any card the user owns.
+  // Realtime can silently fail (network, socket drop), so we also poll as a fallback.
   useEffect(() => {
     let channel: ReturnType<typeof supabase.channel> | null = null;
     let cancelled = false;
@@ -117,15 +118,35 @@ function Wallet() {
       const { data } = await supabase.auth.getUser();
       const userId = data.user?.id;
       if (cancelled || !userId) return;
+      const token = (await supabase.auth.getSession()).data.session?.access_token;
+      if (token) supabase.realtime.setAuth(token);
       channel = supabase.channel(`wallet-stamps:${userId}`)
-        .on("postgres_changes", { event: "*", schema: "public", table: "card_instances", filter: `customer_id=eq.${userId}` }, () => load())
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "card_instances", filter: `customer_id=eq.${userId}` },
+          () => load(),
+        )
         .subscribe();
     })();
+
+    const poll = setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
+      load();
+    }, 4000);
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") load();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
     return () => {
       cancelled = true;
+      clearInterval(poll);
+      document.removeEventListener("visibilitychange", onVisible);
       if (channel) supabase.removeChannel(channel);
     };
   }, [load]);
+
 
   // Auto-dismiss celebration
   useEffect(() => {
