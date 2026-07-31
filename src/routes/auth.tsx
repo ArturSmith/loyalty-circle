@@ -25,6 +25,8 @@ function AuthPage() {
   const { redirect } = useSearch({ from: "/auth" });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [dob, setDob] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [signupEmail, setSignupEmail] = useState<string | null>(null);
@@ -88,12 +90,24 @@ function AuthPage() {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) return;
+    const name = fullName.trim();
+    if (name.length < 2 || name.length > 80) { toast.error("Please enter your name (2–80 characters)"); return; }
+    if (!dob) { toast.error("Please enter your date of birth"); return; }
+    const dobDate = new Date(dob + "T00:00:00");
+    if (Number.isNaN(dobDate.getTime())) { toast.error("Invalid date of birth"); return; }
+    const now = new Date();
+    const age = (now.getTime() - dobDate.getTime()) / (365.25 * 24 * 3600 * 1000);
+    if (age < 13) { toast.error("You must be at least 13 years old"); return; }
+    if (age > 120) { toast.error("Please enter a valid date of birth"); return; }
     if (password.length < 6) { toast.error("Password must be at least 6 characters"); return; }
     setSending(true);
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: window.location.origin + (explicitRedirect ?? "/") },
+      options: {
+        emailRedirectTo: window.location.origin + (explicitRedirect ?? "/"),
+        data: { full_name: name, date_of_birth: dob },
+      },
     });
     setSending(false);
     if (error) { toast.error(error.message); return; }
@@ -219,6 +233,29 @@ function AuthPage() {
 
           {mode === "signup" && (
             <form onSubmit={handleSignUp} className="space-y-3">
+              <Input
+                type="text"
+                required
+                maxLength={80}
+                autoComplete="name"
+                placeholder="Full name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="h-11"
+              />
+              <div className="space-y-1">
+                <label htmlFor="dob" className="px-1 text-xs text-muted-foreground">Date of birth</label>
+                <Input
+                  id="dob"
+                  type="date"
+                  required
+                  max={new Date().toISOString().slice(0, 10)}
+                  autoComplete="bday"
+                  value={dob}
+                  onChange={(e) => setDob(e.target.value)}
+                  className="h-11"
+                />
+              </div>
               <Input
                 type="email"
                 required
