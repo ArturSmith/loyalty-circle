@@ -13,6 +13,8 @@ import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { getPaddleEnvironment } from "@/lib/paddle";
 import { useServerFn } from "@tanstack/react-start";
 import { getWalletCards, type WalletInstance } from "@/utils/cards.functions";
+import { useProfile } from "@/hooks/useProfile";
+import { initialsFrom } from "@/lib/avatar";
 
 type Instance = WalletInstance;
 
