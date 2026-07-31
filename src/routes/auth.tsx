@@ -25,6 +25,7 @@ function AuthPage() {
   const { redirect } = useSearch({ from: "/auth" });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [dob, setDob] = useState("");
   const [sending, setSending] = useState(false);
@@ -100,6 +101,7 @@ function AuthPage() {
     if (age < 13) { toast.error("You must be at least 13 years old"); return; }
     if (age > 120) { toast.error("Please enter a valid date of birth"); return; }
     if (password.length < 6) { toast.error("Password must be at least 6 characters"); return; }
+    if (password !== confirmPassword) { toast.error("Passwords don't match"); return; }
     setSending(true);
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -273,6 +275,19 @@ function AuthPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 className="h-11"
               />
+              <Input
+                type="password"
+                required
+                minLength={6}
+                placeholder="Confirm password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="h-11"
+                aria-invalid={confirmPassword.length > 0 && confirmPassword !== password}
+              />
+              {confirmPassword.length > 0 && confirmPassword !== password && (
+                <p className="-mt-2 text-xs text-destructive">Passwords don't match</p>
+              )}
               <Button type="submit" disabled={sending} className="w-full h-11">
                 {sending ? "Creating account…" : "Sign up"}
               </Button>
