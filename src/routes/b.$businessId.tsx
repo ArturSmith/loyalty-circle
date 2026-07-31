@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +8,7 @@ import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { ArrowLeft } from "lucide-react";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { useServerFn } from "@tanstack/react-start";
 import { claimCardToWallet } from "@/utils/cards.functions";
