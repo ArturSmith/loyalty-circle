@@ -332,6 +332,7 @@ export type Database = {
         Args: { check_env?: string; user_uuid: string }
         Returns: boolean
       }
+      renew_card: { Args: { _card_instance_id: string }; Returns: undefined }
       user_holds_card_for_business: {
         Args: { _business_id: string }
         Returns: boolean
