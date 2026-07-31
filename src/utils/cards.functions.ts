@@ -72,7 +72,10 @@ export const claimCardToWallet = createServerFn({ method: "POST" })
 
 export const getWalletCards = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<{ instances: WalletInstance[]; frozenBusinessIds: string[] }> => {
+  .inputValidator((data?: { environment?: string }) => ({
+    environment: data?.environment === "sandbox" ? "sandbox" : "live",
+  }))
+  .handler(async ({ data, context }): Promise<{ instances: WalletInstance[]; frozenBusinessIds: string[] }> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     try {
