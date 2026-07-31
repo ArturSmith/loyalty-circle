@@ -393,6 +393,7 @@ function Wallet() {
                             if (isExpanded) {
                               setFlippedId(inst.id);
                             } else {
+                              setFrontId(inst.id);
                               setExpandedId(inst.id);
                             }
                           }}
