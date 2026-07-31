@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Cardholders can read their businesses" ON public.businesses;
