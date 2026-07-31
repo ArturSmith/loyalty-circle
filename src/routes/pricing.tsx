@@ -7,9 +7,9 @@ import { SELLER_NAME, SUPPORT_EMAIL } from "@/components/LegalLayout";
 export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
-      { title: "Pricing — Clubcarder digital loyalty cards" },
-      { name: "description", content: "Clubcarder is free for customers. Businesses get a 14-day free trial, then $19/month for unlimited cards, stamps, and customers." },
-      { property: "og:title", content: "Pricing — Clubcarder" },
+      { title: "Pricing — ClubCarder digital loyalty cards" },
+      { name: "description", content: "ClubCarder is free for customers. Businesses get a 14-day free trial, then $19/month for unlimited cards, stamps, and customers." },
+      { property: "og:title", content: "Pricing — ClubCarder" },
       { property: "og:description", content: "Free for customers. $19/month for businesses after a 14-day free trial." },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://clubcarder.com/pricing" },
@@ -43,7 +43,7 @@ function PricingPage() {
       <header className="mx-auto flex max-w-5xl items-center justify-between px-6 py-6">
         <Link to="/" className="flex items-center gap-2">
           <Logo className="h-8 w-8" />
-          <span className="font-display text-lg font-semibold">Clubcarder</span>
+          <span className="font-display text-lg font-semibold">ClubCarder</span>
         </Link>
         <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Home
@@ -127,7 +127,7 @@ function PricingPage() {
           <div>
             <h2 className="font-display text-lg font-semibold text-foreground">Who am I buying from?</h2>
             <p className="mt-2">
-              Clubcarder is operated by {SELLER_NAME}. Our order process is conducted by our online reseller Paddle.com,
+              ClubCarder is operated by {SELLER_NAME}. Our order process is conducted by our online reseller Paddle.com,
               the Merchant of Record for all our orders. Questions? Email{" "}
               <a href={`mailto:${SUPPORT_EMAIL}`} className="text-primary underline">{SUPPORT_EMAIL}</a>.
             </p>

@@ -26,7 +26,7 @@ type Customer = {
 };
 
 export const Route = createFileRoute("/_authenticated/business/cards/$id/")({
-  head: () => ({ meta: [{ title: "Card details — Clubcarder" }] }),
+  head: () => ({ meta: [{ title: "Card details — ClubCarder" }] }),
   component: CardDetails,
 });
 

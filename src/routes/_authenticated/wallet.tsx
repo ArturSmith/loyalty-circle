@@ -17,7 +17,7 @@ import { getWalletCards, type WalletInstance } from "@/utils/cards.functions";
 type Instance = WalletInstance;
 
 export const Route = createFileRoute("/_authenticated/wallet")({
-  head: () => ({ meta: [{ title: "My Wallet — Clubcarder" }] }),
+  head: () => ({ meta: [{ title: "My Wallet — ClubCarder" }] }),
   component: Wallet,
 });
 

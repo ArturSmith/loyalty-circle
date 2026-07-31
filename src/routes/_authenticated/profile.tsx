@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 
 export const Route = createFileRoute("/_authenticated/profile")({
-  head: () => ({ meta: [{ title: "Profile — Clubcarder" }] }),
+  head: () => ({ meta: [{ title: "Profile — ClubCarder" }] }),
   component: Profile,
 });
 

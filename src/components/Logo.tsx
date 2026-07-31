@@ -5,7 +5,7 @@ type Props = {
   alt?: string;
 };
 
-export function Logo({ className, alt = "Clubcarder logo" }: Props) {
+export function Logo({ className, alt = "ClubCarder logo" }: Props) {
   return (
     <img
       src={logoSrc}

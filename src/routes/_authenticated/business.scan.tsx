@@ -10,7 +10,7 @@ import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { getPaddleEnvironment } from "@/lib/paddle";
 
 export const Route = createFileRoute("/_authenticated/business/scan")({
-  head: () => ({ meta: [{ title: "Scan customer — Clubcarder" }] }),
+  head: () => ({ meta: [{ title: "Scan customer — ClubCarder" }] }),
   component: ScanPage,
 });
 
@@ -53,7 +53,7 @@ function ScanPage() {
   const onScan = useCallback(async (text: string) => {
     if (busy || paused) return;
     const m = text.match(/^stempel:card:([0-9a-f-]+)$/i);
-    if (!m) { toast.error("Not a Clubcarder card QR"); return; }
+    if (!m) { toast.error("Not a ClubCarder card QR"); return; }
     setBusy(true); setPaused(true);
     try {
       const { data, error } = await supabase.rpc("add_stamp", {

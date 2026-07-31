@@ -35,9 +35,9 @@ export const Route = createFileRoute("/")({
   },
   head: () => ({
     meta: [
-      { title: "Clubcarder — Digital loyalty cards that live in every pocket" },
-      { name: "description", content: "Clubcarder replaces paper punch cards with beautiful digital stamp cards. Great for cafés, salons, and shops — loved by their regulars." },
-      { property: "og:title", content: "Clubcarder — Digital loyalty cards" },
+      { title: "ClubCarder — Digital loyalty cards that live in every pocket" },
+      { name: "description", content: "ClubCarder replaces paper punch cards with beautiful digital stamp cards. Great for cafés, salons, and shops — loved by their regulars." },
+      { property: "og:title", content: "ClubCarder — Digital loyalty cards" },
       { property: "og:description", content: "Replace paper punch cards with digital ones. Businesses design them, customers collect them." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -104,7 +104,7 @@ function Landing() {
       <header className="relative mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6">
         <Link to="/" className="flex items-center gap-2">
           <Logo className="h-9 w-9 rotate-[-8deg] drop-shadow-md" />
-          <span className="font-display text-xl font-extrabold tracking-tight">Clubcarder</span>
+          <span className="font-display text-xl font-extrabold tracking-tight">ClubCarder</span>
         </Link>
         <div className="flex items-center gap-2">
           <Link to="/auth">
@@ -125,13 +125,13 @@ function Landing() {
             transition={{ duration: 0.6 }}
           >
             <span className="inline-flex items-center gap-1.5 rounded-full glass-panel px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-primary">
-              <Sparkles className="h-3 w-3" /> Meet Clubcarder
+              <Sparkles className="h-3 w-3" /> Meet ClubCarder
             </span>
             <h1 className="mt-4 font-display text-5xl font-extrabold leading-[0.95] tracking-tight sm:text-6xl">
               Loyalty cards that live in every pocket.
             </h1>
             <p className="mt-5 max-w-xl text-lg text-muted-foreground">
-              Clubcarder replaces paper punch cards with beautiful digital stamp cards.
+              ClubCarder replaces paper punch cards with beautiful digital stamp cards.
               Businesses design them in minutes, customers collect them with a scan —
               and nobody ever loses a free coffee again.
             </p>
@@ -211,7 +211,7 @@ function Landing() {
           <Link to="/help" className="hover:text-foreground">Help</Link>
           <Link to="/contact" className="hover:text-foreground">Contact</Link>
         </div>
-        © Muzaev AS · Clubcarder
+        © Muzaev AS · ClubCarder
       </footer>
 
     </div>

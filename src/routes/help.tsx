@@ -8,10 +8,10 @@ export const Route = createFileRoute("/help")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Help Center — Clubcarder" },
-      { name: "description", content: "Answers to common questions about Clubcarder digital loyalty cards for businesses and customers." },
-      { property: "og:title", content: "Help Center — Clubcarder" },
-      { property: "og:description", content: "How Clubcarder works — for businesses designing loyalty cards and customers collecting stamps." },
+      { title: "Help Center — ClubCarder" },
+      { name: "description", content: "Answers to common questions about ClubCarder digital loyalty cards for businesses and customers." },
+      { property: "og:title", content: "Help Center — ClubCarder" },
+      { property: "og:description", content: "How ClubCarder works — for businesses designing loyalty cards and customers collecting stamps." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -25,7 +25,7 @@ const customerFaqs: Faq[] = [
   {
     icon: Wallet,
     q: "How do I collect stamps?",
-    a: "Scan a business's Clubcarder QR code to add their card to your wallet. On each visit, show the card's QR code to the business — they scan it and your stamp is added instantly.",
+    a: "Scan a business's ClubCarder QR code to add their card to your wallet. On each visit, show the card's QR code to the business — they scan it and your stamp is added instantly.",
   },
   {
     icon: Gift,
@@ -81,7 +81,7 @@ function HelpPage() {
   return (
     <div className="relative min-h-screen">
       <header className="mx-auto flex max-w-4xl items-center justify-between px-6 py-6">
-        <Link to="/" className="flex items-center gap-2"><Logo className="h-8 w-8" /><span className="font-display text-lg font-semibold">Clubcarder</span></Link>
+        <Link to="/" className="flex items-center gap-2"><Logo className="h-8 w-8" /><span className="font-display text-lg font-semibold">ClubCarder</span></Link>
         <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Home
         </Link>
@@ -89,7 +89,7 @@ function HelpPage() {
 
       <main className="mx-auto max-w-3xl px-6 pb-24">
         <h1 className="font-display text-4xl font-semibold tracking-tight sm:text-5xl">Help Center</h1>
-        <p className="mt-3 text-muted-foreground">Quick answers about using Clubcarder. Can't find what you need? <Link to="/contact" className="underline">Contact us</Link>.</p>
+        <p className="mt-3 text-muted-foreground">Quick answers about using ClubCarder. Can't find what you need? <Link to="/contact" className="underline">Contact us</Link>.</p>
 
         <Tabs defaultValue="customer" className="mt-8">
           <TabsList className="grid w-full grid-cols-2">

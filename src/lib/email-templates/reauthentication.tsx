@@ -31,7 +31,7 @@ export const ReauthenticationEmail = ({
 }: ReauthenticationEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Your Clubcarder verification code</Preview>
+    <Preview>Your ClubCarder verification code</Preview>
     <Body style={main}>
       <Container style={container}>
         <Text style={brand}>clubcarder</Text>

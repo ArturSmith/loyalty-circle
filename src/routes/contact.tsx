@@ -13,10 +13,10 @@ export const Route = createFileRoute("/contact")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Contact Us — Clubcarder" },
-      { name: "description", content: "Get in touch with the Clubcarder team for support, sales, or feedback about our digital loyalty card platform." },
-      { property: "og:title", content: "Contact Us — Clubcarder" },
-      { property: "og:description", content: "Reach out to Clubcarder — we're happy to help businesses and customers alike." },
+      { title: "Contact Us — ClubCarder" },
+      { name: "description", content: "Get in touch with the ClubCarder team for support, sales, or feedback about our digital loyalty card platform." },
+      { property: "og:title", content: "Contact Us — ClubCarder" },
+      { property: "og:description", content: "Reach out to ClubCarder — we're happy to help businesses and customers alike." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -46,7 +46,7 @@ function ContactPage() {
       return;
     }
     setSending(true);
-    const subject = encodeURIComponent(`Clubcarder — message from ${parsed.data.name}`);
+    const subject = encodeURIComponent(`ClubCarder — message from ${parsed.data.name}`);
     const body = encodeURIComponent(`${parsed.data.message}\n\n—\nFrom: ${parsed.data.name} <${parsed.data.email}>`);
     window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${body}`;
     setTimeout(() => setSending(false), 800);
@@ -55,7 +55,7 @@ function ContactPage() {
   return (
     <div className="relative min-h-screen">
       <header className="mx-auto flex max-w-4xl items-center justify-between px-6 py-6">
-        <Link to="/" className="flex items-center gap-2"><Logo className="h-8 w-8" /><span className="font-display text-lg font-semibold">Clubcarder</span></Link>
+        <Link to="/" className="flex items-center gap-2"><Logo className="h-8 w-8" /><span className="font-display text-lg font-semibold">ClubCarder</span></Link>
         <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Home
         </Link>

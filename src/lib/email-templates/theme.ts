@@ -1,4 +1,4 @@
-// Shared inline styles for Clubcarder auth emails.
+// Shared inline styles for ClubCarder auth emails.
 // Email clients only support inline styles — no external CSS.
 
 export const main = {

@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ScanLine } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/scan")({
-  head: () => ({ meta: [{ title: "Scan QR — Clubcarder" }] }),
+  head: () => ({ meta: [{ title: "Scan QR — ClubCarder" }] }),
   component: ScanPage,
 });
 
@@ -25,7 +25,7 @@ function ScanPage() {
     const businessId = urlMatch?.[1] ?? schemeMatch?.[1];
 
     if (!businessId) {
-      toast.error("Not a Clubcarder business QR");
+      toast.error("Not a ClubCarder business QR");
       setTimeout(() => setPaused(false), 1500);
       return;
     }
@@ -57,7 +57,7 @@ function ScanPage() {
             <ScanLine className="h-5 w-5 text-muted-foreground" />
           </div>
           <p className="text-sm text-muted-foreground">
-            Scan a Clubcarder business QR to claim a loyalty card.
+            Scan a ClubCarder business QR to claim a loyalty card.
           </p>
         </div>
       </div>

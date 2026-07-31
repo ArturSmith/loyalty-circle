@@ -4,10 +4,10 @@ import { LegalLayout, LegalSection, SELLER_NAME, SUPPORT_EMAIL } from "@/compone
 export const Route = createFileRoute("/refunds")({
   head: () => ({
     meta: [
-      { title: "Refund Policy — Clubcarder" },
-      { name: "description", content: "Clubcarder offers a 30-day money-back guarantee on business subscriptions. Refunds are handled by Paddle." },
-      { property: "og:title", content: "Refund Policy — Clubcarder" },
-      { property: "og:description", content: "30-day money-back guarantee on Clubcarder business subscriptions." },
+      { title: "Refund Policy — ClubCarder" },
+      { name: "description", content: "ClubCarder offers a 30-day money-back guarantee on business subscriptions. Refunds are handled by Paddle." },
+      { property: "og:title", content: "Refund Policy — ClubCarder" },
+      { property: "og:description", content: "30-day money-back guarantee on ClubCarder business subscriptions." },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://clubcarder.com/refunds" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -21,13 +21,13 @@ function RefundsPage() {
   return (
     <LegalLayout title="Refund Policy" updated="30 July 2026">
       <p>
-        Clubcarder is operated by <strong className="text-foreground">{SELLER_NAME}</strong>. We want you to be happy
+        ClubCarder is operated by <strong className="text-foreground">{SELLER_NAME}</strong>. We want you to be happy
         with your subscription.
       </p>
 
       <LegalSection heading="30-day money-back guarantee">
         <p>
-          If you are not satisfied with your Clubcarder business subscription, you can request a full refund within
+          If you are not satisfied with your ClubCarder business subscription, you can request a full refund within
           30 days of your order date. This applies to change of mind as well as technical problems we cannot resolve.
         </p>
       </LegalSection>
