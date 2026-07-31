@@ -47,6 +47,7 @@ function Wallet() {
   const [celebration, setCelebration] = useState<Celebration | null>(null);
 
   const fetchWallet = useServerFn(getWalletCards);
+  const { profile, loading: profileLoading } = useProfile();
 
   const load = useCallback(async () => {
     try {
