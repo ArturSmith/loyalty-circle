@@ -48,6 +48,7 @@ function Wallet() {
   const [frozenBusinessIds, setFrozenBusinessIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [frontId, setFrontId] = useState<string | null>(null);
   const [flippedId, setFlippedId] = useState<string | null>(null);
   const [faceFlipped, setFaceFlipped] = useState<Set<string>>(new Set());
   const [celebration, setCelebration] = useState<Celebration | null>(null);
