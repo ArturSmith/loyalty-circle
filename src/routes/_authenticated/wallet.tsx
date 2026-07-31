@@ -385,14 +385,6 @@ function Wallet() {
                             if (isExpanded) {
                               setFlippedId(inst.id);
                             } else {
-                              setInstances((prev) => {
-                                const idx = prev.findIndex((x) => x.id === inst.id);
-                                if (idx < prev.length - 1) {
-                                  const reordered = [...prev.slice(0, idx), ...prev.slice(idx + 1), prev[idx]];
-                                  return reordered;
-                                }
-                                return prev;
-                              });
                               setExpandedId(inst.id);
                             }
                           }}
