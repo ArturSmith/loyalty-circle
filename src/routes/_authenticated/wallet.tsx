@@ -339,15 +339,15 @@ function Wallet() {
             const PEEK = 56;
             const TIGHT = 34;
             const GAP = 14;
-            const expandedIndex = expandedId ? instances.findIndex((x) => x.id === expandedId) : -1;
+            const expandedIndex = expandedId ? displayInstances.findIndex((x) => x.id === expandedId) : -1;
             const totalHeight =
               expandedIndex >= 0
-                ? expandedIndex * TIGHT + CARD_H + GAP + Math.max(0, instances.length - expandedIndex - 1) * (TIGHT + 8) + 40
-                : (instances.length - 1) * PEEK + CARD_H + 40;
+                ? expandedIndex * TIGHT + CARD_H + GAP + Math.max(0, displayInstances.length - expandedIndex - 1) * (TIGHT + 8) + 40
+                : (displayInstances.length - 1) * PEEK + CARD_H + 40;
 
             return (
               <div className="relative mx-auto max-w-md" style={{ height: totalHeight }}>
-                {instances.map((inst, i) => {
+                {displayInstances.map((inst, i) => {
                   const isExpanded = i === expandedIndex;
                   let top: number;
                   if (expandedIndex < 0) {
