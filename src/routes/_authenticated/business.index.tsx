@@ -14,6 +14,14 @@ import { StampCard } from "@/components/StampCard";
 import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
 import { Carousel, CarouselApi, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import QRCode from "qrcode";
+import {
+  BusinessForm,
+  businessDetailsToPayload,
+  emptyBusinessDetails,
+  isBusinessDetailsValid,
+  type BusinessDetails,
+} from "@/components/BusinessForm";
+
 
 type Business = { id: string; name: string; logo_url: string | null; brand_color: string | null };
 type Tpl = {
@@ -41,9 +49,9 @@ function BusinessDashboard() {
   const [current, setCurrent] = useState(0);
   const [flipped, setFlipped] = useState<Set<string>>(new Set());
   // create biz form
-  const [name, setName] = useState("");
-  const [logoUrl, setLogoUrl] = useState("");
+  const [details, setDetails] = useState<BusinessDetails>(emptyBusinessDetails);
   const [creating, setCreating] = useState(false);
+
 
 
   useEffect(() => {
