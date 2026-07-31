@@ -82,17 +82,22 @@ function BusinessDashboard() {
 
   const createBiz = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isBusinessDetailsValid(details)) {
+      toast.error("Please fill in name, category and full address");
+      return;
+    }
     setCreating(true);
     const { data: u } = await supabase.auth.getUser();
-    if (!u.user) return;
+    if (!u.user) { setCreating(false); return; }
     const { data, error } = await supabase.from("businesses").insert({
-      owner_id: u.user.id, name, logo_url: logoUrl || null,
+      owner_id: u.user.id, ...businessDetailsToPayload(details),
     }).select().maybeSingle();
     setCreating(false);
     if (error) { toast.error(error.message); return; }
     setBiz(data as Business);
     toast.success("Business created");
   };
+
 
   const signOut = async () => {
     await supabase.auth.signOut();
