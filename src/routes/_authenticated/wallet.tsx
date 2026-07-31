@@ -211,15 +211,6 @@ function Wallet() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Link to="/profile" aria-label="Open your profile">
-            <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full glass-panel border border-white/60 text-xs font-bold">
-              {profile?.avatarUrl ? (
-                <img src={profile.avatarUrl} alt="Your profile picture" className="h-full w-full object-cover" />
-              ) : (
-                initialsFrom(profile?.displayName, profile?.email)
-              )}
-            </span>
-          </Link>
           <Link to="/scan">
             <Button variant="ghost" size="icon" aria-label="Scan QR code" title="Scan QR" className="rounded-full glass-panel">
               <ScanLine className="h-5 w-5" />
