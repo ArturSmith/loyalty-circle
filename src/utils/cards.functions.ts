@@ -152,6 +152,7 @@ export const getWalletCards = createServerFn({ method: "GET" })
 
       const { data: frozenRows, error: frozenError } = await supabaseAdmin.rpc("get_frozen_business_ids", {
         _ids: businessIds,
+        _env: data.environment,
       });
 
       if (frozenError) {
