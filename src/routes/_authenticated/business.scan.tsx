@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { QrScanner } from "@/components/QrScanner";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Check, Sparkles } from "lucide-react";
+import { ArrowLeft, Check, Sparkles, XCircle } from "lucide-react";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { getPaddleEnvironment } from "@/lib/paddle";
 
