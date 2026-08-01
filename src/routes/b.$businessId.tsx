@@ -83,6 +83,13 @@ function BusinessPublic() {
   const [userId, setUserId] = useState<string | null>(null);
   const [ownedTemplateIds, setOwnedTemplateIds] = useState<Map<string, string>>(new Map());
   const [flippedTemplateId, setFlippedTemplateId] = useState<string | null>(null);
+  const walletEnabled = useServerFn(isGoogleWalletEnabled);
+  const [googleWalletReady, setGoogleWalletReady] = useState(false);
+
+  useEffect(() => {
+    walletEnabled({}).then((r) => setGoogleWalletReady(r.enabled)).catch(() => setGoogleWalletReady(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     (async () => {
