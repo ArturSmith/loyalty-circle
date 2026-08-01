@@ -8,6 +8,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Check, Sparkles, XCircle } from "lucide-react";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { getPaddleEnvironment } from "@/lib/paddle";
+import { useServerFn } from "@tanstack/react-start";
+import { syncWalletPass } from "@/utils/wallet.functions";
 
 export const Route = createFileRoute("/_authenticated/business/scan")({
   head: () => ({ meta: [{ title: "Scan customer — ClubCarder" }] }),
@@ -49,6 +51,7 @@ function ScanPage() {
   const [result, setResult] = useState<Result | null>(null);
   const [rejection, setRejection] = useState<Rejection | null>(null);
   const [paused, setPaused] = useState(false);
+  const syncPass = useServerFn(syncWalletPass);
 
   const onScan = useCallback(async (text: string) => {
     if (busy || paused) return;
@@ -62,12 +65,14 @@ function ScanPage() {
       });
       if (error) { setRejection(describeError(error.message)); return; }
       setResult(data as unknown as Result);
+      // Push the new stamp count to the customer's phone wallet pass (best effort).
+      void syncPass({ data: { instanceId: m[1] } }).catch(() => {});
     } catch (e) {
       setRejection(describeError(e instanceof Error ? e.message : ""));
     } finally {
       setBusy(false);
     }
-  }, [busy, paused]);
+  }, [busy, paused, syncPass]);
 
   const reset = () => { setResult(null); setRejection(null); setPaused(false); };
 
