@@ -20,6 +20,7 @@ import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ClaimInstanceIdRouteImport } from './routes/claim.$instanceId'
 import { Route as CheckoutSuccessRouteImport } from './routes/checkout.success'
 import { Route as BBusinessIdRouteImport } from './routes/b.$businessId'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
@@ -90,6 +91,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClaimInstanceIdRoute = ClaimInstanceIdRouteImport.update({
+  id: '/claim/$instanceId',
+  path: '/claim/$instanceId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CheckoutSuccessRoute = CheckoutSuccessRouteImport.update({
@@ -204,6 +210,7 @@ export interface FileRoutesByFullPath {
   '/wallet': typeof AuthenticatedWalletRoute
   '/b/$businessId': typeof BBusinessIdRoute
   '/checkout/success': typeof CheckoutSuccessRoute
+  '/claim/$instanceId': typeof ClaimInstanceIdRoute
   '/business/edit': typeof AuthenticatedBusinessEditRoute
   '/business/scan': typeof AuthenticatedBusinessScanRoute
   '/settings/billing': typeof AuthenticatedSettingsBillingRoute
@@ -232,6 +239,7 @@ export interface FileRoutesByTo {
   '/wallet': typeof AuthenticatedWalletRoute
   '/b/$businessId': typeof BBusinessIdRoute
   '/checkout/success': typeof CheckoutSuccessRoute
+  '/claim/$instanceId': typeof ClaimInstanceIdRoute
   '/business/edit': typeof AuthenticatedBusinessEditRoute
   '/business/scan': typeof AuthenticatedBusinessScanRoute
   '/settings/billing': typeof AuthenticatedSettingsBillingRoute
@@ -263,6 +271,7 @@ export interface FileRoutesById {
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/b/$businessId': typeof BBusinessIdRoute
   '/checkout/success': typeof CheckoutSuccessRoute
+  '/claim/$instanceId': typeof ClaimInstanceIdRoute
   '/_authenticated/business/edit': typeof AuthenticatedBusinessEditRoute
   '/_authenticated/business/scan': typeof AuthenticatedBusinessScanRoute
   '/_authenticated/settings/billing': typeof AuthenticatedSettingsBillingRoute
@@ -294,6 +303,7 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/b/$businessId'
     | '/checkout/success'
+    | '/claim/$instanceId'
     | '/business/edit'
     | '/business/scan'
     | '/settings/billing'
@@ -322,6 +332,7 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/b/$businessId'
     | '/checkout/success'
+    | '/claim/$instanceId'
     | '/business/edit'
     | '/business/scan'
     | '/settings/billing'
@@ -352,6 +363,7 @@ export interface FileRouteTypes {
     | '/_authenticated/wallet'
     | '/b/$businessId'
     | '/checkout/success'
+    | '/claim/$instanceId'
     | '/_authenticated/business/edit'
     | '/_authenticated/business/scan'
     | '/_authenticated/settings/billing'
@@ -378,6 +390,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   BBusinessIdRoute: typeof BBusinessIdRoute
   CheckoutSuccessRoute: typeof CheckoutSuccessRoute
+  ClaimInstanceIdRoute: typeof ClaimInstanceIdRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -460,6 +473,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/claim/$instanceId': {
+      id: '/claim/$instanceId'
+      path: '/claim/$instanceId'
+      fullPath: '/claim/$instanceId'
+      preLoaderRoute: typeof ClaimInstanceIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/checkout/success': {
@@ -643,6 +663,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   BBusinessIdRoute: BBusinessIdRoute,
   CheckoutSuccessRoute: CheckoutSuccessRoute,
+  ClaimInstanceIdRoute: ClaimInstanceIdRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
@@ -650,13 +671,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

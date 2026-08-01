@@ -12,6 +12,8 @@ import { ArrowLeft } from "lucide-react";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { useServerFn } from "@tanstack/react-start";
 import { claimCardToWallet } from "@/utils/cards.functions";
+import { isGoogleWalletEnabled } from "@/utils/wallet.functions";
+import { GoogleWalletButton } from "@/components/GoogleWalletButton";
 
 type Template = {
   id: string; business_id: string; title: string; subtitle: string | null; description: string | null;
@@ -81,6 +83,13 @@ function BusinessPublic() {
   const [userId, setUserId] = useState<string | null>(null);
   const [ownedTemplateIds, setOwnedTemplateIds] = useState<Map<string, string>>(new Map());
   const [flippedTemplateId, setFlippedTemplateId] = useState<string | null>(null);
+  const walletEnabled = useServerFn(isGoogleWalletEnabled);
+  const [googleWalletReady, setGoogleWalletReady] = useState(false);
+
+  useEffect(() => {
+    walletEnabled({}).then((r) => setGoogleWalletReady(r.enabled)).catch(() => setGoogleWalletReady(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -238,6 +247,14 @@ function BusinessPublic() {
                       ? "Add to my wallet"
                       : "Sign in to add"}
                   </Button>
+                  {googleWalletReady && !ownedInstanceId ? (
+                    <>
+                      <GoogleWalletButton templateId={t.id} className="mt-2" />
+                      <p className="mt-1.5 text-center text-[11px] text-muted-foreground">
+                        No account needed — the pass goes straight to your phone.
+                      </p>
+                    </>
+                  ) : null}
                 </motion.div>
                 );
               })}

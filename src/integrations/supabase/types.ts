@@ -88,27 +88,36 @@ export type Database = {
       }
       card_instances: {
         Row: {
+          anon_secret: string | null
+          claimed_at: string | null
           completed_at: string | null
           created_at: string
-          customer_id: string
+          customer_id: string | null
+          google_object_id: string | null
           id: string
           order_index: number | null
           stamps_count: number
           template_id: string
         }
         Insert: {
+          anon_secret?: string | null
+          claimed_at?: string | null
           completed_at?: string | null
           created_at?: string
-          customer_id: string
+          customer_id?: string | null
+          google_object_id?: string | null
           id?: string
           order_index?: number | null
           stamps_count?: number
           template_id: string
         }
         Update: {
+          anon_secret?: string | null
+          claimed_at?: string | null
           completed_at?: string | null
           created_at?: string
-          customer_id?: string
+          customer_id?: string | null
+          google_object_id?: string | null
           id?: string
           order_index?: number | null
           stamps_count?: number
@@ -133,6 +142,7 @@ export type Database = {
           corner_title: string | null
           created_at: string
           description: string | null
+          google_class_id: string | null
           grid_cols: number | null
           id: string
           logo_url: string | null
@@ -155,6 +165,7 @@ export type Database = {
           corner_title?: string | null
           created_at?: string
           description?: string | null
+          google_class_id?: string | null
           grid_cols?: number | null
           id?: string
           logo_url?: string | null
@@ -177,6 +188,7 @@ export type Database = {
           corner_title?: string | null
           created_at?: string
           description?: string | null
+          google_class_id?: string | null
           grid_cols?: number | null
           id?: string
           logo_url?: string | null
@@ -343,6 +355,10 @@ export type Database = {
         Returns: boolean
       }
       business_slot_rank: { Args: { _business_id: string }; Returns: number }
+      claim_anonymous_card: {
+        Args: { _instance_id: string; _secret: string }
+        Returns: string
+      }
       discover_cards: {
         Args: { _lat?: number; _limit?: number; _lng?: number; _q?: string }
         Returns: {
