@@ -247,6 +247,14 @@ function BusinessPublic() {
                       ? "Add to my wallet"
                       : "Sign in to add"}
                   </Button>
+                  {googleWalletReady && !ownedInstanceId ? (
+                    <>
+                      <GoogleWalletButton templateId={t.id} className="mt-2" />
+                      <p className="mt-1.5 text-center text-[11px] text-muted-foreground">
+                        No account needed — the pass goes straight to your phone.
+                      </p>
+                    </>
+                  ) : null}
                 </motion.div>
                 );
               })}
