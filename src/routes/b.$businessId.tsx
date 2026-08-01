@@ -12,6 +12,8 @@ import { ArrowLeft } from "lucide-react";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { useServerFn } from "@tanstack/react-start";
 import { claimCardToWallet } from "@/utils/cards.functions";
+import { isGoogleWalletEnabled } from "@/utils/wallet.functions";
+import { GoogleWalletButton } from "@/components/GoogleWalletButton";
 
 type Template = {
   id: string; business_id: string; title: string; subtitle: string | null; description: string | null;
