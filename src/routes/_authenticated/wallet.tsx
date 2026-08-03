@@ -240,7 +240,7 @@ function Wallet() {
               </Link>
               <Link to="/business" className="w-full">
                 <Button variant="ghost" className="w-full justify-start gap-3">
-                  <Store className="h-4 w-4" /> {profile?.hasBusiness ? "Business dashboard" : "Start a business"}
+                  <Store className="h-4 w-4" /> {profile?.hasBusiness ? "Business dashboard" : "ClubCarder enterprise"}
                 </Button>
               </Link>
               <Link to="/help" className="w-full">
