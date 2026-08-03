@@ -72,7 +72,7 @@ export function useBusinessAccess(): BusinessAccess {
       const [{ data: businesses }, { data: subs }, { data: profile }] = await Promise.all([
         supabase
           .from("businesses")
-          .select("id, created_at")
+          .select("id, created_at, comped")
           .eq("owner_id", u.user.id)
           .order("created_at", { ascending: true }),
         supabase
@@ -87,6 +87,10 @@ export function useBusinessAccess(): BusinessAccess {
       const now = Date.now();
       const businessCount = businesses?.length ?? 0;
       const hasBusiness = businessCount > 0;
+      // Comped (staff-granted) businesses are always covered and never consume a seat.
+      const billableCount = (businesses ?? []).filter(
+        (b) => !(b as { comped?: boolean }).comped
+      ).length;
 
       const activeSubs = (subs ?? []).filter((s) =>
         isRowActive(s as { status: string; current_period_end: string | null }, now)
@@ -103,9 +107,9 @@ export function useBusinessAccess(): BusinessAccess {
         ? Math.max(0, Math.ceil((trialEndsAt.getTime() - now) / 86400_000))
         : null;
 
-      // One seat covers one business (oldest first). The trial covers the first business only.
-      const covered = Math.min(businessCount, seatCount + (trialActive ? 1 : 0));
-      const uncoveredCount = Math.max(0, businessCount - covered);
+      // One seat covers one billable business (oldest first). The trial covers the first one only.
+      const covered = Math.min(billableCount, seatCount + (trialActive ? 1 : 0));
+      const uncoveredCount = Math.max(0, billableCount - covered);
 
       let hasAccess: boolean;
       let reason: BusinessAccess["reason"];
