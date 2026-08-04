@@ -192,15 +192,21 @@ function SwipeableBenefits({
     { id: "business" as const, label: "For businesses", icon: Store },
   ];
 
-  const handleDragEnd = (_: unknown, info: { offset: { x: number }; velocity: { x: number } }) => {
+  const handleDragEnd = (
+    _: unknown,
+    info: { offset: { x: number; y: number }; velocity: { x: number } },
+  ) => {
     const threshold = 60;
     const velocityThreshold = 300;
+    // Ignore gestures that are mostly vertical (page scrolling)
+    if (Math.abs(info.offset.y) > Math.abs(info.offset.x)) return;
     if (info.offset.x < -threshold || info.velocity.x < -velocityThreshold) {
       setActive("business");
     } else if (info.offset.x > threshold || info.velocity.x > velocityThreshold) {
       setActive("customers");
     }
   };
+
 
   return (
     <section id="benefits" className="mt-20 scroll-mt-24">
@@ -246,7 +252,9 @@ function SwipeableBenefits({
       <div className="relative overflow-hidden">
         <motion.div
           className="flex w-[200%] cursor-grab active:cursor-grabbing"
+          style={{ touchAction: "pan-y" }}
           drag="x"
+          dragDirectionLock
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.2}
           animate={{ x: active === "customers" ? "0%" : "-50%" }}
