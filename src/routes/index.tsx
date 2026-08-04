@@ -140,7 +140,7 @@ function Landing() {
               <Link to="/auth">
                 <Button size="lg" className="h-12 px-8">Get started</Button>
               </Link>
-              <a href="#for-customers">
+              <a href="#benefits">
                 <Button size="lg" variant="outline" className="h-12 px-8">
                   See how it works <ArrowRight className="ml-1 h-4 w-4" />
                 </Button>
