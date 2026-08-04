@@ -251,9 +251,7 @@ function SwipeableBenefits({
           dragElastic={0.2}
           animate={{ x: active === "customers" ? "0%" : "-50%" }}
           transition={{ type: "spring", stiffness: 280, damping: 32 }}
-          onDragStart={() => console.log("DRAG START")}
-          onDrag={() => console.log("DRAGGING")}
-          onDragEnd={(e, info) => { console.log("DRAG END", info.offset.x, info.velocity.x); handleDragEnd(e, info); }}
+          onDragEnd={handleDragEnd}
         >
           <div className="w-1/2 shrink-0 px-2">
             <BenefitGrid items={customerBenefits} />
