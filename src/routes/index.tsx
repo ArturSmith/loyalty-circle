@@ -252,7 +252,9 @@ function SwipeableBenefits({
       <div className="relative overflow-hidden">
         <motion.div
           className="flex w-[200%] cursor-grab active:cursor-grabbing"
+          style={{ touchAction: "pan-y" }}
           drag="x"
+          dragDirectionLock
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.2}
           animate={{ x: active === "customers" ? "0%" : "-50%" }}
