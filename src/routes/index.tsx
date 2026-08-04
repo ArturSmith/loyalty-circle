@@ -1,4 +1,5 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { Logo } from "@/components/Logo";
@@ -157,49 +158,8 @@ function Landing() {
           </motion.div>
         </section>
 
-        {/* FOR CUSTOMERS */}
-        <section id="for-customers" className="mt-20 scroll-mt-24">
-          <div className="mb-10 text-center">
-            <OrnamentDivider className="mx-auto mb-5 w-32" />
-            <span className="inline-flex items-center gap-1.5 rounded-full glass-panel px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-primary">
-              <Wallet className="h-3 w-3" /> For customers
-            </span>
-            <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-              Never lose a punch card again
-            </h2>
-            <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">
-              Collect stamps, track rewards, and keep every loyalty card in one place — right on your phone.
-            </p>
-          </div>
-          <BenefitGrid items={customerBenefits} />
-          <div className="mt-8 text-center">
-            <Link to="/auth">
-              <Button size="lg" className="h-12 px-8">Open my wallet</Button>
-            </Link>
-          </div>
-        </section>
-
-        {/* FOR BUSINESSES */}
-        <section id="for-business" className="mt-24 scroll-mt-24">
-          <div className="mb-10 text-center">
-            <OrnamentDivider className="mx-auto mb-5 w-32" />
-            <span className="inline-flex items-center gap-1.5 rounded-full glass-panel px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-primary">
-              <Store className="h-3 w-3" /> For businesses
-            </span>
-            <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-              Everything you need to run a loyalty program
-            </h2>
-            <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">
-              Design a card once, hand it out with a QR, and turn first-time visitors into regulars.
-            </p>
-          </div>
-          <BenefitGrid items={businessBenefits} />
-          <div className="mt-8 text-center">
-            <Link to="/auth">
-              <Button size="lg" className="h-12 px-8">Create your first card</Button>
-            </Link>
-          </div>
-        </section>
+        {/* SWIPEABLE BENEFITS */}
+        <SwipeableBenefits customerBenefits={customerBenefits} businessBenefits={businessBenefits} />
       </main>
 
       <footer className="relative mx-auto max-w-6xl px-6 py-10 text-center text-xs text-muted-foreground">
@@ -215,6 +175,117 @@ function Landing() {
       </footer>
 
     </div>
+  );
+}
+
+function SwipeableBenefits({
+  customerBenefits,
+  businessBenefits,
+}: {
+  customerBenefits: { icon: LucideIcon; title: string; body: string }[];
+  businessBenefits: { icon: LucideIcon; title: string; body: string }[];
+}) {
+  const [active, setActive] = useState<"customers" | "business">("customers");
+
+  const tabs = [
+    { id: "customers" as const, label: "For customers", icon: Wallet },
+    { id: "business" as const, label: "For businesses", icon: Store },
+  ];
+
+  const handleDragEnd = (_: unknown, info: { offset: { x: number }; velocity: { x: number } }) => {
+    const threshold = 60;
+    const velocityThreshold = 300;
+    if (info.offset.x < -threshold || info.velocity.x < -velocityThreshold) {
+      setActive("business");
+    } else if (info.offset.x > threshold || info.velocity.x > velocityThreshold) {
+      setActive("customers");
+    }
+  };
+
+  return (
+    <section id="benefits" className="mt-20 scroll-mt-24">
+      <div className="mb-8 text-center">
+        <OrnamentDivider className="mx-auto mb-5 w-32" />
+        <h2 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+          Built for everyone
+        </h2>
+        <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">
+          Swipe to see what ClubCarder does for customers and businesses.
+        </p>
+      </div>
+
+      {/* Tabs */}
+      <div className="mx-auto mb-6 flex w-fit items-center gap-1 rounded-full border border-border/60 bg-secondary/40 p-1 backdrop-blur-sm">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = active === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActive(tab.id)}
+              className={`relative flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+                isActive ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {isActive && (
+                <motion.div
+                  layoutId="activeBenefitTab"
+                  className="absolute inset-0 rounded-full bg-primary"
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                />
+              )}
+              <span className="relative z-10 flex items-center gap-1.5">
+                <Icon className="h-3.5 w-3.5" /> {tab.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Swipeable panels */}
+      <div className="relative overflow-hidden">
+        <motion.div
+          className="flex w-[200%] cursor-grab active:cursor-grabbing"
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.2}
+          animate={{ x: active === "customers" ? "0%" : "-50%" }}
+          transition={{ type: "spring", stiffness: 280, damping: 32 }}
+          onDragStart={() => console.log("DRAG START")}
+          onDrag={() => console.log("DRAGGING")}
+          onDragEnd={(e, info) => { console.log("DRAG END", info.offset.x, info.velocity.x); handleDragEnd(e, info); }}
+        >
+          <div className="w-1/2 shrink-0 px-2">
+            <BenefitGrid items={customerBenefits} />
+            <div className="mt-8 text-center">
+              <Link to="/auth">
+                <Button size="lg" className="h-12 px-8">Open my wallet</Button>
+              </Link>
+            </div>
+          </div>
+          <div className="w-1/2 shrink-0 px-2">
+            <BenefitGrid items={businessBenefits} />
+            <div className="mt-8 text-center">
+              <Link to="/auth">
+                <Button size="lg" className="h-12 px-8">Create your first card</Button>
+              </Link>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Swipe hints */}
+        <div className="pointer-events-none absolute inset-y-0 left-2 hidden items-center sm:flex">
+          <div className={`rounded-full bg-background/80 p-2 shadow-lg backdrop-blur transition-opacity ${active === "customers" ? "opacity-0" : "opacity-60"}`}>
+            <ArrowRight className="h-4 w-4 -scale-x-100" />
+          </div>
+        </div>
+        <div className="pointer-events-none absolute inset-y-0 right-2 hidden items-center sm:flex">
+          <div className={`rounded-full bg-background/80 p-2 shadow-lg backdrop-blur transition-opacity ${active === "business" ? "opacity-0" : "opacity-60"}`}>
+            <ArrowRight className="h-4 w-4" />
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
