@@ -287,6 +287,11 @@ export function StampCard({
           style={{ backgroundColor: bgColor, color: textColor, backfaceVisibility: "hidden" }}
         >
           {InfoFace}
+          <div
+            className={`absolute inset-2 ${radius} pointer-events-none`}
+            style={{ border: `1.5px solid color-mix(in srgb, ${accentColor} 25%, transparent)` }}
+            aria-hidden
+          />
         </div>
         <div
           className={`absolute inset-0 paper-grain ${disableShadow ? "" : "card-shadow"} ${radius} overflow-hidden`}
@@ -298,6 +303,11 @@ export function StampCard({
           }}
         >
           {StampsFace}
+          <div
+            className={`absolute inset-2 ${radius} pointer-events-none`}
+            style={{ border: `1.5px solid color-mix(in srgb, ${accentColor} 25%, transparent)` }}
+            aria-hidden
+          />
         </div>
       </motion.div>
     </div>
