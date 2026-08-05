@@ -303,6 +303,11 @@ export function StampCard({
           }}
         >
           {StampsFace}
+          <div
+            className={`absolute inset-2 ${radius} pointer-events-none`}
+            style={{ border: `1.5px solid color-mix(in srgb, ${accentColor} 25%, transparent)` }}
+            aria-hidden
+          />
         </div>
       </motion.div>
     </div>
