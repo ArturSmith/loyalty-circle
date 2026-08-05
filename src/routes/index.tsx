@@ -6,7 +6,7 @@ import { Logo } from "@/components/Logo";
 import { WalletShowcase } from "@/components/WalletShowcase";
 import type { StampCardProps } from "@/components/StampCard";
 import { Button } from "@/components/ui/button";
-import walletPreviewAsset from "@/assets/clubcarder-wallet-preview.png.asset.json";
+import walletPreviewAsset from "@/assets/loyalty-showcase.png.asset.json";
 import {
   CreditCard,
   Sparkles,
@@ -170,7 +170,7 @@ function Landing() {
             >
               <img
                 src={walletPreviewAsset.url}
-                alt="ClubCarder loyalty card in Apple Wallet"
+                alt="Paper punch card next to a digital ClubCarder card on a phone"
                 className="w-full rounded-3xl"
                 loading="lazy"
               />
