@@ -6,6 +6,7 @@ import { Logo } from "@/components/Logo";
 import { WalletShowcase } from "@/components/WalletShowcase";
 import type { StampCardProps } from "@/components/StampCard";
 import { Button } from "@/components/ui/button";
+import walletPreviewAsset from "@/assets/clubcarder-wallet-preview.png.asset.json";
 import {
   CreditCard,
   Sparkles,
