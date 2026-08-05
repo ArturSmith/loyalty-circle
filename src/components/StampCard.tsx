@@ -82,14 +82,14 @@ export function StampCard({
           <button
             type="button"
             onClick={onCornerTitleClick}
-            className="absolute top-3 left-4 text-[11px] sm:text-xs font-semibold tracking-wide max-w-[60%] truncate text-left rounded-md hover:bg-black/5 transition px-1 -mx-1"
+            className="absolute top-4 left-5 text-[11px] sm:text-xs font-semibold tracking-wide max-w-[60%] truncate text-left rounded-md hover:bg-black/5 transition px-2 py-1"
             style={{ color: accentColor }}
           >
             {displayedCornerTitle || "Add corner title"}
           </button>
         ) : displayedCornerTitle ? (
           <div
-            className="absolute top-3 left-4 text-[11px] sm:text-xs font-semibold tracking-wide max-w-[60%] truncate text-left"
+            className="absolute top-4 left-5 text-[11px] sm:text-xs font-semibold tracking-wide max-w-[60%] truncate text-left px-2 py-1"
             style={{ color: accentColor }}
           >
             {displayedCornerTitle}
