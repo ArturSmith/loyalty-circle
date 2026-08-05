@@ -260,7 +260,7 @@ function SwipeableBenefits({
       <div className="mb-8 text-center">
         <OrnamentDivider className="mx-auto mb-5 w-32" />
         <h2 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-          Built for everyone
+          See how it works
         </h2>
         <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">
           Swipe to see what ClubCarder does for customers and businesses.
