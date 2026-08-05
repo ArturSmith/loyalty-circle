@@ -170,7 +170,7 @@ function Landing() {
             >
               <img
                 src={walletPreviewAsset.url}
-                alt="ClubCarder loyalty card in Apple Wallet"
+                alt="Paper punch card next to a digital ClubCarder card on a phone"
                 className="w-full rounded-3xl"
                 loading="lazy"
               />
