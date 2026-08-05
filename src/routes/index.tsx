@@ -159,6 +159,52 @@ function Landing() {
           </motion.div>
         </section>
 
+        {/* PRODUCT SHOWCASE */}
+        <section className="mt-20 scroll-mt-24">
+          <div className="grid items-center gap-10 lg:grid-cols-2">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: "-60px" }}
+              transition={{ duration: 0.6 }}
+            >
+              <img
+                src={walletPreviewAsset.url}
+                alt="ClubCarder loyalty card in Apple Wallet"
+                className="w-full rounded-3xl"
+                loading="lazy"
+              />
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: "-60px" }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+            >
+              <h2 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+                Your loyalty cards, always in your pocket.
+              </h2>
+              <p className="mt-4 max-w-lg text-lg text-muted-foreground">
+                Customers scan your business QR once and their digital stamp card lives right in Apple Wallet or Google Wallet. No app to install, no paper to lose — just tap, stamp, and reward.
+              </p>
+              <ul className="mt-6 space-y-3 text-muted-foreground">
+                <li className="flex items-start gap-3">
+                  <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
+                  <span>One QR scan puts the card in every wallet.</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
+                  <span>Stamps update instantly when the business scans your code.</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
+                  <span>Rewards are visible anytime, anywhere — no login required at the counter.</span>
+                </li>
+              </ul>
+            </motion.div>
+          </div>
+        </section>
+
         {/* SWIPEABLE BENEFITS */}
         <SwipeableBenefits customerBenefits={customerBenefits} businessBenefits={businessBenefits} />
       </main>
