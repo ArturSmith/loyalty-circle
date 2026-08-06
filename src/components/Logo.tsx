@@ -1,4 +1,4 @@
-import logoSrc from "@/assets/logo.png";
+import logoAsset from "@/assets/clubcarder-logo.png.asset.json";
 
 type Props = {
   className?: string;
@@ -8,7 +8,7 @@ type Props = {
 export function Logo({ className, alt = "ClubCarder logo" }: Props) {
   return (
     <img
-      src={logoSrc}
+      src={logoAsset.url}
       alt={alt}
       width={64}
       height={64}
