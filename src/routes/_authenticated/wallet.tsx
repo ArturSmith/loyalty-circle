@@ -312,19 +312,19 @@ function Wallet() {
       {instances.length === 0 ? (
         <div className="relative flex-1 flex flex-col items-center justify-center px-6 text-center">
           <motion.div
-            initial={{ scale: 0.85, opacity: 0, rotate: -8 }}
-            animate={{ scale: 1, opacity: 1, rotate: -4 }}
-            transition={{ type: "spring", stiffness: 220, damping: 18 }}
-            className="relative h-40 w-40 rounded-[2rem] sticker-shadow border border-white/70 flex items-center justify-center"
-            style={{ backgroundImage: "var(--gradient-iris)" }}
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 220, damping: 20 }}
+            className="relative h-40 w-40 rounded-3xl border border-border bg-secondary flex items-center justify-center"
           >
-            <div className="absolute inset-3 rounded-[1.5rem] bg-white/40 backdrop-blur-md flex items-center justify-center">
-              <ScanLine className="h-14 w-14 text-foreground/80" />
+            <div className="absolute inset-3 rounded-2xl bg-card border border-border flex items-center justify-center">
+              <ScanLine className="h-14 w-14 text-primary" />
             </div>
-            <div className="absolute -top-3 -right-3 h-10 w-10 rounded-full bg-white text-foreground sticker-shadow flex items-center justify-center">
+            <div className="absolute -top-3 -right-3 h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
               <Sparkles className="h-4 w-4" />
             </div>
           </motion.div>
+
           <h2 className="mt-8 font-display text-3xl font-extrabold">No cards yet</h2>
           <p className="mt-2 text-sm text-muted-foreground max-w-xs">Scan a business's QR to add your first loyalty card.</p>
         </div>
