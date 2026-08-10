@@ -206,7 +206,7 @@ function Wallet() {
       <header className="relative flex items-center justify-between px-5 py-4">
         <div className="flex items-center gap-3 min-w-0">
           <Link to="/profile" aria-label="Open your profile">
-            <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full glass-panel border border-white/60 text-xs font-bold">
+            <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full glass-panel border border-border text-xs font-bold">
               {profile?.avatarUrl ? (
                 <img src={profile.avatarUrl} alt="Your profile picture" className="h-full w-full object-cover" />
               ) : (
@@ -267,13 +267,13 @@ function Wallet() {
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            className="relative mx-auto max-w-md rounded-2xl glass-panel border border-white/60 p-4 text-left"
+            className="relative mx-auto max-w-md rounded-2xl glass-panel border border-border p-4 text-left"
           >
             <button
               type="button"
               onClick={dismissBusinessCta}
               aria-label="Hide this suggestion for a week"
-              className="absolute right-2 top-2 rounded-full p-1.5 text-muted-foreground hover:bg-white/60 hover:text-foreground"
+              className="absolute right-2 top-2 rounded-full p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
             >
               <X className="h-4 w-4" />
             </button>
@@ -441,7 +441,7 @@ function Wallet() {
                               }}
                             />
                             {isFrozen && (
-                              <div className="pointer-events-none absolute top-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-sky-500/95 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white shadow-lg ring-1 ring-white/40 backdrop-blur">
+                              <div className="pointer-events-none absolute top-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white shadow-lg ring-1 ring-border backdrop-blur">
                                 <Snowflake className="h-3 w-3" /> Frozen
                               </div>
                             )}

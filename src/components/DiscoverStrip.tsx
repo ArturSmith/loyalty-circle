@@ -83,7 +83,7 @@ export function DiscoverStrip() {
           ? Array.from({ length: 3 }).map((_, i) => (
               <div
                 key={i}
-                className="h-[116px] w-[190px] shrink-0 animate-pulse rounded-2xl bg-white/50 first:ml-5 last:mr-5"
+                className="h-[116px] w-[190px] shrink-0 animate-pulse rounded-2xl bg-secondary first:ml-5 last:mr-5"
               />
             ))
           : cards.map((card) => (

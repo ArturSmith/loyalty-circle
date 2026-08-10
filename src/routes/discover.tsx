@@ -66,7 +66,7 @@ function Discover() {
 
   return (
     <main className="min-h-screen pb-16">
-      <header className="sticky top-0 z-20 glass-panel border-b border-white/50 px-5 py-4">
+      <header className="sticky top-0 z-20 glass-panel border-b border-border px-5 py-4">
         <div className="mx-auto flex max-w-3xl items-center gap-3">
           <Link to="/wallet" aria-label="Back to my cards">
             <Button variant="ghost" size="icon" className="rounded-full">
@@ -92,7 +92,7 @@ function Discover() {
       </header>
 
       {!coords && asked && (
-        <div className="mx-auto mt-4 flex max-w-3xl items-center justify-between gap-3 rounded-2xl glass-panel border border-white/60 px-5 py-3">
+        <div className="mx-auto mt-4 flex max-w-3xl items-center justify-between gap-3 rounded-2xl glass-panel border border-border px-5 py-3">
           <p className="text-sm text-muted-foreground">Share your location to sort cards by what's closest.</p>
           <Button size="sm" variant="secondary" className="gap-2 shrink-0" onClick={request}>
             <MapPin className="h-4 w-4" /> Use location
@@ -103,7 +103,7 @@ function Discover() {
       {loading ? (
         <div className="mx-auto mt-8 max-w-3xl space-y-6 px-5">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-[150px] animate-pulse rounded-2xl bg-white/50" />
+            <div key={i} className="h-[150px] animate-pulse rounded-2xl bg-secondary" />
           ))}
         </div>
       ) : groups.length === 0 ? (

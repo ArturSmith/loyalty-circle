@@ -105,7 +105,7 @@ function Profile() {
               <button
                 type="button"
                 onClick={() => fileRef.current?.click()}
-                className="relative h-24 w-24 rounded-full overflow-hidden glass-panel border border-white/60 flex items-center justify-center text-2xl font-display font-bold"
+                className="relative h-24 w-24 rounded-full overflow-hidden glass-panel border border-border flex items-center justify-center text-2xl font-display font-bold"
                 aria-label="Upload profile picture"
               >
                 {avatarUrl ? (
