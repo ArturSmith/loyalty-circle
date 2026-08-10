@@ -206,7 +206,7 @@ function Wallet() {
       <header className="relative flex items-center justify-between px-5 py-4">
         <div className="flex items-center gap-3 min-w-0">
           <Link to="/profile" aria-label="Open your profile">
-            <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full glass-panel border border-white/60 text-xs font-bold">
+            <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full glass-panel border border-border text-xs font-bold">
               {profile?.avatarUrl ? (
                 <img src={profile.avatarUrl} alt="Your profile picture" className="h-full w-full object-cover" />
               ) : (
@@ -267,13 +267,13 @@ function Wallet() {
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            className="relative mx-auto max-w-md rounded-2xl glass-panel border border-white/60 p-4 text-left"
+            className="relative mx-auto max-w-md rounded-2xl glass-panel border border-border p-4 text-left"
           >
             <button
               type="button"
               onClick={dismissBusinessCta}
               aria-label="Hide this suggestion for a week"
-              className="absolute right-2 top-2 rounded-full p-1.5 text-muted-foreground hover:bg-white/60 hover:text-foreground"
+              className="absolute right-2 top-2 rounded-full p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
             >
               <X className="h-4 w-4" />
             </button>
@@ -312,19 +312,19 @@ function Wallet() {
       {instances.length === 0 ? (
         <div className="relative flex-1 flex flex-col items-center justify-center px-6 text-center">
           <motion.div
-            initial={{ scale: 0.85, opacity: 0, rotate: -8 }}
-            animate={{ scale: 1, opacity: 1, rotate: -4 }}
-            transition={{ type: "spring", stiffness: 220, damping: 18 }}
-            className="relative h-40 w-40 rounded-[2rem] sticker-shadow border border-white/70 flex items-center justify-center"
-            style={{ backgroundImage: "var(--gradient-iris)" }}
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 220, damping: 20 }}
+            className="relative h-40 w-40 rounded-3xl border border-border bg-secondary flex items-center justify-center"
           >
-            <div className="absolute inset-3 rounded-[1.5rem] bg-white/40 backdrop-blur-md flex items-center justify-center">
-              <ScanLine className="h-14 w-14 text-foreground/80" />
+            <div className="absolute inset-3 rounded-2xl bg-card border border-border flex items-center justify-center">
+              <ScanLine className="h-14 w-14 text-primary" />
             </div>
-            <div className="absolute -top-3 -right-3 h-10 w-10 rounded-full bg-white text-foreground sticker-shadow flex items-center justify-center">
+            <div className="absolute -top-3 -right-3 h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
               <Sparkles className="h-4 w-4" />
             </div>
           </motion.div>
+
           <h2 className="mt-8 font-display text-3xl font-extrabold">No cards yet</h2>
           <p className="mt-2 text-sm text-muted-foreground max-w-xs">Scan a business's QR to add your first loyalty card.</p>
         </div>
@@ -441,7 +441,7 @@ function Wallet() {
                               }}
                             />
                             {isFrozen && (
-                              <div className="pointer-events-none absolute top-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-sky-500/95 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white shadow-lg ring-1 ring-white/40 backdrop-blur">
+                              <div className="pointer-events-none absolute top-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white shadow-lg ring-1 ring-border backdrop-blur">
                                 <Snowflake className="h-3 w-3" /> Frozen
                               </div>
                             )}
@@ -568,7 +568,7 @@ function Wallet() {
               {isCompleted && (
                 <Button
                   onClick={renew}
-                  className="mt-5 w-full h-12 gap-2 rounded-2xl bg-[image:var(--gradient-primary)] text-white sticker-shadow border-0 hover:opacity-95"
+                  className="mt-5 w-full h-12 gap-2 rounded-2xl bg-primary text-primary-foreground border-0 hover:bg-primary/90"
                 >
                   <RotateCcw className="h-4 w-4" /> Renew card
                 </Button>

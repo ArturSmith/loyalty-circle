@@ -31,7 +31,7 @@ export function BusinessInfoPanel({ business }: { business: PublicBusinessInfo }
     : null;
 
   return (
-    <div className="mt-5 rounded-2xl border border-ink/10 bg-white/60 p-4 text-left">
+    <div className="mt-5 rounded-2xl border border-ink/10 bg-secondary p-4 text-left">
       <div className="flex items-center gap-3">
         {business.logo_url ? (
           <img src={business.logo_url} alt={`${business.name} logo`} className="h-9 w-9 rounded-full object-cover" />

@@ -99,9 +99,6 @@ function Landing() {
   return (
     <div className="relative min-h-screen overflow-hidden">
       {/* Iridescent floating blobs */}
-      <div aria-hidden className="pointer-events-none absolute -top-24 -left-16 h-72 w-72 rounded-full bg-[oklch(0.82_0.16_300/0.45)] blur-3xl" />
-      <div aria-hidden className="pointer-events-none absolute top-1/4 -right-16 h-80 w-80 rounded-full bg-[oklch(0.86_0.14_195/0.45)] blur-3xl" />
-      <div aria-hidden className="pointer-events-none absolute bottom-0 left-1/3 h-56 w-56 rounded-full bg-[oklch(0.88_0.14_340/0.35)] blur-3xl" />
 
       <header className="relative mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6">
         <Link to="/" className="flex items-center gap-2">

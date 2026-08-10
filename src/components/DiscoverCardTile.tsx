@@ -21,7 +21,7 @@ export function DiscoverCardTile({
       aria-label={`${card.title} by ${card.business_name}`}
     >
       <div
-        className="relative overflow-hidden rounded-2xl border border-white/60 p-3 transition-transform group-hover:-translate-y-1"
+        className="relative overflow-hidden rounded-2xl border border-border p-3 transition-transform group-hover:-translate-y-1"
         style={{
           height: compact ? 116 : 132,
           backgroundColor: card.bg_color,
@@ -34,7 +34,7 @@ export function DiscoverCardTile({
           aria-hidden
         />
         <div className="relative flex items-center gap-2">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/70">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary">
             {card.business_logo_url ? (
               <img src={card.business_logo_url} alt="" className="h-full w-full object-cover" loading="lazy" />
             ) : (
@@ -45,7 +45,7 @@ export function DiscoverCardTile({
         </div>
         <p className="relative mt-2 line-clamp-2 font-display text-base font-extrabold leading-tight">{card.title}</p>
         <div className="relative mt-auto flex items-center gap-2 pt-2 text-[11px] opacity-75">
-          <span className="rounded-full bg-white/50 px-2 py-0.5">{card.total_steps} steps</span>
+          <span className="rounded-full bg-secondary px-2 py-0.5">{card.total_steps} steps</span>
           {distance ? (
             <span className="inline-flex items-center gap-1">
               <MapPin className="h-3 w-3" /> {distance}
