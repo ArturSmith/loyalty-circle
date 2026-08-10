@@ -123,7 +123,7 @@
 }
 
 @utility paper-grain {
-  /* intentionally flat */
+  background-image: none;
 }
 
 @utility card-shadow {
