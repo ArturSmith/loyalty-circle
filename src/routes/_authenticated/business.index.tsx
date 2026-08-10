@@ -221,7 +221,7 @@ function BusinessDashboard() {
             <span className="text-xs font-semibold">Scan customer</span>
           </Link>
         </Button>
-        <Button asChild className="h-auto flex-col gap-1.5 py-3 rounded-2xl bg-[image:var(--gradient-primary)] text-white sticker-shadow border-0 hover:opacity-95">
+        <Button asChild className="h-auto flex-col gap-1.5 py-3 rounded-2xl bg-primary text-primary-foreground border-0 hover:bg-primary/90">
           <Link to="/business/cards/new">
             <Plus className="h-5 w-5" />
             <span className="text-xs font-semibold">New card</span>

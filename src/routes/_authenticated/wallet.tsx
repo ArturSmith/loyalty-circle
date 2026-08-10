@@ -568,7 +568,7 @@ function Wallet() {
               {isCompleted && (
                 <Button
                   onClick={renew}
-                  className="mt-5 w-full h-12 gap-2 rounded-2xl bg-[image:var(--gradient-primary)] text-white sticker-shadow border-0 hover:opacity-95"
+                  className="mt-5 w-full h-12 gap-2 rounded-2xl bg-primary text-primary-foreground border-0 hover:bg-primary/90"
                 >
                   <RotateCcw className="h-4 w-4" /> Renew card
                 </Button>
