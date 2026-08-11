@@ -7,6 +7,9 @@ import type { CardFace, CardShape, Reward, StampIconName } from "@/components/St
 import { ArrowLeft, Pencil, Users, Stamp as StampIco, CheckCircle2, Calendar } from "lucide-react";
 import { motion } from "framer-motion";
 import { resolveAvatarUrls } from "@/lib/avatar";
+import { CardAnalytics } from "@/components/CardAnalytics";
+import type { AnalyticsInstance, AnalyticsStamp } from "@/components/CardAnalytics";
+
 
 type Tpl = {
   id: string; business_id: string; title: string; subtitle: string | null; description: string | null;
@@ -40,6 +43,9 @@ function CardDetails() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [face, setFace] = useState<CardFace>("info");
+  const [analytics, setAnalytics] = useState<{ instances: AnalyticsInstance[]; stamps: AnalyticsStamp[] }>({ instances: [], stamps: [] });
+
+
 
   useEffect(() => {
     (async () => {
@@ -83,11 +89,13 @@ function CardDetails() {
         };
       });
       setCustomers(list);
+      setAnalytics({ instances: rows, stamps: (lastStamps ?? []) as AnalyticsStamp[] });
       setStats({
         users: customerIds.length,
         stamps: (lastStamps ?? []).length,
         completed: rows.filter(r => r.completed_at).length,
       });
+
       setLoading(false);
     })();
   }, [id]);
@@ -152,6 +160,9 @@ function CardDetails() {
         <Stat icon={StampIco} label="Stamps" value={stats.stamps} />
         <Stat icon={CheckCircle2} label="Completed" value={stats.completed} />
       </div>
+
+      <CardAnalytics totalSteps={tpl.total_steps} instances={analytics.instances} stamps={analytics.stamps} />
+
 
       <div className="mt-10">
         <h2 className="font-display text-xl">Customers</h2>
