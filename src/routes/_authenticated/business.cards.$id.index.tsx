@@ -89,11 +89,13 @@ function CardDetails() {
         };
       });
       setCustomers(list);
+      setAnalytics({ instances: rows, stamps: (lastStamps ?? []) as AnalyticsStamp[] });
       setStats({
         users: customerIds.length,
         stamps: (lastStamps ?? []).length,
         completed: rows.filter(r => r.completed_at).length,
       });
+
       setLoading(false);
     })();
   }, [id]);
