@@ -43,6 +43,9 @@ function CardDetails() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [face, setFace] = useState<CardFace>("info");
+  const [analytics, setAnalytics] = useState<{ instances: AnalyticsInstance[]; stamps: AnalyticsStamp[] }>({ instances: [], stamps: [] });
+
+
 
   useEffect(() => {
     (async () => {
