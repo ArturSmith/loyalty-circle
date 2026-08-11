@@ -161,6 +161,9 @@ function CardDetails() {
         <Stat icon={CheckCircle2} label="Completed" value={stats.completed} />
       </div>
 
+      <CardAnalytics totalSteps={tpl.total_steps} instances={analytics.instances} stamps={analytics.stamps} />
+
+
       <div className="mt-10">
         <h2 className="font-display text-xl">Customers</h2>
         <p className="text-xs text-muted-foreground mt-1">Who's using this card and when they last stamped.</p>
