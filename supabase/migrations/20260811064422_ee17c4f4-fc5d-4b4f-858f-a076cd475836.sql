@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.business_has_access_v2(uuid, text) TO authenticated;
