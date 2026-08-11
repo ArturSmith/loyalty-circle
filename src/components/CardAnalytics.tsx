@@ -139,13 +139,13 @@ export function CardAnalytics({ totalSteps, instances, stamps }: Props) {
               {m.trend >= 0 ? "+" : ""}{m.trend}%
             </span>
           </div>
-          <div className="mt-5 flex h-28 items-end gap-2">
+          <div className="mt-5 flex h-28 items-stretch gap-2">
             {m.weeks.map((w, i) => (
-              <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
+              <div key={i} className="flex-1 flex h-full flex-col items-center justify-end gap-1.5">
                 <span className="text-[10px] text-muted-foreground">{w.count || ""}</span>
                 <motion.div
                   initial={{ height: 0 }}
-                  animate={{ height: `${Math.max(4, (w.count / m.weekPeak) * 100)}%` }}
+                  animate={{ height: Math.max(4, (w.count / m.weekPeak) * 80) }}
                   transition={{ delay: i * 0.05, type: "spring", damping: 18, stiffness: 180 }}
                   className={`w-full rounded-md ${i === m.weeks.length - 1 ? "bg-primary" : "bg-primary/25"}`}
                 />
@@ -153,6 +153,7 @@ export function CardAnalytics({ totalSteps, instances, stamps }: Props) {
               </div>
             ))}
           </div>
+
         </div>
 
         <div className="rounded-2xl border-2 border-ink/10 bg-card p-5">
