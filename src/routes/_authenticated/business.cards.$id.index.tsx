@@ -7,6 +7,9 @@ import type { CardFace, CardShape, Reward, StampIconName } from "@/components/St
 import { ArrowLeft, Pencil, Users, Stamp as StampIco, CheckCircle2, Calendar } from "lucide-react";
 import { motion } from "framer-motion";
 import { resolveAvatarUrls } from "@/lib/avatar";
+import { CardAnalytics } from "@/components/CardAnalytics";
+import type { AnalyticsInstance, AnalyticsStamp } from "@/components/CardAnalytics";
+
 
 type Tpl = {
   id: string; business_id: string; title: string; subtitle: string | null; description: string | null;
