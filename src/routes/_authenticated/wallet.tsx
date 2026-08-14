@@ -1,13 +1,12 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { StampCard } from "@/components/StampCard";
 import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
 import { QrDisplay } from "@/components/QrDisplay";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, CreditCard, Gift, HelpCircle, LogOut, Mail, Menu, RotateCcw, ScanLine, Snowflake, Sparkles, Store, Trash2, User, X } from "lucide-react";
+import { Check, CreditCard, Gift, RotateCcw, ScanLine, Snowflake, Sparkles, Store, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { getPaddleEnvironment } from "@/lib/paddle";
@@ -17,6 +16,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { initialsFrom } from "@/lib/avatar";
 import { BusinessInfoPanel } from "@/components/BusinessInfoPanel";
 import { DiscoverStrip } from "@/components/DiscoverStrip";
+import { BottomNav } from "@/components/BottomNav";
 
 
 type Instance = WalletInstance;
@@ -43,7 +43,6 @@ const BUSINESS_CTA_KEY = "cc_business_cta_hidden_until";
 const BUSINESS_CTA_SNOOZE_MS = 7 * 24 * 60 * 60 * 1000;
 
 function Wallet() {
-  const navigate = useNavigate();
   const [instances, setInstances] = useState<Instance[]>([]);
   const [frozenBusinessIds, setFrozenBusinessIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -197,12 +196,11 @@ function Wallet() {
     if (expandedId && !instances.find((i) => i.id === expandedId)) setExpandedId(null);
   }, [instances, expandedId]);
 
-  const signOut = async () => { await supabase.auth.signOut(); navigate({ to: "/" }); };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading your wallet…</div>;
 
   return (
-    <div className="relative min-h-screen flex flex-col overflow-hidden">
+    <div className="relative min-h-screen flex flex-col overflow-hidden pb-24">
       <header className="relative flex items-center justify-between px-5 py-4">
         <div className="flex items-center gap-3 min-w-0">
           <Link to="/profile" aria-label="Open your profile">
@@ -685,6 +683,7 @@ function Wallet() {
           </motion.div>
         )}
       </AnimatePresence>
+      <BottomNav />
     </div>
   );
 }
