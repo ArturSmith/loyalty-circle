@@ -4,11 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChevronLeft, Camera, LogOut, Store, Loader2 } from "lucide-react";
+import { Camera, LogOut, Store, Loader2, HelpCircle, Mail, CreditCard, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { useProfile } from "@/hooks/useProfile";
 import { AVATAR_BUCKET, initialsFrom, resolveAvatarUrl } from "@/lib/avatar";
+import { BottomNav } from "@/components/BottomNav";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
@@ -87,13 +88,9 @@ function Profile() {
     d ? new Date(d).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }) : "—";
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="flex items-center justify-between px-5 py-4">
-        <Link to="/wallet">
-          <Button variant="ghost" size="icon" aria-label="Back to my cards"><ChevronLeft className="h-5 w-5" /></Button>
-        </Link>
+    <div className="min-h-screen flex flex-col pb-24">
+      <header className="px-5 py-4">
         <h1 className="font-display text-2xl font-semibold">Profile</h1>
-        <div className="w-9" />
       </header>
 
       <div className="flex-1 px-6 py-4 max-w-md mx-auto w-full">
@@ -160,14 +157,32 @@ function Profile() {
               <Button onClick={save} disabled={saving} className="w-full h-11">
                 {saving ? "Saving…" : "Save changes"}
               </Button>
-              <Button variant="ghost" onClick={signOut} className="w-full gap-2 text-muted-foreground">
-                <LogOut className="h-4 w-4" /> Sign out
-              </Button>
             </div>
+
+            <nav className="mt-8 overflow-hidden rounded-2xl border border-border divide-y divide-border" aria-label="Account menu">
+              <MenuLink to="/settings/billing" icon={CreditCard} label="Settings & billing" />
+              <MenuLink to="/help" icon={HelpCircle} label="Help" />
+              <MenuLink to="/contact" icon={Mail} label="Contact us" />
+            </nav>
+
+            <Button variant="ghost" onClick={signOut} className="mt-6 w-full gap-2 text-muted-foreground">
+              <LogOut className="h-4 w-4" /> Sign out
+            </Button>
           </>
         )}
       </div>
+      <BottomNav />
     </div>
+  );
+}
+
+function MenuLink({ to, icon: Icon, label }: { to: string; icon: typeof Store; label: string }) {
+  return (
+    <Link to={to} className="flex items-center gap-3 px-4 py-3.5 text-sm font-medium hover:bg-secondary">
+      <Icon className="h-4 w-4 text-muted-foreground" />
+      <span className="flex-1">{label}</span>
+      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+    </Link>
   );
 }
 
