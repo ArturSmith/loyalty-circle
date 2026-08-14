@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { CreditCard, Compass, MessageCircle, User } from "lucide-react";
 
 const items = [
-  { to: "/wallet", label: "Cards", icon: CreditCard },
+  { to: "/wallet", label: "Wallet", icon: CreditCard },
   { to: "/discover", label: "Discover", icon: Compass },
   { to: "/chats", label: "Chats", icon: MessageCircle },
   { to: "/profile", label: "Profile", icon: User },
