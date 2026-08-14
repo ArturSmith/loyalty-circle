@@ -224,42 +224,8 @@ function Wallet() {
               <ScanLine className="h-5 w-5" />
             </Button>
           </Link>
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="Open menu" title="Menu" className="rounded-full glass-panel"><Menu className="h-5 w-5" /></Button>
-            </SheetTrigger>
-          <SheetContent side="right" className="w-64">
-            <SheetHeader className="text-left">
-              <SheetTitle className="font-display">Menu</SheetTitle>
-            </SheetHeader>
-            <nav className="mt-8 flex flex-col gap-2">
-              <Link to="/profile" className="w-full">
-                <Button variant="ghost" className="w-full justify-start gap-3">
-                  <User className="h-4 w-4" /> Profile
-                </Button>
-              </Link>
-              <Link to="/business" className="w-full">
-                <Button variant="ghost" className="w-full justify-start gap-3">
-                  <Store className="h-4 w-4" /> {profile?.hasBusiness ? "Business dashboard" : "ClubCarder enterprise"}
-                </Button>
-              </Link>
-              <Link to="/help" className="w-full">
-                <Button variant="ghost" className="w-full justify-start gap-3">
-                  <HelpCircle className="h-4 w-4" /> Help
-                </Button>
-              </Link>
-              <Link to="/contact" className="w-full">
-                <Button variant="ghost" className="w-full justify-start gap-3">
-                  <Mail className="h-4 w-4" /> Contact us
-                </Button>
-              </Link>
-              <Button variant="ghost" className="w-full justify-start gap-3" onClick={signOut}>
-                <LogOut className="h-4 w-4" /> Sign out
-              </Button>
-            </nav>
-          </SheetContent>
-        </Sheet>
         </div>
+
       </header>
 
       {!profileLoading && !profile?.hasBusiness && !businessCtaHidden && (
