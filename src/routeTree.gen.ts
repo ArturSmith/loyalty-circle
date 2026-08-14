@@ -27,6 +27,7 @@ import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedSubscribeRouteImport } from './routes/_authenticated/subscribe'
 import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated/scan'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedChatsRouteImport } from './routes/_authenticated/chats'
 import { Route as AuthenticatedBusinessRouteImport } from './routes/_authenticated/business'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedBusinessIndexRouteImport } from './routes/_authenticated/business.index'
@@ -129,6 +130,11 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedChatsRoute = AuthenticatedChatsRouteImport.update({
+  id: '/chats',
+  path: '/chats',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedBusinessRoute = AuthenticatedBusinessRouteImport.update({
   id: '/business',
   path: '/business',
@@ -211,6 +217,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/business': typeof AuthenticatedBusinessRouteWithChildren
+  '/chats': typeof AuthenticatedChatsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/scan': typeof AuthenticatedScanRoute
   '/subscribe': typeof AuthenticatedSubscribeRoute
@@ -241,6 +248,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/chats': typeof AuthenticatedChatsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/scan': typeof AuthenticatedScanRoute
   '/subscribe': typeof AuthenticatedSubscribeRoute
@@ -274,6 +282,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/business': typeof AuthenticatedBusinessRouteWithChildren
+  '/_authenticated/chats': typeof AuthenticatedChatsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/scan': typeof AuthenticatedScanRoute
   '/_authenticated/subscribe': typeof AuthenticatedSubscribeRoute
@@ -307,6 +316,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/admin'
     | '/business'
+    | '/chats'
     | '/profile'
     | '/scan'
     | '/subscribe'
@@ -337,6 +347,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/admin'
+    | '/chats'
     | '/profile'
     | '/scan'
     | '/subscribe'
@@ -369,6 +380,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/_authenticated/admin'
     | '/_authenticated/business'
+    | '/_authenticated/chats'
     | '/_authenticated/profile'
     | '/_authenticated/scan'
     | '/_authenticated/subscribe'
@@ -536,6 +548,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/chats': {
+      id: '/_authenticated/chats'
+      path: '/chats'
+      fullPath: '/chats'
+      preLoaderRoute: typeof AuthenticatedChatsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/business': {
       id: '/_authenticated/business'
       path: '/business'
@@ -650,6 +669,7 @@ const AuthenticatedBusinessRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedBusinessRoute: typeof AuthenticatedBusinessRouteWithChildren
+  AuthenticatedChatsRoute: typeof AuthenticatedChatsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedScanRoute: typeof AuthenticatedScanRoute
   AuthenticatedSubscribeRoute: typeof AuthenticatedSubscribeRoute
@@ -660,6 +680,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedBusinessRoute: AuthenticatedBusinessRouteWithChildren,
+  AuthenticatedChatsRoute: AuthenticatedChatsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedScanRoute: AuthenticatedScanRoute,
   AuthenticatedSubscribeRoute: AuthenticatedSubscribeRoute,
@@ -692,3 +713,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
