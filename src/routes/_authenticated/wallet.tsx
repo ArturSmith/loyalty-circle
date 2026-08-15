@@ -375,37 +375,39 @@ function Wallet() {
                           className="relative block w-full text-left focus:outline-none drop-shadow-2xl"
                           aria-label={isExpanded ? `Show QR for ${inst.template.title}` : `Open ${inst.template.title}`}
                         >
-                          <div className={isFrozen ? "relative" : undefined}>
-                            <StampCard
-                              title={inst.template.title}
-                              subtitle={inst.template.subtitle}
-                              cornerTitle={inst.template.corner_title}
-                              description={inst.template.description}
-                              totalSteps={inst.template.total_steps}
-                              stampsCount={inst.stamps_count}
-                              shape={inst.template.shape}
-                              gridCols={inst.template.grid_cols}
-                              bgColor={inst.template.bg_color}
-                              accentColor={inst.template.accent_color}
-                              textColor={inst.template.text_color}
-                              stampIcon={inst.template.stamp_icon}
-                              logoUrl={inst.template.logo_url}
-                              rewards={inst.template.rewards}
-                              businessName={inst.template.business.name}
-                              lastStamp={inst.stamps_count}
-                              face={faceFlipped.has(inst.id) ? "stamps" : "info"}
-                              showFlipButton
-                              onFlip={() => {
-                                setFaceFlipped((prev) => {
-                                  const next = new Set(prev);
-                                  if (next.has(inst.id)) next.delete(inst.id);
-                                  else next.add(inst.id);
-                                  return next;
-                                });
-                              }}
-                            />
+                          <div className="relative">
+                            <div className={isFrozen ? "opacity-75" : undefined}>
+                              <StampCard
+                                title={inst.template.title}
+                                subtitle={inst.template.subtitle}
+                                cornerTitle={inst.template.corner_title}
+                                description={inst.template.description}
+                                totalSteps={inst.template.total_steps}
+                                stampsCount={inst.stamps_count}
+                                shape={inst.template.shape}
+                                gridCols={inst.template.grid_cols}
+                                bgColor={inst.template.bg_color}
+                                accentColor={inst.template.accent_color}
+                                textColor={inst.template.text_color}
+                                stampIcon={inst.template.stamp_icon}
+                                logoUrl={inst.template.logo_url}
+                                rewards={inst.template.rewards}
+                                businessName={inst.template.business.name}
+                                lastStamp={inst.stamps_count}
+                                face={faceFlipped.has(inst.id) ? "stamps" : "info"}
+                                showFlipButton
+                                onFlip={() => {
+                                  setFaceFlipped((prev) => {
+                                    const next = new Set(prev);
+                                    if (next.has(inst.id)) next.delete(inst.id);
+                                    else next.add(inst.id);
+                                    return next;
+                                  });
+                                }}
+                              />
+                            </div>
                             {isFrozen && (
-                              <div className="pointer-events-none absolute top-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white shadow-lg ring-1 ring-border backdrop-blur">
+                              <div className="pointer-events-none absolute bottom-3 left-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white shadow-lg ring-1 ring-border backdrop-blur">
                                 <Snowflake className="h-3 w-3" /> Frozen
                               </div>
                             )}
