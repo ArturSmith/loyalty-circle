@@ -125,16 +125,23 @@ function RootComponent() {
   useEffect(() => {
     let dispose: (() => void) | undefined;
     import("@/lib/native").then(({ initNative }) =>
-      initNative(() => {
-        if (window.history.length > 1) {
-          window.history.back();
-          return true;
-        }
-        return false;
-      }).then((fn) => { dispose = fn; }),
+      initNative(
+        () => {
+          if (window.history.length > 1) {
+            window.history.back();
+            return true;
+          }
+          return false;
+        },
+        (path) => {
+          if (path && path !== window.location.pathname + window.location.search) {
+            router.navigate({ to: path });
+          }
+        },
+      ).then((fn) => { dispose = fn; }),
     );
     return () => dispose?.();
-  }, []);
+  }, [router]);
 
 
 

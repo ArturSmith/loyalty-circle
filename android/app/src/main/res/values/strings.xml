@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ClubCarder</string>
+    <string name="title_activity_main">ClubCarder</string>
+    <string name="package_name">com.clubcarder.app</string>
+    <string name="custom_url_scheme">com.clubcarder.app</string>
+</resources>
