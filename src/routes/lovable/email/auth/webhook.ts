@@ -80,7 +80,12 @@ const createHandler = () => createAuthEmailHandler({
 export const Route = createFileRoute("/lovable/email/auth/webhook")({
   server: {
     handlers: {
-      POST: ({ request }) => handler(request),
+      POST: ({ request }) => {
+        if (!process.env.LOVABLE_API_KEY) {
+          return Response.json({ error: 'Email service not configured' }, { status: 503 })
+        }
+        return (cachedHandler ??= createHandler())(request)
+      },
     },
   },
 })
