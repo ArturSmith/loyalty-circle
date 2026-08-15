@@ -122,6 +122,22 @@ function RootComponent() {
     return () => data.subscription.unsubscribe();
   }, [queryClient, router]);
 
+  useEffect(() => {
+    let dispose: (() => void) | undefined;
+    import("@/lib/native").then(({ initNative }) =>
+      initNative(() => {
+        if (window.history.length > 1) {
+          window.history.back();
+          return true;
+        }
+        return false;
+      }).then((fn) => { dispose = fn; }),
+    );
+    return () => dispose?.();
+  }, []);
+
+
+
 
   return (
     <QueryClientProvider client={queryClient}>
