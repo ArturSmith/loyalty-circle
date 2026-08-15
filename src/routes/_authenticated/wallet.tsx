@@ -407,7 +407,7 @@ function Wallet() {
                               />
                             </div>
                             {isFrozen && (
-                              <div className="pointer-events-none absolute top-3 left-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white shadow-lg ring-1 ring-border backdrop-blur">
+                              <div className="pointer-events-none absolute bottom-3 left-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white shadow-lg ring-1 ring-border backdrop-blur">
                                 <Snowflake className="h-3 w-3" /> Frozen
                               </div>
                             )}
