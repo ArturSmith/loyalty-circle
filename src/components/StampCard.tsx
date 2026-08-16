@@ -188,10 +188,21 @@ export function StampCard({
             const tileBase = "aspect-square w-full rounded-full border-2 flex items-center justify-center";
             const rewardTile = "aspect-square w-full flex items-center justify-center";
 
+            // A reward step counts as achieved once the stamp counter has moved
+            // past it — that's the moment `add_stamp` issues the voucher.
+            const rewardEarned = !!reward && !clickable && filled;
+
             const rewardLabel = (
               <span
                 className="font-bold uppercase text-center leading-none px-0.5"
-                style={{ color: accentColor, fontSize: "clamp(7px, 3.2cqi, 13px)", lineHeight: 1 }}
+                style={{
+                  color: accentColor,
+                  fontSize: "clamp(7px, 3.2cqi, 13px)",
+                  lineHeight: 1,
+                  textDecoration: rewardEarned ? "line-through" : undefined,
+                  textDecorationThickness: rewardEarned ? "0.12em" : undefined,
+                  opacity: rewardEarned ? 0.55 : 1,
+                }}
               >
                 {reward?.label}
               </span>
@@ -218,7 +229,13 @@ export function StampCard({
                   initial={isLast ? { scale: 3, rotate: -18, opacity: 0 } : false}
                   animate={isLast ? { scale: 1, rotate: 0, opacity: 1 } : undefined}
                   transition={{ type: "spring", stiffness: 260, damping: 14 }}
-                  className={rewardTile}>
+                  className={rewardTile}
+                  title={rewardEarned ? `${reward.label} — earned` : reward.label}
+                  aria-label={
+                    rewardEarned
+                      ? `Step ${step}: ${reward.label} — earned`
+                      : `Step ${step}: ${reward.label} reward`
+                  }>
                   {rewardLabel}
                 </motion.div>
               );
