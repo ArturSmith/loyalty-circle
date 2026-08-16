@@ -8,6 +8,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { QrDisplay } from "@/components/QrDisplay";
 import { supabase } from "@/integrations/supabase/client";
 import { hapticTap } from "@/lib/native";
+import { publishUnusedVoucherCount } from "@/hooks/useUnusedVoucherCount";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { getMyVouchers } from "@/utils/vouchers.functions";
 import type { MyVoucher } from "@/utils/vouchers.functions";
@@ -69,6 +70,9 @@ function VouchersPage() {
         seenStatus.current = new Map(rows.map((v) => [v.id, v.status]));
 
         setVouchers(rows);
+        // This page holds the real list, so the nav badge can take our number
+        // rather than firing its own count query.
+        publishUnusedVoucherCount(rows.filter((v) => v.status === "unused").length);
       } finally {
         if (alive) setLoading(false);
       }

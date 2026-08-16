@@ -12,6 +12,7 @@ import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { getPaddleEnvironment } from "@/lib/paddle";
 import { useServerFn } from "@tanstack/react-start";
 import { getWalletCards, type WalletInstance } from "@/utils/cards.functions";
+import { invalidateUnusedVoucherCount } from "@/hooks/useUnusedVoucherCount";
 import { useProfile } from "@/hooks/useProfile";
 import { initialsFrom } from "@/lib/avatar";
 import { BusinessInfoPanel } from "@/components/BusinessInfoPanel";
@@ -112,6 +113,9 @@ function Wallet() {
               completed: inst.stamps_count >= inst.template.total_steps,
               accentColor: inst.template.accent_color,
             });
+            // A reward step just unlocked, which means a voucher was issued —
+            // move the nav badge without waiting on realtime.
+            if (unlocked) invalidateUnusedVoucherCount();
             break;
           }
         }
