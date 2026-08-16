@@ -1,11 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Gift, MapPin, Phone, Globe, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BottomNav } from "@/components/BottomNav";
 import { QrDisplay } from "@/components/QrDisplay";
+import { supabase } from "@/integrations/supabase/client";
+import { hapticTap } from "@/lib/native";
+import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { getMyVouchers } from "@/utils/vouchers.functions";
 import type { MyVoucher } from "@/utils/vouchers.functions";
 
@@ -37,21 +40,75 @@ function VouchersPage() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"unused" | "used">("unused");
   const [openId, setOpenId] = useState<string | null>(null);
+  const [redeemed, setRedeemed] = useState<MyVoucher | null>(null);
+  // Statuses from the previous fetch, so we can spot the moment the business
+  // redeems a voucher. Starts undefined so the first load never celebrates.
+  const seenStatus = useRef<Map<string, MyVoucher["status"]> | null>(null);
 
   useEffect(() => {
     let alive = true;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
     const run = async () => {
       try {
         const rows = await load({});
-        if (alive) setVouchers(rows);
+        if (!alive) return;
+
+        const previous = seenStatus.current;
+        if (previous) {
+          // The business just scanned this voucher — celebrate it.
+          const justUsed = rows.find(
+            (v) => v.status === "used" && previous.get(v.id) === "unused",
+          );
+          if (justUsed) {
+            setRedeemed(justUsed);
+            setOpenId(null); // the QR modal is spent, swap it for the animation
+            void hapticTap();
+          }
+        }
+        seenStatus.current = new Map(rows.map((v) => [v.id, v.status]));
+
+        setVouchers(rows);
       } finally {
         if (alive) setLoading(false);
       }
     };
+
     void run();
+
+    // The customer is standing at the counter watching, so poll alone is too
+    // slow — realtime makes redemption feel immediate, with the poll as backup.
+    (async () => {
+      const { data } = await supabase.auth.getUser();
+      const userId = data.user?.id;
+      if (!alive || !userId) return;
+      const token = (await supabase.auth.getSession()).data.session?.access_token;
+      if (token) supabase.realtime.setAuth(token);
+      if (!alive) return;
+      channel = supabase
+        .channel(`vouchers:${userId}`)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "vouchers", filter: `customer_id=eq.${userId}` },
+          () => void run(),
+        )
+        .subscribe();
+    })();
+
     const t = setInterval(run, 6000);
-    return () => { alive = false; clearInterval(t); };
+    return () => {
+      alive = false;
+      clearInterval(t);
+      if (channel) supabase.removeChannel(channel);
+    };
   }, [load]);
+
+  // Auto-dismiss the redemption celebration.
+  useEffect(() => {
+    if (!redeemed) return;
+    const t = setTimeout(() => setRedeemed(null), 6000);
+    return () => clearTimeout(t);
+  }, [redeemed]);
 
   const list = useMemo(() => vouchers.filter((v) => v.status === tab), [vouchers, tab]);
   const open = vouchers.find((v) => v.id === openId) ?? null;
@@ -182,6 +239,81 @@ function VouchersPage() {
                 )}
                 <div className="flex items-center gap-2"><Check className="h-3.5 w-3.5 shrink-0" />Unlocked at step {open.step_number} • {fmt(open.created_at)}</div>
               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {redeemed && (
+          <motion.div
+            key={`redeemed-${redeemed.id}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-ink/85 p-6 backdrop-blur-md"
+            onClick={() => setRedeemed(null)}
+          >
+            {Array.from({ length: 14 }).map((_, i) => (
+              <motion.span
+                key={i}
+                initial={{ opacity: 0, x: 0, y: 0, scale: 0 }}
+                animate={{
+                  opacity: [0, 1, 0],
+                  x: Math.cos((i / 14) * Math.PI * 2) * 160,
+                  y: Math.sin((i / 14) * Math.PI * 2) * 160,
+                  scale: [0, 1, 0.6],
+                  rotate: i * 30,
+                }}
+                transition={{ duration: 1.2, delay: 0.1 + i * 0.02, ease: "easeOut" }}
+                className="pointer-events-none absolute h-2 w-2 rounded-full"
+                style={{ background: redeemed.accent_color }}
+              />
+            ))}
+
+            <motion.div
+              initial={{ scale: 0.6, y: 40, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: "spring", damping: 16, stiffness: 220 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-sm rounded-3xl bg-paper paper-grain card-shadow p-8 text-center"
+              role="status"
+              aria-live="polite"
+            >
+              <button
+                onClick={() => setRedeemed(null)}
+                className="absolute right-3 top-3 p-2 opacity-60 hover:opacity-100"
+                aria-label="Close"
+              >
+                <X className="h-4 w-4" />
+              </button>
+
+              <OrnamentDivider className="mx-auto w-40 opacity-70" />
+
+              <motion.div
+                initial={{ scale: 0, rotate: -30 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: "spring", damping: 12, stiffness: 260, delay: 0.15 }}
+                className="mx-auto mt-5 flex h-16 w-16 items-center justify-center rounded-2xl"
+                style={{ backgroundColor: `${redeemed.accent_color}1a`, color: redeemed.accent_color }}
+              >
+                <Check className="h-8 w-8" strokeWidth={3} />
+              </motion.div>
+
+              <p className="mt-4 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                Enjoy your reward
+              </p>
+              <h2 className="mt-1 font-display text-2xl font-semibold">{redeemed.label}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {redeemed.business?.name ?? "Business"} · {redeemed.card_title}
+              </p>
+
+              <p className="mt-5 text-xs text-muted-foreground">
+                Redeemed just now — it's moved to your used vouchers.
+              </p>
+
+              <OrnamentDivider className="mx-auto mt-6 w-40 opacity-70" />
             </motion.div>
           </motion.div>
         )}
