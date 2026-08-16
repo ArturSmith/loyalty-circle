@@ -360,6 +360,70 @@ export type Database = {
         }
         Relationships: []
       }
+      vouchers: {
+        Row: {
+          business_id: string
+          card_instance_id: string
+          created_at: string
+          customer_id: string | null
+          id: string
+          label: string
+          redeemed_at: string | null
+          redeemed_by: string | null
+          status: string
+          step_number: number
+          template_id: string
+        }
+        Insert: {
+          business_id: string
+          card_instance_id: string
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          label: string
+          redeemed_at?: string | null
+          redeemed_by?: string | null
+          status?: string
+          step_number: number
+          template_id: string
+        }
+        Update: {
+          business_id?: string
+          card_instance_id?: string
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          label?: string
+          redeemed_at?: string | null
+          redeemed_by?: string | null
+          status?: string
+          step_number?: number
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vouchers_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vouchers_card_instance_id_fkey"
+            columns: ["card_instance_id"]
+            isOneToOne: false
+            referencedRelation: "card_instances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vouchers_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "card_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -463,6 +527,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      redeem_voucher: { Args: { _voucher_id: string }; Returns: Json }
       renew_card: { Args: { _card_instance_id: string }; Returns: undefined }
       user_holds_card_for_business: {
         Args: { _business_id: string }

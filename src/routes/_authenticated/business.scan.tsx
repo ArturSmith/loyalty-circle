@@ -17,7 +17,9 @@ export const Route = createFileRoute("/_authenticated/business/scan")({
 });
 
 type Result = { stamps_count: number; total_steps: number; reward: { step: number; label: string } | null; completed: boolean };
+type VoucherResult = { label: string; business_name: string };
 type Rejection = { title: string; message: string };
+
 
 function describeError(raw: string): Rejection {
   const msg = (raw || "").toLowerCase();
@@ -42,6 +44,12 @@ function describeError(raw: string): Rejection {
   if (msg.includes("auth required")) {
     return { title: "Signed out", message: "Your session expired. Sign in again to keep stamping." };
   }
+  if (msg.includes("voucher already used")) {
+    return { title: "Already redeemed", message: "This voucher has already been used." };
+  }
+  if (msg.includes("voucher not found")) {
+    return { title: "Voucher not found", message: "This QR doesn't match any voucher. Ask the customer to reopen it." };
+  }
   return { title: "Couldn't stamp", message: raw || "Something went wrong. Try scanning again." };
 }
 
@@ -49,24 +57,33 @@ function ScanPage() {
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
+  const [voucher, setVoucher] = useState<VoucherResult | null>(null);
   const [rejection, setRejection] = useState<Rejection | null>(null);
   const [paused, setPaused] = useState(false);
   const syncPass = useServerFn(syncWalletPass);
 
   const onScan = useCallback(async (text: string) => {
     if (busy || paused) return;
+    const voucherMatch = text.match(/^stempel:voucher:([0-9a-f-]+)$/i);
     const m = text.match(/^stempel:card:([0-9a-f-]+)$/i);
-    if (!m) { toast.error("Not a ClubCarder card QR"); return; }
+    if (!m && !voucherMatch) { toast.error("Not a ClubCarder QR"); return; }
     setBusy(true); setPaused(true);
     try {
+      if (voucherMatch) {
+        const { data, error } = await supabase.rpc("redeem_voucher", { _voucher_id: voucherMatch[1]! });
+        if (error) { setRejection(describeError(error.message)); return; }
+        const v = data as unknown as { label?: string; business_name?: string };
+        setVoucher({ label: v?.label ?? "Reward", business_name: v?.business_name ?? "" });
+        return;
+      }
       const { data, error } = await supabase.rpc("add_stamp", {
-        _card_instance_id: m[1],
+        _card_instance_id: m![1]!,
         _env: getPaddleEnvironment(),
       });
       if (error) { setRejection(describeError(error.message)); return; }
       setResult(data as unknown as Result);
       // Push the new stamp count to the customer's phone wallet pass (best effort).
-      void syncPass({ data: { instanceId: m[1] } }).catch(() => {});
+      void syncPass({ data: { instanceId: m![1]! } }).catch(() => {});
     } catch (e) {
       setRejection(describeError(e instanceof Error ? e.message : ""));
     } finally {
@@ -74,7 +91,8 @@ function ScanPage() {
     }
   }, [busy, paused, syncPass]);
 
-  const reset = () => { setResult(null); setRejection(null); setPaused(false); };
+  const reset = () => { setResult(null); setRejection(null); setVoucher(null); setPaused(false); };
+
 
 
   return (
@@ -134,7 +152,26 @@ function ScanPage() {
           </motion.div>
         )}
 
-        {rejection && !result && (
+        {voucher && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-ink/85 backdrop-blur-md flex items-center justify-center p-6">
+            <motion.div initial={{ scale: 0.7, y: 30 }} animate={{ scale: 1, y: 0 }}
+              transition={{ type: "spring", damping: 18, stiffness: 220 }}
+              className="w-full max-w-sm rounded-3xl bg-paper paper-grain card-shadow p-8 text-center">
+              <motion.div initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: "spring", damping: 11, stiffness: 200 }}
+                className="mx-auto h-20 w-20 rounded-full bg-gold text-ink flex items-center justify-center">
+                <Gift className="h-8 w-8" />
+              </motion.div>
+              <h2 className="font-display text-3xl mt-4">Voucher redeemed</h2>
+              <p className="mt-2 text-sm text-muted-foreground">Hand over: <span className="font-semibold text-foreground">{voucher.label}</span></p>
+              <Button className="mt-6 w-full h-11" onClick={reset}>Scan next</Button>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {rejection && !result && !voucher && (
+
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 bg-ink/85 backdrop-blur-md flex items-center justify-center p-6">
             <motion.div initial={{ scale: 0.7, y: 30 }} animate={{ scale: 1, y: 0 }}

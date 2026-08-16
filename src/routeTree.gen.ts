@@ -24,6 +24,7 @@ import { Route as ClaimInstanceIdRouteImport } from './routes/claim.$instanceId'
 import { Route as CheckoutSuccessRouteImport } from './routes/checkout.success'
 import { Route as BBusinessIdRouteImport } from './routes/b.$businessId'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
+import { Route as AuthenticatedVouchersRouteImport } from './routes/_authenticated/vouchers'
 import { Route as AuthenticatedSubscribeRouteImport } from './routes/_authenticated/subscribe'
 import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated/scan'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
@@ -113,6 +114,11 @@ const BBusinessIdRoute = BBusinessIdRouteImport.update({
 const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
   id: '/wallet',
   path: '/wallet',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedVouchersRoute = AuthenticatedVouchersRouteImport.update({
+  id: '/vouchers',
+  path: '/vouchers',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSubscribeRoute = AuthenticatedSubscribeRouteImport.update({
@@ -221,6 +227,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/scan': typeof AuthenticatedScanRoute
   '/subscribe': typeof AuthenticatedSubscribeRoute
+  '/vouchers': typeof AuthenticatedVouchersRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/b/$businessId': typeof BBusinessIdRoute
   '/checkout/success': typeof CheckoutSuccessRoute
@@ -252,6 +259,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/scan': typeof AuthenticatedScanRoute
   '/subscribe': typeof AuthenticatedSubscribeRoute
+  '/vouchers': typeof AuthenticatedVouchersRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/b/$businessId': typeof BBusinessIdRoute
   '/checkout/success': typeof CheckoutSuccessRoute
@@ -286,6 +294,7 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/scan': typeof AuthenticatedScanRoute
   '/_authenticated/subscribe': typeof AuthenticatedSubscribeRoute
+  '/_authenticated/vouchers': typeof AuthenticatedVouchersRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/b/$businessId': typeof BBusinessIdRoute
   '/checkout/success': typeof CheckoutSuccessRoute
@@ -320,6 +329,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/scan'
     | '/subscribe'
+    | '/vouchers'
     | '/wallet'
     | '/b/$businessId'
     | '/checkout/success'
@@ -351,6 +361,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/scan'
     | '/subscribe'
+    | '/vouchers'
     | '/wallet'
     | '/b/$businessId'
     | '/checkout/success'
@@ -384,6 +395,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/scan'
     | '/_authenticated/subscribe'
+    | '/_authenticated/vouchers'
     | '/_authenticated/wallet'
     | '/b/$businessId'
     | '/checkout/success'
@@ -525,6 +537,13 @@ declare module '@tanstack/react-router' {
       path: '/wallet'
       fullPath: '/wallet'
       preLoaderRoute: typeof AuthenticatedWalletRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/vouchers': {
+      id: '/_authenticated/vouchers'
+      path: '/vouchers'
+      fullPath: '/vouchers'
+      preLoaderRoute: typeof AuthenticatedVouchersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/subscribe': {
@@ -673,6 +692,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedScanRoute: typeof AuthenticatedScanRoute
   AuthenticatedSubscribeRoute: typeof AuthenticatedSubscribeRoute
+  AuthenticatedVouchersRoute: typeof AuthenticatedVouchersRoute
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
   AuthenticatedSettingsBillingRoute: typeof AuthenticatedSettingsBillingRoute
 }
@@ -684,6 +704,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedScanRoute: AuthenticatedScanRoute,
   AuthenticatedSubscribeRoute: AuthenticatedSubscribeRoute,
+  AuthenticatedVouchersRoute: AuthenticatedVouchersRoute,
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
   AuthenticatedSettingsBillingRoute: AuthenticatedSettingsBillingRoute,
 }
