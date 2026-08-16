@@ -44,6 +44,12 @@ function describeError(raw: string): Rejection {
   if (msg.includes("auth required")) {
     return { title: "Signed out", message: "Your session expired. Sign in again to keep stamping." };
   }
+  if (msg.includes("voucher already used")) {
+    return { title: "Already redeemed", message: "This voucher has already been used." };
+  }
+  if (msg.includes("voucher not found")) {
+    return { title: "Voucher not found", message: "This QR doesn't match any voucher. Ask the customer to reopen it." };
+  }
   return { title: "Couldn't stamp", message: raw || "Something went wrong. Try scanning again." };
 }
 
@@ -51,24 +57,33 @@ function ScanPage() {
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
+  const [voucher, setVoucher] = useState<VoucherResult | null>(null);
   const [rejection, setRejection] = useState<Rejection | null>(null);
   const [paused, setPaused] = useState(false);
   const syncPass = useServerFn(syncWalletPass);
 
   const onScan = useCallback(async (text: string) => {
     if (busy || paused) return;
+    const voucherMatch = text.match(/^stempel:voucher:([0-9a-f-]+)$/i);
     const m = text.match(/^stempel:card:([0-9a-f-]+)$/i);
-    if (!m) { toast.error("Not a ClubCarder card QR"); return; }
+    if (!m && !voucherMatch) { toast.error("Not a ClubCarder QR"); return; }
     setBusy(true); setPaused(true);
     try {
+      if (voucherMatch) {
+        const { data, error } = await supabase.rpc("redeem_voucher", { _voucher_id: voucherMatch[1]! });
+        if (error) { setRejection(describeError(error.message)); return; }
+        const v = data as unknown as { label?: string; business_name?: string };
+        setVoucher({ label: v?.label ?? "Reward", business_name: v?.business_name ?? "" });
+        return;
+      }
       const { data, error } = await supabase.rpc("add_stamp", {
-        _card_instance_id: m[1],
+        _card_instance_id: m![1]!,
         _env: getPaddleEnvironment(),
       });
       if (error) { setRejection(describeError(error.message)); return; }
       setResult(data as unknown as Result);
       // Push the new stamp count to the customer's phone wallet pass (best effort).
-      void syncPass({ data: { instanceId: m[1] } }).catch(() => {});
+      void syncPass({ data: { instanceId: m![1]! } }).catch(() => {});
     } catch (e) {
       setRejection(describeError(e instanceof Error ? e.message : ""));
     } finally {
@@ -76,7 +91,8 @@ function ScanPage() {
     }
   }, [busy, paused, syncPass]);
 
-  const reset = () => { setResult(null); setRejection(null); setPaused(false); };
+  const reset = () => { setResult(null); setRejection(null); setVoucher(null); setPaused(false); };
+
 
 
   return (
