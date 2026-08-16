@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { Repeat, Sparkles, TrendingUp, Zap } from "lucide-react";
+import { Repeat, Sparkles, Ticket, TrendingUp, Zap } from "lucide-react";
 
 export type AnalyticsInstance = {
   id: string;
@@ -10,11 +10,19 @@ export type AnalyticsInstance = {
   created_at: string;
 };
 export type AnalyticsStamp = { card_instance_id: string; created_at: string };
+export type AnalyticsVoucher = {
+  id: string;
+  customer_id: string | null;
+  status: "unused" | "used";
+  created_at: string;
+  redeemed_at: string | null;
+};
 
 type Props = {
   totalSteps: number;
   instances: AnalyticsInstance[];
   stamps: AnalyticsStamp[];
+  vouchers?: AnalyticsVoucher[];
 };
 
 const WEEK = 7 * 86400_000;
@@ -24,7 +32,7 @@ function pct(part: number, whole: number) {
   return Math.round((part / whole) * 100);
 }
 
-export function CardAnalytics({ totalSteps, instances, stamps }: Props) {
+export function CardAnalytics({ totalSteps, instances, stamps, vouchers = [] }: Props) {
   const m = useMemo(() => {
     const now = Date.now();
     const perInstance = new Map<string, number>();
@@ -67,14 +75,38 @@ export function CardAnalytics({ totalSteps, instances, stamps }: Props) {
 
     const avgStamps = claimed ? stamps.length / claimed : 0;
 
+    // Vouchers: issued when a reward step unlocks, outstanding until redeemed.
+    const issued = vouchers.length;
+    const redeemed = vouchers.filter((v) => v.status === "used").length;
+    const outstanding = issued - redeemed;
+    const holders = new Set(
+      vouchers.filter((v) => v.status === "unused" && v.customer_id).map((v) => v.customer_id),
+    ).size;
+
+    // How long customers take to come in and claim their reward.
+    const redeemDays = vouchers
+      .filter((v) => v.status === "used" && v.redeemed_at)
+      .map((v) => (new Date(v.redeemed_at!).getTime() - new Date(v.created_at).getTime()) / 86400_000)
+      .filter((d) => d >= 0);
+    const avgRedeemDays = redeemDays.length
+      ? redeemDays.reduce((a, b) => a + b, 0) / redeemDays.length
+      : null;
+
+    // Outstanding vouchers that have been sitting unclaimed for over a month.
+    const staleVouchers = vouchers.filter(
+      (v) => v.status === "unused" && now - new Date(v.created_at).getTime() > 30 * 86400_000,
+    ).length;
+
     return {
       claimed, activated, repeat, halfway, completed, active30, returnVisits,
       weeks, weekPeak, trend, distribution, distPeak, avgStamps, totalStamps: stamps.length,
+      issued, redeemed, outstanding, holders, avgRedeemDays, staleVouchers,
     };
-  }, [instances, stamps, totalSteps]);
+  }, [instances, stamps, vouchers, totalSteps]);
 
   const completionRate = pct(m.completed, m.claimed);
   const repeatRate = pct(m.repeat, m.claimed);
+  const redemptionRate = pct(m.redeemed, m.issued);
 
   if (m.claimed === 0) return null;
 
@@ -88,7 +120,7 @@ export function CardAnalytics({ totalSteps, instances, stamps }: Props) {
         <ValueTile icon={Repeat} value={m.returnVisits} label="Return visits driven" tone="primary" />
         <ValueTile icon={Zap} value={m.active30} label="Active last 30 days" />
         <ValueTile icon={TrendingUp} value={`${m.avgStamps.toFixed(1)}`} label="Avg stamps / customer" />
-        <ValueTile icon={Sparkles} value={m.completed} label="Rewards earned" />
+        <ValueTile icon={Sparkles} value={m.issued} label="Rewards unlocked" />
       </div>
 
       {/* Conversion rings */}
@@ -112,6 +144,61 @@ export function CardAnalytics({ totalSteps, instances, stamps }: Props) {
           </div>
         </div>
       </div>
+
+      {/* Vouchers */}
+      {m.issued > 0 && (
+        <div className="mt-3 rounded-2xl border-2 border-ink/10 bg-card p-5">
+          <div className="flex items-baseline justify-between">
+            <div className="font-medium">Vouchers</div>
+            <div className="text-[11px] uppercase tracking-widest text-muted-foreground">Rewards</div>
+          </div>
+
+          <div className="mt-4 flex items-center gap-5">
+            <Ring value={redemptionRate} />
+            <div className="min-w-0">
+              <div className="font-medium">Redemption rate</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {m.redeemed} of {m.issued} unlocked rewards have been claimed in store.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-3 gap-3">
+            <VoucherStat value={m.issued} label="Issued" />
+            <VoucherStat value={m.outstanding} label="Outstanding" tone="amber" />
+            <VoucherStat value={m.redeemed} label="Redeemed" tone="emerald" />
+          </div>
+
+          <div className="mt-3 space-y-1.5 text-xs text-muted-foreground">
+            {m.outstanding > 0 && (
+              <p className="flex items-start gap-1.5">
+                <Ticket className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <span>
+                  <strong className="font-medium text-foreground">{m.holders}</strong>{" "}
+                  {m.holders === 1 ? "customer is" : "customers are"} holding{" "}
+                  {m.outstanding === 1 ? "a voucher" : `${m.outstanding} vouchers`} — that's{" "}
+                  {m.outstanding === 1 ? "a visit" : "visits"} you can still expect.
+                </span>
+              </p>
+            )}
+            {m.avgRedeemDays !== null && (
+              <p>
+                Customers claim their reward{" "}
+                <strong className="font-medium text-foreground">
+                  {m.avgRedeemDays < 1 ? "the same day" : `after ~${m.avgRedeemDays.toFixed(1)} days`}
+                </strong>{" "}
+                on average.
+              </p>
+            )}
+            {m.staleVouchers > 0 && (
+              <p>
+                {m.staleVouchers} {m.staleVouchers === 1 ? "voucher has" : "vouchers have"} been
+                unclaimed for over a month — worth a reminder.
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Funnel */}
       <div className="mt-3 rounded-2xl border-2 border-ink/10 bg-card p-5">
@@ -194,6 +281,21 @@ function ValueTile({
       <Icon className={`h-4 w-4 ${tone === "primary" ? "text-primary" : "text-muted-foreground"}`} />
       <div className="mt-2 font-display text-2xl leading-none">{value}</div>
       <div className="mt-1.5 text-[11px] leading-tight text-muted-foreground">{label}</div>
+    </div>
+  );
+}
+
+function VoucherStat({
+  value, label, tone,
+}: { value: number; label: string; tone?: "amber" | "emerald" }) {
+  const toneClass =
+    tone === "amber" ? "text-amber-600"
+    : tone === "emerald" ? "text-emerald-600"
+    : "";
+  return (
+    <div className="rounded-xl border-2 border-ink/10 bg-secondary/40 p-3 text-center">
+      <div className={`font-display text-2xl leading-none ${toneClass}`}>{value}</div>
+      <div className="mt-1.5 text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div>
     </div>
   );
 }

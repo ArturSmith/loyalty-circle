@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Camera, LogOut, Store, Loader2, HelpCircle, Mail, CreditCard, ChevronRight } from "lucide-react";
+import { Camera, LogOut, Store, Loader2, HelpCircle, Mail, CreditCard, ChevronRight, Ticket } from "lucide-react";
 import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { useProfile } from "@/hooks/useProfile";
@@ -160,6 +160,7 @@ function Profile() {
             </div>
 
             <nav className="mt-8 overflow-hidden rounded-2xl border border-border divide-y divide-border" aria-label="Account menu">
+              <MenuLink to="/vouchers" icon={Ticket} label="My vouchers" />
               <MenuLink to="/settings/billing" icon={CreditCard} label="Settings & billing" />
               <MenuLink to="/help" icon={HelpCircle} label="Help" />
               <MenuLink to="/contact" icon={Mail} label="Contact us" />

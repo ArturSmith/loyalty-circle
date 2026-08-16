@@ -4,11 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { StampCard } from "@/components/StampCard";
 import type { CardFace, CardShape, Reward, StampIconName } from "@/components/StampCard";
-import { ArrowLeft, Pencil, Users, Stamp as StampIco, CheckCircle2, Calendar } from "lucide-react";
+import { ArrowLeft, Pencil, Users, Stamp as StampIco, CheckCircle2, Calendar, Ticket } from "lucide-react";
 import { motion } from "framer-motion";
 import { resolveAvatarUrls } from "@/lib/avatar";
 import { CardAnalytics } from "@/components/CardAnalytics";
-import type { AnalyticsInstance, AnalyticsStamp } from "@/components/CardAnalytics";
+import type { AnalyticsInstance, AnalyticsStamp, AnalyticsVoucher } from "@/components/CardAnalytics";
 
 
 type Tpl = {
@@ -39,11 +39,11 @@ function CardDetails() {
   const navigate = useNavigate();
   const [tpl, setTpl] = useState<Tpl | null>(null);
   const [biz, setBiz] = useState<Biz | null>(null);
-  const [stats, setStats] = useState({ users: 0, stamps: 0, completed: 0 });
+  const [stats, setStats] = useState({ users: 0, stamps: 0, completed: 0, outstandingVouchers: 0 });
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [face, setFace] = useState<CardFace>("info");
-  const [analytics, setAnalytics] = useState<{ instances: AnalyticsInstance[]; stamps: AnalyticsStamp[] }>({ instances: [], stamps: [] });
+  const [analytics, setAnalytics] = useState<{ instances: AnalyticsInstance[]; stamps: AnalyticsStamp[]; vouchers: AnalyticsVoucher[] }>({ instances: [], stamps: [], vouchers: [] });
 
 
 
@@ -63,9 +63,10 @@ function CardDetails() {
       const rows = (instances as { id: string; customer_id: string; stamps_count: number; completed_at: string | null; created_at: string }[] | null) ?? [];
       const customerIds = Array.from(new Set(rows.map(r => r.customer_id)));
 
-      const [{ data: profiles }, { data: lastStamps }] = await Promise.all([
+      const [{ data: profiles }, { data: lastStamps }, { data: voucherRows }] = await Promise.all([
         customerIds.length ? supabase.from("profiles").select("id,display_name,avatar_url").in("id", customerIds) : Promise.resolve({ data: [] as { id: string; display_name: string | null; avatar_url: string | null }[] }),
         rows.length ? supabase.from("stamps").select("card_instance_id,created_at").in("card_instance_id", rows.map(r => r.id)).order("created_at", { ascending: false }) : Promise.resolve({ data: [] as { card_instance_id: string; created_at: string }[] }),
+        supabase.from("vouchers").select("id,customer_id,status,created_at,redeemed_at").eq("template_id", id),
       ]);
 
       const profMap = new Map((profiles ?? []).map(p => [p.id, p]));
@@ -88,12 +89,14 @@ function CardDetails() {
           created_at: r.created_at,
         };
       });
+      const vouchers = ((voucherRows ?? []) as AnalyticsVoucher[]);
       setCustomers(list);
-      setAnalytics({ instances: rows, stamps: (lastStamps ?? []) as AnalyticsStamp[] });
+      setAnalytics({ instances: rows, stamps: (lastStamps ?? []) as AnalyticsStamp[], vouchers });
       setStats({
         users: customerIds.length,
         stamps: (lastStamps ?? []).length,
         completed: rows.filter(r => r.completed_at).length,
+        outstandingVouchers: vouchers.filter(v => v.status === "unused").length,
       });
 
       setLoading(false);
@@ -155,13 +158,14 @@ function CardDetails() {
         <span className={tpl.active ? "text-emerald-600" : ""}>{tpl.active ? "Active" : "Paused"}</span>
       </div>
 
-      <div className="mt-6 grid grid-cols-3 gap-3">
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat icon={Users} label="Users" value={stats.users} />
         <Stat icon={StampIco} label="Stamps" value={stats.stamps} />
         <Stat icon={CheckCircle2} label="Completed" value={stats.completed} />
+        <Stat icon={Ticket} label="Vouchers out" value={stats.outstandingVouchers} />
       </div>
 
-      <CardAnalytics totalSteps={tpl.total_steps} instances={analytics.instances} stamps={analytics.stamps} />
+      <CardAnalytics totalSteps={tpl.total_steps} instances={analytics.instances} stamps={analytics.stamps} vouchers={analytics.vouchers} />
 
 
       <div className="mt-10">

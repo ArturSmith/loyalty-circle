@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { QrScanner } from "@/components/QrScanner";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Check, Sparkles, XCircle } from "lucide-react";
+import { ArrowLeft, Check, Gift, Sparkles, XCircle } from "lucide-react";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { getPaddleEnvironment } from "@/lib/paddle";
 import { useServerFn } from "@tanstack/react-start";
@@ -25,8 +25,8 @@ function describeError(raw: string): Rejection {
   const msg = (raw || "").toLowerCase();
   if (msg.includes("not authorized")) {
     return {
-      title: "Not your card",
-      message: "This loyalty card belongs to a different business, so you can't stamp it.",
+      title: "Not yours to scan",
+      message: "This card or voucher belongs to a different business.",
     };
   }
   if (msg.includes("card not found")) {
