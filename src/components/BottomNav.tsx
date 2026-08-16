@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { CreditCard, Compass, MessageCircle, Ticket, User } from "lucide-react";
+import { useUnusedVoucherCount } from "@/hooks/useUnusedVoucherCount";
 
 const items = [
   { to: "/wallet", label: "Wallet", icon: CreditCard },
@@ -10,6 +11,8 @@ const items = [
 ] as const;
 
 export function BottomNav() {
+  const unusedVouchers = useUnusedVoucherCount();
+
   return (
     <nav
       aria-label="Main navigation"
@@ -17,20 +20,33 @@ export function BottomNav() {
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <ul className="mx-auto flex max-w-md items-stretch justify-between px-2">
-        {items.map(({ to, label, icon: Icon }) => (
-          <li key={to} className="flex-1">
-            <Link
-              to={to}
-              aria-label={label}
-              activeProps={{ className: "text-primary" }}
-              inactiveProps={{ className: "text-muted-foreground" }}
-              className="flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors hover:text-foreground"
-            >
-              <Icon className="h-5 w-5" />
-              {label}
-            </Link>
-          </li>
-        ))}
+        {items.map(({ to, label, icon: Icon }) => {
+          const badge = to === "/vouchers" ? unusedVouchers : 0;
+          return (
+            <li key={to} className="flex-1">
+              <Link
+                to={to}
+                aria-label={badge > 0 ? `${label}, ${badge} unused` : label}
+                activeProps={{ className: "text-primary" }}
+                inactiveProps={{ className: "text-muted-foreground" }}
+                className="flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors hover:text-foreground"
+              >
+                <span className="relative">
+                  <Icon className="h-5 w-5" />
+                  {badge > 0 && (
+                    <span
+                      aria-hidden
+                      className="absolute -right-2 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold leading-none text-primary-foreground"
+                    >
+                      {badge > 9 ? "9+" : badge}
+                    </span>
+                  )}
+                </span>
+                {label}
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </nav>
   );
