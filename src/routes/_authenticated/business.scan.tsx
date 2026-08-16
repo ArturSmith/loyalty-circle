@@ -17,7 +17,9 @@ export const Route = createFileRoute("/_authenticated/business/scan")({
 });
 
 type Result = { stamps_count: number; total_steps: number; reward: { step: number; label: string } | null; completed: boolean };
+type VoucherResult = { label: string; business_name: string };
 type Rejection = { title: string; message: string };
+
 
 function describeError(raw: string): Rejection {
   const msg = (raw || "").toLowerCase();
