@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { MessageCircle } from "lucide-react";
-import { BottomNav } from "@/components/BottomNav";
+import { TabScreen } from "@/components/TabScreen";
 
 export const Route = createFileRoute("/_authenticated/chats")({
   head: () => ({
@@ -18,11 +18,8 @@ export const Route = createFileRoute("/_authenticated/chats")({
 
 function Chats() {
   return (
-    <div className="flex min-h-screen flex-col pb-24">
-      <header className="px-5 py-4">
-        <h1 className="font-display text-2xl font-semibold">Chats</h1>
-      </header>
-      <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
+    <TabScreen title="Chats" contentClassName="flex flex-1 flex-col">
+      <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
         <div className="flex h-20 w-20 items-center justify-center rounded-3xl border border-border bg-secondary">
           <MessageCircle className="h-8 w-8 text-primary" />
         </div>
@@ -31,7 +28,6 @@ function Chats() {
           Soon you'll be able to message the businesses you collect cards from.
         </p>
       </div>
-      <BottomNav />
-    </div>
+    </TabScreen>
   );
 }

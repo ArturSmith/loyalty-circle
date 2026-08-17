@@ -1,10 +1,10 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Gift, MapPin, Phone, Globe, Check, X } from "lucide-react";
+import { Gift, MapPin, Phone, Globe, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { BottomNav } from "@/components/BottomNav";
+import { TabScreen } from "@/components/TabScreen";
 import { QrDisplay } from "@/components/QrDisplay";
 import { supabase } from "@/integrations/supabase/client";
 import { hapticTap } from "@/lib/native";
@@ -34,11 +34,14 @@ function addressOf(b: MyVoucher["business"]) {
   return text || null;
 }
 
+// Kept between tab switches so returning to Vouchers renders instantly
+// instead of flashing a loading state while the refetch runs in background.
+let cachedVouchers: MyVoucher[] | null = null;
+
 function VouchersPage() {
-  const navigate = useNavigate();
   const load = useServerFn(getMyVouchers);
-  const [vouchers, setVouchers] = useState<MyVoucher[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [vouchers, setVouchers] = useState<MyVoucher[]>(() => cachedVouchers ?? []);
+  const [loading, setLoading] = useState(() => cachedVouchers === null);
   const [tab, setTab] = useState<"unused" | "used">("unused");
   const [openId, setOpenId] = useState<string | null>(null);
   const [redeemed, setRedeemed] = useState<MyVoucher | null>(null);
@@ -69,6 +72,7 @@ function VouchersPage() {
         }
         seenStatus.current = new Map(rows.map((v) => [v.id, v.status]));
 
+        cachedVouchers = rows;
         setVouchers(rows);
         // This page holds the real list, so the nav badge can take our number
         // rather than firing its own count query.
@@ -122,20 +126,11 @@ function VouchersPage() {
     d ? new Date(d).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }) : "—";
 
   return (
-    <div className="min-h-screen pb-24">
-      <header className="flex items-center gap-3 px-4 py-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate({ to: "/profile" })} aria-label="Back">
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div>
-          <h1 className="font-display text-2xl font-semibold">My vouchers</h1>
-          <p className="text-xs text-muted-foreground">
-            {unusedCount > 0 ? `${unusedCount} ready to use` : "Rewards you unlock appear here"}
-          </p>
-        </div>
-      </header>
-
-      <div className="mx-auto w-full max-w-md px-5">
+    <TabScreen
+      title="Vouchers"
+      subtitle={unusedCount > 0 ? `${unusedCount} ready to use` : "Rewards you unlock appear here"}
+    >
+      <div className="mx-auto w-full max-w-md px-5 pt-5">
         <div className="flex rounded-full border border-border p-1 text-sm">
           {(["unused", "used"] as const).map((t) => (
             <button
@@ -323,7 +318,6 @@ function VouchersPage() {
         )}
       </AnimatePresence>
 
-      <BottomNav />
-    </div>
+    </TabScreen>
   );
 }
