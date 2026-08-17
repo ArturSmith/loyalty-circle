@@ -126,20 +126,11 @@ function VouchersPage() {
     d ? new Date(d).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }) : "—";
 
   return (
-    <div className="min-h-screen pb-24">
-      <header className="flex items-center gap-3 px-4 py-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate({ to: "/profile" })} aria-label="Back">
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div>
-          <h1 className="font-display text-2xl font-semibold">My vouchers</h1>
-          <p className="text-xs text-muted-foreground">
-            {unusedCount > 0 ? `${unusedCount} ready to use` : "Rewards you unlock appear here"}
-          </p>
-        </div>
-      </header>
-
-      <div className="mx-auto w-full max-w-md px-5">
+    <TabScreen
+      title="Vouchers"
+      subtitle={unusedCount > 0 ? `${unusedCount} ready to use` : "Rewards you unlock appear here"}
+    >
+      <div className="mx-auto w-full max-w-md px-5 pt-5">
         <div className="flex rounded-full border border-border p-1 text-sm">
           {(["unused", "used"] as const).map((t) => (
             <button
