@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { MessageCircle } from "lucide-react";
-import { BottomNav } from "@/components/BottomNav";
+import { TabScreen } from "@/components/TabScreen";
 
 export const Route = createFileRoute("/_authenticated/chats")({
   head: () => ({
