@@ -124,6 +124,6 @@ function Discover() {
           ))}
         </div>
       )}
-    </main>
+    </TabScreen>
   );
 }
