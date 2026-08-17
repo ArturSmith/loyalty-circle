@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { useProfile } from "@/hooks/useProfile";
 import { AVATAR_BUCKET, initialsFrom, resolveAvatarUrl } from "@/lib/avatar";
-import { BottomNav } from "@/components/BottomNav";
+import { TabScreen } from "@/components/TabScreen";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
