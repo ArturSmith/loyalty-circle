@@ -318,7 +318,6 @@ function VouchersPage() {
         )}
       </AnimatePresence>
 
-      <BottomNav />
-    </div>
+    </TabScreen>
   );
 }
