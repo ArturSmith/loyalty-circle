@@ -28,22 +28,29 @@ export const Route = createFileRoute("/discover")({
   component: Discover,
 });
 
+// Survives tab switches so coming back to Discover shows the previous results
+// immediately while a fresh fetch runs in the background.
+let cachedCards: DiscoverCard[] | null = null;
+
 function Discover() {
   const { coords, asked, request } = useUserLocation(true);
-  const [cards, setCards] = useState<DiscoverCard[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [cards, setCards] = useState<DiscoverCard[]>(() => cachedCards ?? []);
+  const [loading, setLoading] = useState(() => cachedCards === null);
   const [query, setQuery] = useState("");
 
   useEffect(() => {
     if (!asked) return;
     let cancelled = false;
-    setLoading(true);
+    if (cachedCards === null) setLoading(true);
     (async () => {
       try {
         const rows = await fetchDiscoverCards({ coords, limit: 300 });
-        if (!cancelled) setCards(rows);
+        if (!cancelled) {
+          cachedCards = rows;
+          setCards(rows);
+        }
       } catch {
-        if (!cancelled) setCards([]);
+        if (!cancelled && cachedCards === null) setCards([]);
       } finally {
         if (!cancelled) setLoading(false);
       }
