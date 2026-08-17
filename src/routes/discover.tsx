@@ -1,8 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Compass, MapPin, Search } from "lucide-react";
+import { MapPin, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { TabScreen } from "@/components/TabScreen";
 import { DiscoverCardTile } from "@/components/DiscoverCardTile";
 import { fetchDiscoverCards, groupByCategory, useUserLocation, type DiscoverCard } from "@/lib/discover";
 
