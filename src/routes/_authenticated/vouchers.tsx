@@ -1,10 +1,10 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Gift, MapPin, Phone, Globe, Check, X } from "lucide-react";
+import { Gift, MapPin, Phone, Globe, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { BottomNav } from "@/components/BottomNav";
+import { TabScreen } from "@/components/TabScreen";
 import { QrDisplay } from "@/components/QrDisplay";
 import { supabase } from "@/integrations/supabase/client";
 import { hapticTap } from "@/lib/native";
