@@ -167,8 +167,7 @@ function Profile() {
           </>
         )}
       </div>
-      <BottomNav />
-    </div>
+    </TabScreen>
   );
 }
 
