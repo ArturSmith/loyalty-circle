@@ -34,11 +34,14 @@ function addressOf(b: MyVoucher["business"]) {
   return text || null;
 }
 
+// Kept between tab switches so returning to Vouchers renders instantly
+// instead of flashing a loading state while the refetch runs in background.
+let cachedVouchers: MyVoucher[] | null = null;
+
 function VouchersPage() {
-  const navigate = useNavigate();
   const load = useServerFn(getMyVouchers);
-  const [vouchers, setVouchers] = useState<MyVoucher[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [vouchers, setVouchers] = useState<MyVoucher[]>(() => cachedVouchers ?? []);
+  const [loading, setLoading] = useState(() => cachedVouchers === null);
   const [tab, setTab] = useState<"unused" | "used">("unused");
   const [openId, setOpenId] = useState<string | null>(null);
   const [redeemed, setRedeemed] = useState<MyVoucher | null>(null);
