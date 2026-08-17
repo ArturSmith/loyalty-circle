@@ -88,11 +88,7 @@ function Profile() {
     d ? new Date(d).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }) : "—";
 
   return (
-    <div className="min-h-screen flex flex-col pb-24">
-      <header className="px-5 py-4">
-        <h1 className="font-display text-2xl font-semibold">Profile</h1>
-      </header>
-
+    <TabScreen title="Profile">
       <div className="flex-1 px-6 py-4 max-w-md mx-auto w-full">
         {loading || !profile ? (
           <div className="text-center text-muted-foreground py-12">Loading…</div>
