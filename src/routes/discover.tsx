@@ -73,31 +73,20 @@ function Discover() {
   const groups = useMemo(() => groupByCategory(filtered), [filtered]);
 
   return (
-    <main className="min-h-screen pb-16">
-      <header className="sticky top-0 z-20 glass-panel border-b border-border px-5 py-4">
-        <div className="mx-auto flex max-w-3xl items-center gap-3">
-          <Link to="/wallet" aria-label="Back to my cards">
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          </Link>
-          <h1 className="flex items-center gap-2 font-display text-2xl font-extrabold">
-            <Compass className="h-5 w-5" /> Discover
-          </h1>
+    <TabScreen title="Discover">
+      <div className="mx-auto mt-4 max-w-3xl px-5">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search business, card or category"
+            aria-label="Search loyalty cards"
+            className="pl-9"
+          />
         </div>
-        <div className="mx-auto mt-3 max-w-3xl">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search business, card or category"
-              aria-label="Search loyalty cards"
-              className="pl-9"
-            />
-          </div>
-        </div>
-      </header>
+      </div>
+
 
       {!coords && asked && (
         <div className="mx-auto mt-4 flex max-w-3xl items-center justify-between gap-3 rounded-2xl glass-panel border border-border px-5 py-3">
