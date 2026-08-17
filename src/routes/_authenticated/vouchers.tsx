@@ -72,6 +72,7 @@ function VouchersPage() {
         }
         seenStatus.current = new Map(rows.map((v) => [v.id, v.status]));
 
+        cachedVouchers = rows;
         setVouchers(rows);
         // This page holds the real list, so the nav badge can take our number
         // rather than firing its own count query.
