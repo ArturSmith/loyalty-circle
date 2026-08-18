@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { postSignOutDestination } from "@/lib/post-sign-out";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { QrDisplay } from "@/components/QrDisplay";
@@ -101,7 +102,7 @@ function BusinessDashboard() {
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    navigate({ to: "/" });
+    navigate({ to: postSignOutDestination(), replace: true });
   };
 
   const downloadBusinessQr = async () => {
