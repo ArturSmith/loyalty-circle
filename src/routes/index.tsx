@@ -32,9 +32,10 @@ export const Route = createFileRoute("/")({
     // These redirect rather than render, so they replace the history entry —
     // otherwise "back" returns to `/`, which just redirects again, leaving the
     // browser and Android hardware back buttons stuck in a loop.
-    const { data, error } = await supabase.auth.getUser();
-    if (!error && data.user) {
-      const dest = await getDefaultHome(data.user.id);
+    const { data } = await supabase.auth.getSession();
+    const user = data.session?.user;
+    if (user) {
+      const dest = await getDefaultHome(user.id);
       throw redirect({ to: dest, replace: true });
     }
     // Someone who installed the app doesn't need the marketing pitch — they're
