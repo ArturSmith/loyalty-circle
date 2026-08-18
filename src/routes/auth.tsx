@@ -51,7 +51,14 @@ function AuthPage() {
 
   const handleGoogle = async () => {
     stashRedirect();
-    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin,
+      // Signing out of ClubCarder doesn't sign the user out of Google, so the
+      // provider would otherwise wave them straight back in as whoever they
+      // were last time — with no way to pick a different account, and no sign
+      // that a choice was even made. Always show the account chooser.
+      extraParams: { prompt: "select_account" },
+    });
     if (result.error) { toast.error("Sign-in failed. Try again."); return; }
     if (result.redirected) return;
     goNext();
