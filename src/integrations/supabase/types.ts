@@ -363,7 +363,7 @@ export type Database = {
       vouchers: {
         Row: {
           business_id: string
-          card_instance_id: string
+          card_instance_id: string | null
           created_at: string
           customer_id: string | null
           id: string
@@ -372,11 +372,11 @@ export type Database = {
           redeemed_by: string | null
           status: string
           step_number: number
-          template_id: string
+          template_id: string | null
         }
         Insert: {
           business_id: string
-          card_instance_id: string
+          card_instance_id?: string | null
           created_at?: string
           customer_id?: string | null
           id?: string
@@ -385,11 +385,11 @@ export type Database = {
           redeemed_by?: string | null
           status?: string
           step_number: number
-          template_id: string
+          template_id?: string | null
         }
         Update: {
           business_id?: string
-          card_instance_id?: string
+          card_instance_id?: string | null
           created_at?: string
           customer_id?: string | null
           id?: string
@@ -398,7 +398,7 @@ export type Database = {
           redeemed_by?: string | null
           status?: string
           step_number?: number
-          template_id?: string
+          template_id?: string | null
         }
         Relationships: [
           {
