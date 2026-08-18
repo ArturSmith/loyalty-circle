@@ -210,7 +210,8 @@ function CardDetails() {
                 </div>
               )}
             </div>
-          </div>
+          </Link>
+
         ))}
       </div>
     </div>
