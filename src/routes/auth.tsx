@@ -135,7 +135,7 @@ function AuthPage() {
   return (
     <div className="min-h-screen px-4 py-10">
       <div className="mx-auto w-full max-w-sm">
-        <Button variant="ghost" className="mb-3 -ml-2 gap-2 text-muted-foreground" asChild>
+        <Button variant="ghost" className="hide-in-app mb-3 -ml-2 gap-2 text-muted-foreground" asChild>
           <Link to="/">
             <ArrowLeft className="h-4 w-4" />
             Back

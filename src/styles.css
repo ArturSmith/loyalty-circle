@@ -178,3 +178,12 @@ html.capacitor-native [contenteditable] {
   -webkit-touch-callout: default;
   user-select: text;
 }
+
+/* Chrome that only makes sense on the marketing site — links back to the
+   landing page, "get the app" prompts. Hidden in the native shell, where the
+   destination is either unreachable or a no-op. Done in CSS rather than a
+   render-time check because the server can't know it's serving the app, so a
+   conditional render would mismatch on hydration. */
+html.capacitor-native .hide-in-app {
+  display: none;
+}

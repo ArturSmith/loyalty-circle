@@ -29,11 +29,18 @@ import { getDefaultHome } from "@/lib/defaultHome";
 export const Route = createFileRoute("/")({
   ssr: false,
   beforeLoad: async () => {
+    // These redirect rather than render, so they replace the history entry —
+    // otherwise "back" returns to `/`, which just redirects again, leaving the
+    // browser and Android hardware back buttons stuck in a loop.
     const { data, error } = await supabase.auth.getUser();
     if (!error && data.user) {
       const dest = await getDefaultHome(data.user.id);
-      throw redirect({ to: dest });
+      throw redirect({ to: dest, replace: true });
     }
+    // Someone who installed the app doesn't need the marketing pitch — they're
+    // already sold. Open on sign-in instead, the way a native app should.
+    const { isNativeApp } = await import("@/lib/native");
+    if (isNativeApp()) throw redirect({ to: "/auth", replace: true });
   },
   head: () => ({
     meta: [
