@@ -10,6 +10,20 @@ const config: CapacitorConfig = {
     url: "https://clubcarder.com",
     cleartext: false,
     androidScheme: "https",
+    // Sign-in bounces through the OAuth broker and the identity provider before
+    // landing back on our origin with the tokens in the URL fragment. Without
+    // these hosts listed, Capacitor treats the first hop off our domain as an
+    // external link and hands it to the system browser — the user authenticates
+    // in Chrome, Chrome receives the session, and the app stays signed out.
+    allowNavigation: [
+      "accounts.google.com",
+      "*.google.com",
+      "appleid.apple.com",
+      "login.microsoftonline.com",
+      "oauth.lovable.app",
+      "lovable.dev",
+      "*.supabase.co",
+    ],
   },
   ios: {
     contentInset: "always",
