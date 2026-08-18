@@ -41,6 +41,7 @@ import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/publi
 import { Route as AuthenticatedBusinessCardsNewRouteImport } from './routes/_authenticated/business.cards.new'
 import { Route as AuthenticatedBusinessCardsIdIndexRouteImport } from './routes/_authenticated/business.cards.$id.index'
 import { Route as AuthenticatedBusinessCardsIdEditRouteImport } from './routes/_authenticated/business.cards.$id.edit'
+import { Route as AuthenticatedBusinessCardsIdCustomersCustomerIdRouteImport } from './routes/_authenticated/business.cards.$id.customers.$customerId'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -209,6 +210,12 @@ const AuthenticatedBusinessCardsIdEditRoute =
     path: '/cards/$id/edit',
     getParentRoute: () => AuthenticatedBusinessRoute,
   } as any)
+const AuthenticatedBusinessCardsIdCustomersCustomerIdRoute =
+  AuthenticatedBusinessCardsIdCustomersCustomerIdRouteImport.update({
+    id: '/cards/$id/customers/$customerId',
+    path: '/cards/$id/customers/$customerId',
+    getParentRoute: () => AuthenticatedBusinessRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -242,6 +249,7 @@ export interface FileRoutesByFullPath {
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/business/cards/$id/edit': typeof AuthenticatedBusinessCardsIdEditRoute
   '/business/cards/$id/': typeof AuthenticatedBusinessCardsIdIndexRoute
+  '/business/cards/$id/customers/$customerId': typeof AuthenticatedBusinessCardsIdCustomersCustomerIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -274,6 +282,7 @@ export interface FileRoutesByTo {
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/business/cards/$id/edit': typeof AuthenticatedBusinessCardsIdEditRoute
   '/business/cards/$id': typeof AuthenticatedBusinessCardsIdIndexRoute
+  '/business/cards/$id/customers/$customerId': typeof AuthenticatedBusinessCardsIdCustomersCustomerIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -309,6 +318,7 @@ export interface FileRoutesById {
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/_authenticated/business/cards/$id/edit': typeof AuthenticatedBusinessCardsIdEditRoute
   '/_authenticated/business/cards/$id/': typeof AuthenticatedBusinessCardsIdIndexRoute
+  '/_authenticated/business/cards/$id/customers/$customerId': typeof AuthenticatedBusinessCardsIdCustomersCustomerIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -344,6 +354,7 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/webhook'
     | '/business/cards/$id/edit'
     | '/business/cards/$id/'
+    | '/business/cards/$id/customers/$customerId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -376,6 +387,7 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/webhook'
     | '/business/cards/$id/edit'
     | '/business/cards/$id'
+    | '/business/cards/$id/customers/$customerId'
   id:
     | '__root__'
     | '/'
@@ -410,6 +422,7 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/webhook'
     | '/_authenticated/business/cards/$id/edit'
     | '/_authenticated/business/cards/$id/'
+    | '/_authenticated/business/cards/$id/customers/$customerId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -658,6 +671,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBusinessCardsIdEditRouteImport
       parentRoute: typeof AuthenticatedBusinessRoute
     }
+    '/_authenticated/business/cards/$id/customers/$customerId': {
+      id: '/_authenticated/business/cards/$id/customers/$customerId'
+      path: '/cards/$id/customers/$customerId'
+      fullPath: '/business/cards/$id/customers/$customerId'
+      preLoaderRoute: typeof AuthenticatedBusinessCardsIdCustomersCustomerIdRouteImport
+      parentRoute: typeof AuthenticatedBusinessRoute
+    }
   }
 }
 
@@ -668,6 +688,7 @@ interface AuthenticatedBusinessRouteChildren {
   AuthenticatedBusinessCardsNewRoute: typeof AuthenticatedBusinessCardsNewRoute
   AuthenticatedBusinessCardsIdEditRoute: typeof AuthenticatedBusinessCardsIdEditRoute
   AuthenticatedBusinessCardsIdIndexRoute: typeof AuthenticatedBusinessCardsIdIndexRoute
+  AuthenticatedBusinessCardsIdCustomersCustomerIdRoute: typeof AuthenticatedBusinessCardsIdCustomersCustomerIdRoute
 }
 
 const AuthenticatedBusinessRouteChildren: AuthenticatedBusinessRouteChildren = {
@@ -678,6 +699,8 @@ const AuthenticatedBusinessRouteChildren: AuthenticatedBusinessRouteChildren = {
   AuthenticatedBusinessCardsIdEditRoute: AuthenticatedBusinessCardsIdEditRoute,
   AuthenticatedBusinessCardsIdIndexRoute:
     AuthenticatedBusinessCardsIdIndexRoute,
+  AuthenticatedBusinessCardsIdCustomersCustomerIdRoute:
+    AuthenticatedBusinessCardsIdCustomersCustomerIdRoute,
 }
 
 const AuthenticatedBusinessRouteWithChildren =
