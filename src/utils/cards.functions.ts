@@ -54,7 +54,7 @@ export const claimCardToWallet = createServerFn({ method: "POST" })
 
     const { data: template, error: templateError } = await supabaseAdmin
       .from("card_templates")
-      .select("id")
+      .select("id, business_id")
       .eq("id", data.templateId)
       .eq("active", true)
       .maybeSingle();
@@ -81,6 +81,11 @@ export const claimCardToWallet = createServerFn({ method: "POST" })
 
     if (createError) throw createError;
     if (!created) throw new Error("Card could not be added");
+
+    // Say hello. `openWelcomeConversation` swallows its own errors — a chat that
+    // fails to open must not cost the customer the card they just added.
+    const { openWelcomeConversation } = await import("@/lib/chats.server");
+    await openWelcomeConversation(template.business_id, context.userId);
 
     return { instanceId: created.id, alreadyOwned: false };
   });

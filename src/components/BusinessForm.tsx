@@ -326,7 +326,10 @@ export function BusinessForm({ value, onChange }: Props) {
             placeholder="Thanks for joining our club — your first stamp is on us!"
             className="mt-1.5"
           />
-          <p className="mt-1 text-xs text-muted-foreground">Shown to customers who add your card.</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Sent as the first chat message when someone adds your card. Leave blank
+            to use a default greeting.
+          </p>
         </div>
       </section>
     </div>

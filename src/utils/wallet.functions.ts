@@ -187,5 +187,25 @@ export const claimAnonymousCard = createServerFn({ method: "POST" })
       _secret: data.secret,
     });
     if (error) throw new Error(error.message);
-    return { instanceId: (claimedId as string | null) ?? data.instanceId };
+    const instanceId = (claimedId as string | null) ?? data.instanceId;
+
+    // A pass claimed from Google Wallet lands in the same place as one added in
+    // the app, so it deserves the same greeting.
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: row } = await supabaseAdmin
+        .from("card_instances")
+        .select("template:card_templates(business_id)")
+        .eq("id", instanceId)
+        .maybeSingle();
+      const businessId = (row as any)?.template?.business_id;
+      if (businessId) {
+        const { openWelcomeConversation } = await import("@/lib/chats.server");
+        await openWelcomeConversation(businessId, context.userId);
+      }
+    } catch (chatError) {
+      console.error("claimAnonymousCard: welcome chat failed", chatError);
+    }
+
+    return { instanceId };
   });
