@@ -28,11 +28,12 @@ import { Route as AuthenticatedVouchersRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedSubscribeRouteImport } from './routes/_authenticated/subscribe'
 import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated/scan'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
-import { Route as AuthenticatedChatsRouteImport } from './routes/_authenticated/chats'
 import { Route as AuthenticatedBusinessRouteImport } from './routes/_authenticated/business'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authenticated/chats.index'
 import { Route as AuthenticatedBusinessIndexRouteImport } from './routes/_authenticated/business.index'
 import { Route as AuthenticatedSettingsBillingRouteImport } from './routes/_authenticated/settings.billing'
+import { Route as AuthenticatedChatsConversationIdRouteImport } from './routes/_authenticated/chats.$conversationId'
 import { Route as AuthenticatedBusinessScanRouteImport } from './routes/_authenticated/business.scan'
 import { Route as AuthenticatedBusinessEditRouteImport } from './routes/_authenticated/business.edit'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -137,11 +138,6 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedChatsRoute = AuthenticatedChatsRouteImport.update({
-  id: '/chats',
-  path: '/chats',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedBusinessRoute = AuthenticatedBusinessRouteImport.update({
   id: '/business',
   path: '/business',
@@ -150,6 +146,11 @@ const AuthenticatedBusinessRoute = AuthenticatedBusinessRouteImport.update({
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedChatsIndexRoute = AuthenticatedChatsIndexRouteImport.update({
+  id: '/chats/',
+  path: '/chats/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedBusinessIndexRoute =
@@ -162,6 +163,12 @@ const AuthenticatedSettingsBillingRoute =
   AuthenticatedSettingsBillingRouteImport.update({
     id: '/settings/billing',
     path: '/settings/billing',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedChatsConversationIdRoute =
+  AuthenticatedChatsConversationIdRouteImport.update({
+    id: '/chats/$conversationId',
+    path: '/chats/$conversationId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedBusinessScanRoute =
@@ -230,7 +237,6 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/business': typeof AuthenticatedBusinessRouteWithChildren
-  '/chats': typeof AuthenticatedChatsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/scan': typeof AuthenticatedScanRoute
   '/subscribe': typeof AuthenticatedSubscribeRoute
@@ -241,8 +247,10 @@ export interface FileRoutesByFullPath {
   '/claim/$instanceId': typeof ClaimInstanceIdRoute
   '/business/edit': typeof AuthenticatedBusinessEditRoute
   '/business/scan': typeof AuthenticatedBusinessScanRoute
+  '/chats/$conversationId': typeof AuthenticatedChatsConversationIdRoute
   '/settings/billing': typeof AuthenticatedSettingsBillingRoute
   '/business/': typeof AuthenticatedBusinessIndexRoute
+  '/chats/': typeof AuthenticatedChatsIndexRoute
   '/business/cards/new': typeof AuthenticatedBusinessCardsNewRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -263,7 +271,6 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/admin': typeof AuthenticatedAdminRoute
-  '/chats': typeof AuthenticatedChatsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/scan': typeof AuthenticatedScanRoute
   '/subscribe': typeof AuthenticatedSubscribeRoute
@@ -274,8 +281,10 @@ export interface FileRoutesByTo {
   '/claim/$instanceId': typeof ClaimInstanceIdRoute
   '/business/edit': typeof AuthenticatedBusinessEditRoute
   '/business/scan': typeof AuthenticatedBusinessScanRoute
+  '/chats/$conversationId': typeof AuthenticatedChatsConversationIdRoute
   '/settings/billing': typeof AuthenticatedSettingsBillingRoute
   '/business': typeof AuthenticatedBusinessIndexRoute
+  '/chats': typeof AuthenticatedChatsIndexRoute
   '/business/cards/new': typeof AuthenticatedBusinessCardsNewRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -299,7 +308,6 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/business': typeof AuthenticatedBusinessRouteWithChildren
-  '/_authenticated/chats': typeof AuthenticatedChatsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/scan': typeof AuthenticatedScanRoute
   '/_authenticated/subscribe': typeof AuthenticatedSubscribeRoute
@@ -310,8 +318,10 @@ export interface FileRoutesById {
   '/claim/$instanceId': typeof ClaimInstanceIdRoute
   '/_authenticated/business/edit': typeof AuthenticatedBusinessEditRoute
   '/_authenticated/business/scan': typeof AuthenticatedBusinessScanRoute
+  '/_authenticated/chats/$conversationId': typeof AuthenticatedChatsConversationIdRoute
   '/_authenticated/settings/billing': typeof AuthenticatedSettingsBillingRoute
   '/_authenticated/business/': typeof AuthenticatedBusinessIndexRoute
+  '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
   '/_authenticated/business/cards/new': typeof AuthenticatedBusinessCardsNewRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -335,7 +345,6 @@ export interface FileRouteTypes {
     | '/terms'
     | '/admin'
     | '/business'
-    | '/chats'
     | '/profile'
     | '/scan'
     | '/subscribe'
@@ -346,8 +355,10 @@ export interface FileRouteTypes {
     | '/claim/$instanceId'
     | '/business/edit'
     | '/business/scan'
+    | '/chats/$conversationId'
     | '/settings/billing'
     | '/business/'
+    | '/chats/'
     | '/business/cards/new'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
@@ -368,7 +379,6 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/admin'
-    | '/chats'
     | '/profile'
     | '/scan'
     | '/subscribe'
@@ -379,8 +389,10 @@ export interface FileRouteTypes {
     | '/claim/$instanceId'
     | '/business/edit'
     | '/business/scan'
+    | '/chats/$conversationId'
     | '/settings/billing'
     | '/business'
+    | '/chats'
     | '/business/cards/new'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
@@ -403,7 +415,6 @@ export interface FileRouteTypes {
     | '/terms'
     | '/_authenticated/admin'
     | '/_authenticated/business'
-    | '/_authenticated/chats'
     | '/_authenticated/profile'
     | '/_authenticated/scan'
     | '/_authenticated/subscribe'
@@ -414,8 +425,10 @@ export interface FileRouteTypes {
     | '/claim/$instanceId'
     | '/_authenticated/business/edit'
     | '/_authenticated/business/scan'
+    | '/_authenticated/chats/$conversationId'
     | '/_authenticated/settings/billing'
     | '/_authenticated/business/'
+    | '/_authenticated/chats/'
     | '/_authenticated/business/cards/new'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
@@ -580,13 +593,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/chats': {
-      id: '/_authenticated/chats'
-      path: '/chats'
-      fullPath: '/chats'
-      preLoaderRoute: typeof AuthenticatedChatsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/business': {
       id: '/_authenticated/business'
       path: '/business'
@@ -601,6 +607,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/chats/': {
+      id: '/_authenticated/chats/'
+      path: '/chats'
+      fullPath: '/chats/'
+      preLoaderRoute: typeof AuthenticatedChatsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/business/': {
       id: '/_authenticated/business/'
       path: '/'
@@ -613,6 +626,13 @@ declare module '@tanstack/react-router' {
       path: '/settings/billing'
       fullPath: '/settings/billing'
       preLoaderRoute: typeof AuthenticatedSettingsBillingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/chats/$conversationId': {
+      id: '/_authenticated/chats/$conversationId'
+      path: '/chats/$conversationId'
+      fullPath: '/chats/$conversationId'
+      preLoaderRoute: typeof AuthenticatedChatsConversationIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/business/scan': {
@@ -711,25 +731,27 @@ const AuthenticatedBusinessRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedBusinessRoute: typeof AuthenticatedBusinessRouteWithChildren
-  AuthenticatedChatsRoute: typeof AuthenticatedChatsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedScanRoute: typeof AuthenticatedScanRoute
   AuthenticatedSubscribeRoute: typeof AuthenticatedSubscribeRoute
   AuthenticatedVouchersRoute: typeof AuthenticatedVouchersRoute
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
+  AuthenticatedChatsConversationIdRoute: typeof AuthenticatedChatsConversationIdRoute
   AuthenticatedSettingsBillingRoute: typeof AuthenticatedSettingsBillingRoute
+  AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedBusinessRoute: AuthenticatedBusinessRouteWithChildren,
-  AuthenticatedChatsRoute: AuthenticatedChatsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedScanRoute: AuthenticatedScanRoute,
   AuthenticatedSubscribeRoute: AuthenticatedSubscribeRoute,
   AuthenticatedVouchersRoute: AuthenticatedVouchersRoute,
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
+  AuthenticatedChatsConversationIdRoute: AuthenticatedChatsConversationIdRoute,
   AuthenticatedSettingsBillingRoute: AuthenticatedSettingsBillingRoute,
+  AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
