@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { postSignOutDestination } from "@/lib/post-sign-out";
+import { useUnreadChatCount } from "@/hooks/useUnreadChatCount";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { QrDisplay } from "@/components/QrDisplay";
@@ -9,7 +10,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
-import { Plus, QrCode, ScanLine, Users, Stamp as StampIco, Wallet as WalletIcon, Pencil, Menu, Settings, LogOut, Download, CreditCard, Sparkles, HelpCircle, Mail, ArrowLeft } from "lucide-react";
+import { Plus, QrCode, ScanLine, Users, Stamp as StampIco, Wallet as WalletIcon, Pencil, Menu, Settings, LogOut, Download, CreditCard, Sparkles, HelpCircle, Mail, ArrowLeft, MessageCircle } from "lucide-react";
 import { useBusinessAccess } from "@/hooks/useBusinessAccess";
 import { StampCard } from "@/components/StampCard";
 import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
@@ -41,6 +42,7 @@ export const Route = createFileRoute("/_authenticated/business/")({
 
 function BusinessDashboard() {
   const navigate = useNavigate();
+  const unreadChats = useUnreadChatCount();
   const [biz, setBiz] = useState<Business | null>(null);
   const [tpls, setTpls] = useState<Tpl[]>([]);
   const [stats, setStats] = useState({ stamps: 0, customers: 0, active: 0 });
@@ -178,6 +180,16 @@ function BusinessDashboard() {
               <SheetTitle className="font-display">Menu</SheetTitle>
             </SheetHeader>
             <nav className="mt-8 flex flex-col gap-2">
+              <Link to="/chats" className="w-full">
+                <Button variant="ghost" className="w-full justify-start gap-3">
+                  <MessageCircle className="h-4 w-4" /> Chats
+                  {unreadChats > 0 && (
+                    <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold leading-none text-primary-foreground">
+                      {unreadChats > 9 ? "9+" : unreadChats}
+                    </span>
+                  )}
+                </Button>
+              </Link>
               <Link to="/business/edit" className="w-full">
                 <Button variant="ghost" className="w-full justify-start gap-3">
                   <Settings className="h-4 w-4" /> Edit business info

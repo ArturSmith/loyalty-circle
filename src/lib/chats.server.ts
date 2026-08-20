@@ -20,6 +20,7 @@ export type ChatConversation = {
   last_message: string | null;
   viewer_role: "business" | "customer";
   customer_name: string | null;
+  unread_count: number;
 };
 
 const DEFAULT_WELCOME = (name: string) =>
@@ -92,7 +93,9 @@ export async function listConversationsFor(userId: string): Promise<ChatConversa
 
   const { data: rows, error } = await supabaseAdmin
     .from("conversations")
-    .select("id, business_id, customer_id, last_message_at, business:businesses(id, name, logo_url)")
+    .select(
+      "id, business_id, customer_id, last_message_at, customer_last_read_at, business_last_read_at, business:businesses(id, name, logo_url)",
+    )
     .or(filters.join(","))
     .order("last_message_at", { ascending: false });
 
@@ -102,13 +105,31 @@ export async function listConversationsFor(userId: string): Promise<ChatConversa
 
   const { data: messages } = await supabaseAdmin
     .from("chat_messages")
-    .select("conversation_id, body, created_at")
+    .select("conversation_id, body, created_at, sender_role")
     .in("conversation_id", conversations.map((c) => c.id))
     .order("created_at", { ascending: false });
 
   const lastByConversation = new Map<string, string>();
   (messages ?? []).forEach((m: any) => {
     if (!lastByConversation.has(m.conversation_id)) lastByConversation.set(m.conversation_id, m.body);
+  });
+
+  // Unread = arrived after this side last looked, and sent by the *other* side.
+  // Your own messages are never unread to you.
+  const readAtByConversation = new Map<string, { role: "business" | "customer"; readAt: number }>();
+  conversations.forEach((c) => {
+    const role = c.customer_id === userId ? ("customer" as const) : ("business" as const);
+    const readAt = role === "customer" ? c.customer_last_read_at : c.business_last_read_at;
+    readAtByConversation.set(c.id, { role, readAt: readAt ? new Date(readAt).getTime() : 0 });
+  });
+
+  const unreadByConversation = new Map<string, number>();
+  (messages ?? []).forEach((m: any) => {
+    const meta = readAtByConversation.get(m.conversation_id);
+    if (!meta) return;
+    if (m.sender_role === meta.role) return;
+    if (new Date(m.created_at).getTime() <= meta.readAt) return;
+    unreadByConversation.set(m.conversation_id, (unreadByConversation.get(m.conversation_id) ?? 0) + 1);
   });
 
   const customerIds = Array.from(
@@ -132,7 +153,14 @@ export async function listConversationsFor(userId: string): Promise<ChatConversa
       last_message: lastByConversation.get(c.id) ?? null,
       viewer_role: c.customer_id === userId ? ("customer" as const) : ("business" as const),
       customer_name: c.customer_id === userId ? null : nameById.get(c.customer_id) ?? null,
+      unread_count: unreadByConversation.get(c.id) ?? 0,
     }));
+}
+
+/** Total unread messages across every conversation the user takes part in. */
+export async function countUnreadMessagesFor(userId: string): Promise<number> {
+  const conversations = await listConversationsFor(userId);
+  return conversations.reduce((total, c) => total + c.unread_count, 0);
 }
 
 export async function loadConversation(conversationId: string, userId: string) {
@@ -179,6 +207,37 @@ export async function loadConversation(conversationId: string, userId: string) {
     customer_name: customerName,
     messages: (messages ?? []) as ChatMessage[],
   };
+}
+
+/**
+ * Marks the viewer's side of a conversation as read. Opening a conversation is
+ * what "reading" means here, so this is called on load rather than being left to
+ * the caller to remember.
+ */
+export async function markConversationRead(conversationId: string, userId: string): Promise<void> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+  const { data: row } = await supabaseAdmin
+    .from("conversations")
+    .select("id, customer_id, business:businesses(owner_id)")
+    .eq("id", conversationId)
+    .maybeSingle();
+
+  const conversation = row as any;
+  if (!conversation) return;
+
+  const isCustomer = conversation.customer_id === userId;
+  const isOwner = conversation.business?.owner_id === userId;
+  if (!isCustomer && !isOwner) return;
+
+  await supabaseAdmin
+    .from("conversations")
+    .update(
+      isCustomer
+        ? ({ customer_last_read_at: new Date().toISOString() } as any)
+        : ({ business_last_read_at: new Date().toISOString() } as any),
+    )
+    .eq("id", conversationId);
 }
 
 export async function postMessage(conversationId: string, userId: string, body: string): Promise<ChatMessage> {

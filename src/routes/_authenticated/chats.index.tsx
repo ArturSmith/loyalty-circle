@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { MessageCircle } from "lucide-react";
 import { TabScreen } from "@/components/TabScreen";
 import { getConversations } from "@/utils/chats.functions";
+import { publishUnreadChatCount } from "@/hooks/useUnreadChatCount";
 import type { ChatConversation } from "@/utils/chats.functions";
 
 export const Route = createFileRoute("/_authenticated/chats/")({
@@ -43,6 +44,9 @@ function ChatsList() {
         if (!alive) return;
         cachedConversations = result.conversations;
         setConversations(result.conversations);
+        // This list is the authoritative count, so hand it to the badge rather
+        // than making it run the same query again.
+        publishUnreadChatCount(result.conversations.reduce((n, c) => n + c.unread_count, 0));
       })
       .catch(() => {})
       .finally(() => alive && setLoading(false));
@@ -63,7 +67,7 @@ function ChatsList() {
           </div>
           <h2 className="mt-6 font-display text-xl font-bold">No chats yet</h2>
           <p className="mt-2 max-w-xs text-sm text-muted-foreground">
-            Add a loyalty card to your wallet and the business will say hello here.
+            Conversations start when someone adds a loyalty card — yours or a business you collect from.
           </p>
         </div>
       ) : (
@@ -78,6 +82,11 @@ function ChatsList() {
                 <Link
                   to="/chats/$conversationId"
                   params={{ conversationId: conversation.id }}
+                  aria-label={
+                    conversation.unread_count > 0
+                      ? `${title}, ${conversation.unread_count} unread`
+                      : title
+                  }
                   className="flex items-center gap-3 px-5 py-4 transition-colors hover:bg-secondary/60"
                 >
                   {conversation.business.logo_url ? (
@@ -98,9 +107,23 @@ function ChatsList() {
                         {timeLabel(conversation.last_message_at)}
                       </span>
                     </div>
-                    <p className="truncate text-sm text-muted-foreground">
-                      {conversation.last_message ?? "No messages yet"}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p
+                        className={`truncate text-sm ${
+                          conversation.unread_count > 0 ? "font-medium text-foreground" : "text-muted-foreground"
+                        }`}
+                      >
+                        {conversation.last_message ?? "No messages yet"}
+                      </p>
+                      {conversation.unread_count > 0 && (
+                        <span
+                          aria-hidden
+                          className="ml-auto flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold leading-none text-primary-foreground"
+                        >
+                          {conversation.unread_count > 9 ? "9+" : conversation.unread_count}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </Link>
               </li>

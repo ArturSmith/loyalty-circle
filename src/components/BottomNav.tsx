@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { CreditCard, Compass, MessageCircle, Ticket, User } from "lucide-react";
 import { useUnusedVoucherCount } from "@/hooks/useUnusedVoucherCount";
+import { useUnreadChatCount } from "@/hooks/useUnreadChatCount";
 
 const items = [
   { to: "/wallet", label: "Wallet", icon: CreditCard },
@@ -12,6 +13,7 @@ const items = [
 
 export function BottomNav() {
   const unusedVouchers = useUnusedVoucherCount();
+  const unreadChats = useUnreadChatCount();
 
   return (
     <nav
@@ -21,12 +23,13 @@ export function BottomNav() {
     >
       <ul className="mx-auto flex max-w-md items-stretch justify-between px-2">
         {items.map(({ to, label, icon: Icon }) => {
-          const badge = to === "/vouchers" ? unusedVouchers : 0;
+          const badge = to === "/vouchers" ? unusedVouchers : to === "/chats" ? unreadChats : 0;
+          const badgeLabel = to === "/chats" ? "unread" : "unused";
           return (
             <li key={to} className="flex-1">
               <Link
                 to={to}
-                aria-label={badge > 0 ? `${label}, ${badge} unused` : label}
+                aria-label={badge > 0 ? `${label}, ${badge} ${badgeLabel}` : label}
                 activeProps={{ className: "text-primary" }}
                 inactiveProps={{ className: "text-muted-foreground" }}
                 className="flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors hover:text-foreground"

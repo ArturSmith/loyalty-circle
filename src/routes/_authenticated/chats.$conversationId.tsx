@@ -5,7 +5,8 @@ import { ArrowLeft, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import { getConversation, sendChatMessage } from "@/utils/chats.functions";
+import { getConversation, markChatRead, sendChatMessage } from "@/utils/chats.functions";
+import { invalidateUnreadChatCount } from "@/hooks/useUnreadChatCount";
 import type { ChatMessage } from "@/utils/chats.functions";
 
 export const Route = createFileRoute("/_authenticated/chats/$conversationId")({
@@ -26,6 +27,7 @@ function ConversationPage() {
   const { conversationId } = Route.useParams();
   const load = useServerFn(getConversation);
   const send = useServerFn(sendChatMessage);
+  const markRead = useServerFn(markChatRead);
 
   const [title, setTitle] = useState("Chat");
   const [logo, setLogo] = useState<string | null>(null);
@@ -51,6 +53,9 @@ function ConversationPage() {
       .catch(() => {})
       .finally(() => alive && setLoading(false));
 
+    // Opening the conversation is what reading it means.
+    void markRead({ data: { conversationId } }).then(() => invalidateUnreadChatCount());
+
     const channel = supabase
       .channel(`chat:${conversationId}`)
       .on(
@@ -59,6 +64,9 @@ function ConversationPage() {
         (payload) => {
           const row = payload.new as ChatMessage;
           setMessages((prev) => (prev.some((m) => m.id === row.id) ? prev : [...prev, row]));
+          // The user is looking at this conversation, so anything arriving now
+          // has been read. Clear it before the badge ever counts it.
+          void markRead({ data: { conversationId } }).then(() => invalidateUnreadChatCount());
         },
       )
       .subscribe();
