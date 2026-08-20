@@ -5,7 +5,7 @@ import { postSignOutDestination } from "@/lib/post-sign-out";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Camera, LogOut, Store, Loader2, HelpCircle, Mail, CreditCard, ChevronRight } from "lucide-react";
+import { Camera, LogOut, Store, Loader2, HelpCircle, Mail, CreditCard, ChevronRight, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { useProfile } from "@/hooks/useProfile";
