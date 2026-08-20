@@ -5,7 +5,7 @@ import { postSignOutDestination } from "@/lib/post-sign-out";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Camera, LogOut, Store, Loader2, HelpCircle, Mail, CreditCard, ChevronRight } from "lucide-react";
+import { Camera, LogOut, Store, Loader2, HelpCircle, Mail, CreditCard, ChevronRight, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { useProfile } from "@/hooks/useProfile";
@@ -137,10 +137,16 @@ function Profile() {
                   value={profile.hasBusiness ? `Business — ${profile.businessName}` : "Customer"}
                 />
               </dl>
-              {profile.hasBusiness && (
+              {profile.hasBusiness ? (
                 <Link to="/business" className="mt-4 block">
                   <Button variant="outline" className="w-full gap-2">
                     <Store className="h-4 w-4" /> Business dashboard
+                  </Button>
+                </Link>
+              ) : (
+                <Link to="/business" className="mt-4 block">
+                  <Button className="w-full gap-2">
+                    <Building2 className="h-4 w-4" /> ClubCarder enterprise
                   </Button>
                 </Link>
               )}
