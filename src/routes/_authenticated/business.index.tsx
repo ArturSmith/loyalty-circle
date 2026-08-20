@@ -42,7 +42,7 @@ export const Route = createFileRoute("/_authenticated/business/")({
 
 function BusinessDashboard() {
   const navigate = useNavigate();
-  const unreadChats = useUnreadChatCount();
+  const unreadChats = useUnreadChatCount("business");
   const [biz, setBiz] = useState<Business | null>(null);
   const [tpls, setTpls] = useState<Tpl[]>([]);
   const [stats, setStats] = useState({ stamps: 0, customers: 0, active: 0 });
@@ -180,9 +180,9 @@ function BusinessDashboard() {
               <SheetTitle className="font-display">Menu</SheetTitle>
             </SheetHeader>
             <nav className="mt-8 flex flex-col gap-2">
-              <Link to="/chats" className="w-full">
+              <Link to="/business/chats" className="w-full">
                 <Button variant="ghost" className="w-full justify-start gap-3">
-                  <MessageCircle className="h-4 w-4" /> Chats
+                  <MessageCircle className="h-4 w-4" /> Messages
                   {unreadChats > 0 && (
                     <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold leading-none text-primary-foreground">
                       {unreadChats > 9 ? "9+" : unreadChats}

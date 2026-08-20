@@ -39,14 +39,14 @@ function ChatsList() {
 
   useEffect(() => {
     let alive = true;
-    load({})
+    load({ data: { scope: "customer" } })
       .then((result) => {
         if (!alive) return;
         cachedConversations = result.conversations;
         setConversations(result.conversations);
         // This list is the authoritative count, so hand it to the badge rather
         // than making it run the same query again.
-        publishUnreadChatCount(result.conversations.reduce((n, c) => n + c.unread_count, 0));
+        publishUnreadChatCount(result.conversations.reduce((n, c) => n + c.unread_count, 0), "customer");
       })
       .catch(() => {})
       .finally(() => alive && setLoading(false));
@@ -67,21 +67,20 @@ function ChatsList() {
           </div>
           <h2 className="mt-6 font-display text-xl font-bold">No chats yet</h2>
           <p className="mt-2 max-w-xs text-sm text-muted-foreground">
-            Conversations start when someone adds a loyalty card — yours or a business you collect from.
+            Add a loyalty card to your wallet and the business will say hello here.
           </p>
         </div>
       ) : (
         <ul className="mx-auto w-full max-w-3xl divide-y divide-border">
           {conversations.map((conversation) => {
-            const title =
-              conversation.viewer_role === "business"
-                ? conversation.customer_name ?? "Customer"
-                : conversation.business.name;
+            // This list is customer-scoped, so the other side is always a business.
+            const title = conversation.business.name;
             return (
               <li key={conversation.id}>
                 <Link
                   to="/chats/$conversationId"
                   params={{ conversationId: conversation.id }}
+                  search={{ scope: "customer" }}
                   aria-label={
                     conversation.unread_count > 0
                       ? `${title}, ${conversation.unread_count} unread`

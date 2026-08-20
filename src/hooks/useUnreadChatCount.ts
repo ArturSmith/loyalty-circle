@@ -1,55 +1,58 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getUnreadChatCount } from "@/utils/chats.functions";
+import type { ChatScope } from "@/utils/chats.functions";
 
 /**
- * Shared unread-message count for the Chats badge.
+ * Shared unread-message count for the Chats badges.
  *
  * Mirrors `useUnusedVoucherCount`: the badge renders on every screen, so it
  * refreshes on realtime inserts and tab focus rather than polling, and pages
  * that already know the true number publish it directly.
  *
- * Unlike vouchers, the count can't be a single client-side query — unread spans
- * conversations the viewer owns *and* conversations they're the customer in, and
- * RLS-safe aggregation across both lives on the server.
+ * Counts are kept per scope. Someone who runs a business is also a customer
+ * elsewhere, and a single total would light up their personal Chats tab for
+ * enquiries they can only read from the dashboard.
  */
-let cached: number | null = null;
-const listeners = new Set<(n: number) => void>();
-const refreshers = new Set<() => void>();
+const cached: Record<ChatScope, number | null> = { customer: null, business: null };
+const listeners: Record<ChatScope, Set<(n: number) => void>> = { customer: new Set(), business: new Set() };
+const refreshers: Record<ChatScope, Set<() => void>> = { customer: new Set(), business: new Set() };
 
-export function publishUnreadChatCount(n: number) {
-  if (cached === n) return;
-  cached = n;
-  for (const listener of listeners) listener(n);
+export function publishUnreadChatCount(n: number, scope: ChatScope = "customer") {
+  if (cached[scope] === n) return;
+  cached[scope] = n;
+  for (const listener of listeners[scope]) listener(n);
 }
 
 /** Ask mounted badges to recount, for callers that know something changed but
  *  not what the new total is. */
-export function invalidateUnreadChatCount() {
-  for (const refresh of refreshers) refresh();
+export function invalidateUnreadChatCount(scope?: ChatScope) {
+  const scopes: ChatScope[] = scope ? [scope] : ["customer", "business"];
+  for (const s of scopes) for (const refresh of refreshers[s]) refresh();
 }
 
-export function useUnreadChatCount() {
+export function useUnreadChatCount(scope: ChatScope = "customer") {
   // Module state is shared between requests on the server, so only seed from the
   // cache in the browser.
-  const [count, setCount] = useState(() => (typeof window === "undefined" ? 0 : cached ?? 0));
+  const [count, setCount] = useState(() => (typeof window === "undefined" ? 0 : cached[scope] ?? 0));
 
   const load = useCallback(async () => {
     try {
-      const { count: n } = await getUnreadChatCount({});
-      publishUnreadChatCount(n);
+      const { count: n } = await getUnreadChatCount({ data: { scope } });
+      publishUnreadChatCount(n, scope);
     } catch {
       // A failed count is not worth surfacing — the badge just keeps its
       // previous value until the next refresh.
     }
-  }, []);
+  }, [scope]);
 
   useEffect(() => {
-    listeners.add(setCount);
+    const scoped = listeners[scope];
+    scoped.add(setCount);
     return () => {
-      listeners.delete(setCount);
+      scoped.delete(setCount);
     };
-  }, []);
+  }, [scope]);
 
   useEffect(() => {
     let channel: ReturnType<typeof supabase.channel> | null = null;
@@ -64,7 +67,7 @@ export function useUnreadChatCount() {
       if (cancelled) return;
       if (!data.user) {
         // Signed out — drop any count left over from the previous session.
-        publishUnreadChatCount(0);
+        publishUnreadChatCount(0, scope);
         return;
       }
       void load();
@@ -75,7 +78,7 @@ export function useUnreadChatCount() {
       // No filter: messages arrive on conversations this user may be either side
       // of, and RLS already limits the stream to conversations they can read.
       channel = supabase
-        .channel(`chat-unread:${data.user.id}`)
+        .channel(`chat-unread:${scope}:${data.user.id}`)
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages" }, refresh)
         .subscribe();
     })();
@@ -84,15 +87,15 @@ export function useUnreadChatCount() {
       if (document.visibilityState === "visible") refresh();
     };
     document.addEventListener("visibilitychange", onVisible);
-    refreshers.add(refresh);
+    refreshers[scope].add(refresh);
 
     return () => {
       cancelled = true;
-      refreshers.delete(refresh);
+      refreshers[scope].delete(refresh);
       document.removeEventListener("visibilitychange", onVisible);
       if (channel) supabase.removeChannel(channel);
     };
-  }, [load]);
+  }, [load, scope]);
 
   return count;
 }

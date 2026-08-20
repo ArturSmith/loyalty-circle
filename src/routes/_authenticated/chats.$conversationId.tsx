@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, Send } from "lucide-react";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +10,15 @@ import { getConversation, markChatRead, sendChatMessage } from "@/utils/chats.fu
 import { invalidateUnreadChatCount } from "@/hooks/useUnreadChatCount";
 import type { ChatMessage } from "@/utils/chats.functions";
 
+// Which side the reader is acting as. Carried in the URL so the same screen can
+// serve a customer's chat and a business inbox thread without guessing — and so
+// that a shared or bookmarked link keeps its meaning.
+const searchSchema = z
+  .object({ scope: z.enum(["customer", "business"]).optional() })
+  .catch({ scope: undefined });
+
 export const Route = createFileRoute("/_authenticated/chats/$conversationId")({
+  validateSearch: searchSchema,
   head: () => ({
     meta: [
       { title: "Conversation — ClubCarder" },
@@ -25,6 +34,8 @@ export const Route = createFileRoute("/_authenticated/chats/$conversationId")({
 
 function ConversationPage() {
   const { conversationId } = Route.useParams();
+  const { scope: scopeParam } = Route.useSearch();
+  const scope = scopeParam ?? "customer";
   const load = useServerFn(getConversation);
   const send = useServerFn(sendChatMessage);
   const markRead = useServerFn(markChatRead);
@@ -42,7 +53,7 @@ function ConversationPage() {
   useEffect(() => {
     let alive = true;
     setLoading(true);
-    load({ data: { conversationId } })
+    load({ data: { conversationId, scope } })
       .then((result) => {
         if (!alive) return;
         setTitle(result.viewer_role === "business" ? result.customer_name ?? "Customer" : result.business.name);
@@ -54,7 +65,7 @@ function ConversationPage() {
       .finally(() => alive && setLoading(false));
 
     // Opening the conversation is what reading it means.
-    void markRead({ data: { conversationId } }).then(() => invalidateUnreadChatCount());
+    void markRead({ data: { conversationId, scope } }).then(() => invalidateUnreadChatCount(scope));
 
     const channel = supabase
       .channel(`chat:${conversationId}`)
@@ -66,7 +77,7 @@ function ConversationPage() {
           setMessages((prev) => (prev.some((m) => m.id === row.id) ? prev : [...prev, row]));
           // The user is looking at this conversation, so anything arriving now
           // has been read. Clear it before the badge ever counts it.
-          void markRead({ data: { conversationId } }).then(() => invalidateUnreadChatCount());
+          void markRead({ data: { conversationId, scope } }).then(() => invalidateUnreadChatCount(scope));
         },
       )
       .subscribe();
@@ -76,7 +87,7 @@ function ConversationPage() {
       supabase.removeChannel(channel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversationId]);
+  }, [conversationId, scope]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: "end" });
@@ -91,7 +102,7 @@ function ConversationPage() {
     if (!text || sending) return;
     setSending(true);
     try {
-      const result = await send({ data: { conversationId, body: text } });
+      const result = await send({ data: { conversationId, body: text, scope } });
       setBody("");
       setMessages((prev) => (prev.some((m) => m.id === result.message.id) ? prev : [...prev, result.message]));
     } catch {
@@ -106,8 +117,8 @@ function ConversationPage() {
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
         <div className="mx-auto flex min-h-[56px] w-full max-w-3xl items-center gap-3 px-3 py-3">
-          <Button variant="ghost" size="icon" asChild aria-label="Back to chats">
-            <Link to="/chats">
+          <Button variant="ghost" size="icon" asChild aria-label={scope === "business" ? "Back to inbox" : "Back to chats"}>
+            <Link to={scope === "business" ? "/business/chats" : "/chats"}>
               <ArrowLeft className="h-5 w-5" />
             </Link>
           </Button>

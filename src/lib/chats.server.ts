@@ -79,25 +79,42 @@ export async function openWelcomeConversation(businessId: string, customerId: st
   }
 }
 
-export async function listConversationsFor(userId: string): Promise<ChatConversation[]> {
+/**
+ * Which side of the conversation the caller is acting as.
+ *
+ * A conversation belongs to a business and a customer, never to a business
+ * *owner* personally. Someone who runs a café is also a customer elsewhere, and
+ * the two roles must not bleed into each other: their personal Chats tab should
+ * never show café enquiries, and the café inbox should never show the cards they
+ * collect. Every read is therefore scoped explicitly rather than inferred.
+ */
+export type ChatScope = "customer" | "business";
+
+export async function listConversationsFor(
+  userId: string,
+  scope: ChatScope = "customer",
+): Promise<ChatConversation[]> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-  const { data: ownedBusinesses } = await supabaseAdmin
-    .from("businesses")
-    .select("id")
-    .eq("owner_id", userId);
-  const ownedIds = (ownedBusinesses ?? []).map((b: { id: string }) => b.id);
-
-  const filters = [`customer_id.eq.${userId}`];
-  if (ownedIds.length > 0) filters.push(`business_id.in.(${ownedIds.join(",")})`);
-
-  const { data: rows, error } = await supabaseAdmin
+  let query = supabaseAdmin
     .from("conversations")
     .select(
       "id, business_id, customer_id, last_message_at, customer_last_read_at, business_last_read_at, business:businesses(id, name, logo_url)",
-    )
-    .or(filters.join(","))
-    .order("last_message_at", { ascending: false });
+    );
+
+  if (scope === "customer") {
+    query = query.eq("customer_id", userId);
+  } else {
+    const { data: ownedBusinesses } = await supabaseAdmin
+      .from("businesses")
+      .select("id")
+      .eq("owner_id", userId);
+    const ownedIds = (ownedBusinesses ?? []).map((b: { id: string }) => b.id);
+    if (ownedIds.length === 0) return [];
+    query = query.in("business_id", ownedIds);
+  }
+
+  const { data: rows, error } = await query.order("last_message_at", { ascending: false });
 
   if (error) throw error;
   const conversations = (rows ?? []) as any[];
@@ -116,11 +133,10 @@ export async function listConversationsFor(userId: string): Promise<ChatConversa
 
   // Unread = arrived after this side last looked, and sent by the *other* side.
   // Your own messages are never unread to you.
-  const readAtByConversation = new Map<string, { role: "business" | "customer"; readAt: number }>();
+  const readAtByConversation = new Map<string, { role: ChatScope; readAt: number }>();
   conversations.forEach((c) => {
-    const role = c.customer_id === userId ? ("customer" as const) : ("business" as const);
-    const readAt = role === "customer" ? c.customer_last_read_at : c.business_last_read_at;
-    readAtByConversation.set(c.id, { role, readAt: readAt ? new Date(readAt).getTime() : 0 });
+    const readAt = scope === "customer" ? c.customer_last_read_at : c.business_last_read_at;
+    readAtByConversation.set(c.id, { role: scope, readAt: readAt ? new Date(readAt).getTime() : 0 });
   });
 
   const unreadByConversation = new Map<string, number>();
@@ -132,16 +148,16 @@ export async function listConversationsFor(userId: string): Promise<ChatConversa
     unreadByConversation.set(m.conversation_id, (unreadByConversation.get(m.conversation_id) ?? 0) + 1);
   });
 
-  const customerIds = Array.from(
-    new Set(conversations.filter((c) => c.customer_id !== userId).map((c) => c.customer_id)),
-  );
   const nameById = new Map<string, string | null>();
-  if (customerIds.length > 0) {
-    const { data: profiles } = await supabaseAdmin
-      .from("profiles")
-      .select("id, display_name")
-      .in("id", customerIds);
-    (profiles ?? []).forEach((p: any) => nameById.set(p.id, p.display_name));
+  if (scope === "business") {
+    const customerIds = Array.from(new Set(conversations.map((c) => c.customer_id)));
+    if (customerIds.length > 0) {
+      const { data: profiles } = await supabaseAdmin
+        .from("profiles")
+        .select("id, display_name")
+        .in("id", customerIds);
+      (profiles ?? []).forEach((p: any) => nameById.set(p.id, p.display_name));
+    }
   }
 
   return conversations
@@ -151,19 +167,19 @@ export async function listConversationsFor(userId: string): Promise<ChatConversa
       business: c.business as ChatBusiness,
       last_message_at: c.last_message_at,
       last_message: lastByConversation.get(c.id) ?? null,
-      viewer_role: c.customer_id === userId ? ("customer" as const) : ("business" as const),
-      customer_name: c.customer_id === userId ? null : nameById.get(c.customer_id) ?? null,
+      viewer_role: scope,
+      customer_name: scope === "business" ? nameById.get(c.customer_id) ?? null : null,
       unread_count: unreadByConversation.get(c.id) ?? 0,
     }));
 }
 
-/** Total unread messages across every conversation the user takes part in. */
-export async function countUnreadMessagesFor(userId: string): Promise<number> {
-  const conversations = await listConversationsFor(userId);
+/** Total unread messages across the conversations in one scope. */
+export async function countUnreadMessagesFor(userId: string, scope: ChatScope = "customer"): Promise<number> {
+  const conversations = await listConversationsFor(userId, scope);
   return conversations.reduce((total, c) => total + c.unread_count, 0);
 }
 
-export async function loadConversation(conversationId: string, userId: string) {
+export async function loadConversation(conversationId: string, userId: string, scope: ChatScope = "customer") {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
   const { data: row, error } = await supabaseAdmin
@@ -176,8 +192,11 @@ export async function loadConversation(conversationId: string, userId: string) {
   const conversation = row as any;
   if (!conversation || !conversation.business) throw new Error("Conversation not found");
 
-  const isCustomer = conversation.customer_id === userId;
-  const isOwner = conversation.business.owner_id === userId;
+  // Access is granted by the requested scope alone. An owner opening a
+  // conversation from their personal Chats tab is not acting as the business, so
+  // asking as a customer for a conversation you merely own is a miss.
+  const isCustomer = scope === "customer" && conversation.customer_id === userId;
+  const isOwner = scope === "business" && conversation.business.owner_id === userId;
   if (!isCustomer && !isOwner) throw new Error("Conversation not found");
 
   const { data: messages } = await supabaseAdmin
@@ -214,7 +233,11 @@ export async function loadConversation(conversationId: string, userId: string) {
  * what "reading" means here, so this is called on load rather than being left to
  * the caller to remember.
  */
-export async function markConversationRead(conversationId: string, userId: string): Promise<void> {
+export async function markConversationRead(
+  conversationId: string,
+  userId: string,
+  scope: ChatScope = "customer",
+): Promise<void> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
   const { data: row } = await supabaseAdmin
@@ -226,8 +249,8 @@ export async function markConversationRead(conversationId: string, userId: strin
   const conversation = row as any;
   if (!conversation) return;
 
-  const isCustomer = conversation.customer_id === userId;
-  const isOwner = conversation.business?.owner_id === userId;
+  const isCustomer = scope === "customer" && conversation.customer_id === userId;
+  const isOwner = scope === "business" && conversation.business?.owner_id === userId;
   if (!isCustomer && !isOwner) return;
 
   await supabaseAdmin
@@ -240,7 +263,12 @@ export async function markConversationRead(conversationId: string, userId: strin
     .eq("id", conversationId);
 }
 
-export async function postMessage(conversationId: string, userId: string, body: string): Promise<ChatMessage> {
+export async function postMessage(
+  conversationId: string,
+  userId: string,
+  body: string,
+  scope: ChatScope = "customer",
+): Promise<ChatMessage> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
   const { data: row, error } = await supabaseAdmin
@@ -253,8 +281,10 @@ export async function postMessage(conversationId: string, userId: string, body: 
   const conversation = row as any;
   if (!conversation) throw new Error("Conversation not found");
 
-  const isCustomer = conversation.customer_id === userId;
-  const isOwner = conversation.business?.owner_id === userId;
+  // The scope decides who you're speaking as, so a reply from the business
+  // inbox is always stamped 'business' and one from the Chats tab 'customer'.
+  const isCustomer = scope === "customer" && conversation.customer_id === userId;
+  const isOwner = scope === "business" && conversation.business?.owner_id === userId;
   if (!isCustomer && !isOwner) throw new Error("Conversation not found");
 
   const { data: created, error: insertError } = await supabaseAdmin
