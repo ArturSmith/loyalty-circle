@@ -1,3 +1,4 @@
+import { getTabCache, setTabCache } from "@/lib/tabCache";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { MapPin, Search } from "lucide-react";
@@ -30,27 +31,27 @@ export const Route = createFileRoute("/discover")({
 
 // Survives tab switches so coming back to Discover shows the previous results
 // immediately while a fresh fetch runs in the background.
-let cachedCards: DiscoverCard[] | null = null;
+const CACHE_KEY = "discover";
 
 function Discover() {
   const { coords, asked, request } = useUserLocation(true);
-  const [cards, setCards] = useState<DiscoverCard[]>(() => cachedCards ?? []);
-  const [loading, setLoading] = useState(() => cachedCards === null);
+  const [cards, setCards] = useState<DiscoverCard[]>(() => getTabCache<DiscoverCard[]>(CACHE_KEY) ?? []);
+  const [loading, setLoading] = useState(() => getTabCache<DiscoverCard[]>(CACHE_KEY) === null);
   const [query, setQuery] = useState("");
 
   useEffect(() => {
     if (!asked) return;
     let cancelled = false;
-    if (cachedCards === null) setLoading(true);
+    if (getTabCache<DiscoverCard[]>(CACHE_KEY) === null) setLoading(true);
     (async () => {
       try {
         const rows = await fetchDiscoverCards({ coords, limit: 300 });
         if (!cancelled) {
-          cachedCards = rows;
+          setTabCache<DiscoverCard[]>(CACHE_KEY, rows);
           setCards(rows);
         }
       } catch {
-        if (!cancelled && cachedCards === null) setCards([]);
+        if (!cancelled && getTabCache<DiscoverCard[]>(CACHE_KEY) === null) setCards([]);
       } finally {
         if (!cancelled) setLoading(false);
       }

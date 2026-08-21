@@ -1,3 +1,4 @@
+import { getTabCache, setTabCache } from "@/lib/tabCache";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -36,12 +37,12 @@ function addressOf(b: MyVoucher["business"]) {
 
 // Kept between tab switches so returning to Vouchers renders instantly
 // instead of flashing a loading state while the refetch runs in background.
-let cachedVouchers: MyVoucher[] | null = null;
+const CACHE_KEY = "vouchers";
 
 function VouchersPage() {
   const load = useServerFn(getMyVouchers);
-  const [vouchers, setVouchers] = useState<MyVoucher[]>(() => cachedVouchers ?? []);
-  const [loading, setLoading] = useState(() => cachedVouchers === null);
+  const [vouchers, setVouchers] = useState<MyVoucher[]>(() => getTabCache<MyVoucher[]>(CACHE_KEY) ?? []);
+  const [loading, setLoading] = useState(() => getTabCache<MyVoucher[]>(CACHE_KEY) === null);
   const [tab, setTab] = useState<"unused" | "used">("unused");
   const [openId, setOpenId] = useState<string | null>(null);
   const [redeemed, setRedeemed] = useState<MyVoucher | null>(null);
@@ -72,7 +73,7 @@ function VouchersPage() {
         }
         seenStatus.current = new Map(rows.map((v) => [v.id, v.status]));
 
-        cachedVouchers = rows;
+        setTabCache<MyVoucher[]>(CACHE_KEY, rows);
         setVouchers(rows);
         // This page holds the real list, so the nav badge can take our number
         // rather than firing its own count query.
