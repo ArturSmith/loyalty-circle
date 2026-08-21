@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "sonner";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { clearTabCaches } from "@/lib/tabCache";
 
 function NotFoundComponent() {
   return (
@@ -95,7 +96,8 @@ function RootComponent() {
     const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();
-      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
+      if (event === "SIGNED_OUT") clearTabCaches();
+      else queryClient.invalidateQueries();
       if (event === "SIGNED_IN") {
         (async () => {
           try {
