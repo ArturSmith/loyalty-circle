@@ -18,6 +18,7 @@ import { initialsFrom } from "@/lib/avatar";
 import { BusinessInfoPanel } from "@/components/BusinessInfoPanel";
 import { DiscoverStrip } from "@/components/DiscoverStrip";
 import { BottomNav } from "@/components/BottomNav";
+import { getTabCache, setTabCache } from "@/lib/tabCache";
 
 
 type Instance = WalletInstance;
@@ -45,14 +46,15 @@ const BUSINESS_CTA_SNOOZE_MS = 7 * 24 * 60 * 60 * 1000;
 
 // Survives tab switches so returning to Wallet renders the previous cards
 // immediately while a fresh fetch runs in the background.
-let cachedWallet: { instances: Instance[]; frozenBusinessIds: string[] } | null = null;
+type WalletCache = { instances: Instance[]; frozenBusinessIds: string[] };
+const WALLET_CACHE_KEY = "wallet";
 
 function Wallet() {
-  const [instances, setInstances] = useState<Instance[]>(() => cachedWallet?.instances ?? []);
+  const [instances, setInstances] = useState<Instance[]>(() => getTabCache<WalletCache>(WALLET_CACHE_KEY)?.instances ?? []);
   const [frozenBusinessIds, setFrozenBusinessIds] = useState<Set<string>>(
-    () => new Set(cachedWallet?.frozenBusinessIds ?? []),
+    () => new Set(getTabCache<WalletCache>(WALLET_CACHE_KEY)?.frozenBusinessIds ?? []),
   );
-  const [loading, setLoading] = useState(() => cachedWallet === null);
+  const [loading, setLoading] = useState(() => getTabCache<WalletCache>(WALLET_CACHE_KEY) === null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [frontId, setFrontId] = useState<string | null>(null);
   const [flippedId, setFlippedId] = useState<string | null>(null);
@@ -91,7 +93,7 @@ function Wallet() {
   const load = useCallback(async () => {
     try {
       const { instances: next, frozenBusinessIds: nextFrozenBusinessIds } = await fetchWallet({ data: { environment: getPaddleEnvironment() } });
-      cachedWallet = { instances: next, frozenBusinessIds: nextFrozenBusinessIds };
+      setTabCache<WalletCache>(WALLET_CACHE_KEY, { instances: next, frozenBusinessIds: nextFrozenBusinessIds });
       // Diff against previous state to celebrate any stamp increment for the current user
       setInstances((prev) => {
         const prevMap = new Map(prev.map((p) => [p.id, p.stamps_count]));
@@ -131,7 +133,7 @@ function Wallet() {
       setFrozenBusinessIds(new Set(nextFrozenBusinessIds));
     } catch (error) {
       console.error("Error loading wallet cards:", error);
-      if (cachedWallet === null) {
+      if (getTabCache<WalletCache>(WALLET_CACHE_KEY) === null) {
         setInstances([]);
         setFrozenBusinessIds(new Set());
         const errorMessage = error instanceof Error ? error.message : "Please try again.";
