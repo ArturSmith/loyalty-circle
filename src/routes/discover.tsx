@@ -33,7 +33,7 @@ export const Route = createFileRoute("/discover")({
 let cachedCards: DiscoverCard[] | null = null;
 
 function Discover() {
-  const { coords, asked, request } = useUserLocation(true);
+  const { coords, asked, status, request } = useUserLocation(true);
   const [cards, setCards] = useState<DiscoverCard[]>(() => cachedCards ?? []);
   const [loading, setLoading] = useState(() => cachedCards === null);
   const [query, setQuery] = useState("");
@@ -89,11 +89,28 @@ function Discover() {
 
 
       {!coords && asked && (
-        <div className="mx-auto mt-4 flex max-w-3xl items-center justify-between gap-3 rounded-2xl glass-panel border border-border px-5 py-3">
-          <p className="text-sm text-muted-foreground">Share your location to sort cards by what's closest.</p>
-          <Button size="sm" variant="secondary" className="gap-2 shrink-0" onClick={request}>
-            <MapPin className="h-4 w-4" /> Use location
-          </Button>
+        <div className="mx-auto mt-4 max-w-3xl px-5">
+          <div className="flex items-center justify-between gap-3 rounded-2xl glass-panel border border-border px-4 py-3">
+            <p className="text-sm text-muted-foreground">
+              {status === "denied"
+                ? "Location is blocked. Allow it in your browser or device settings to sort by what's closest."
+                : status === "unavailable"
+                  ? "Couldn't get your location. Check your connection and try again."
+                  : "Share your location to sort cards by what's closest."}
+            </p>
+            {status !== "denied" && (
+              <Button
+                size="sm"
+                variant="secondary"
+                className="gap-2 shrink-0"
+                onClick={request}
+                disabled={status === "pending"}
+              >
+                <MapPin className="h-4 w-4" />
+                {status === "pending" ? "Locating…" : "Share location"}
+              </Button>
+            )}
+          </div>
         </div>
       )}
 

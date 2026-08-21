@@ -26,6 +26,8 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>ClubCarder uses the camera to scan loyalty QR codes.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>ClubCarder uses your location to show loyalty cards from businesses nearest to you.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

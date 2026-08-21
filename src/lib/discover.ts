@@ -53,24 +53,42 @@ function writeCachedCoords(coords: Coords) {
   }
 }
 
+/**
+ * How the last location attempt went.
+ *
+ * `denied` matters: once permission is refused the browser fails every later
+ * `getCurrentPosition` immediately and without prompting, so a retry button is
+ * useless and we have to say so instead of appearing to do nothing.
+ */
+export type LocationStatus = "idle" | "pending" | "granted" | "denied" | "unavailable";
+
 /** Asks the browser for the user's location (cached for 24h). Never throws. */
 export function useUserLocation(enabled = true) {
   const [coords, setCoords] = useState<Coords | null>(null);
   const [asked, setAsked] = useState(false);
+  const [status, setStatus] = useState<LocationStatus>("idle");
 
   const request = useCallback(() => {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
       setAsked(true);
+      setStatus("unavailable");
       return;
     }
+    setStatus("pending");
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const next = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         writeCachedCoords(next);
         setCoords(next);
         setAsked(true);
+        setStatus("granted");
       },
-      () => setAsked(true),
+      (error) => {
+        setAsked(true);
+        // PERMISSION_DENIED (1) is permanent until the user changes it in
+        // settings; a timeout or position error is worth retrying.
+        setStatus(error.code === error.PERMISSION_DENIED ? "denied" : "unavailable");
+      },
       { enableHighAccuracy: false, timeout: 8000, maximumAge: 10 * 60 * 1000 },
     );
   }, []);
@@ -81,12 +99,13 @@ export function useUserLocation(enabled = true) {
     if (cachedCoords) {
       setCoords(cachedCoords);
       setAsked(true);
+      setStatus("granted");
       return;
     }
     request();
   }, [enabled, request]);
 
-  return { coords, asked, request };
+  return { coords, asked, status, request };
 }
 
 export async function fetchDiscoverCards(params: {

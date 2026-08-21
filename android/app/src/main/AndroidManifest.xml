@@ -42,4 +42,9 @@
     <!-- QR scanning (getUserMedia in the WebView) -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
+
+    <!-- Sorting Discover by what's nearest (navigator.geolocation in the WebView).
+         Coarse is enough — we only rank businesses by rough distance. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-feature android:name="android.hardware.location" android:required="false" />
 </manifest>
