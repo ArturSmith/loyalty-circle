@@ -17,7 +17,7 @@ function indexFor(path: string) {
  * Slides a bottom-nav tab screen in from the side you navigated from, so
  * switching tabs feels continuous instead of snapping.
  */
-export function TabTransition({ children }: { children: ReactNode }) {
+export function TabTransition({ children, className }: { children: ReactNode; className?: string }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const direction = useRef<number>(0);
   const initialised = useRef(false);
@@ -35,7 +35,7 @@ export function TabTransition({ children }: { children: ReactNode }) {
       initial={{ opacity: 0, x: direction.current * 28 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.24, ease: [0.22, 0.61, 0.36, 1] }}
-      className="flex-1"
+      className={className ?? "flex-1"}
     >
       {children}
     </motion.div>

@@ -217,7 +217,7 @@ function Wallet() {
 
   return (
     <div className="relative min-h-screen flex flex-col overflow-hidden pb-24">
-      <TabTransition>
+      <TabTransition className="flex flex-1 flex-col">
       <header className="relative flex items-center justify-between px-5 py-4">
         <div className="flex items-center gap-3 min-w-0">
           <Link to="/profile" aria-label="Open your profile">
