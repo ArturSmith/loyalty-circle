@@ -257,22 +257,28 @@ export type Database = {
       conversations: {
         Row: {
           business_id: string
+          business_last_read_at: string
           created_at: string
           customer_id: string
+          customer_last_read_at: string
           id: string
           last_message_at: string
         }
         Insert: {
           business_id: string
+          business_last_read_at?: string
           created_at?: string
           customer_id: string
+          customer_last_read_at?: string
           id?: string
           last_message_at?: string
         }
         Update: {
           business_id?: string
+          business_last_read_at?: string
           created_at?: string
           customer_id?: string
+          customer_last_read_at?: string
           id?: string
           last_message_at?: string
         }
@@ -597,6 +603,10 @@ export type Database = {
       is_conversation_participant: {
         Args: { _conversation_id: string }
         Returns: boolean
+      }
+      mark_conversation_read: {
+        Args: { _conversation_id: string }
+        Returns: undefined
       }
       redeem_voucher: { Args: { _voucher_id: string }; Returns: Json }
       renew_card: { Args: { _card_instance_id: string }; Returns: undefined }
