@@ -91,6 +91,7 @@ function Wallet() {
   const load = useCallback(async () => {
     try {
       const { instances: next, frozenBusinessIds: nextFrozenBusinessIds } = await fetchWallet({ data: { environment: getPaddleEnvironment() } });
+      cachedWallet = { instances: next, frozenBusinessIds: nextFrozenBusinessIds };
       // Diff against previous state to celebrate any stamp increment for the current user
       setInstances((prev) => {
         const prevMap = new Map(prev.map((p) => [p.id, p.stamps_count]));
@@ -130,10 +131,12 @@ function Wallet() {
       setFrozenBusinessIds(new Set(nextFrozenBusinessIds));
     } catch (error) {
       console.error("Error loading wallet cards:", error);
-      setInstances([]);
-      setFrozenBusinessIds(new Set());
-      const errorMessage = error instanceof Error ? error.message : "Please try again.";
-      toast.error("Couldn't load your cards", { description: errorMessage });
+      if (cachedWallet === null) {
+        setInstances([]);
+        setFrozenBusinessIds(new Set());
+        const errorMessage = error instanceof Error ? error.message : "Please try again.";
+        toast.error("Couldn't load your cards", { description: errorMessage });
+      }
     } finally {
       setLoading(false);
     }
