@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { BottomNav } from "@/components/BottomNav";
+import { TabTransition } from "@/components/TabTransition";
 
 /**
  * Shared shell for the bottom-nav tabs: one consistent top app bar (title only,
@@ -30,7 +31,9 @@ export function TabScreen({
         </div>
       </header>
 
-      <main className={contentClassName ?? "flex-1"}>{children}</main>
+      <main className={contentClassName ?? "flex-1"}>
+        <TabTransition>{children}</TabTransition>
+      </main>
 
       <BottomNav />
     </div>

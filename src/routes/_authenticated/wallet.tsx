@@ -18,6 +18,8 @@ import { initialsFrom } from "@/lib/avatar";
 import { BusinessInfoPanel } from "@/components/BusinessInfoPanel";
 import { DiscoverStrip } from "@/components/DiscoverStrip";
 import { BottomNav } from "@/components/BottomNav";
+import { TabTransition } from "@/components/TabTransition";
+import { getTabCache, setTabCache } from "@/lib/tabCache";
 
 
 type Instance = WalletInstance;
@@ -43,10 +45,17 @@ type Celebration = {
 const BUSINESS_CTA_KEY = "cc_business_cta_hidden_until";
 const BUSINESS_CTA_SNOOZE_MS = 7 * 24 * 60 * 60 * 1000;
 
+// Survives tab switches so returning to Wallet renders the previous cards
+// immediately while a fresh fetch runs in the background.
+type WalletCache = { instances: Instance[]; frozenBusinessIds: string[] };
+const WALLET_CACHE_KEY = "wallet";
+
 function Wallet() {
-  const [instances, setInstances] = useState<Instance[]>([]);
-  const [frozenBusinessIds, setFrozenBusinessIds] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(true);
+  const [instances, setInstances] = useState<Instance[]>(() => getTabCache<WalletCache>(WALLET_CACHE_KEY)?.instances ?? []);
+  const [frozenBusinessIds, setFrozenBusinessIds] = useState<Set<string>>(
+    () => new Set(getTabCache<WalletCache>(WALLET_CACHE_KEY)?.frozenBusinessIds ?? []),
+  );
+  const [loading, setLoading] = useState(() => getTabCache<WalletCache>(WALLET_CACHE_KEY) === null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [frontId, setFrontId] = useState<string | null>(null);
   const [flippedId, setFlippedId] = useState<string | null>(null);
@@ -85,6 +94,7 @@ function Wallet() {
   const load = useCallback(async () => {
     try {
       const { instances: next, frozenBusinessIds: nextFrozenBusinessIds } = await fetchWallet({ data: { environment: getPaddleEnvironment() } });
+      setTabCache<WalletCache>(WALLET_CACHE_KEY, { instances: next, frozenBusinessIds: nextFrozenBusinessIds });
       // Diff against previous state to celebrate any stamp increment for the current user
       setInstances((prev) => {
         const prevMap = new Map(prev.map((p) => [p.id, p.stamps_count]));
@@ -124,10 +134,12 @@ function Wallet() {
       setFrozenBusinessIds(new Set(nextFrozenBusinessIds));
     } catch (error) {
       console.error("Error loading wallet cards:", error);
-      setInstances([]);
-      setFrozenBusinessIds(new Set());
-      const errorMessage = error instanceof Error ? error.message : "Please try again.";
-      toast.error("Couldn't load your cards", { description: errorMessage });
+      if (getTabCache<WalletCache>(WALLET_CACHE_KEY) === null) {
+        setInstances([]);
+        setFrozenBusinessIds(new Set());
+        const errorMessage = error instanceof Error ? error.message : "Please try again.";
+        toast.error("Couldn't load your cards", { description: errorMessage });
+      }
     } finally {
       setLoading(false);
     }
@@ -205,6 +217,7 @@ function Wallet() {
 
   return (
     <div className="relative min-h-screen flex flex-col overflow-hidden pb-24">
+      <TabTransition className="flex flex-1 flex-col">
       <header className="relative flex items-center justify-between px-5 py-4">
         <div className="flex items-center gap-3 min-w-0">
           <Link to="/profile" aria-label="Open your profile">
@@ -689,6 +702,7 @@ function Wallet() {
           </motion.div>
         )}
       </AnimatePresence>
+      </TabTransition>
       <BottomNav />
     </div>
   );
