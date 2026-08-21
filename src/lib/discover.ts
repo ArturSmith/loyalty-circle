@@ -62,6 +62,21 @@ function writeCachedCoords(coords: Coords) {
  */
 export type LocationStatus = "idle" | "pending" | "granted" | "denied" | "unavailable";
 
+/**
+ * Reads the real permission state, which `getCurrentPosition` alone can't tell
+ * us: dismissing the prompt reports PERMISSION_DENIED identically to a genuine
+ * block, but only the latter is permanent. Returns null where unsupported.
+ */
+async function readPermissionState(): Promise<PermissionState | null> {
+  try {
+    if (typeof navigator === "undefined" || !navigator.permissions?.query) return null;
+    const result = await navigator.permissions.query({ name: "geolocation" as PermissionName });
+    return result.state;
+  } catch {
+    return null;
+  }
+}
+
 /** Asks the browser for the user's location (cached for 24h). Never throws. */
 export function useUserLocation(enabled = true) {
   const [coords, setCoords] = useState<Coords | null>(null);
@@ -85,9 +100,16 @@ export function useUserLocation(enabled = true) {
       },
       (error) => {
         setAsked(true);
-        // PERMISSION_DENIED (1) is permanent until the user changes it in
-        // settings; a timeout or position error is worth retrying.
-        setStatus(error.code === error.PERMISSION_DENIED ? "denied" : "unavailable");
+        if (error.code !== error.PERMISSION_DENIED) {
+          // Timeout or position-unavailable: worth retrying.
+          setStatus("unavailable");
+          return;
+        }
+        // Only call it blocked if the browser confirms it. A dismissed prompt
+        // still reads as "prompt", and asking again will work.
+        void readPermissionState().then((state) => {
+          setStatus(state === "denied" ? "denied" : "idle");
+        });
       },
       { enableHighAccuracy: false, timeout: 8000, maximumAge: 10 * 60 * 1000 },
     );
@@ -102,7 +124,22 @@ export function useUserLocation(enabled = true) {
       setStatus("granted");
       return;
     }
-    request();
+    let cancelled = false;
+    // Don't fire an unsolicited prompt on load. If permission was already
+    // granted the call is silent, so it's safe; otherwise wait for the user to
+    // press "Share location" so the request has a gesture behind it.
+    void readPermissionState().then((state) => {
+      if (cancelled) return;
+      if (state === "granted") {
+        request();
+      } else {
+        setAsked(true);
+        setStatus(state === "denied" ? "denied" : "idle");
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [enabled, request]);
 
   return { coords, asked, status, request };
