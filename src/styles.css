@@ -105,6 +105,18 @@
 @layer base {
   * { border-color: var(--color-border); }
   html, body { font-family: var(--font-sans); }
+  /* Tab screens slide in from ±28px. Without this the off-screen start position
+     widens the document for the length of the animation, which flashes a
+     horizontal scrollbar along the bottom edge and makes the fixed bottom nav
+     appear to jump. `clip` rather than `hidden` so neither element becomes a
+     scroll container (that would break `position: fixed` descendants). */
+  html, body { overflow-x: clip; }
+  /* Tabs differ in content height, so the vertical scrollbar appears on some
+     and not others. On desktop that changes the viewport width, which shifts
+     the horizontally-centred nav contents sideways on every switch. Reserving
+     the gutter permanently keeps the width constant. No effect on mobile or the
+     native shell, where scrollbars are overlaid. */
+  html { scrollbar-gutter: stable; }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
