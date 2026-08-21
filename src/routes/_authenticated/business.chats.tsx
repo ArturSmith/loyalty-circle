@@ -101,9 +101,17 @@ function BusinessChats() {
                     }
                     className="flex items-center gap-3 px-5 py-4 transition-colors hover:bg-secondary/60"
                   >
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-semibold">
-                      {title.slice(0, 1).toUpperCase()}
-                    </div>
+                    {conversation.customer_avatar_url ? (
+                      <img
+                        src={conversation.customer_avatar_url}
+                        alt=""
+                        className="h-11 w-11 shrink-0 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-semibold">
+                        {title.slice(0, 1).toUpperCase()}
+                      </div>
+                    )}
                     <div className="min-w-0 flex-1">
                       <div className="flex items-baseline justify-between gap-2">
                         <p className="truncate font-medium">{title}</p>

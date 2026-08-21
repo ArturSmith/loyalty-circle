@@ -19,7 +19,9 @@ export type ChatConversation = {
   last_message_at: string;
   last_message: string | null;
   viewer_role: "business" | "customer";
+  /** Populated only in the "business" scope — the other party's identity. */
   customer_name: string | null;
+  customer_avatar_url: string | null;
   unread_count: number;
 };
 
@@ -149,14 +151,18 @@ export async function listConversationsFor(
   });
 
   const nameById = new Map<string, string | null>();
+  const avatarById = new Map<string, string | null>();
   if (scope === "business") {
     const customerIds = Array.from(new Set(conversations.map((c) => c.customer_id)));
     if (customerIds.length > 0) {
       const { data: profiles } = await supabaseAdmin
         .from("profiles")
-        .select("id, display_name")
+        .select("id, display_name, avatar_url")
         .in("id", customerIds);
-      (profiles ?? []).forEach((p: any) => nameById.set(p.id, p.display_name));
+      (profiles ?? []).forEach((p: any) => {
+        nameById.set(p.id, p.display_name);
+        avatarById.set(p.id, p.avatar_url);
+      });
     }
   }
 
@@ -169,6 +175,7 @@ export async function listConversationsFor(
       last_message: lastByConversation.get(c.id) ?? null,
       viewer_role: scope,
       customer_name: scope === "business" ? nameById.get(c.customer_id) ?? null : null,
+      customer_avatar_url: scope === "business" ? avatarById.get(c.customer_id) ?? null : null,
       unread_count: unreadByConversation.get(c.id) ?? 0,
     }));
 }
@@ -206,13 +213,15 @@ export async function loadConversation(conversationId: string, userId: string, s
     .order("created_at", { ascending: true });
 
   let customerName: string | null = null;
+  let customerAvatarUrl: string | null = null;
   if (isOwner) {
     const { data: profile } = await supabaseAdmin
       .from("profiles")
-      .select("display_name")
+      .select("display_name, avatar_url")
       .eq("id", conversation.customer_id)
       .maybeSingle();
     customerName = profile?.display_name ?? null;
+    customerAvatarUrl = profile?.avatar_url ?? null;
   }
 
   return {
@@ -224,6 +233,7 @@ export async function loadConversation(conversationId: string, userId: string, s
     } as ChatBusiness,
     viewer_role: (isCustomer ? "customer" : "business") as "customer" | "business",
     customer_name: customerName,
+    customer_avatar_url: customerAvatarUrl,
     messages: (messages ?? []) as ChatMessage[],
   };
 }

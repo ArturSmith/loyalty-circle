@@ -57,8 +57,11 @@ function ConversationPage() {
     load({ data: { conversationId, scope } })
       .then((result) => {
         if (!alive) return;
-        setTitle(result.viewer_role === "business" ? result.customer_name ?? "Customer" : result.business.name);
-        setLogo(result.business.logo_url);
+        // Each side sees the *other* party. A business owner looking at this
+        // conversation should see the customer, not their own logo.
+        const isBusinessViewer = result.viewer_role === "business";
+        setTitle(isBusinessViewer ? result.customer_name ?? "Customer" : result.business.name);
+        setLogo(isBusinessViewer ? result.customer_avatar_url : result.business.logo_url);
         setViewerRole(result.viewer_role);
         setMessages(result.messages);
       })
@@ -123,7 +126,13 @@ function ConversationPage() {
               <ArrowLeft className="h-5 w-5" />
             </Link>
           </Button>
-          {logo ? <img src={logo} alt="" className="h-9 w-9 rounded-full object-cover" /> : null}
+          {logo ? (
+            <img src={logo} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />
+          ) : (
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold">
+              {title.slice(0, 1).toUpperCase()}
+            </div>
+          )}
           <h1 className="min-w-0 truncate font-display text-lg font-semibold">{title}</h1>
         </div>
       </header>
