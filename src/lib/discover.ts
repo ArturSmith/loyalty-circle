@@ -105,10 +105,12 @@ export function useUserLocation(enabled = true) {
           setStatus("unavailable");
           return;
         }
-        // Only call it blocked if the browser confirms it. A dismissed prompt
-        // still reads as "prompt", and asking again will work.
+        // Safari and iOS WKWebView don't implement permissions.query for
+        // geolocation, so state comes back null. Only treat the denial as
+        // recoverable when the API positively says we're still at "prompt"
+        // (a dismissed dialog); otherwise trust the error and say it's blocked.
         void readPermissionState().then((state) => {
-          setStatus(state === "denied" ? "denied" : "idle");
+          setStatus(state === "prompt" ? "idle" : "denied");
         });
       },
       { enableHighAccuracy: false, timeout: 8000, maximumAge: 10 * 60 * 1000 },
