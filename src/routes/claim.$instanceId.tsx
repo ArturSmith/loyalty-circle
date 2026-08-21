@@ -4,7 +4,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { claimAnonymousCard, getClaimPreview } from "@/utils/wallet.functions";
 import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { CheckCircle2, XCircle } from "lucide-react";
+import { Spinner } from "@/components/Spinner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 
 type Search = { s?: string };
@@ -95,7 +96,7 @@ function ClaimPage() {
 
         {status === "loading" || status === "claiming" ? (
           <>
-            <Loader2 className="mx-auto mt-6 h-10 w-10 animate-spin text-muted-foreground" />
+            <Spinner size={40} className="mx-auto mt-6" />
             <h1 className="mt-4 font-display text-2xl font-semibold">Saving your card…</h1>
           </>
         ) : null}

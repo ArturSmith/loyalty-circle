@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { ScreenLoader } from "@/components/Spinner";
 import { postSignOutDestination } from "@/lib/post-sign-out";
 import { useUnreadChatCount } from "@/hooks/useUnreadChatCount";
 import { Button } from "@/components/ui/button";
@@ -127,7 +128,7 @@ function BusinessDashboard() {
     }
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>;
+  if (loading) return <ScreenLoader />;
 
   if (!biz) {
     return (

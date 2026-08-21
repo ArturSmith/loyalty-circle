@@ -1,4 +1,5 @@
 import { getTabCache, setTabCache } from "@/lib/tabCache";
+import { PageLoader } from "@/components/Spinner";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { MapPin, Search } from "lucide-react";
@@ -116,11 +117,7 @@ function Discover() {
       )}
 
       {loading ? (
-        <div className="mx-auto mt-8 max-w-3xl space-y-6 px-5">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-[150px] animate-pulse rounded-2xl bg-secondary" />
-          ))}
-        </div>
+        <PageLoader />
       ) : groups.length === 0 ? (
         <div className="mx-auto mt-20 max-w-md px-6 text-center">
           <h2 className="font-display text-2xl font-extrabold">Nothing found</h2>

@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { ScreenLoader } from "@/components/Spinner";
 import { Button } from "@/components/ui/button";
 import { StampCard } from "@/components/StampCard";
 import type { CardFace, CardShape, Reward, StampIconName } from "@/components/StampCard";
@@ -103,7 +104,7 @@ function CardDetails() {
     })();
   }, [id]);
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>;
+  if (loading) return <ScreenLoader />;
   if (!tpl || !biz) return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-muted-foreground">
       <p>Card not found.</p>

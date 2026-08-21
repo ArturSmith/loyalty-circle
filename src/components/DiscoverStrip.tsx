@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Spinner } from "@/components/Spinner";
 import { Link } from "@tanstack/react-router";
 import { ChevronRight, Compass } from "lucide-react";
 import { DiscoverCardTile } from "@/components/DiscoverCardTile";
@@ -79,16 +80,15 @@ export function DiscoverStrip() {
         ref={scrollerRef}
         className="mx-auto mt-2 flex max-w-md gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
-        {loading
-          ? Array.from({ length: 3 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-[116px] w-[190px] shrink-0 animate-pulse rounded-2xl bg-secondary first:ml-5 last:mr-5"
-              />
-            ))
-          : cards.map((card) => (
-              <DiscoverCardTile key={card.template_id} card={card} compact className="first:ml-5 last:mr-5" />
-            ))}
+        {loading ? (
+          <div className="flex h-[116px] w-full items-center justify-center">
+            <Spinner size={28} />
+          </div>
+        ) : (
+          cards.map((card) => (
+            <DiscoverCardTile key={card.template_id} card={card} compact className="first:ml-5 last:mr-5" />
+          ))
+        )}
       </div>
     </section>
   );

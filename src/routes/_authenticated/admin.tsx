@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { ScreenLoader, Spinner } from "@/components/Spinner";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -74,11 +75,7 @@ function AdminPage() {
   };
 
   if (admin === null) {
-    return (
-      <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
-        Loading…
-      </div>
-    );
+    return <ScreenLoader />;
   }
 
   if (!admin) {
@@ -172,7 +169,11 @@ function AdminPage() {
         </form>
 
         <div className="mt-4 space-y-2">
-          {loading && <p className="text-sm text-muted-foreground">Loading…</p>}
+          {loading && (
+            <div className="p-4">
+              <Spinner size={24} className="mx-auto" />
+            </div>
+          )}
           {!loading && rows.length === 0 && (
             <p className="text-sm text-muted-foreground">No businesses found.</p>
           )}

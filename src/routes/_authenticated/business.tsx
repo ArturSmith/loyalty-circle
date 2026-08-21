@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
+import { ScreenLoader } from "@/components/Spinner";
 import { useBusinessAccess } from "@/hooks/useBusinessAccess";
 import { Button } from "@/components/ui/button";
 import { Lock, Sparkles } from "lucide-react";
@@ -14,11 +15,7 @@ function BusinessLayout() {
   const navigate = useNavigate();
 
   if (access.loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-sm text-muted-foreground">Loading…</div>
-      </div>
-    );
+    return <ScreenLoader />;
   }
 
   if (!access.hasAccess) {

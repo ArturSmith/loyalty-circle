@@ -1,4 +1,5 @@
 import { getTabCache, setTabCache } from "@/lib/tabCache";
+import { PageLoader } from "@/components/Spinner";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -148,7 +149,7 @@ function VouchersPage() {
         </div>
 
         <div className="mt-5 space-y-3">
-          {loading && <p className="py-10 text-center text-sm text-muted-foreground">Loading…</p>}
+          {loading && <PageLoader />}
 
           {!loading && list.length === 0 && (
             <div className="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">

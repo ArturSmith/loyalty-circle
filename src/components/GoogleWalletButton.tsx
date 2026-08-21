@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { createWalletPass } from "@/utils/wallet.functions";
 import { toast } from "sonner";
-import { Loader2, Wallet } from "lucide-react";
+import { Wallet } from "lucide-react";
+import { Spinner } from "@/components/Spinner";
 
 export function GoogleWalletButton({ templateId, className }: { templateId: string; className?: string }) {
   const create = useServerFn(createWalletPass);
@@ -29,7 +30,7 @@ export function GoogleWalletButton({ templateId, className }: { templateId: stri
       aria-label="Add this loyalty card to Google Wallet"
       className={`inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-ink px-5 text-sm font-semibold text-paper transition-opacity disabled:opacity-60 ${className ?? ""}`}
     >
-      {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wallet className="h-4 w-4" />}
+      {busy ? <Spinner size={16} label={null} /> : <Wallet className="h-4 w-4" />}
       {busy ? "Preparing pass…" : "Add to Google Wallet"}
     </button>
   );

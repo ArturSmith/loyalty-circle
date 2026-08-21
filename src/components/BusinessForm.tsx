@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
-import { ImagePlus, Loader2, X } from "lucide-react";
+import { ImagePlus, X } from "lucide-react";
+import { Spinner } from "@/components/Spinner";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -204,7 +205,7 @@ export function BusinessForm({ value, onChange }: Props) {
                 }}
               />
               <Button type="button" variant="outline" size="sm" disabled={uploading} onClick={() => fileRef.current?.click()}>
-                {uploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ImagePlus className="mr-2 h-4 w-4" />}
+                {uploading ? <Spinner size={16} label={null} className="mr-2" /> : <ImagePlus className="mr-2 h-4 w-4" />}
                 {value.logo_url ? "Replace logo" : "Upload logo"}
               </Button>
               {value.logo_url && (

@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { PageLoader } from "@/components/Spinner";
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, Send } from "lucide-react";
@@ -129,7 +130,7 @@ function ConversationPage() {
 
       <main className="mx-auto w-full max-w-3xl flex-1 space-y-3 px-4 py-5">
         {loading ? (
-          <p className="py-10 text-center text-sm text-muted-foreground">Loading…</p>
+          <PageLoader />
         ) : messages.length === 0 ? (
           <p className="py-10 text-center text-sm text-muted-foreground">No messages yet — say hello.</p>
         ) : (

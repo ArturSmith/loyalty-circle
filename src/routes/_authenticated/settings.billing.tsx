@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Spinner } from "@/components/Spinner";
 import { useCallback, useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
@@ -192,7 +193,9 @@ function BillingSettings() {
             <h2 className="font-display text-lg font-semibold mb-3">Invoice history</h2>
             <div className="rounded-2xl border-2 border-ink/10 bg-card paper-grain card-shadow overflow-hidden flex flex-col max-h-[60vh]">
               {txLoading && (
-                <p className="p-4 text-sm text-muted-foreground text-center">Loading…</p>
+                <div className="p-4">
+                  <Spinner size={24} className="mx-auto" />
+                </div>
               )}
               {!txLoading && txs && txs.length === 0 && (
                 <p className="p-4 text-sm text-muted-foreground text-center">No invoices yet.</p>

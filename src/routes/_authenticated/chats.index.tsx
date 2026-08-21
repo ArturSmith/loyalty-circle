@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { PageLoader } from "@/components/Spinner";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { MessageCircle } from "lucide-react";
@@ -59,7 +60,7 @@ function ChatsList() {
   return (
     <TabScreen title="Chats" contentClassName="flex flex-1 flex-col">
       {loading ? (
-        <div className="px-5 py-10 text-center text-sm text-muted-foreground">Loading…</div>
+        <PageLoader />
       ) : conversations.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
           <div className="flex h-20 w-20 items-center justify-center rounded-3xl border border-border bg-secondary">

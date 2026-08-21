@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { ScreenLoader } from "@/components/Spinner";
 import { createClient } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -156,7 +157,7 @@ function BusinessPublic() {
   }, [userId, loading, templates, businessId]);
 
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>;
+  if (loading) return <ScreenLoader />;
 
   return (
     <div className="min-h-screen px-4 py-10">

@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { ScreenLoader } from "@/components/Spinner";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { ChevronLeft } from "lucide-react";
@@ -56,7 +57,7 @@ function EditBusiness() {
     navigate({ to: "/business" });
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>;
+  if (loading) return <ScreenLoader />;
   if (!bizId) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">No business found.</div>;
 
   return (

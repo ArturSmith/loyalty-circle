@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { ScreenLoader } from "@/components/Spinner";
 import { Button } from "@/components/ui/button";
 import { resolveAvatarUrls } from "@/lib/avatar";
 import { motion } from "framer-motion";
@@ -126,8 +127,7 @@ function CustomerDetails() {
     })();
   }, [id, customerId]);
 
-  if (loading)
-    return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading…</div>;
+  if (loading) return <ScreenLoader />;
 
   if (!tpl || !instance)
     return (

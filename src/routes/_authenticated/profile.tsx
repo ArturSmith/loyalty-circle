@@ -1,11 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { PageLoader, Spinner } from "@/components/Spinner";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { postSignOutDestination } from "@/lib/post-sign-out";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Camera, LogOut, Store, Loader2, HelpCircle, Mail, CreditCard, ChevronRight, Building2 } from "lucide-react";
+import { Camera, LogOut, Store, HelpCircle, Mail, CreditCard, ChevronRight, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { useProfile } from "@/hooks/useProfile";
@@ -92,7 +93,7 @@ function Profile() {
     <TabScreen title="Profile">
       <div className="flex-1 px-6 py-4 max-w-md mx-auto w-full">
         {loading || !profile ? (
-          <div className="text-center text-muted-foreground py-12">Loading…</div>
+          <PageLoader />
         ) : (
           <>
             <div className="flex flex-col items-center">
@@ -108,7 +109,7 @@ function Profile() {
                   <span>{initialsFrom(displayName, profile.email)}</span>
                 )}
                 <span className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-1 bg-black/45 py-1 text-[10px] font-semibold uppercase tracking-wider text-white">
-                  {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Camera className="h-3 w-3" />}
+                  {uploading ? <Spinner size={12} label={null} className="text-white" /> : <Camera className="h-3 w-3" />}
                   {uploading ? "" : "Change"}
                 </span>
               </button>

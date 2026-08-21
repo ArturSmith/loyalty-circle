@@ -19,6 +19,7 @@ import { BusinessInfoPanel } from "@/components/BusinessInfoPanel";
 import { DiscoverStrip } from "@/components/DiscoverStrip";
 import { BottomNav } from "@/components/BottomNav";
 import { TabTransition } from "@/components/TabTransition";
+import { ScreenLoader } from "@/components/Spinner";
 import { getTabCache, setTabCache } from "@/lib/tabCache";
 
 
@@ -213,7 +214,7 @@ function Wallet() {
   }, [instances, expandedId]);
 
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading your wallet…</div>;
+  if (loading) return <ScreenLoader />;
 
   return (
     <div className="relative min-h-screen flex flex-col overflow-hidden pb-24">
