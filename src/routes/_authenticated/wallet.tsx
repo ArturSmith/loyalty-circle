@@ -43,10 +43,16 @@ type Celebration = {
 const BUSINESS_CTA_KEY = "cc_business_cta_hidden_until";
 const BUSINESS_CTA_SNOOZE_MS = 7 * 24 * 60 * 60 * 1000;
 
+// Survives tab switches so returning to Wallet renders the previous cards
+// immediately while a fresh fetch runs in the background.
+let cachedWallet: { instances: Instance[]; frozenBusinessIds: string[] } | null = null;
+
 function Wallet() {
-  const [instances, setInstances] = useState<Instance[]>([]);
-  const [frozenBusinessIds, setFrozenBusinessIds] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(true);
+  const [instances, setInstances] = useState<Instance[]>(() => cachedWallet?.instances ?? []);
+  const [frozenBusinessIds, setFrozenBusinessIds] = useState<Set<string>>(
+    () => new Set(cachedWallet?.frozenBusinessIds ?? []),
+  );
+  const [loading, setLoading] = useState(() => cachedWallet === null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [frontId, setFrontId] = useState<string | null>(null);
   const [flippedId, setFlippedId] = useState<string | null>(null);
