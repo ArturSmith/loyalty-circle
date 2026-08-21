@@ -1,5 +1,6 @@
 import { useRef, type ReactNode } from "react";
 import { motion } from "framer-motion";
+import { useRouterState } from "@tanstack/react-router";
 
 const TAB_ORDER = ["/wallet", "/vouchers", "/discover", "/chats", "/profile"];
 
@@ -16,7 +17,8 @@ function indexFor(path: string) {
  * Slides a bottom-nav tab screen in from the side you navigated from, so
  * switching tabs feels continuous instead of snapping.
  */
-export function TabTransition({ path, children }: { path: string; children: ReactNode }) {
+export function TabTransition({ children }: { children: ReactNode }) {
+  const path = useRouterState({ select: (s) => s.location.pathname });
   const direction = useRef<number>(0);
   const initialised = useRef(false);
 
