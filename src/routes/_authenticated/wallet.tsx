@@ -18,6 +18,7 @@ import { initialsFrom } from "@/lib/avatar";
 import { BusinessInfoPanel } from "@/components/BusinessInfoPanel";
 import { DiscoverStrip } from "@/components/DiscoverStrip";
 import { BottomNav } from "@/components/BottomNav";
+import { TabTransition } from "@/components/TabTransition";
 import { getTabCache, setTabCache } from "@/lib/tabCache";
 
 
@@ -216,6 +217,7 @@ function Wallet() {
 
   return (
     <div className="relative min-h-screen flex flex-col overflow-hidden pb-24">
+      <TabTransition className="flex flex-1 flex-col">
       <header className="relative flex items-center justify-between px-5 py-4">
         <div className="flex items-center gap-3 min-w-0">
           <Link to="/profile" aria-label="Open your profile">
@@ -700,6 +702,7 @@ function Wallet() {
           </motion.div>
         )}
       </AnimatePresence>
+      </TabTransition>
       <BottomNav />
     </div>
   );
