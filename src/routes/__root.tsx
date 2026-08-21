@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -14,6 +15,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "sonner";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { BottomNav, isTabRoute } from "@/components/BottomNav";
 import { clearTabCaches } from "@/lib/tabCache";
 
 function NotFoundComponent() {
@@ -152,7 +154,20 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <PaymentTestModeBanner />
       <Outlet />
+      <PersistentBottomNav />
       <Toaster position="top-center" richColors />
     </QueryClientProvider>
   );
+}
+
+/**
+ * The bottom nav lives here, above the router Outlet, so it is mounted once for
+ * the whole session. Rendering it inside each tab screen made it unmount and
+ * remount on every tab switch, which re-ran the badge queries and let the bar
+ * repaint mid-navigation — the visible "jump" when moving between tabs.
+ */
+function PersistentBottomNav() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  if (!isTabRoute(pathname)) return null;
+  return <BottomNav />;
 }

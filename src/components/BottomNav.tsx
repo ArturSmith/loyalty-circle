@@ -11,6 +11,15 @@ const items = [
   { to: "/profile", label: "Profile", icon: User },
 ] as const;
 
+/**
+ * True only on the five top-level tab screens. Detail pages pushed from a tab
+ * (a single conversation, a card, the business dashboard) deliberately hide the
+ * nav, so this matches exact paths rather than prefixes.
+ */
+export function isTabRoute(pathname: string) {
+  return items.some((item) => item.to === pathname);
+}
+
 export function BottomNav() {
   const unusedVouchers = useUnusedVoucherCount();
   const unreadChats = useUnreadChatCount();

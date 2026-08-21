@@ -17,7 +17,6 @@ import { useProfile } from "@/hooks/useProfile";
 import { initialsFrom } from "@/lib/avatar";
 import { BusinessInfoPanel } from "@/components/BusinessInfoPanel";
 import { DiscoverStrip } from "@/components/DiscoverStrip";
-import { BottomNav } from "@/components/BottomNav";
 import { TabTransition } from "@/components/TabTransition";
 import { ScreenLoader } from "@/components/Spinner";
 import { getTabCache, setTabCache } from "@/lib/tabCache";
@@ -704,7 +703,6 @@ function Wallet() {
         )}
       </AnimatePresence>
       </TabTransition>
-      <BottomNav />
     </div>
   );
 }

@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { BottomNav } from "@/components/BottomNav";
 import { TabTransition } from "@/components/TabTransition";
 
 /**
@@ -34,8 +33,6 @@ export function TabScreen({
       <main className={contentClassName ?? "flex-1"}>
         <TabTransition>{children}</TabTransition>
       </main>
-
-      <BottomNav />
     </div>
   );
 }
