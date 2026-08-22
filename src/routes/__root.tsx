@@ -153,7 +153,12 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <PaymentTestModeBanner />
-      <Outlet />
+      {/* Styled only in the native shell (see styles.css), where it becomes the
+          app's scroll container so the document itself never scrolls. On web
+          this is an inert wrapper and the page scrolls as usual. */}
+      <div id="app-scroll">
+        <Outlet />
+      </div>
       <PersistentBottomNav />
       <Toaster position="top-center" richColors />
     </QueryClientProvider>

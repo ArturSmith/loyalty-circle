@@ -26,7 +26,11 @@ const config: CapacitorConfig = {
     ],
   },
   ios: {
-    contentInset: "always",
+    // The web layer owns its safe-area insets (env(safe-area-inset-*) in
+    // styles.css) and manages its own scroll container, so letting UIKit also
+    // adjust the scroll view's inset double-counts the status bar and shifts
+    // content as the bars appear.
+    contentInset: "never",
     limitsNavigationsToAppBoundDomains: false,
   },
   android: {
