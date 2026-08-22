@@ -64,6 +64,14 @@ function ScanPage() {
 
   const onScan = useCallback(async (text: string) => {
     if (busy || paused) return;
+    // A customer QR identifies a person rather than a card, so it can't be
+    // stamped — hand it to the lookup screen instead of rejecting it.
+    const customerMatch = text.match(/^stempel:user:([0-9a-f-]+)$/i);
+    if (customerMatch) {
+      setPaused(true);
+      navigate({ to: "/business/customers", search: { q: customerMatch[1]! } });
+      return;
+    }
     const voucherMatch = text.match(/^stempel:voucher:([0-9a-f-]+)$/i);
     const m = text.match(/^stempel:card:([0-9a-f-]+)$/i);
     if (!m && !voucherMatch) { toast.error("Not a ClubCarder QR"); return; }

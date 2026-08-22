@@ -11,7 +11,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
-import { Plus, QrCode, ScanLine, Users, Stamp as StampIco, Wallet as WalletIcon, Pencil, Menu, Settings, LogOut, Download, CreditCard, Sparkles, HelpCircle, Mail, ArrowLeft, MessageCircle } from "lucide-react";
+import { Plus, QrCode, ScanLine, Search, Users, Stamp as StampIco, Wallet as WalletIcon, Pencil, Menu, Settings, LogOut, Download, CreditCard, Sparkles, HelpCircle, Mail, ArrowLeft, MessageCircle } from "lucide-react";
 import { useBusinessAccess } from "@/hooks/useBusinessAccess";
 import { StampCard } from "@/components/StampCard";
 import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
@@ -224,7 +224,7 @@ function BusinessDashboard() {
         </Sheet>
       </header>
 
-      <div className="mt-6 grid grid-cols-3 gap-2">
+      <div className="mt-6 grid grid-cols-4 gap-2">
         <Button variant="outline" onClick={() => setShowQr((v) => !v)} className="h-auto flex-col gap-1.5 py-3 rounded-2xl glass-panel">
           <QrCode className="h-5 w-5" />
           <span className="text-xs font-semibold">Business QR</span>
@@ -233,6 +233,12 @@ function BusinessDashboard() {
           <Link to="/business/scan">
             <ScanLine className="h-5 w-5" />
             <span className="text-xs font-semibold">Scan customer</span>
+          </Link>
+        </Button>
+        <Button asChild variant="outline" className="h-auto flex-col gap-1.5 py-3 rounded-2xl glass-panel">
+          <Link to="/business/customers">
+            <Search className="h-5 w-5" />
+            <span className="text-xs font-semibold">Find customer</span>
           </Link>
         </Button>
         <Button asChild className="h-auto flex-col gap-1.5 py-3 rounded-2xl bg-primary text-primary-foreground border-0 hover:bg-primary/90">
