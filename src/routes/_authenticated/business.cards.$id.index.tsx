@@ -28,7 +28,9 @@ type Customer = {
   completed_at: string | null;
   last_stamp_at: string | null;
   created_at: string;
+  removed_at: string | null;
 };
+
 
 export const Route = createFileRoute("/_authenticated/business/cards/$id/")({
   head: () => ({ meta: [{ title: "Card details — ClubCarder" }] }),
@@ -57,52 +59,107 @@ function CardDetails() {
       const { data: b } = await supabase.from("businesses").select("id,name,owner_id").eq("id", (t as Tpl).business_id).maybeSingle();
       setBiz(b as Biz | null);
 
-      const [{ data: instances }] = await Promise.all([
-        supabase.from("card_instances").select("id,customer_id,stamps_count,completed_at,created_at").eq("template_id", id).order("created_at", { ascending: false }),
-      ]);
+      // Analytics come from the permanent event log, so history survives a
+      // customer deleting the card from their wallet.
+      const { data: eventRows } = await supabase
+        .from("card_events")
+        .select("id,card_instance_id,customer_id,event_type,step_number,metadata,created_at")
+        .eq("template_id", id)
+        .order("created_at", { ascending: true });
 
-      const rows = (instances as { id: string; customer_id: string; stamps_count: number; completed_at: string | null; created_at: string }[] | null) ?? [];
-      const customerIds = Array.from(new Set(rows.map(r => r.customer_id)));
+      type Ev = {
+        id: string; card_instance_id: string | null; customer_id: string | null;
+        event_type: string; step_number: number | null; metadata: Record<string, unknown> | null; created_at: string;
+      };
+      const events = ((eventRows ?? []) as Ev[]).filter((e) => e.card_instance_id);
 
-      const [{ data: profiles }, { data: lastStamps }, { data: voucherRows }] = await Promise.all([
-        customerIds.length ? supabase.from("profiles").select("id,display_name,avatar_url").in("id", customerIds) : Promise.resolve({ data: [] as { id: string; display_name: string | null; avatar_url: string | null }[] }),
-        rows.length ? supabase.from("stamps").select("card_instance_id,created_at").in("card_instance_id", rows.map(r => r.id)).order("created_at", { ascending: false }) : Promise.resolve({ data: [] as { card_instance_id: string; created_at: string }[] }),
-        supabase.from("vouchers").select("id,customer_id,status,created_at,redeemed_at").eq("template_id", id),
-      ]);
+      type Agg = {
+        id: string; customer_id: string; created_at: string; removed_at: string | null;
+        completed_at: string | null; lastResetAt: string; stamps: string[];
+      };
+      const byInstance = new Map<string, Agg>();
+      const ensure = (e: Ev): Agg => {
+        let a = byInstance.get(e.card_instance_id!);
+        if (!a) {
+          a = { id: e.card_instance_id!, customer_id: e.customer_id ?? "", created_at: e.created_at, removed_at: null, completed_at: null, lastResetAt: e.created_at, stamps: [] };
+          byInstance.set(a.id, a);
+        }
+        if (!a.customer_id && e.customer_id) a.customer_id = e.customer_id;
+        return a;
+      };
 
-      const profMap = new Map((profiles ?? []).map(p => [p.id, p]));
-      const lastMap = new Map<string, string>();
-      for (const s of (lastStamps ?? [])) {
-        if (!lastMap.has(s.card_instance_id)) lastMap.set(s.card_instance_id, s.created_at);
+      for (const e of events) {
+        const a = ensure(e);
+        switch (e.event_type) {
+          case "card_added": a.created_at = e.created_at; a.lastResetAt = e.created_at; break;
+          case "stamp": a.stamps.push(e.created_at); break;
+          case "card_completed": a.completed_at = e.created_at; break;
+          case "card_renewed": a.lastResetAt = e.created_at; a.completed_at = null; break;
+          case "card_removed": a.removed_at = e.created_at; break;
+        }
       }
 
+      const aggs = Array.from(byInstance.values()).sort((x, y) => y.created_at.localeCompare(x.created_at));
+      const instanceRows: AnalyticsInstance[] = aggs.map((a) => ({
+        id: a.id,
+        customer_id: a.customer_id,
+        stamps_count: a.stamps.filter((s) => s >= a.lastResetAt).length,
+        completed_at: a.completed_at,
+        created_at: a.created_at,
+      }));
+      const stampRows: AnalyticsStamp[] = events
+        .filter((e) => e.event_type === "stamp")
+        .map((e) => ({ card_instance_id: e.card_instance_id!, created_at: e.created_at }));
+
+      const voucherMap = new Map<string, AnalyticsVoucher>();
+      for (const e of events) {
+        const vid = (e.metadata as { voucher_id?: string } | null)?.voucher_id;
+        if (!vid) continue;
+        if (e.event_type === "reward_issued") {
+          voucherMap.set(vid, { id: vid, customer_id: e.customer_id, status: "unused", created_at: e.created_at, redeemed_at: null });
+        } else if (e.event_type === "reward_redeemed") {
+          const v = voucherMap.get(vid);
+          if (v) { v.status = "used"; v.redeemed_at = e.created_at; }
+          else voucherMap.set(vid, { id: vid, customer_id: e.customer_id, status: "used", created_at: e.created_at, redeemed_at: e.created_at });
+        }
+      }
+      const vouchers = Array.from(voucherMap.values());
+
+      const customerIds = Array.from(new Set(aggs.map((a) => a.customer_id).filter(Boolean)));
+      const { data: profiles } = customerIds.length
+        ? await supabase.from("profiles").select("id,display_name,avatar_url").in("id", customerIds)
+        : { data: [] as { id: string; display_name: string | null; avatar_url: string | null }[] };
+
+      const profMap = new Map((profiles ?? []).map(p => [p.id, p]));
       const avatarMap = await resolveAvatarUrls((profiles ?? []).map(p => p.avatar_url));
 
-      const list: Customer[] = rows.map(r => {
-        const p = profMap.get(r.customer_id);
+      const list: Customer[] = aggs.map((a) => {
+        const p = profMap.get(a.customer_id);
         return {
-          customer_id: r.customer_id,
+          customer_id: a.customer_id,
           display_name: p?.display_name ?? null,
           avatar_url: p?.avatar_url ? (avatarMap.get(p.avatar_url) ?? null) : null,
-          stamps_count: r.stamps_count,
-          completed_at: r.completed_at,
-          last_stamp_at: lastMap.get(r.id) ?? null,
-          created_at: r.created_at,
+          stamps_count: a.stamps.filter((s) => s >= a.lastResetAt).length,
+          completed_at: a.completed_at,
+          last_stamp_at: a.stamps.length ? a.stamps[a.stamps.length - 1] : null,
+          created_at: a.created_at,
+          removed_at: a.removed_at,
         };
-      });
-      const vouchers = ((voucherRows ?? []) as AnalyticsVoucher[]);
+      }).filter((c) => c.customer_id);
+
       setCustomers(list);
-      setAnalytics({ instances: rows, stamps: (lastStamps ?? []) as AnalyticsStamp[], vouchers });
+      setAnalytics({ instances: instanceRows, stamps: stampRows, vouchers });
       setStats({
         users: customerIds.length,
-        stamps: (lastStamps ?? []).length,
-        completed: rows.filter(r => r.completed_at).length,
+        stamps: stampRows.length,
+        completed: instanceRows.filter(r => r.completed_at).length,
         outstandingVouchers: vouchers.filter(v => v.status === "unused").length,
       });
 
       setLoading(false);
     })();
   }, [id]);
+
 
   if (loading) return <ScreenLoader />;
   if (!tpl || !biz) return (
@@ -182,10 +239,10 @@ function CardDetails() {
         )}
         {customers.map((c) => (
           <Link
-            key={c.customer_id}
+            key={`${c.customer_id}-${c.created_at}`}
             to="/business/cards/$id/customers/$customerId"
             params={{ id: tpl.id, customerId: c.customer_id }}
-            className="flex items-center gap-3 rounded-2xl border-2 border-ink/10 bg-card paper-grain p-3 transition-colors hover:bg-muted/40"
+            className={`flex items-center gap-3 rounded-2xl border-2 border-ink/10 bg-card paper-grain p-3 transition-colors hover:bg-muted/40 ${c.removed_at ? "opacity-60" : ""}`}
           >
             <div className="h-10 w-10 rounded-full bg-muted overflow-hidden flex items-center justify-center text-sm font-semibold shrink-0">
 
@@ -196,11 +253,17 @@ function CardDetails() {
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="font-medium truncate">{c.display_name ?? "Customer"}</div>
+              <div className="font-medium truncate flex items-center gap-2">
+                {c.display_name ?? "Customer"}
+                {c.removed_at && (
+                  <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">Removed</span>
+                )}
+              </div>
               <div className="text-[11px] text-muted-foreground">
                 Joined {fmt(c.created_at)} • Last stamp {fmtDT(c.last_stamp_at)}
               </div>
             </div>
+
             <div className="text-right shrink-0">
               <div className="font-display text-lg leading-none">
                 {c.stamps_count}<span className="text-muted-foreground text-sm">/{tpl.total_steps}</span>
