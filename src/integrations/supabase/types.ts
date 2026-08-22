@@ -92,6 +92,42 @@ export type Database = {
         }
         Relationships: []
       }
+      card_events: {
+        Row: {
+          business_id: string
+          card_instance_id: string | null
+          created_at: string
+          customer_id: string | null
+          event_type: string
+          id: string
+          metadata: Json
+          step_number: number | null
+          template_id: string | null
+        }
+        Insert: {
+          business_id: string
+          card_instance_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json
+          step_number?: number | null
+          template_id?: string | null
+        }
+        Update: {
+          business_id?: string
+          card_instance_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json
+          step_number?: number | null
+          template_id?: string | null
+        }
+        Relationships: []
+      }
       card_instances: {
         Row: {
           anon_secret: string | null
