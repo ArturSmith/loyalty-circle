@@ -239,7 +239,7 @@ function CardDetails() {
         )}
         {customers.map((c) => (
           <Link
-            key={c.customer_id}
+            key={`${c.customer_id}-${c.created_at}`}
             to="/business/cards/$id/customers/$customerId"
             params={{ id: tpl.id, customerId: c.customer_id }}
             className={`flex items-center gap-3 rounded-2xl border-2 border-ink/10 bg-card paper-grain p-3 transition-colors hover:bg-muted/40 ${c.removed_at ? "opacity-60" : ""}`}
