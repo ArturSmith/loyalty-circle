@@ -6,12 +6,14 @@ import { postSignOutDestination } from "@/lib/post-sign-out";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Camera, LogOut, Store, HelpCircle, Mail, CreditCard, ChevronRight, Building2, Copy, Check } from "lucide-react";
+import { Camera, LogOut, Store, HelpCircle, Mail, CreditCard, ChevronRight, Building2, Copy, Check, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { QrDisplay } from "@/components/QrDisplay";
 import { customerQrValue, shortCustomerCode } from "@/lib/customer-code";
 import { useProfile } from "@/hooks/useProfile";
+import type { ProfileInfo } from "@/hooks/useProfile";
+import { useBusinessAccess } from "@/hooks/useBusinessAccess";
 import { AVATAR_BUCKET, initialsFrom, resolveAvatarUrl } from "@/lib/avatar";
 import { TabScreen } from "@/components/TabScreen";
 
@@ -37,6 +39,7 @@ function Profile() {
   const [avatarPath, setAvatarPath] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [copied, setCopied] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -96,7 +99,7 @@ function Profile() {
     });
     setSaving(false);
     if (error) toast.error(error.message);
-    else { toast.success("Profile saved"); reload(); }
+    else { toast.success("Profile saved"); setEditing(false); reload(); }
   };
 
   const signOut = async () => { await supabase.auth.signOut(); navigate({ to: postSignOutDestination(), replace: true }); };
@@ -137,6 +140,40 @@ function Profile() {
               />
               <p className="mt-3 font-display text-xl font-semibold">{displayName || "Your name"}</p>
               <p className="text-sm text-muted-foreground">{profile.email}</p>
+
+              {editing ? (
+                <div className="mt-4 w-full">
+                  <Label htmlFor="name">Display name</Label>
+                  <Input
+                    id="name"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder="Your name"
+                    className="mt-1.5"
+                    autoFocus
+                  />
+                  <div className="mt-3 flex gap-2">
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => {
+                        // Discard the draft, not just the form.
+                        setDisplayName(profile.displayName ?? "");
+                        setEditing(false);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button onClick={save} disabled={saving} className="flex-1">
+                      {saving ? "Saving…" : "Save"}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <Button variant="outline" size="sm" className="mt-4 gap-2" onClick={() => setEditing(true)}>
+                  <Pencil className="h-3.5 w-3.5" /> Edit profile
+                </Button>
+              )}
             </div>
 
             <OrnamentDivider className="w-32 mx-auto opacity-60 my-7" />
@@ -148,25 +185,10 @@ function Profile() {
                 <Row label="Email" value={profile.email} />
                 <Row label="Date of birth" value={fmt(profile.dateOfBirth)} />
                 <Row label="Member since" value={fmt(profile.createdAt)} />
-                <Row
-                  label="Account type"
-                  value={profile.hasBusiness ? `Business — ${profile.businessName}` : "Customer"}
-                />
               </dl>
-              {profile.hasBusiness ? (
-                <Link to="/business" className="mt-4 block">
-                  <Button variant="outline" className="w-full gap-2">
-                    <Store className="h-4 w-4" /> Business dashboard
-                  </Button>
-                </Link>
-              ) : (
-                <Link to="/business" className="mt-4 block">
-                  <Button className="w-full gap-2">
-                    <Building2 className="h-4 w-4" /> ClubCarder enterprise
-                  </Button>
-                </Link>
-              )}
             </section>
+
+            <BusinessSection profile={profile} />
 
             <section className="mt-6 rounded-2xl glass-panel p-4">
               <h2 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Your ID</h2>
@@ -199,16 +221,6 @@ function Profile() {
               <p className="mt-2 break-all font-mono text-[10px] text-muted-foreground">{profile.id}</p>
             </section>
 
-            <div className="mt-6 space-y-5">
-              <div>
-                <Label htmlFor="name">Display name</Label>
-                <Input id="name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Your name" className="mt-1.5" />
-              </div>
-              <Button onClick={save} disabled={saving} className="w-full h-11">
-                {saving ? "Saving…" : "Save changes"}
-              </Button>
-            </div>
-
             <nav className="mt-8 overflow-hidden rounded-2xl border border-border divide-y divide-border" aria-label="Account menu">
               <MenuLink to="/settings/billing" icon={CreditCard} label="Settings & billing" />
               <MenuLink to="/help" icon={HelpCircle} label="Help" />
@@ -222,6 +234,96 @@ function Profile() {
         )}
       </div>
     </TabScreen>
+  );
+}
+
+/**
+ * What this account's relationship to a business actually is: whether they own
+ * one, how it's being paid for, and anything that needs their attention.
+ *
+ * Kept in its own component so the subscription lookup only runs here, and the
+ * rest of the profile still renders while it's in flight.
+ */
+function BusinessSection({ profile }: { profile: ProfileInfo }) {
+  const access = useBusinessAccess();
+
+  if (!profile.hasBusiness) {
+    return (
+      <section className="mt-6 rounded-2xl glass-panel p-4">
+        <h2 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Business</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          You don't run a business on ClubCarder yet. Create loyalty cards, stamp them by QR and see who keeps
+          coming back.
+        </p>
+        <Link to="/business" className="mt-4 block">
+          <Button className="w-full gap-2">
+            <Building2 className="h-4 w-4" /> ClubCarder enterprise
+          </Button>
+        </Link>
+      </section>
+    );
+  }
+
+  const plan = access.loading
+    ? "Checking…"
+    : access.isPastDue
+      ? "Payment failed"
+      : access.uncoveredCount > 0
+        ? access.reason === "trial-expired"
+          ? "Trial ended"
+          : "Needs more seats"
+        : access.isSubscribed
+          ? access.cancelAtPeriodEnd
+            ? "Cancels at period end"
+            : "Subscribed"
+          : access.trialDaysLeft !== null
+            ? `Trial — ${access.trialDaysLeft} ${access.trialDaysLeft === 1 ? "day" : "days"} left`
+            : "Trial";
+
+  // Anything that stops stamping, or will soon, is worth surfacing here rather
+  // than leaving the owner to discover it at the counter.
+  const needsAttention = !access.loading && (access.isPastDue || access.uncoveredCount > 0);
+
+  return (
+    <section className="mt-6 rounded-2xl glass-panel p-4">
+      <h2 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Business</h2>
+      <dl className="mt-3 space-y-2.5 text-sm">
+        <Row label="Your role" value="Owner" />
+        <Row
+          label={access.businessCount > 1 ? "Businesses" : "Business"}
+          value={
+            access.businessCount > 1
+              ? `${profile.businessName} +${access.businessCount - 1} more`
+              : profile.businessName ?? "—"
+          }
+        />
+        <Row label="Plan" value={plan} />
+        {!access.loading && access.seatCount > 0 && (
+          <Row label="Seats" value={`${access.seatCount} active`} />
+        )}
+      </dl>
+
+      {needsAttention && (
+        <p className="mt-3 rounded-xl bg-destructive/10 px-3 py-2 text-xs text-destructive">
+          {access.isPastDue
+            ? "Your last payment failed. Update your card to keep stamping."
+            : `${access.uncoveredCount} of your businesses ${access.uncoveredCount === 1 ? "isn't" : "aren't"} covered — stamping is paused for ${access.uncoveredCount === 1 ? "it" : "them"}.`}
+        </p>
+      )}
+
+      <div className="mt-4 grid grid-cols-2 gap-2">
+        <Link to="/business">
+          <Button variant="outline" className="w-full gap-2">
+            <Store className="h-4 w-4" /> Dashboard
+          </Button>
+        </Link>
+        <Link to="/settings/billing">
+          <Button variant={needsAttention ? "default" : "outline"} className="w-full gap-2">
+            <CreditCard className="h-4 w-4" /> Billing
+          </Button>
+        </Link>
+      </div>
+    </section>
   );
 }
 
