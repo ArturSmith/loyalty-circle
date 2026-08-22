@@ -242,7 +242,7 @@ function CardDetails() {
             key={c.customer_id}
             to="/business/cards/$id/customers/$customerId"
             params={{ id: tpl.id, customerId: c.customer_id }}
-            className="flex items-center gap-3 rounded-2xl border-2 border-ink/10 bg-card paper-grain p-3 transition-colors hover:bg-muted/40"
+            className={`flex items-center gap-3 rounded-2xl border-2 border-ink/10 bg-card paper-grain p-3 transition-colors hover:bg-muted/40 ${c.removed_at ? "opacity-60" : ""}`}
           >
             <div className="h-10 w-10 rounded-full bg-muted overflow-hidden flex items-center justify-center text-sm font-semibold shrink-0">
 
@@ -253,11 +253,17 @@ function CardDetails() {
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="font-medium truncate">{c.display_name ?? "Customer"}</div>
+              <div className="font-medium truncate flex items-center gap-2">
+                {c.display_name ?? "Customer"}
+                {c.removed_at && (
+                  <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">Removed</span>
+                )}
+              </div>
               <div className="text-[11px] text-muted-foreground">
                 Joined {fmt(c.created_at)} • Last stamp {fmtDT(c.last_stamp_at)}
               </div>
             </div>
+
             <div className="text-right shrink-0">
               <div className="font-display text-lg leading-none">
                 {c.stamps_count}<span className="text-muted-foreground text-sm">/{tpl.total_steps}</span>
