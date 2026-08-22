@@ -42,7 +42,7 @@ function CardDetails() {
   const navigate = useNavigate();
   const [tpl, setTpl] = useState<Tpl | null>(null);
   const [biz, setBiz] = useState<Biz | null>(null);
-  const [stats, setStats] = useState({ users: 0, stamps: 0, completed: 0, outstandingVouchers: 0 });
+  const [stats, setStats] = useState({ users: 0, everUsers: 0, stamps: 0, completed: 0, outstandingVouchers: 0 });
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [face, setFace] = useState<CardFace>("info");
@@ -147,10 +147,17 @@ function CardDetails() {
         };
       }).filter((c) => c.customer_id);
 
+      // `aggs` is built from the permanent card_events log, so it includes every
+      // instance that ever existed. A customer who removed the card and claimed
+      // it again has two instances, so count distinct customers on their
+      // still-held instances rather than counting rows.
+      const activeCustomerIds = new Set(aggs.filter((a) => !a.removed_at).map((a) => a.customer_id).filter(Boolean));
+
       setCustomers(list);
       setAnalytics({ instances: instanceRows, stamps: stampRows, vouchers });
       setStats({
-        users: customerIds.length,
+        users: activeCustomerIds.size,
+        everUsers: customerIds.length,
         stamps: stampRows.length,
         completed: instanceRows.filter(r => r.completed_at).length,
         outstandingVouchers: vouchers.filter(v => v.status === "unused").length,
@@ -217,7 +224,12 @@ function CardDetails() {
       </div>
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat icon={Users} label="Users" value={stats.users} />
+        <Stat
+          icon={Users}
+          label="Active users"
+          value={stats.users}
+          hint={stats.everUsers > stats.users ? `${stats.everUsers} ever` : undefined}
+        />
         <Stat icon={StampIco} label="Stamps" value={stats.stamps} />
         <Stat icon={CheckCircle2} label="Completed" value={stats.completed} />
         <Stat icon={Ticket} label="Vouchers out" value={stats.outstandingVouchers} />
@@ -282,11 +294,14 @@ function CardDetails() {
   );
 }
 
-function Stat({ icon: Icon, label, value }: { icon: typeof Users; label: string; value: number }) {
+function Stat({ icon: Icon, label, value, hint }: { icon: typeof Users; label: string; value: number; hint?: string }) {
   return (
     <div className="rounded-xl border-2 border-ink/10 bg-card paper-grain p-4">
       <Icon className="h-4 w-4 text-muted-foreground" />
-      <div className="mt-2 font-display text-2xl">{value}</div>
+      <div className="mt-2 font-display text-2xl">
+        {value}
+        {hint && <span className="ml-1.5 font-sans text-xs text-muted-foreground">{hint}</span>}
+      </div>
       <div className="text-[11px] uppercase tracking-widest text-muted-foreground">{label}</div>
     </div>
   );
