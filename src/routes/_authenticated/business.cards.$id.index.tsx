@@ -28,7 +28,9 @@ type Customer = {
   completed_at: string | null;
   last_stamp_at: string | null;
   created_at: string;
+  removed_at: string | null;
 };
+
 
 export const Route = createFileRoute("/_authenticated/business/cards/$id/")({
   head: () => ({ meta: [{ title: "Card details — ClubCarder" }] }),
