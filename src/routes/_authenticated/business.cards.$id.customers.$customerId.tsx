@@ -239,7 +239,13 @@ function CustomerDetails() {
           <p className="text-xs text-muted-foreground truncate">
             {tpl.title} • joined {fmt(instance.created_at)}
           </p>
+          {removed && (
+            <span className="mt-1 inline-block rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+              Removed from wallet
+            </span>
+          )}
         </div>
+
         <div className="text-right">
           <div className="font-display text-2xl leading-none">
             {instance.stamps_count}
