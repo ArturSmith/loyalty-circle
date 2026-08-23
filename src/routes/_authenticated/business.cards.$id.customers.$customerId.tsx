@@ -81,10 +81,12 @@ function CustomerDetails() {
     avatar_url: null,
   });
 
+  const [removed, setRemoved] = useState(false);
+
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const [{ data: t }, { data: inst }, { data: prof }] = await Promise.all([
+      const [{ data: t }, { data: inst }, { data: prof }, { data: vs }] = await Promise.all([
         supabase.from("card_templates").select("id,title,total_steps,rewards").eq("id", id).maybeSingle(),
         supabase
           .from("card_instances")
@@ -93,10 +95,16 @@ function CustomerDetails() {
           .eq("customer_id", customerId)
           .maybeSingle(),
         supabase.from("profiles").select("display_name,avatar_url").eq("id", customerId).maybeSingle(),
+        supabase
+          .from("vouchers")
+          .select("id,label,status,step_number,created_at,redeemed_at")
+          .eq("template_id", id)
+          .eq("customer_id", customerId)
+          .order("created_at", { ascending: false }),
       ]);
 
       setTpl((t as Tpl | null) ?? null);
-      setInstance((inst as Instance | null) ?? null);
+      setVouchers((vs as Voucher[] | null) ?? []);
 
       if (prof) {
         const map = await resolveAvatarUrls([prof.avatar_url]);
@@ -107,21 +115,65 @@ function CustomerDetails() {
       }
 
       if (inst) {
-        const [{ data: st }, { data: vs }] = await Promise.all([
-          supabase
-            .from("stamps")
-            .select("id,step_number,created_at")
-            .eq("card_instance_id", (inst as Instance).id)
-            .order("created_at", { ascending: false }),
-          supabase
-            .from("vouchers")
-            .select("id,label,status,step_number,created_at,redeemed_at")
-            .eq("template_id", id)
-            .eq("customer_id", customerId)
-            .order("created_at", { ascending: false }),
-        ]);
+        setInstance(inst as Instance);
+        setRemoved(false);
+        const { data: st } = await supabase
+          .from("stamps")
+          .select("id,step_number,created_at")
+          .eq("card_instance_id", (inst as Instance).id)
+          .order("created_at", { ascending: false });
         setStamps((st as Stamp[] | null) ?? []);
-        setVouchers((vs as Voucher[] | null) ?? []);
+      } else {
+        // The customer removed the card from their wallet: rebuild their
+        // history from the permanent event log so it is never lost.
+        const { data: evRows } = await supabase
+          .from("card_events")
+          .select("id,card_instance_id,event_type,step_number,created_at")
+          .eq("template_id", id)
+          .eq("customer_id", customerId)
+          .order("created_at", { ascending: true });
+
+        type Ev = { id: string; card_instance_id: string | null; event_type: string; step_number: number | null; created_at: string };
+        const events = (evRows ?? []) as Ev[];
+        if (events.length === 0) {
+          setInstance(null);
+          setStamps([]);
+        } else {
+          const lastInstanceId = [...events].reverse().find((e) => e.card_instance_id)?.card_instance_id ?? null;
+          const own = lastInstanceId ? events.filter((e) => e.card_instance_id === lastInstanceId) : events;
+          let createdAt = own[0].created_at;
+          let lastResetAt = own[0].created_at;
+          let completedAt: string | null = null;
+          let removedAt: string | null = null;
+          const stampEvents: Ev[] = [];
+          for (const e of own) {
+            switch (e.event_type) {
+              case "card_added": createdAt = e.created_at; lastResetAt = e.created_at; break;
+              case "stamp": stampEvents.push(e); break;
+              case "card_completed": completedAt = e.created_at; break;
+              case "card_renewed": lastResetAt = e.created_at; completedAt = null; break;
+              case "card_removed": removedAt = e.created_at; break;
+            }
+          }
+          const currentStamps = stampEvents.filter((e) => e.created_at >= lastResetAt);
+          setInstance({
+            id: lastInstanceId ?? "",
+            stamps_count: currentStamps.length,
+            completed_at: completedAt,
+            created_at: createdAt,
+          });
+          setRemoved(Boolean(removedAt));
+          setStamps(
+            stampEvents
+              .slice()
+              .reverse()
+              .map((e, i) => ({
+                id: e.id,
+                step_number: e.step_number ?? stampEvents.length - i,
+                created_at: e.created_at,
+              })),
+          );
+        }
       }
       setLoading(false);
     })();
@@ -138,6 +190,7 @@ function CustomerDetails() {
         </Button>
       </div>
     );
+
 
   const rewards = (tpl.rewards ?? []).slice().sort((a, b) => a.step - b.step);
   const earned = rewards.filter((r) => r.step <= instance.stamps_count);
@@ -186,7 +239,13 @@ function CustomerDetails() {
           <p className="text-xs text-muted-foreground truncate">
             {tpl.title} • joined {fmt(instance.created_at)}
           </p>
+          {removed && (
+            <span className="mt-1 inline-block rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+              Removed from wallet
+            </span>
+          )}
         </div>
+
         <div className="text-right">
           <div className="font-display text-2xl leading-none">
             {instance.stamps_count}
