@@ -184,10 +184,12 @@ export type Database = {
           onboarding_completed_at: string | null
           onboarding_step: number
           owner_id: string
+          paused_at: string | null
           phone: string | null
           postal_code: string | null
           region: string | null
           slug: string | null
+          trial_started_at: string | null
           updated_at: string
           website: string | null
           welcome_message: string | null
@@ -214,10 +216,12 @@ export type Database = {
           onboarding_completed_at?: string | null
           onboarding_step?: number
           owner_id: string
+          paused_at?: string | null
           phone?: string | null
           postal_code?: string | null
           region?: string | null
           slug?: string | null
+          trial_started_at?: string | null
           updated_at?: string
           website?: string | null
           welcome_message?: string | null
@@ -244,10 +248,12 @@ export type Database = {
           onboarding_completed_at?: string | null
           onboarding_step?: number
           owner_id?: string
+          paused_at?: string | null
           phone?: string | null
           postal_code?: string | null
           region?: string | null
           slug?: string | null
+          trial_started_at?: string | null
           updated_at?: string
           website?: string | null
           welcome_message?: string | null
@@ -497,6 +503,7 @@ export type Database = {
           date_of_birth: string | null
           display_name: string | null
           id: string
+          trial_consumed_at: string | null
           trial_started_at: string | null
           updated_at: string
         }
@@ -506,6 +513,7 @@ export type Database = {
           date_of_birth?: string | null
           display_name?: string | null
           id: string
+          trial_consumed_at?: string | null
           trial_started_at?: string | null
           updated_at?: string
         }
@@ -515,6 +523,7 @@ export type Database = {
           date_of_birth?: string | null
           display_name?: string | null
           id?: string
+          trial_consumed_at?: string | null
           trial_started_at?: string | null
           updated_at?: string
         }
@@ -764,7 +773,12 @@ export type Database = {
         Args: { _business_id: string; _env?: string }
         Returns: boolean
       }
+      business_is_listable: { Args: { _business_id: string }; Returns: boolean }
       business_slot_rank: { Args: { _business_id: string }; Returns: number }
+      business_trial_active: {
+        Args: { _business_id: string }
+        Returns: boolean
+      }
       can_on_business: {
         Args: { _business_id: string; _permission: string }
         Returns: boolean
@@ -776,6 +790,26 @@ export type Database = {
       claim_anonymous_card: {
         Args: { _instance_id: string; _secret: string }
         Returns: string
+      }
+      delete_business: { Args: { _business_id: string }; Returns: undefined }
+      discover_businesses: {
+        Args: { _lat?: number; _limit?: number; _lng?: number; _q?: string }
+        Returns: {
+          brand_color: string
+          business_id: string
+          card_count: number
+          category: string
+          city: string
+          country: string
+          description: string
+          distance_km: number
+          latitude: number
+          location_count: number
+          locations: Json
+          logo_url: string
+          longitude: number
+          name: string
+        }[]
       }
       discover_cards: {
         Args: { _lat?: number; _limit?: number; _lng?: number; _q?: string }
@@ -806,6 +840,7 @@ export type Database = {
           total_steps: number
         }[]
       }
+      get_business_detail_public: { Args: { _id: string }; Returns: Json }
       get_business_public: {
         Args: { _id: string }
         Returns: {
@@ -872,6 +907,10 @@ export type Database = {
       }
       redeem_voucher: { Args: { _voucher_id: string }; Returns: Json }
       renew_card: { Args: { _card_instance_id: string }; Returns: undefined }
+      set_business_paused: {
+        Args: { _business_id: string; _paused: boolean }
+        Returns: undefined
+      }
       user_holds_card_for_business: {
         Args: { _business_id: string }
         Returns: boolean
