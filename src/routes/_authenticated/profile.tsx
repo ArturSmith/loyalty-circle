@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { postSignOutDestination } from "@/lib/post-sign-out";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Camera, LogOut, Store, HelpCircle, Mail, CreditCard, ChevronRight, Building2, Copy, Check, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
@@ -35,6 +34,7 @@ function Profile() {
   const navigate = useNavigate();
   const { profile, loading, reload } = useProfile();
   const [displayName, setDisplayName] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarPath, setAvatarPath] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -58,6 +58,9 @@ function Profile() {
   useEffect(() => {
     if (!profile) return;
     setDisplayName(profile.displayName ?? "");
+    // <input type="date"> needs a bare YYYY-MM-DD, but the stored value may be
+    // a full timestamp.
+    setDateOfBirth((profile.dateOfBirth ?? "").slice(0, 10));
     setAvatarUrl(profile.avatarUrl);
     setAvatarPath(profile.avatarPath);
   }, [profile]);
@@ -97,9 +100,28 @@ function Profile() {
       display_name: displayName || null,
       updated_at: new Date().toISOString(),
     });
+    if (error) { setSaving(false); toast.error(error.message); return; }
+
+    // Date of birth lives in the auth user's metadata rather than the profiles
+    // table, so it needs a second call.
+    if (dateOfBirth !== (profile.dateOfBirth ?? "").slice(0, 10)) {
+      const { error: dobError } = await supabase.auth.updateUser({
+        data: { date_of_birth: dateOfBirth || null },
+      });
+      if (dobError) { setSaving(false); toast.error(dobError.message); return; }
+    }
+
     setSaving(false);
-    if (error) toast.error(error.message);
-    else { toast.success("Profile saved"); setEditing(false); reload(); }
+    toast.success("Profile saved");
+    setEditing(false);
+    reload();
+  };
+
+  const cancelEdit = () => {
+    // Discard the draft, not just the form.
+    setDisplayName(profile?.displayName ?? "");
+    setDateOfBirth((profile?.dateOfBirth ?? "").slice(0, 10));
+    setEditing(false);
   };
 
   const signOut = async () => { await supabase.auth.signOut(); navigate({ to: postSignOutDestination(), replace: true }); };
@@ -140,52 +162,63 @@ function Profile() {
               />
               <p className="mt-3 font-display text-xl font-semibold">{displayName || "Your name"}</p>
               <p className="text-sm text-muted-foreground">{profile.email}</p>
-
-              {editing ? (
-                <div className="mt-4 w-full">
-                  <Label htmlFor="name">Display name</Label>
-                  <Input
-                    id="name"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="Your name"
-                    className="mt-1.5"
-                    autoFocus
-                  />
-                  <div className="mt-3 flex gap-2">
-                    <Button
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => {
-                        // Discard the draft, not just the form.
-                        setDisplayName(profile.displayName ?? "");
-                        setEditing(false);
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                    <Button onClick={save} disabled={saving} className="flex-1">
-                      {saving ? "Saving…" : "Save"}
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <Button variant="outline" size="sm" className="mt-4 gap-2" onClick={() => setEditing(true)}>
-                  <Pencil className="h-3.5 w-3.5" /> Edit profile
-                </Button>
-              )}
             </div>
 
             <OrnamentDivider className="w-32 mx-auto opacity-60 my-7" />
 
             <section className="rounded-2xl glass-panel p-4">
-              <h2 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Account details</h2>
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Account details</h2>
+                {!editing && (
+                  <Button variant="ghost" size="sm" className="-mr-2 h-7 gap-1.5 px-2" onClick={() => setEditing(true)}>
+                    <Pencil className="h-3.5 w-3.5" /> Edit
+                  </Button>
+                )}
+              </div>
               <dl className="mt-3 space-y-2.5 text-sm">
-                <Row label="Full name" value={profile.displayName || "—"} />
-                <Row label="Email" value={profile.email} />
-                <Row label="Date of birth" value={fmt(profile.dateOfBirth)} />
-                <Row label="Member since" value={fmt(profile.createdAt)} />
+                {/* The editable rows swap their value for a field in place, so
+                    the layout stays put instead of growing a second form. */}
+                <Row label="Full name">
+                  {editing ? (
+                    <Input
+                      aria-label="Full name"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      placeholder="Your name"
+                      className="h-8 text-right"
+                      autoFocus
+                    />
+                  ) : (
+                    profile.displayName || "—"
+                  )}
+                </Row>
+                <Row label="Email">{profile.email}</Row>
+                <Row label="Date of birth">
+                  {editing ? (
+                    <Input
+                      aria-label="Date of birth"
+                      type="date"
+                      value={dateOfBirth}
+                      max={new Date().toISOString().slice(0, 10)}
+                      onChange={(e) => setDateOfBirth(e.target.value)}
+                      className="h-8 text-right"
+                    />
+                  ) : (
+                    fmt(profile.dateOfBirth)
+                  )}
+                </Row>
+                <Row label="Member since">{fmt(profile.createdAt)}</Row>
               </dl>
+              {editing && (
+                <div className="mt-4 flex gap-2">
+                  <Button variant="outline" className="flex-1" onClick={cancelEdit}>
+                    Cancel
+                  </Button>
+                  <Button onClick={save} disabled={saving} className="flex-1">
+                    {saving ? "Saving…" : "Save"}
+                  </Button>
+                </div>
+              )}
             </section>
 
             <BusinessSection profile={profile} />
@@ -287,18 +320,15 @@ function BusinessSection({ profile }: { profile: ProfileInfo }) {
     <section className="mt-6 rounded-2xl glass-panel p-4">
       <h2 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Business</h2>
       <dl className="mt-3 space-y-2.5 text-sm">
-        <Row label="Your role" value="Owner" />
-        <Row
-          label={access.businessCount > 1 ? "Businesses" : "Business"}
-          value={
-            access.businessCount > 1
-              ? `${profile.businessName} +${access.businessCount - 1} more`
-              : profile.businessName ?? "—"
-          }
-        />
-        <Row label="Plan" value={plan} />
+        <Row label="Your role">Owner</Row>
+        <Row label={access.businessCount > 1 ? "Businesses" : "Business"}>
+          {access.businessCount > 1
+            ? `${profile.businessName} +${access.businessCount - 1} more`
+            : profile.businessName ?? "—"}
+        </Row>
+        <Row label="Plan">{plan}</Row>
         {!access.loading && access.seatCount > 0 && (
-          <Row label="Seats" value={`${access.seatCount} active`} />
+          <Row label="Seats">{`${access.seatCount} active`}</Row>
         )}
       </dl>
 
@@ -336,11 +366,11 @@ function MenuLink({ to, icon: Icon, label }: { to: string; icon: typeof Store; l
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-baseline justify-between gap-4">
+    <div className="flex items-center justify-between gap-4 min-h-8">
       <dt className="text-muted-foreground shrink-0">{label}</dt>
-      <dd className="text-right font-medium break-words">{value}</dd>
+      <dd className="min-w-0 flex-1 text-right font-medium break-words">{children}</dd>
     </div>
   );
 }
