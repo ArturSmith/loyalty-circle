@@ -73,9 +73,10 @@ function SubscribePage() {
   const trialing = access.reason === "trialing";
 
   // Going "back" to /business is only sensible if the dashboard will actually
-  // let them in. Without access it bounces straight back here, so send someone
-  // who is locked out to their wallet instead of round a loop.
-  const backTo = access.hasAccess ? "/business" : "/wallet";
+  // let them in. Someone locked out bounces straight back here, and someone
+  // with no business at all gets pushed into the onboarding wizard — neither is
+  // what "back" should mean, so send both to their wallet.
+  const backTo = access.hasBusiness && access.hasAccess ? "/business" : "/wallet";
 
   return (
     <div className="min-h-screen bg-background px-4 py-10">

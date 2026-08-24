@@ -194,7 +194,12 @@ function OnboardingWizard() {
   };
 
   const goBack = () => {
-    if (step === 1) return;
+    // On the first step there is no previous step, but a dead button is worse
+    // than none — leave the wizard rather than trapping the user in it.
+    if (step === 1) {
+      navigate({ to: "/wallet" });
+      return;
+    }
     setStep(step - 1);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -221,11 +226,11 @@ function OnboardingWizard() {
             <h1 className="mt-1 text-2xl font-semibold tracking-tight">{current.title}</h1>
             <p className="mt-1 text-sm text-muted-foreground">{current.blurb}</p>
           </div>
-          {biz?.onboarding_completed_at && (
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/business">Exit</Link>
-            </Button>
-          )}
+          {/* Always offer a way out. Someone part-way through goes to their
+              wallet, since /business would only send them back here. */}
+          <Button asChild variant="ghost" size="sm">
+            <Link to={biz?.onboarding_completed_at ? "/business" : "/wallet"}>Exit</Link>
+          </Button>
         </div>
 
         <div className="mt-5 flex gap-1.5" role="progressbar" aria-valuenow={step} aria-valuemin={1} aria-valuemax={TOTAL_STEPS}>
@@ -267,8 +272,8 @@ function OnboardingWizard() {
 
       <div className="fixed inset-x-0 bottom-0 border-t border-border bg-background/95 backdrop-blur">
         <div className="mx-auto flex w-full max-w-2xl items-center gap-3 px-4 py-3">
-          <Button type="button" variant="ghost" onClick={goBack} disabled={step === 1 || saving}>
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back
+          <Button type="button" variant="ghost" onClick={goBack} disabled={saving}>
+            <ArrowLeft className="mr-2 h-4 w-4" /> {step === 1 ? "Cancel" : "Back"}
           </Button>
           <div className="flex-1" />
           {current.optional && (
