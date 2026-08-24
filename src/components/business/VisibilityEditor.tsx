@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Check } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useBusinessAccess } from "@/hooks/useBusinessAccess";
 
 export type MarketplaceStatus = "unpublished" | "published";
 
@@ -33,6 +34,7 @@ const OPTIONS: { key: MarketplaceStatus; title: string; blurb: string }[] = [
 export function VisibilityEditor({ businessId }: { businessId: string }) {
   const [value, setValue] = useState<MarketplaceStatus | null>(null);
   const [saving, setSaving] = useState(false);
+  const access = useBusinessAccess();
 
   useEffect(() => {
     let cancelled = false;
@@ -85,6 +87,15 @@ export function VisibilityEditor({ businessId }: { businessId: string }) {
 
   return (
     <div className="space-y-3">
+      {!access.loading && !access.hasAccess && value === "published" && (
+        // Being listed is a paid feature, so the preference is kept but not
+        // honoured. Saying so beats letting the owner believe they're visible.
+        <p className="rounded-xl bg-destructive/10 px-3 py-2 text-xs text-destructive">
+          Your trial has ended and there's no active subscription, so you're
+          currently hidden from Discover. Your choice is saved and the listing
+          returns as soon as you subscribe.
+        </p>
+      )}
       {OPTIONS.map((o) => {
         const selected = value === o.key;
         return (

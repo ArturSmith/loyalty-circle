@@ -17,6 +17,7 @@ import {
 import { LocationsEditor } from "@/components/business/LocationsEditor";
 import { SocialsEditor } from "@/components/business/SocialsEditor";
 import { VisibilityEditor } from "@/components/business/VisibilityEditor";
+import { BusinessLifecycle } from "@/components/business/BusinessLifecycle";
 
 /** Rendered as separate cards; BusinessForm supplies each heading. */
 const DETAIL_SECTIONS: BusinessFormSection[] = ["basics", "address", "contact", "about"];
@@ -122,6 +123,14 @@ function EditBusiness() {
           </h2>
           <div className="mt-4">
             <VisibilityEditor businessId={bizId} />
+          </div>
+        </section>
+        <section className="rounded-2xl glass-panel p-4">
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            Business status
+          </h2>
+          <div className="mt-4">
+            <BusinessLifecycle businessId={bizId} businessName={details.name} />
           </div>
         </section>
       </div>
