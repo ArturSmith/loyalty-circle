@@ -153,11 +153,13 @@ export async function inviteMemberAsOwner(
     return { status: "error", message: "Only a business owner can invite administrators." };
   }
 
-  // Plan limit. Revoked members do not count against it.
+  // Plan limit. Revoked members do not count, and neither does the owner —
+  // the limit is about how many administrators may be added alongside them.
   const { count } = await (supabaseAdmin as any)
     .from("business_members")
     .select("id", { count: "exact", head: true })
     .eq("business_id", businessId)
+    .eq("role", "admin")
     .neq("status", "revoked");
 
   const billing = await billingStateForOwner(userId, environment);
@@ -193,24 +195,37 @@ export async function inviteMemberAsOwner(
 
   const permissions = sanitizePermissions(input.permissions);
 
-  const { data: upserted, error } = await (supabaseAdmin as any)
-    .from("business_members")
-    .upsert(
-      {
-        business_id: businessId,
-        email,
-        user_id: inviteeUserId,
-        role: "admin",
-        permissions,
-        status: "invited",
-        invited_by: userId,
-        invited_at: new Date().toISOString(),
-        accepted_at: null,
-      },
-      { onConflict: "business_id,email" },
-    )
-    .select("id, email, role, permissions, status, invited_at, accepted_at, invite_token, user_id")
-    .single();
+  // Deliberately not an upsert. The uniqueness rule is a functional index on
+  // (business_id, lower(email)), and Postgres cannot match ON CONFLICT
+  // (business_id, email) to it — every invitation failed with "no unique or
+  // exclusion constraint matching the ON CONFLICT specification".
+  const existingId = (existingForEmail.data as { id?: string } | null)?.id ?? null;
+  const invitation = {
+    business_id: businessId,
+    email,
+    user_id: inviteeUserId,
+    role: "admin",
+    permissions,
+    status: "invited",
+    invited_by: userId,
+    invited_at: new Date().toISOString(),
+    accepted_at: null,
+  };
+  const columns =
+    "id, email, role, permissions, status, invited_at, accepted_at, invite_token, user_id";
+
+  const { data: upserted, error } = existingId
+    ? await (supabaseAdmin as any)
+        .from("business_members")
+        .update(invitation)
+        .eq("id", existingId)
+        .select(columns)
+        .single()
+    : await (supabaseAdmin as any)
+        .from("business_members")
+        .insert(invitation)
+        .select(columns)
+        .single();
 
   if (error || !upserted) {
     return { status: "error", message: error?.message ?? "Could not create the invitation." };
