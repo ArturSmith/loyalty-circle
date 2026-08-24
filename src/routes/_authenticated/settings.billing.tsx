@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ExternalLink, Sparkles, CreditCard, Calendar, XCircle, FileText, Download } from "lucide-react";
 import { toast } from "sonner";
 import { useBusinessAccess } from "@/hooks/useBusinessAccess";
+import { useEntitlements } from "@/hooks/useEntitlements";
 import { getBillingPortalUrl, listTransactions, getInvoicePdfUrl } from "@/utils/payments.functions";
 import { getPaddleEnvironment } from "@/lib/paddle";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
-import { formatPlanPrice, planFromTier } from "@/lib/plans";
+import { formatPlanPrice } from "@/lib/plans";
 
 export const Route = createFileRoute("/_authenticated/settings/billing")({
   head: () => ({
@@ -34,6 +35,8 @@ type Tx = {
 function BillingSettings() {
   const navigate = useNavigate();
   const access = useBusinessAccess();
+  // The plan actually bought, rather than assuming everyone is on one tier.
+  const ent = useEntitlements();
   const portalFn = useServerFn(getBillingPortalUrl);
   const txFn = useServerFn(listTransactions);
   const invoiceFn = useServerFn(getInvoicePdfUrl);
@@ -104,9 +107,9 @@ function BillingSettings() {
   };
 
   const planLabel = access.isSubscribed
-    ? "ClubCarder Business — Pro"
+    ? `ClubCarder ${ent.plan.name}`
     : access.reason === "trialing"
-      ? "Free trial"
+      ? `Free trial — ${ent.plan.name}`
       : "No active plan";
 
   const statusLabel = access.isSubscribed
@@ -148,7 +151,7 @@ function BillingSettings() {
               </div>
               <p className="mt-2 text-sm text-muted-foreground">{statusLabel}</p>
             </div>
-            {access.isSubscribed && <span className="text-lg font-semibold">{formatPlanPrice(planFromTier(null).price)}<span className="text-xs text-muted-foreground font-normal">/mo</span></span>}
+            {access.isSubscribed && <span className="text-lg font-semibold">{formatPlanPrice(ent.plan.price)}<span className="text-xs text-muted-foreground font-normal">/mo</span></span>}
           </div>
 
           <div className="mt-5 space-y-3 text-sm">

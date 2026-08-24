@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Lock, Sparkles } from "lucide-react";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { motion } from "framer-motion";
-import { formatPlanPrice, planFromTier } from "@/lib/plans";
+import { formatPlanPrice, PLAN_LIST } from "@/lib/plans";
 
 export const Route = createFileRoute("/_authenticated/business")({
   component: BusinessLayout,
@@ -41,16 +41,24 @@ function BusinessLayout() {
                 : "Subscribe to keep issuing stamps, adding customers, and running your loyalty program."}
             </p>
             <OrnamentDivider className="my-5 w-32 mx-auto opacity-60" />
-            <div className="flex items-baseline justify-center gap-1">
-              <span className="font-display text-4xl font-semibold">{formatPlanPrice(planFromTier(null).price)}</span>
+            {/* Quoting one price here misrepresented the offer as single-tier.
+                Show the entry price and let /subscribe present the full range. */}
+            <p className="text-xs uppercase tracking-widest text-muted-foreground">Plans from</p>
+            <div className="mt-1 flex items-baseline justify-center gap-1">
+              <span className="font-display text-4xl font-semibold">
+                {formatPlanPrice(PLAN_LIST[0].price)}
+              </span>
               <span className="text-muted-foreground">/month</span>
             </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {PLAN_LIST.length} plans · cancel anytime
+            </p>
             <Button
               onClick={() => navigate({ to: "/subscribe" })}
               className="mt-6 w-full h-12 text-base"
             >
               <Sparkles className="h-4 w-4" />
-              {needsSeats ? "Add subscription" : "Subscribe now"}
+              {needsSeats ? "Add subscription" : "See plans"}
             </Button>
             <button
               onClick={() => navigate({ to: "/wallet" })}
