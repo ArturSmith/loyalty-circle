@@ -13,8 +13,9 @@ import { ArrowLeft } from "lucide-react";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { useServerFn } from "@tanstack/react-start";
 import { claimCardToWallet } from "@/utils/cards.functions";
-import { isGoogleWalletEnabled } from "@/utils/wallet.functions";
+import { isGoogleWalletEnabled, isAppleWalletEnabled } from "@/utils/wallet.functions";
 import { GoogleWalletButton } from "@/components/GoogleWalletButton";
+import { WalletChooser } from "@/components/WalletChooser";
 
 type Template = {
   id: string; business_id: string; title: string; subtitle: string | null; description: string | null;
@@ -85,10 +86,13 @@ function BusinessPublic() {
   const [ownedTemplateIds, setOwnedTemplateIds] = useState<Map<string, string>>(new Map());
   const [flippedTemplateId, setFlippedTemplateId] = useState<string | null>(null);
   const walletEnabled = useServerFn(isGoogleWalletEnabled);
+  const appleWalletEnabled = useServerFn(isAppleWalletEnabled);
   const [googleWalletReady, setGoogleWalletReady] = useState(false);
+  const [appleWalletReady, setAppleWalletReady] = useState(false);
 
   useEffect(() => {
     walletEnabled({}).then((r) => setGoogleWalletReady(r.enabled)).catch(() => setGoogleWalletReady(false));
+    appleWalletEnabled({}).then((r) => setAppleWalletReady(r.enabled)).catch(() => setAppleWalletReady(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -189,11 +193,10 @@ function BusinessPublic() {
               {templates.map((t, i) => {
                 const ownedInstanceId = ownedTemplateIds.get(t.id);
                 const handleCardClick = () => {
-                  if (!userId) {
-                    try { sessionStorage.setItem(`pending_claim:${businessId}`, t.id); } catch {}
-                    navigate({ to: "/auth", search: { redirect: `/b/${businessId}` } });
-                    return;
-                  }
+                  // Signed-out visitors pick a wallet from the options below the
+                  // card, so tapping the card itself must not hijack them into
+                  // the sign-in flow.
+                  if (!userId) return;
                   if (ownedInstanceId) {
                     try { sessionStorage.setItem("open_card_id", ownedInstanceId); } catch {}
                     navigate({ to: "/wallet" });
@@ -204,17 +207,18 @@ function BusinessPublic() {
                 return (
                 <motion.div key={t.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}>
                   <div
-                    role="button"
-                    tabIndex={0}
+                    role={userId ? "button" : undefined}
+                    tabIndex={userId ? 0 : undefined}
                     onClick={handleCardClick}
                     onKeyDown={(event) => {
+                      if (!userId) return;
                       if (event.key === "Enter" || event.key === " ") {
                         event.preventDefault();
                         handleCardClick();
                       }
                     }}
                     className="block w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-2xl"
-                    aria-label={ownedInstanceId ? `Open ${t.title} in your wallet` : userId ? `Add ${t.title} to your wallet` : `Sign in to add ${t.title}`}
+                    aria-label={userId ? (ownedInstanceId ? `Open ${t.title} in your wallet` : `Add ${t.title} to your wallet`) : undefined}
                   >
                     <StampCard
                       title={t.title}
@@ -235,27 +239,40 @@ function BusinessPublic() {
                       onFlip={() => setFlippedTemplateId((prev) => prev === t.id ? null : t.id)}
                     />
                   </div>
-                  <Button
-                    className="mt-3 w-full h-11"
-                    disabled={claiming === t.id}
-                    onClick={handleCardClick}
-                  >
-                    {claiming === t.id
-                      ? "Adding…"
-                      : ownedInstanceId
-                      ? "Open in my wallet"
-                      : userId
-                      ? "Add to my wallet"
-                      : "Sign in to add"}
-                  </Button>
-                  {googleWalletReady && !ownedInstanceId ? (
+                  {userId ? (
                     <>
-                      <GoogleWalletButton templateId={t.id} className="mt-2" />
-                      <p className="mt-1.5 text-center text-[11px] text-muted-foreground">
-                        No account needed — the pass goes straight to your phone.
-                      </p>
+                      <Button
+                        className="mt-3 w-full h-11"
+                        disabled={claiming === t.id}
+                        onClick={handleCardClick}
+                      >
+                        {claiming === t.id
+                          ? "Adding…"
+                          : ownedInstanceId
+                          ? "Open in my wallet"
+                          : "Add to my wallet"}
+                      </Button>
+                      {googleWalletReady && !ownedInstanceId ? (
+                        <>
+                          <GoogleWalletButton templateId={t.id} className="mt-2" />
+                          <p className="mt-1.5 text-center text-[11px] text-muted-foreground">
+                            No account needed — the pass goes straight to your phone.
+                          </p>
+                        </>
+                      ) : null}
                     </>
-                  ) : null}
+                  ) : (
+                    <WalletChooser
+                      templateId={t.id}
+                      cardTitle={t.title}
+                      googleReady={googleWalletReady}
+                      appleReady={appleWalletReady}
+                      onUseInAppWallet={() => {
+                        try { sessionStorage.setItem(`pending_claim:${businessId}`, t.id); } catch {}
+                        navigate({ to: "/auth", search: { redirect: `/b/${businessId}` } });
+                      }}
+                    />
+                  )}
                 </motion.div>
                 );
               })}

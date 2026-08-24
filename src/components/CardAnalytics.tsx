@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { Repeat, Sparkles, Ticket, TrendingUp, Zap } from "lucide-react";
+import { Repeat, Sparkles, Ticket, TrendingUp, Wallet, Zap } from "lucide-react";
 
 export type AnalyticsInstance = {
   id: string;
@@ -18,11 +18,19 @@ export type AnalyticsVoucher = {
   redeemed_at: string | null;
 };
 
+export type AnalyticsPassEvent = {
+  card_instance_id: string;
+  platform: "google" | "apple";
+  event: "created" | "saved" | "deleted";
+  created_at: string;
+};
+
 type Props = {
   totalSteps: number;
   instances: AnalyticsInstance[];
   stamps: AnalyticsStamp[];
   vouchers?: AnalyticsVoucher[];
+  passEvents?: AnalyticsPassEvent[];
 };
 
 const WEEK = 7 * 86400_000;
@@ -32,7 +40,7 @@ function pct(part: number, whole: number) {
   return Math.round((part / whole) * 100);
 }
 
-export function CardAnalytics({ totalSteps, instances, stamps, vouchers = [] }: Props) {
+export function CardAnalytics({ totalSteps, instances, stamps, vouchers = [], passEvents = [] }: Props) {
   const m = useMemo(() => {
     const now = Date.now();
     const perInstance = new Map<string, number>();
@@ -104,6 +112,29 @@ export function CardAnalytics({ totalSteps, instances, stamps, vouchers = [] }: 
     };
   }, [instances, stamps, vouchers, totalSteps]);
 
+  // Phone-wallet passes. Apple and Google only ever tell us "saved" or
+  // "removed" — never who, and never that a pass was opened.
+  const wallet = useMemo(() => {
+    const passesCreated = passEvents.filter((e) => e.event === "created").length;
+    const savedIds = new Set(
+      passEvents.filter((e) => e.event === "saved").map((e) => e.card_instance_id),
+    );
+    const deletedIds = new Set(
+      passEvents.filter((e) => e.event === "deleted").map((e) => e.card_instance_id),
+    );
+    let stillInstalled = 0;
+    savedIds.forEach((id) => {
+      if (!deletedIds.has(id)) stillInstalled += 1;
+    });
+    return {
+      passesCreated,
+      saved: savedIds.size,
+      removed: deletedIds.size,
+      stillInstalled,
+      any: passEvents.length > 0,
+    };
+  }, [passEvents]);
+
   const completionRate = pct(m.completed, m.claimed);
   const repeatRate = pct(m.repeat, m.claimed);
   const redemptionRate = pct(m.redeemed, m.issued);
@@ -122,6 +153,25 @@ export function CardAnalytics({ totalSteps, instances, stamps, vouchers = [] }: 
         <ValueTile icon={TrendingUp} value={`${m.avgStamps.toFixed(1)}`} label="Avg stamps / customer" />
         <ValueTile icon={Sparkles} value={m.issued} label="Rewards unlocked" />
       </div>
+
+      {wallet.any ? (
+        <div className="mt-3 rounded-2xl border-2 border-ink/10 bg-card p-5">
+          <div className="flex items-center gap-2">
+            <Wallet className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-sm font-semibold">Apple &amp; Google Wallet</h3>
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <VoucherStat value={wallet.passesCreated} label="Passes created" />
+            <VoucherStat value={wallet.saved} label="Saved to phone" />
+            <VoucherStat value={wallet.stillInstalled} label="Still installed" tone="emerald" />
+            <VoucherStat value={wallet.removed} label="Removed" tone="amber" />
+          </div>
+          <p className="mt-3 text-[11px] text-muted-foreground">
+            Apple and Google only report saves and removals — never who saved a
+            pass, or when it was opened.
+          </p>
+        </div>
+      ) : null}
 
       {/* Conversion rings */}
       <div className="mt-3 grid gap-3 sm:grid-cols-2">

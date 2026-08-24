@@ -14,6 +14,27 @@ export const isGoogleWalletEnabled = createServerFn({ method: "GET" }).handler(
   },
 );
 
+/**
+ * Apple Wallet is not implemented yet — generating a `.pkpass` needs a Pass
+ * Type ID certificate and private key from a paid Apple Developer account,
+ * plus a PKCS#7 detached signature (which the Cloudflare Workers runtime
+ * cannot produce natively).
+ *
+ * This gate exists so the UI can show the Apple option the moment those
+ * secrets land, without another release. It mirrors `isGoogleWalletEnabled`.
+ */
+export const isAppleWalletEnabled = createServerFn({ method: "GET" }).handler(
+  async (): Promise<{ enabled: boolean }> => {
+    const configured =
+      Boolean(process.env["APPLE_WALLET_PASS_TYPE_ID"]) &&
+      Boolean(process.env["APPLE_WALLET_CERT_P12"]) &&
+      Boolean(process.env["APPLE_WALLET_TEAM_ID"]);
+    // Even fully configured, pass generation is still unimplemented. Keeping
+    // this `false` prevents shipping a button that produces a broken file.
+    return { enabled: configured && false };
+  },
+);
+
 export const createWalletPass = createServerFn({ method: "POST" })
   .inputValidator((data: { templateId: string }) => {
     if (!data || typeof data.templateId !== "string" || data.templateId.length === 0) {
@@ -90,6 +111,15 @@ export const createWalletPass = createServerFn({ method: "POST" })
       .from("card_instances")
       .update({ google_object_id: objectId } as any)
       .eq("id", created.id);
+
+    const { recordWalletPassEvent } = await import("@/lib/walletEvents.server");
+    await recordWalletPassEvent({
+      cardInstanceId: created.id,
+      templateId: tpl.id,
+      platform: "google",
+      event: "created",
+      objectId,
+    });
 
     const saveUrl = await buildSaveUrl(config, objectId, WALLET_SAVE_ORIGINS);
     return { saveUrl, instanceId: created.id, claimUrl };

@@ -9,7 +9,7 @@ import { ArrowLeft, Pencil, Users, Stamp as StampIco, CheckCircle2, Calendar, Ti
 import { motion } from "framer-motion";
 import { resolveAvatarUrls } from "@/lib/avatar";
 import { CardAnalytics } from "@/components/CardAnalytics";
-import type { AnalyticsInstance, AnalyticsStamp, AnalyticsVoucher } from "@/components/CardAnalytics";
+import type { AnalyticsInstance, AnalyticsStamp, AnalyticsVoucher, AnalyticsPassEvent } from "@/components/CardAnalytics";
 
 
 type Tpl = {
@@ -47,6 +47,7 @@ function CardDetails() {
   const [loading, setLoading] = useState(true);
   const [face, setFace] = useState<CardFace>("info");
   const [analytics, setAnalytics] = useState<{ instances: AnalyticsInstance[]; stamps: AnalyticsStamp[]; vouchers: AnalyticsVoucher[] }>({ instances: [], stamps: [], vouchers: [] });
+  const [passEvents, setPassEvents] = useState<AnalyticsPassEvent[]>([]);
 
 
 
@@ -66,6 +67,13 @@ function CardDetails() {
         .select("id,card_instance_id,customer_id,event_type,step_number,metadata,created_at")
         .eq("template_id", id)
         .order("created_at", { ascending: true });
+
+      // Phone-wallet saves/removals. Not in the generated Supabase types yet.
+      const { data: walletRows } = await (supabase as any)
+        .from("wallet_pass_events")
+        .select("card_instance_id,platform,event,created_at")
+        .eq("template_id", id);
+      setPassEvents((walletRows as AnalyticsPassEvent[] | null) ?? []);
 
       type Ev = {
         id: string; card_instance_id: string | null; customer_id: string | null;
@@ -235,7 +243,7 @@ function CardDetails() {
         <Stat icon={Ticket} label="Vouchers out" value={stats.outstandingVouchers} />
       </div>
 
-      <CardAnalytics totalSteps={tpl.total_steps} instances={analytics.instances} stamps={analytics.stamps} vouchers={analytics.vouchers} />
+      <CardAnalytics totalSteps={tpl.total_steps} instances={analytics.instances} stamps={analytics.stamps} vouchers={analytics.vouchers} passEvents={passEvents} />
 
 
       <div className="mt-10">
