@@ -12,10 +12,14 @@ import {
   emptyBusinessDetails,
   isBusinessDetailsValid,
   type BusinessDetails,
+  type BusinessFormSection,
 } from "@/components/BusinessForm";
 import { LocationsEditor } from "@/components/business/LocationsEditor";
 import { SocialsEditor } from "@/components/business/SocialsEditor";
 import { VisibilityEditor } from "@/components/business/VisibilityEditor";
+
+/** Rendered as separate cards; BusinessForm supplies each heading. */
+const DETAIL_SECTIONS: BusinessFormSection[] = ["basics", "address", "contact", "about"];
 
 export const Route = createFileRoute("/_authenticated/business/edit")({
   head: () => ({ meta: [{ title: "Edit business — ClubCarder" }] }),
@@ -79,17 +83,24 @@ function EditBusiness() {
         <div className="w-9" />
       </header>
 
-      <form onSubmit={save} className="flex-1 px-6 py-4 max-w-md mx-auto w-full">
-        <BusinessForm value={details} onChange={setDetails} />
-        <Button type="submit" disabled={saving} className="mt-8 w-full h-11">
-          {saving ? "Saving…" : "Save changes"}
-        </Button>
-      </form>
+      <div className="flex-1 px-6 py-4 pb-16 max-w-md mx-auto w-full space-y-4">
+        {/* Each concern is its own card, matching the profile page. The
+            details form still submits as one unit, so it keeps a single
+            surrounding <form> spanning its cards. */}
+        <form onSubmit={save} className="space-y-4">
+          {DETAIL_SECTIONS.map((section) => (
+            <section key={section} className="rounded-2xl glass-panel p-4">
+              <BusinessForm value={details} onChange={setDetails} sections={[section]} />
+            </section>
+          ))}
+          <Button type="submit" disabled={saving} className="w-full h-11">
+            {saving ? "Saving…" : "Save changes"}
+          </Button>
+        </form>
 
-      {/* Locations, networks and visibility save themselves, so they sit
-          outside the form. */}
-      <div className="px-6 pb-16 max-w-md mx-auto w-full space-y-10">
-        <section>
+        {/* Locations, networks and visibility save themselves, so they sit
+            outside the form. */}
+        <section className="rounded-2xl glass-panel p-4">
           <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             Locations
           </h2>
@@ -97,7 +108,7 @@ function EditBusiness() {
             <LocationsEditor businessId={bizId} />
           </div>
         </section>
-        <section>
+        <section className="rounded-2xl glass-panel p-4">
           <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             My Networks
           </h2>
@@ -105,7 +116,7 @@ function EditBusiness() {
             <SocialsEditor businessId={bizId} />
           </div>
         </section>
-        <section>
+        <section className="rounded-2xl glass-panel p-4">
           <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             Visibility
           </h2>
