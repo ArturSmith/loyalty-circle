@@ -10,7 +10,6 @@ import { Logo } from "@/components/Logo";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { z } from "zod";
-import { getDefaultHome } from "@/lib/defaultHome";
 
 const searchSchema = z.object({ redirect: z.string().optional() }).catch({ redirect: undefined });
 
