@@ -40,10 +40,18 @@ export type PlanLimits = {
   administrators: Limit;
 };
 
+/** ISO 4217 code for every price in this file. */
+export const PLAN_CURRENCY = "NOK";
+
+/** Formats a plan price for display, e.g. "499 kr". */
+export function formatPlanPrice(price: number): string {
+  return `${new Intl.NumberFormat("nb-NO").format(price)} kr`;
+}
+
 export type Plan = {
   tier: PlanTier;
   name: string;
-  /** Monthly price in USD. */
+  /** Monthly price in NOK, excluding VAT. */
   price: number;
   tagline: string;
   /** Shown as the one-line reason to pick this tier over the previous one. */
@@ -61,7 +69,7 @@ export const PLANS: Record<PlanTier, Plan> = {
   starter: {
     tier: "starter",
     name: "Starter",
-    price: 19,
+    price: 499,
     tagline: "One shop, one card, no fuss.",
     bestFor: "A single location finding its regulars.",
     limits: { locations: 1, loyaltyCards: 1, administrators: 1 },
@@ -78,7 +86,7 @@ export const PLANS: Record<PlanTier, Plan> = {
   growth: {
     tier: "growth",
     name: "Growth",
-    price: 49,
+    price: 899,
     tagline: "Several locations, a real team.",
     bestFor: "Businesses with more than one door and more than one manager.",
     limits: { locations: 5, loyaltyCards: 5, administrators: 5 },
@@ -108,7 +116,7 @@ export const PLANS: Record<PlanTier, Plan> = {
   scale: {
     tier: "scale",
     name: "Scale",
-    price: 149,
+    price: 1499,
     tagline: "Chains, franchises, and everything after.",
     bestFor: "Multi-site operators who need no ceiling and an API.",
     limits: { locations: null, loyaltyCards: null, administrators: null },
