@@ -20,6 +20,7 @@ import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as ClaimInstanceIdRouteImport } from './routes/claim.$instanceId'
 import { Route as CheckoutSuccessRouteImport } from './routes/checkout.success'
 import { Route as BBusinessIdRouteImport } from './routes/b.$businessId'
@@ -34,6 +35,7 @@ import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedBusinessIndexRouteImport } from './routes/_authenticated/business.index'
 import { Route as AuthenticatedSettingsBillingRouteImport } from './routes/_authenticated/settings.billing'
 import { Route as AuthenticatedChatsConversationIdRouteImport } from './routes/_authenticated/chats.$conversationId'
+import { Route as AuthenticatedBusinessTeamRouteImport } from './routes/_authenticated/business.team'
 import { Route as AuthenticatedBusinessScanRouteImport } from './routes/_authenticated/business.scan'
 import { Route as AuthenticatedBusinessEditRouteImport } from './routes/_authenticated/business.edit'
 import { Route as AuthenticatedBusinessCustomersRouteImport } from './routes/_authenticated/business.customers'
@@ -99,6 +101,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InviteTokenRoute = InviteTokenRouteImport.update({
+  id: '/invite/$token',
+  path: '/invite/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClaimInstanceIdRoute = ClaimInstanceIdRouteImport.update({
@@ -173,6 +180,12 @@ const AuthenticatedChatsConversationIdRoute =
     id: '/chats/$conversationId',
     path: '/chats/$conversationId',
     getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedBusinessTeamRoute =
+  AuthenticatedBusinessTeamRouteImport.update({
+    id: '/team',
+    path: '/team',
+    getParentRoute: () => AuthenticatedBusinessRoute,
   } as any)
 const AuthenticatedBusinessScanRoute =
   AuthenticatedBusinessScanRouteImport.update({
@@ -266,10 +279,12 @@ export interface FileRoutesByFullPath {
   '/b/$businessId': typeof BBusinessIdRoute
   '/checkout/success': typeof CheckoutSuccessRoute
   '/claim/$instanceId': typeof ClaimInstanceIdRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/business/chats': typeof AuthenticatedBusinessChatsRoute
   '/business/customers': typeof AuthenticatedBusinessCustomersRoute
   '/business/edit': typeof AuthenticatedBusinessEditRoute
   '/business/scan': typeof AuthenticatedBusinessScanRoute
+  '/business/team': typeof AuthenticatedBusinessTeamRoute
   '/chats/$conversationId': typeof AuthenticatedChatsConversationIdRoute
   '/settings/billing': typeof AuthenticatedSettingsBillingRoute
   '/business/': typeof AuthenticatedBusinessIndexRoute
@@ -303,10 +318,12 @@ export interface FileRoutesByTo {
   '/b/$businessId': typeof BBusinessIdRoute
   '/checkout/success': typeof CheckoutSuccessRoute
   '/claim/$instanceId': typeof ClaimInstanceIdRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/business/chats': typeof AuthenticatedBusinessChatsRoute
   '/business/customers': typeof AuthenticatedBusinessCustomersRoute
   '/business/edit': typeof AuthenticatedBusinessEditRoute
   '/business/scan': typeof AuthenticatedBusinessScanRoute
+  '/business/team': typeof AuthenticatedBusinessTeamRoute
   '/chats/$conversationId': typeof AuthenticatedChatsConversationIdRoute
   '/settings/billing': typeof AuthenticatedSettingsBillingRoute
   '/business': typeof AuthenticatedBusinessIndexRoute
@@ -343,10 +360,12 @@ export interface FileRoutesById {
   '/b/$businessId': typeof BBusinessIdRoute
   '/checkout/success': typeof CheckoutSuccessRoute
   '/claim/$instanceId': typeof ClaimInstanceIdRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/_authenticated/business/chats': typeof AuthenticatedBusinessChatsRoute
   '/_authenticated/business/customers': typeof AuthenticatedBusinessCustomersRoute
   '/_authenticated/business/edit': typeof AuthenticatedBusinessEditRoute
   '/_authenticated/business/scan': typeof AuthenticatedBusinessScanRoute
+  '/_authenticated/business/team': typeof AuthenticatedBusinessTeamRoute
   '/_authenticated/chats/$conversationId': typeof AuthenticatedChatsConversationIdRoute
   '/_authenticated/settings/billing': typeof AuthenticatedSettingsBillingRoute
   '/_authenticated/business/': typeof AuthenticatedBusinessIndexRoute
@@ -383,10 +402,12 @@ export interface FileRouteTypes {
     | '/b/$businessId'
     | '/checkout/success'
     | '/claim/$instanceId'
+    | '/invite/$token'
     | '/business/chats'
     | '/business/customers'
     | '/business/edit'
     | '/business/scan'
+    | '/business/team'
     | '/chats/$conversationId'
     | '/settings/billing'
     | '/business/'
@@ -420,10 +441,12 @@ export interface FileRouteTypes {
     | '/b/$businessId'
     | '/checkout/success'
     | '/claim/$instanceId'
+    | '/invite/$token'
     | '/business/chats'
     | '/business/customers'
     | '/business/edit'
     | '/business/scan'
+    | '/business/team'
     | '/chats/$conversationId'
     | '/settings/billing'
     | '/business'
@@ -459,10 +482,12 @@ export interface FileRouteTypes {
     | '/b/$businessId'
     | '/checkout/success'
     | '/claim/$instanceId'
+    | '/invite/$token'
     | '/_authenticated/business/chats'
     | '/_authenticated/business/customers'
     | '/_authenticated/business/edit'
     | '/_authenticated/business/scan'
+    | '/_authenticated/business/team'
     | '/_authenticated/chats/$conversationId'
     | '/_authenticated/settings/billing'
     | '/_authenticated/business/'
@@ -492,6 +517,7 @@ export interface RootRouteChildren {
   BBusinessIdRoute: typeof BBusinessIdRoute
   CheckoutSuccessRoute: typeof CheckoutSuccessRoute
   ClaimInstanceIdRoute: typeof ClaimInstanceIdRoute
+  InviteTokenRoute: typeof InviteTokenRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicWalletGoogleCallbackRoute: typeof ApiPublicWalletGoogleCallbackRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -575,6 +601,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/invite/$token': {
+      id: '/invite/$token'
+      path: '/invite/$token'
+      fullPath: '/invite/$token'
+      preLoaderRoute: typeof InviteTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/claim/$instanceId': {
@@ -675,6 +708,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChatsConversationIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/business/team': {
+      id: '/_authenticated/business/team'
+      path: '/team'
+      fullPath: '/business/team'
+      preLoaderRoute: typeof AuthenticatedBusinessTeamRouteImport
+      parentRoute: typeof AuthenticatedBusinessRoute
+    }
     '/_authenticated/business/scan': {
       id: '/_authenticated/business/scan'
       path: '/scan'
@@ -767,6 +807,7 @@ interface AuthenticatedBusinessRouteChildren {
   AuthenticatedBusinessCustomersRoute: typeof AuthenticatedBusinessCustomersRoute
   AuthenticatedBusinessEditRoute: typeof AuthenticatedBusinessEditRoute
   AuthenticatedBusinessScanRoute: typeof AuthenticatedBusinessScanRoute
+  AuthenticatedBusinessTeamRoute: typeof AuthenticatedBusinessTeamRoute
   AuthenticatedBusinessIndexRoute: typeof AuthenticatedBusinessIndexRoute
   AuthenticatedBusinessCardsNewRoute: typeof AuthenticatedBusinessCardsNewRoute
   AuthenticatedBusinessCardsIdEditRoute: typeof AuthenticatedBusinessCardsIdEditRoute
@@ -779,6 +820,7 @@ const AuthenticatedBusinessRouteChildren: AuthenticatedBusinessRouteChildren = {
   AuthenticatedBusinessCustomersRoute: AuthenticatedBusinessCustomersRoute,
   AuthenticatedBusinessEditRoute: AuthenticatedBusinessEditRoute,
   AuthenticatedBusinessScanRoute: AuthenticatedBusinessScanRoute,
+  AuthenticatedBusinessTeamRoute: AuthenticatedBusinessTeamRoute,
   AuthenticatedBusinessIndexRoute: AuthenticatedBusinessIndexRoute,
   AuthenticatedBusinessCardsNewRoute: AuthenticatedBusinessCardsNewRoute,
   AuthenticatedBusinessCardsIdEditRoute: AuthenticatedBusinessCardsIdEditRoute,
@@ -837,6 +879,7 @@ const rootRouteChildren: RootRouteChildren = {
   BBusinessIdRoute: BBusinessIdRoute,
   CheckoutSuccessRoute: CheckoutSuccessRoute,
   ClaimInstanceIdRoute: ClaimInstanceIdRoute,
+  InviteTokenRoute: InviteTokenRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicWalletGoogleCallbackRoute: ApiPublicWalletGoogleCallbackRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,

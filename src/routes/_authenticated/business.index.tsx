@@ -62,7 +62,27 @@ function BusinessDashboard() {
     (async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
-      const { data: b } = await supabase.from("businesses").select("*").eq("owner_id", u.user.id).maybeSingle();
+      let { data: b } = await supabase.from("businesses").select("*").eq("owner_id", u.user.id).maybeSingle();
+      if (!b) {
+        // Invited administrators own no business — resolve the one they were
+        // added to, otherwise they would be shown the "create a business" form.
+        const { data: membership } = await (supabase as any)
+          .from("business_members")
+          .select("business_id")
+          .eq("user_id", u.user.id)
+          .eq("status", "active")
+          .limit(1)
+          .maybeSingle();
+        const memberBusinessId = (membership as { business_id?: string } | null)?.business_id;
+        if (memberBusinessId) {
+          const { data: memberBiz } = await supabase
+            .from("businesses")
+            .select("*")
+            .eq("id", memberBusinessId)
+            .maybeSingle();
+          b = memberBiz;
+        }
+      }
       setBiz(b as Business | null);
       if (b) {
         const [{ data: t }, { count: sCount }, { data: instRows }] = await Promise.all([
@@ -194,6 +214,11 @@ function BusinessDashboard() {
               <Link to="/business/edit" className="w-full">
                 <Button variant="ghost" className="w-full justify-start gap-3">
                   <Settings className="h-4 w-4" /> Edit business info
+                </Button>
+              </Link>
+              <Link to="/business/team" className="w-full">
+                <Button variant="ghost" className="w-full justify-start gap-3">
+                  <Users className="h-4 w-4" /> Team & permissions
                 </Button>
               </Link>
               <Link to="/settings/billing" className="w-full">
