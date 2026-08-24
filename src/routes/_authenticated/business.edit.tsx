@@ -32,7 +32,13 @@ function EditBusiness() {
     (async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
-      const { data } = await supabase.from("businesses").select("*").eq("owner_id", u.user.id).maybeSingle();
+      const { data } = await supabase
+        .from("businesses")
+        .select("*")
+        .eq("owner_id", u.user.id)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
       if (data) {
         setBizId((data as { id: string }).id);
         setDetails(businessDetailsFromRow(data as Record<string, unknown>));

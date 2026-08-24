@@ -59,7 +59,16 @@ function BusinessDashboard() {
     (async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
-      let { data: b } = await supabase.from("businesses").select("*").eq("owner_id", u.user.id).maybeSingle();
+      // limit(1) matters: maybeSingle() errors outright when the account owns
+      // more than one business, which would look identical to owning none and
+      // bounce the user into the onboarding wizard.
+      let { data: b } = await supabase
+        .from("businesses")
+        .select("*")
+        .eq("owner_id", u.user.id)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
       if (!b) {
         // Invited administrators own no business — resolve the one they were
         // added to, otherwise they would be shown the "create a business" form.
