@@ -237,14 +237,15 @@ function BusinessPublic() {
         </Button>
 
         {/* The header renders regardless of cards: a business with none is
-            still a real place someone may have scanned a QR code to reach. */}
+            still a real place someone may have scanned a QR code to reach.
+            Only the top corners are rounded and there is no bottom edge, so
+            the brand tint fades out into the page instead of ending in a line. */}
         <div
-          className="rounded-3xl border px-5 py-6 text-center"
+          className="rounded-t-3xl px-5 pb-10 pt-6 text-center"
           style={
             brand
               ? {
-                  borderColor: brandTint(brand, 0.35) ?? undefined,
-                  background: `linear-gradient(180deg, ${brandTint(brand, 0.14)}, transparent)`,
+                  background: `linear-gradient(180deg, ${brandTint(brand, 0.18)} 0%, ${brandTint(brand, 0.06)} 45%, transparent 100%)`,
                 }
               : undefined
           }
