@@ -15,6 +15,7 @@ import {
 } from "@/components/BusinessForm";
 import { LocationsEditor } from "@/components/business/LocationsEditor";
 import { SocialsEditor } from "@/components/business/SocialsEditor";
+import { VisibilityEditor } from "@/components/business/VisibilityEditor";
 
 export const Route = createFileRoute("/_authenticated/business/edit")({
   head: () => ({ meta: [{ title: "Edit business — ClubCarder" }] }),
@@ -85,7 +86,8 @@ function EditBusiness() {
         </Button>
       </form>
 
-      {/* Locations and networks save themselves, so they sit outside the form. */}
+      {/* Locations, networks and visibility save themselves, so they sit
+          outside the form. */}
       <div className="px-6 pb-16 max-w-md mx-auto w-full space-y-10">
         <section>
           <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
@@ -101,6 +103,14 @@ function EditBusiness() {
           </h2>
           <div className="mt-4">
             <SocialsEditor businessId={bizId} />
+          </div>
+        </section>
+        <section>
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            Visibility
+          </h2>
+          <div className="mt-4">
+            <VisibilityEditor businessId={bizId} />
           </div>
         </section>
       </div>
