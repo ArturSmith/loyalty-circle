@@ -9,7 +9,7 @@ import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Link2 as LinkIcon, MapPin } from "lucide-react";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { useServerFn } from "@tanstack/react-start";
 import { claimCardToWallet } from "@/utils/cards.functions";
@@ -24,6 +24,23 @@ type Template = {
   bg_color: string; accent_color: string; text_color: string;
   stamp_icon: StampIconName; logo_url: string | null; rewards: Reward[]; active: boolean; grid_cols: number | null;
 };
+
+type BusinessLocation = {
+  id: string;
+  name: string | null;
+  address_line1: string | null;
+  address_line2: string | null;
+  city: string | null;
+  postal_code: string | null;
+  region: string | null;
+  country: string | null;
+  phone: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  is_primary: boolean;
+};
+
+type BusinessSocial = { platform: string; url: string };
 
 function isNewSupabaseApiKey(value: string): boolean {
   return value.startsWith("sb_publishable_") || value.startsWith("sb_secret_");
@@ -85,6 +102,8 @@ function BusinessPublic() {
   const [userId, setUserId] = useState<string | null>(null);
   const [ownedTemplateIds, setOwnedTemplateIds] = useState<Map<string, string>>(new Map());
   const [flippedTemplateId, setFlippedTemplateId] = useState<string | null>(null);
+  const [locations, setLocations] = useState<BusinessLocation[]>([]);
+  const [socials, setSocials] = useState<BusinessSocial[]>([]);
   const walletEnabled = useServerFn(isGoogleWalletEnabled);
   const appleWalletEnabled = useServerFn(isAppleWalletEnabled);
   const [googleWalletReady, setGoogleWalletReady] = useState(false);
@@ -98,12 +117,17 @@ function BusinessPublic() {
 
   useEffect(() => {
     (async () => {
-      const [{ data: t }, { data: b }, { data: u }] = await Promise.all([
+      const [{ data: t }, { data: b }, { data: u }, { data: detail }] = await Promise.all([
         publicSupabase.from("card_templates").select("*").eq("business_id", businessId).eq("active", true).order("created_at"),
         publicSupabase.rpc("get_business_public", { _id: businessId }),
         supabase.auth.getUser(),
+        // Cast until Supabase types are regenerated with the new RPC.
+        (publicSupabase.rpc as any)("get_business_detail_public", { _id: businessId }),
       ]);
       setTemplates((t as Template[] | null) ?? []);
+      const d = (detail ?? {}) as { locations?: BusinessLocation[]; socials?: BusinessSocial[] };
+      setLocations(Array.isArray(d.locations) ? d.locations : []);
+      setSocials(Array.isArray(d.socials) ? d.socials : []);
       const brow = Array.isArray(b) ? b[0] : null;
       if (brow) setBusiness(brow as typeof business extends null ? never : { id: string; name: string; logo_url: string | null; brand_color: string | null });
       const uid = u.user?.id ?? null;
@@ -278,6 +302,88 @@ function BusinessPublic() {
               })}
             </div>
           </>
+        )}
+
+        {locations.length > 0 && (
+          <section className="mt-10">
+            <h2 className="font-display text-xl font-bold">
+              {locations.length === 1 ? "Where to find us" : "Our locations"}
+            </h2>
+            <ul className="mt-3 space-y-2">
+              {locations.map((loc) => {
+                const address = [loc.address_line1, loc.postal_code, loc.city, loc.country]
+                  .filter(Boolean)
+                  .join(", ");
+                // Let the OS pick the maps app rather than assuming Google.
+                const mapsHref = loc.latitude != null && loc.longitude != null
+                  ? `https://maps.google.com/?q=${loc.latitude},${loc.longitude}`
+                  : address
+                    ? `https://maps.google.com/?q=${encodeURIComponent(address)}`
+                    : null;
+                return (
+                  <li
+                    key={loc.id}
+                    className="rounded-2xl border border-border bg-card p-4"
+                  >
+                    <div className="flex items-start gap-3">
+                      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium">
+                          {loc.name || "Location"}
+                          {loc.is_primary && locations.length > 1 && (
+                            <span className="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+                              Main
+                            </span>
+                          )}
+                        </p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          {address || "Address not listed"}
+                        </p>
+                        <div className="mt-2 flex flex-wrap gap-3 text-xs">
+                          {loc.phone && (
+                            <a href={`tel:${loc.phone}`} className="font-medium text-primary">
+                              {loc.phone}
+                            </a>
+                          )}
+                          {mapsHref && (
+                            <a
+                              href={mapsHref}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-medium text-primary"
+                            >
+                              Directions
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
+
+        {socials.length > 0 && (
+          <section className="mt-8">
+            <h2 className="font-display text-xl font-bold">Follow us</h2>
+            <ul className="mt-3 flex flex-wrap gap-2">
+              {socials.map((s) => (
+                <li key={s.platform}>
+                  <a
+                    href={s.url}
+                    target="_blank"
+                    rel="noopener noreferrer nofollow"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-medium capitalize hover:bg-muted/40"
+                  >
+                    <LinkIcon className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+                    {s.platform}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
         )}
       </div>
     </div>

@@ -30,6 +30,48 @@ export type DiscoverCard = {
 
 export type Coords = { lat: number; lng: number };
 
+/** One place a business can be visited. */
+export type DiscoverLocation = {
+  id: string;
+  name: string | null;
+  address_line1: string | null;
+  address_line2: string | null;
+  city: string | null;
+  postal_code: string | null;
+  region: string | null;
+  country: string | null;
+  phone: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  is_primary: boolean;
+  distance_km: number | null;
+};
+
+export type DiscoverBusiness = {
+  business_id: string;
+  name: string;
+  logo_url: string | null;
+  brand_color: string | null;
+  category: string | null;
+  description: string | null;
+  city: string | null;
+  country: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  distance_km: number | null;
+  card_count: number;
+  location_count: number;
+  locations: DiscoverLocation[];
+};
+
+/** A single line of address, skipping the parts a business left blank. */
+export function formatLocationAddress(loc: DiscoverLocation): string {
+  return (
+    [loc.address_line1, loc.postal_code, loc.city, loc.country].filter(Boolean).join(", ") ||
+    "Address not listed"
+  );
+}
+
 const COORDS_KEY = "cc_user_coords";
 const COORDS_TTL_MS = 24 * 60 * 60 * 1000;
 
@@ -160,6 +202,28 @@ export async function fetchDiscoverCards(params: {
   } as never);
   if (error) throw error;
   return (data as unknown as DiscoverCard[] | null) ?? [];
+}
+
+export async function fetchDiscoverBusinesses(params: {
+  coords?: Coords | null;
+  query?: string;
+  limit?: number;
+}): Promise<DiscoverBusiness[]> {
+  // Cast until Supabase types are regenerated with the new RPC.
+  const { data, error } = await (getPublicSupabase().rpc as any)("discover_businesses", {
+    _lat: params.coords?.lat ?? null,
+    _lng: params.coords?.lng ?? null,
+    _q: params.query?.trim() ? params.query.trim() : null,
+    _limit: params.limit ?? 100,
+  });
+  if (error) throw error;
+  return ((data as unknown as DiscoverBusiness[] | null) ?? []).map((b) => ({
+    ...b,
+    // Postgres hands back jsonb; guard against it arriving as a string.
+    locations: Array.isArray(b.locations)
+      ? b.locations
+      : ((JSON.parse(String(b.locations || "[]")) as DiscoverLocation[]) ?? []),
+  }));
 }
 
 export function formatDistance(km: number | null): string | null {

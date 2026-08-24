@@ -86,7 +86,7 @@ function OnboardingWizard() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [marketplace, setMarketplace] = useState<"unpublished" | "pending">("unpublished");
+  const [marketplace, setMarketplace] = useState<"unpublished" | "published">("unpublished");
 
   useEffect(() => {
     let cancelled = false;
@@ -105,8 +105,8 @@ function OnboardingWizard() {
         setDetails(businessDetailsFromRow(data as Record<string, unknown>));
         const saved = row.onboarding_step ?? 1;
         setStep(Math.min(Math.max(saved, 1), TOTAL_STEPS));
-        if (row.marketplace_status === "pending" || row.marketplace_status === "published") {
-          setMarketplace("pending");
+        if (row.marketplace_status === "published") {
+          setMarketplace("published");
         }
       }
       setLoading(false);
@@ -175,7 +175,7 @@ function OnboardingWizard() {
           .from("businesses")
           .update({
             marketplace_status: marketplace,
-            marketplace_submitted_at: marketplace === "pending" ? new Date().toISOString() : null,
+            marketplace_submitted_at: marketplace === "published" ? new Date().toISOString() : null,
           })
           .eq("id", biz.id);
       }
@@ -434,15 +434,15 @@ function MarketplaceStep({
   value,
   onChange,
 }: {
-  value: "unpublished" | "pending";
-  onChange: (v: "unpublished" | "pending") => void;
+  value: "unpublished" | "published";
+  onChange: (v: "unpublished" | "published") => void;
 }) {
   const options = [
     {
-      key: "pending" as const,
+      key: "published" as const,
       title: "List us in the marketplace",
       blurb:
-        "Your business appears in discovery once our team has reviewed it. Usually within a day.",
+        "Your business and its locations appear in Discover straight away. You can turn this off at any time.",
     },
     {
       key: "unpublished" as const,
@@ -509,7 +509,7 @@ function ReviewStep({
     { label: "Contact", value: [details.phone, details.website].filter(Boolean).join(" · ") || "—" },
     {
       label: "Marketplace",
-      value: marketplace === "pending" ? "Submitted for review" : "Private",
+      value: marketplace === "published" ? "Listed in Discover" : "Private",
     },
   ];
 

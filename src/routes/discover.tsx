@@ -7,7 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { TabScreen } from "@/components/TabScreen";
 import { DiscoverCardTile } from "@/components/DiscoverCardTile";
-import { fetchDiscoverCards, groupByCategory, useUserLocation, type DiscoverCard } from "@/lib/discover";
+import { DiscoverBusinessTile } from "@/components/DiscoverBusinessTile";
+import {
+  fetchDiscoverCards,
+  fetchDiscoverBusinesses,
+  groupByCategory,
+  useUserLocation,
+  type DiscoverBusiness,
+  type DiscoverCard,
+} from "@/lib/discover";
 
 export const Route = createFileRoute("/discover")({
   head: () => ({
@@ -33,10 +41,14 @@ export const Route = createFileRoute("/discover")({
 // Survives tab switches so coming back to Discover shows the previous results
 // immediately while a fresh fetch runs in the background.
 const CACHE_KEY = "discover";
+const BIZ_CACHE_KEY = "discover_businesses";
 
 function Discover() {
   const { coords, asked, status, request } = useUserLocation(true);
   const [cards, setCards] = useState<DiscoverCard[]>(() => getTabCache<DiscoverCard[]>(CACHE_KEY) ?? []);
+  const [businesses, setBusinesses] = useState<DiscoverBusiness[]>(
+    () => getTabCache<DiscoverBusiness[]>(BIZ_CACHE_KEY) ?? [],
+  );
   const [loading, setLoading] = useState(() => getTabCache<DiscoverCard[]>(CACHE_KEY) === null);
   const [query, setQuery] = useState("");
 
@@ -45,17 +57,26 @@ function Discover() {
     let cancelled = false;
     if (getTabCache<DiscoverCard[]>(CACHE_KEY) === null) setLoading(true);
     (async () => {
-      try {
-        const rows = await fetchDiscoverCards({ coords, limit: 300 });
-        if (!cancelled) {
-          setTabCache<DiscoverCard[]>(CACHE_KEY, rows);
-          setCards(rows);
-        }
-      } catch {
-        if (!cancelled && getTabCache<DiscoverCard[]>(CACHE_KEY) === null) setCards([]);
-      } finally {
-        if (!cancelled) setLoading(false);
+      // Fetched together, but settled independently: a failure in one list
+      // should not blank the other.
+      const [cardRes, bizRes] = await Promise.allSettled([
+        fetchDiscoverCards({ coords, limit: 300 }),
+        fetchDiscoverBusinesses({ coords, limit: 100 }),
+      ]);
+      if (cancelled) return;
+      if (cardRes.status === "fulfilled") {
+        setTabCache<DiscoverCard[]>(CACHE_KEY, cardRes.value);
+        setCards(cardRes.value);
+      } else if (getTabCache<DiscoverCard[]>(CACHE_KEY) === null) {
+        setCards([]);
       }
+      if (bizRes.status === "fulfilled") {
+        setTabCache<DiscoverBusiness[]>(BIZ_CACHE_KEY, bizRes.value);
+        setBusinesses(bizRes.value);
+      } else if (getTabCache<DiscoverBusiness[]>(BIZ_CACHE_KEY) === null) {
+        setBusinesses([]);
+      }
+      setLoading(false);
     })();
     return () => {
       cancelled = true;
@@ -72,7 +93,24 @@ function Discover() {
     );
   }, [cards, query]);
 
+  const filteredBusinesses = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return businesses;
+    return businesses.filter((b) =>
+      [
+        b.name,
+        b.category,
+        b.city,
+        b.description,
+        ...b.locations.flatMap((l) => [l.name, l.city, l.address_line1]),
+      ]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(q)),
+    );
+  }, [businesses, query]);
+
   const groups = useMemo(() => groupByCategory(filtered), [filtered]);
+  const nothingFound = groups.length === 0 && filteredBusinesses.length === 0;
 
   return (
     <TabScreen title="Discover">
@@ -118,7 +156,7 @@ function Discover() {
 
       {loading ? (
         <PageLoader />
-      ) : groups.length === 0 ? (
+      ) : nothingFound ? (
         <div className="mx-auto mt-20 max-w-md px-6 text-center">
           <h2 className="font-display text-2xl font-extrabold">Nothing found</h2>
           <p className="mt-2 text-sm text-muted-foreground">
@@ -127,6 +165,20 @@ function Discover() {
         </div>
       ) : (
         <div className="mx-auto mt-6 max-w-3xl space-y-8">
+          {filteredBusinesses.length > 0 && (
+            <section aria-label="Businesses">
+              <h2 className="px-5 font-display text-lg font-bold">Businesses near you</h2>
+              <p className="mt-0.5 px-5 text-xs text-muted-foreground">
+                Tap a location for opening details and their cards.
+              </p>
+              <div className="mt-3 space-y-3 px-5">
+                {filteredBusinesses.map((business) => (
+                  <DiscoverBusinessTile key={business.business_id} business={business} />
+                ))}
+              </div>
+            </section>
+          )}
+
           {groups.map((group) => (
             <section key={group.category} aria-label={group.category}>
               <h2 className="px-5 font-display text-lg font-bold">{group.category}</h2>
