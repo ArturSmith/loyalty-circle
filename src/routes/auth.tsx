@@ -35,9 +35,8 @@ function AuthPage() {
 
   const explicitRedirect = redirect && redirect.startsWith("/") ? redirect : null;
 
-  // If an explicit redirect was requested, honor it. Otherwise let __root
-  // route the user to /business or /wallet based on account type once the
-  // session is available.
+  // If an explicit redirect was requested, honor it. Otherwise the root
+  // auth-state handler sends the user to /wallet.
   const goNext = () => {
     if (explicitRedirect) navigate({ to: explicitRedirect });
   };
