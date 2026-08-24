@@ -122,7 +122,14 @@ function BillingSettings() {
   return (
     <div className="min-h-screen flex flex-col">
       <header className="flex items-center justify-between px-5 py-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate({ to: "/business" })}>
+        {/* /business redirects anyone without a business into the onboarding
+            wizard, so "back" would trap them there rather than return them. */}
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="Back"
+          onClick={() => navigate({ to: access.hasBusiness ? "/business" : "/profile" })}
+        >
           <ChevronLeft className="h-5 w-5" />
         </Button>
         <h1 className="font-display text-2xl font-semibold">Billing & plan</h1>

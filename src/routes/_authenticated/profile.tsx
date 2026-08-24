@@ -222,7 +222,6 @@ function Profile() {
             </section>
 
             <nav className="mt-8 overflow-hidden rounded-2xl border border-border divide-y divide-border" aria-label="Account menu">
-              <MenuLink to="/settings/billing" icon={CreditCard} label="Settings & billing" />
               <MenuLink to="/help" icon={HelpCircle} label="Help" />
               <MenuLink to="/contact" icon={Mail} label="Contact us" />
             </nav>

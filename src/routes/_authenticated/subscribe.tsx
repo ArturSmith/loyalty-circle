@@ -35,6 +35,16 @@ function SubscribePage() {
         navigate({ to: "/auth", search: { redirect: "/subscribe" } });
         return;
       }
+      // A subscription covers a business. Without one there is nothing to
+      // cover: they would pay immediately, get nothing until they set a
+      // business up, and forfeit the 14 free days they were entitled to.
+      if (!access.loading && !access.hasBusiness) {
+        toast.error("Set up your business first", {
+          description: "Your plan covers a business, and the first 14 days are free.",
+        });
+        navigate({ to: "/business/onboarding" });
+        return;
+      }
       // Remember where to send the user after payment — default to business dashboard.
       try {
         const prev = document.referrer && new URL(document.referrer).origin === window.location.origin
@@ -97,6 +107,18 @@ function SubscribePage() {
             {trialing ? "You're on the free trial" : "Choose your plan"}
           </h1>
 
+          {!access.loading && !access.hasBusiness && (
+            <div className="mx-auto mt-4 max-w-md rounded-xl border border-dashed border-border bg-muted/40 p-4">
+              <p className="text-sm text-muted-foreground">
+                These plans cover a business. Set yours up first — the first{" "}
+                <strong className="text-foreground">14 days are free</strong>, so there's nothing
+                to pay yet.
+              </p>
+              <Button className="mt-3" onClick={() => navigate({ to: "/business/onboarding" })}>
+                Set up my business
+              </Button>
+            </div>
+          )}
           {trialing && access.trialDaysLeft != null && (
             <p className="mt-2 text-sm text-muted-foreground">
               Your trial includes the <strong className="text-foreground">{TRIAL_PLAN.name}</strong>{" "}
