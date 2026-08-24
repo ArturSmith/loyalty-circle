@@ -14,6 +14,153 @@ export type Database = {
   }
   public: {
     Tables: {
+      business_locations: {
+        Row: {
+          address_line1: string | null
+          address_line2: string | null
+          business_id: string
+          city: string | null
+          country: string | null
+          created_at: string
+          id: string
+          is_primary: boolean
+          latitude: number | null
+          longitude: number | null
+          name: string
+          phone: string | null
+          postal_code: string | null
+          region: string | null
+          updated_at: string
+        }
+        Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          business_id: string
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          phone?: string | null
+          postal_code?: string | null
+          region?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          business_id?: string
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          phone?: string | null
+          postal_code?: string | null
+          region?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_locations_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_members: {
+        Row: {
+          accepted_at: string | null
+          business_id: string
+          created_at: string
+          email: string
+          id: string
+          invite_token: string
+          invited_at: string
+          invited_by: string | null
+          permissions: string[]
+          role: string
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          business_id: string
+          created_at?: string
+          email: string
+          id?: string
+          invite_token?: string
+          invited_at?: string
+          invited_by?: string | null
+          permissions?: string[]
+          role?: string
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          business_id?: string
+          created_at?: string
+          email?: string
+          id?: string
+          invite_token?: string
+          invited_at?: string
+          invited_by?: string | null
+          permissions?: string[]
+          role?: string
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_members_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_socials: {
+        Row: {
+          business_id: string
+          created_at: string
+          id: string
+          platform: string
+          url: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          id?: string
+          platform: string
+          url: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          id?: string
+          platform?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_socials_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       businesses: {
         Row: {
           address_line1: string | null
@@ -30,7 +177,12 @@ export type Database = {
           latitude: number | null
           logo_url: string | null
           longitude: number | null
+          marketplace_rejection_reason: string | null
+          marketplace_status: string
+          marketplace_submitted_at: string | null
           name: string
+          onboarding_completed_at: string | null
+          onboarding_step: number
           owner_id: string
           phone: string | null
           postal_code: string | null
@@ -55,7 +207,12 @@ export type Database = {
           latitude?: number | null
           logo_url?: string | null
           longitude?: number | null
+          marketplace_rejection_reason?: string | null
+          marketplace_status?: string
+          marketplace_submitted_at?: string | null
           name: string
+          onboarding_completed_at?: string | null
+          onboarding_step?: number
           owner_id: string
           phone?: string | null
           postal_code?: string | null
@@ -80,7 +237,12 @@ export type Database = {
           latitude?: number | null
           logo_url?: string | null
           longitude?: number | null
+          marketplace_rejection_reason?: string | null
+          marketplace_status?: string
+          marketplace_submitted_at?: string | null
           name?: string
+          onboarding_completed_at?: string | null
+          onboarding_step?: number
           owner_id?: string
           phone?: string | null
           postal_code?: string | null
@@ -410,6 +572,7 @@ export type Database = {
           id: string
           paddle_customer_id: string
           paddle_subscription_id: string
+          plan_tier: string | null
           price_id: string
           product_id: string
           status: string
@@ -425,6 +588,7 @@ export type Database = {
           id?: string
           paddle_customer_id: string
           paddle_subscription_id: string
+          plan_tier?: string | null
           price_id: string
           product_id: string
           status?: string
@@ -440,6 +604,7 @@ export type Database = {
           id?: string
           paddle_customer_id?: string
           paddle_subscription_id?: string
+          plan_tier?: string | null
           price_id?: string
           product_id?: string
           status?: string
@@ -533,6 +698,51 @@ export type Database = {
           },
         ]
       }
+      wallet_pass_events: {
+        Row: {
+          card_instance_id: string
+          created_at: string
+          event: string
+          id: string
+          object_id: string | null
+          platform: string
+          template_id: string | null
+        }
+        Insert: {
+          card_instance_id: string
+          created_at?: string
+          event: string
+          id?: string
+          object_id?: string | null
+          platform: string
+          template_id?: string | null
+        }
+        Update: {
+          card_instance_id?: string
+          created_at?: string
+          event?: string
+          id?: string
+          object_id?: string | null
+          platform?: string
+          template_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_pass_events_card_instance_id_fkey"
+            columns: ["card_instance_id"]
+            isOneToOne: false
+            referencedRelation: "card_instances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wallet_pass_events_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "card_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -555,6 +765,14 @@ export type Database = {
         Returns: boolean
       }
       business_slot_rank: { Args: { _business_id: string }; Returns: number }
+      can_on_business: {
+        Args: { _business_id: string; _permission: string }
+        Returns: boolean
+      }
+      can_on_template: {
+        Args: { _permission: string; _template_id: string }
+        Returns: boolean
+      }
       claim_anonymous_card: {
         Args: { _instance_id: string; _secret: string }
         Returns: string
@@ -629,11 +847,19 @@ export type Database = {
         Args: { check_env?: string; user_uuid: string }
         Returns: boolean
       }
+      has_business_permission: {
+        Args: { _business_id: string; _permission: string; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_business_member: {
+        Args: { _business_id: string; _user_id: string }
         Returns: boolean
       }
       is_conversation_participant: {
