@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Navigate, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ScreenLoader } from "@/components/Spinner";
@@ -17,16 +17,16 @@ import { StampCard } from "@/components/StampCard";
 import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
 import { Carousel, CarouselApi, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import QRCode from "qrcode";
-import {
-  BusinessForm,
-  businessDetailsToPayload,
-  emptyBusinessDetails,
-  isBusinessDetailsValid,
-  type BusinessDetails,
-} from "@/components/BusinessForm";
 
 
-type Business = { id: string; name: string; logo_url: string | null; brand_color: string | null };
+type Business = {
+  id: string;
+  name: string;
+  logo_url: string | null;
+  brand_color: string | null;
+  onboarding_step?: number | null;
+  onboarding_completed_at?: string | null;
+};
 type Tpl = {
   id: string; title: string; subtitle: string | null; description: string | null;
   corner_title: string | null;
@@ -52,9 +52,6 @@ function BusinessDashboard() {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
   const [flipped, setFlipped] = useState<Set<string>>(new Set());
-  // create biz form
-  const [details, setDetails] = useState<BusinessDetails>(emptyBusinessDetails);
-  const [creating, setCreating] = useState(false);
 
 
 
@@ -104,25 +101,6 @@ function BusinessDashboard() {
     api.on("select", () => setCurrent(api.selectedScrollSnap()));
   }, [api]);
 
-  const createBiz = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isBusinessDetailsValid(details)) {
-      toast.error("Please fill in name, category and full address");
-      return;
-    }
-    setCreating(true);
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) { setCreating(false); return; }
-    const { data, error } = await supabase.from("businesses").insert({
-      owner_id: u.user.id, ...businessDetailsToPayload(details),
-    }).select().maybeSingle();
-    setCreating(false);
-    if (error) { toast.error(error.message); return; }
-    setBiz(data as Business);
-    toast.success("Business created");
-  };
-
-
   const signOut = async () => {
     await supabase.auth.signOut();
     navigate({ to: postSignOutDestination(), replace: true });
@@ -150,30 +128,10 @@ function BusinessDashboard() {
 
   if (loading) return <ScreenLoader />;
 
+  // Business creation now lives in the onboarding wizard, so there is exactly
+  // one path into the product and `onboarding_step` is always meaningful.
   if (!biz) {
-    return (
-      <div className="min-h-screen px-4 py-10">
-        <div className="mx-auto w-full max-w-md">
-          <Button variant="ghost" className="mb-3 -ml-2 gap-2 text-muted-foreground" onClick={() => navigate({ to: "/wallet" })}>
-            <ArrowLeft className="h-4 w-4" /> Back
-          </Button>
-          <motion.form initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} onSubmit={createBiz}
-            className="rounded-2xl border-2 border-ink/10 bg-card paper-grain card-shadow p-7">
-            <div className="text-center">
-              <OrnamentDivider className="w-32 mx-auto opacity-70" />
-              <h1 className="font-display text-2xl mt-3">Create your business</h1>
-              <p className="text-sm text-muted-foreground mt-1">Tell customers who you are and where to find you.</p>
-            </div>
-            <div className="mt-7">
-              <BusinessForm value={details} onChange={setDetails} />
-            </div>
-            <Button type="submit" className="mt-8 w-full h-11" disabled={creating}>
-              {creating ? "Creating…" : "Create business"}
-            </Button>
-          </motion.form>
-        </div>
-      </div>
-    );
+    return <Navigate to="/business/onboarding" replace />;
   }
 
 
@@ -286,6 +244,23 @@ function BusinessDashboard() {
             <Download className="h-4 w-4" /> Download QR image
           </Button>
         </motion.div>
+      )}
+
+      {/* Someone who abandoned the wizard has no other way back into it. */}
+      {!biz.onboarding_completed_at && (
+        <Link
+          to="/business/onboarding"
+          className="mt-6 flex items-center gap-3 rounded-2xl border-2 border-dashed border-ink/15 bg-card/60 p-4 transition-colors hover:bg-muted/40"
+        >
+          <Sparkles className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-medium">Finish setting up your business</span>
+            <span className="block text-xs text-muted-foreground">
+              Step {Math.min(biz.onboarding_step ?? 1, 8)} of 8 — locations, team and your public listing.
+            </span>
+          </span>
+          <ArrowLeft className="h-4 w-4 rotate-180 text-muted-foreground" aria-hidden="true" />
+        </Link>
       )}
 
       <div className="mt-8 grid grid-cols-3 gap-3">

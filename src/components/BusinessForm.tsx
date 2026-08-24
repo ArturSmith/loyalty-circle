@@ -115,14 +115,40 @@ export function isBusinessDetailsValid(v: BusinessDetails) {
   );
 }
 
+/** The form is also driven a section at a time by the onboarding wizard. */
+export type BusinessFormSection = "basics" | "address" | "contact" | "about";
+
+const ALL_SECTIONS: BusinessFormSection[] = ["basics", "address", "contact", "about"];
+
+/** The fields each section requires before it can be considered complete. */
+export function isSectionValid(v: BusinessDetails, section: BusinessFormSection) {
+  switch (section) {
+    case "basics":
+      return v.name.trim().length > 1 && v.category.trim().length > 0;
+    case "address":
+      return (
+        v.address_line1.trim().length > 2 &&
+        v.city.trim().length > 0 &&
+        v.postal_code.trim().length > 0 &&
+        v.country.trim().length > 0
+      );
+    default:
+      return true;
+  }
+}
+
 type Props = {
   value: BusinessDetails;
   onChange: (next: BusinessDetails) => void;
+  /** Render only these sections. Defaults to the whole form. */
+  sections?: BusinessFormSection[];
 };
 
-export function BusinessForm({ value, onChange }: Props) {
+export function BusinessForm({ value, onChange, sections = ALL_SECTIONS }: Props) {
   const set = <K extends keyof BusinessDetails>(key: K, v: BusinessDetails[K]) =>
     onChange({ ...value, [key]: v });
+
+  const show = (s: BusinessFormSection) => sections.includes(s);
 
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -155,6 +181,7 @@ export function BusinessForm({ value, onChange }: Props) {
 
   return (
     <div className="space-y-7">
+      {show("basics") && (
       <section className="space-y-4">
         <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Basics</h2>
         <div>
@@ -238,7 +265,9 @@ export function BusinessForm({ value, onChange }: Props) {
           </div>
         </div>
       </section>
+      )}
 
+      {show("address") && (
       <section className="space-y-4">
         <div>
           <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Address</h2>
@@ -287,7 +316,9 @@ export function BusinessForm({ value, onChange }: Props) {
           </div>
         </div>
       </section>
+      )}
 
+      {show("contact") && (
       <section className="space-y-4">
         <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Contact</h2>
         <div className="grid grid-cols-2 gap-3">
@@ -301,7 +332,9 @@ export function BusinessForm({ value, onChange }: Props) {
           </div>
         </div>
       </section>
+      )}
 
+      {show("about") && (
       <section className="space-y-4">
         <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">About (optional)</h2>
         <div>
@@ -333,6 +366,7 @@ export function BusinessForm({ value, onChange }: Props) {
           </p>
         </div>
       </section>
+      )}
     </div>
   );
 }

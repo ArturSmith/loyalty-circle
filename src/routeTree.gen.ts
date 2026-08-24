@@ -37,6 +37,7 @@ import { Route as AuthenticatedSettingsBillingRouteImport } from './routes/_auth
 import { Route as AuthenticatedChatsConversationIdRouteImport } from './routes/_authenticated/chats.$conversationId'
 import { Route as AuthenticatedBusinessTeamRouteImport } from './routes/_authenticated/business.team'
 import { Route as AuthenticatedBusinessScanRouteImport } from './routes/_authenticated/business.scan'
+import { Route as AuthenticatedBusinessOnboardingRouteImport } from './routes/_authenticated/business.onboarding'
 import { Route as AuthenticatedBusinessEditRouteImport } from './routes/_authenticated/business.edit'
 import { Route as AuthenticatedBusinessCustomersRouteImport } from './routes/_authenticated/business.customers'
 import { Route as AuthenticatedBusinessChatsRouteImport } from './routes/_authenticated/business.chats'
@@ -193,6 +194,12 @@ const AuthenticatedBusinessScanRoute =
     path: '/scan',
     getParentRoute: () => AuthenticatedBusinessRoute,
   } as any)
+const AuthenticatedBusinessOnboardingRoute =
+  AuthenticatedBusinessOnboardingRouteImport.update({
+    id: '/onboarding',
+    path: '/onboarding',
+    getParentRoute: () => AuthenticatedBusinessRoute,
+  } as any)
 const AuthenticatedBusinessEditRoute =
   AuthenticatedBusinessEditRouteImport.update({
     id: '/edit',
@@ -283,6 +290,7 @@ export interface FileRoutesByFullPath {
   '/business/chats': typeof AuthenticatedBusinessChatsRoute
   '/business/customers': typeof AuthenticatedBusinessCustomersRoute
   '/business/edit': typeof AuthenticatedBusinessEditRoute
+  '/business/onboarding': typeof AuthenticatedBusinessOnboardingRoute
   '/business/scan': typeof AuthenticatedBusinessScanRoute
   '/business/team': typeof AuthenticatedBusinessTeamRoute
   '/chats/$conversationId': typeof AuthenticatedChatsConversationIdRoute
@@ -322,6 +330,7 @@ export interface FileRoutesByTo {
   '/business/chats': typeof AuthenticatedBusinessChatsRoute
   '/business/customers': typeof AuthenticatedBusinessCustomersRoute
   '/business/edit': typeof AuthenticatedBusinessEditRoute
+  '/business/onboarding': typeof AuthenticatedBusinessOnboardingRoute
   '/business/scan': typeof AuthenticatedBusinessScanRoute
   '/business/team': typeof AuthenticatedBusinessTeamRoute
   '/chats/$conversationId': typeof AuthenticatedChatsConversationIdRoute
@@ -364,6 +373,7 @@ export interface FileRoutesById {
   '/_authenticated/business/chats': typeof AuthenticatedBusinessChatsRoute
   '/_authenticated/business/customers': typeof AuthenticatedBusinessCustomersRoute
   '/_authenticated/business/edit': typeof AuthenticatedBusinessEditRoute
+  '/_authenticated/business/onboarding': typeof AuthenticatedBusinessOnboardingRoute
   '/_authenticated/business/scan': typeof AuthenticatedBusinessScanRoute
   '/_authenticated/business/team': typeof AuthenticatedBusinessTeamRoute
   '/_authenticated/chats/$conversationId': typeof AuthenticatedChatsConversationIdRoute
@@ -406,6 +416,7 @@ export interface FileRouteTypes {
     | '/business/chats'
     | '/business/customers'
     | '/business/edit'
+    | '/business/onboarding'
     | '/business/scan'
     | '/business/team'
     | '/chats/$conversationId'
@@ -445,6 +456,7 @@ export interface FileRouteTypes {
     | '/business/chats'
     | '/business/customers'
     | '/business/edit'
+    | '/business/onboarding'
     | '/business/scan'
     | '/business/team'
     | '/chats/$conversationId'
@@ -486,6 +498,7 @@ export interface FileRouteTypes {
     | '/_authenticated/business/chats'
     | '/_authenticated/business/customers'
     | '/_authenticated/business/edit'
+    | '/_authenticated/business/onboarding'
     | '/_authenticated/business/scan'
     | '/_authenticated/business/team'
     | '/_authenticated/chats/$conversationId'
@@ -722,6 +735,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBusinessScanRouteImport
       parentRoute: typeof AuthenticatedBusinessRoute
     }
+    '/_authenticated/business/onboarding': {
+      id: '/_authenticated/business/onboarding'
+      path: '/onboarding'
+      fullPath: '/business/onboarding'
+      preLoaderRoute: typeof AuthenticatedBusinessOnboardingRouteImport
+      parentRoute: typeof AuthenticatedBusinessRoute
+    }
     '/_authenticated/business/edit': {
       id: '/_authenticated/business/edit'
       path: '/edit'
@@ -806,6 +826,7 @@ interface AuthenticatedBusinessRouteChildren {
   AuthenticatedBusinessChatsRoute: typeof AuthenticatedBusinessChatsRoute
   AuthenticatedBusinessCustomersRoute: typeof AuthenticatedBusinessCustomersRoute
   AuthenticatedBusinessEditRoute: typeof AuthenticatedBusinessEditRoute
+  AuthenticatedBusinessOnboardingRoute: typeof AuthenticatedBusinessOnboardingRoute
   AuthenticatedBusinessScanRoute: typeof AuthenticatedBusinessScanRoute
   AuthenticatedBusinessTeamRoute: typeof AuthenticatedBusinessTeamRoute
   AuthenticatedBusinessIndexRoute: typeof AuthenticatedBusinessIndexRoute
@@ -819,6 +840,7 @@ const AuthenticatedBusinessRouteChildren: AuthenticatedBusinessRouteChildren = {
   AuthenticatedBusinessChatsRoute: AuthenticatedBusinessChatsRoute,
   AuthenticatedBusinessCustomersRoute: AuthenticatedBusinessCustomersRoute,
   AuthenticatedBusinessEditRoute: AuthenticatedBusinessEditRoute,
+  AuthenticatedBusinessOnboardingRoute: AuthenticatedBusinessOnboardingRoute,
   AuthenticatedBusinessScanRoute: AuthenticatedBusinessScanRoute,
   AuthenticatedBusinessTeamRoute: AuthenticatedBusinessTeamRoute,
   AuthenticatedBusinessIndexRoute: AuthenticatedBusinessIndexRoute,

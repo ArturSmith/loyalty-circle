@@ -13,6 +13,8 @@ import {
   isBusinessDetailsValid,
   type BusinessDetails,
 } from "@/components/BusinessForm";
+import { LocationsEditor } from "@/components/business/LocationsEditor";
+import { SocialsEditor } from "@/components/business/SocialsEditor";
 
 export const Route = createFileRoute("/_authenticated/business/edit")({
   head: () => ({ meta: [{ title: "Edit business — ClubCarder" }] }),
@@ -70,12 +72,32 @@ function EditBusiness() {
         <div className="w-9" />
       </header>
 
-      <form onSubmit={save} className="flex-1 px-6 py-4 pb-16 max-w-md mx-auto w-full">
+      <form onSubmit={save} className="flex-1 px-6 py-4 max-w-md mx-auto w-full">
         <BusinessForm value={details} onChange={setDetails} />
         <Button type="submit" disabled={saving} className="mt-8 w-full h-11">
           {saving ? "Saving…" : "Save changes"}
         </Button>
       </form>
+
+      {/* Locations and networks save themselves, so they sit outside the form. */}
+      <div className="px-6 pb-16 max-w-md mx-auto w-full space-y-10">
+        <section>
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            Locations
+          </h2>
+          <div className="mt-4">
+            <LocationsEditor businessId={bizId} />
+          </div>
+        </section>
+        <section>
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            My Networks
+          </h2>
+          <div className="mt-4">
+            <SocialsEditor businessId={bizId} />
+          </div>
+        </section>
+      </div>
     </div>
   );
 }
