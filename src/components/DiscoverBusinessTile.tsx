@@ -6,6 +6,7 @@ import {
   type DiscoverBusiness,
   type DiscoverLocation,
 } from "@/lib/discover";
+import { brandTint } from "@/lib/brand";
 
 /**
  * A business in the Discover feed, with the places you can actually visit.
@@ -27,6 +28,9 @@ export function DiscoverBusinessTile({
   const visible = business.locations.slice(0, MAX_VISIBLE);
   const hidden = business.locations.length - visible.length;
   const distance = formatDistance(business.distance_km);
+  // Appending "55" for alpha only worked for six-digit hex; anything else
+  // produced an invalid colour that silently dropped the border.
+  const brandBorder = brandTint(business.brand_color, 0.33);
 
   return (
     <article
@@ -39,7 +43,7 @@ export function DiscoverBusinessTile({
       >
         <span
           className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-muted/40"
-          style={business.brand_color ? { borderColor: `${business.brand_color}55` } : undefined}
+          style={brandBorder ? { borderColor: brandBorder } : undefined}
         >
           {business.logo_url ? (
             <img

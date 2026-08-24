@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { ArrowLeft, Globe, Link2 as LinkIcon, MapPin, Phone } from "lucide-react";
+import { brandTint, isDarkBrandColor, normalizeBrandColor } from "@/lib/brand";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { useServerFn } from "@tanstack/react-start";
 import { claimCardToWallet } from "@/utils/cards.functions";
@@ -222,6 +223,9 @@ function BusinessPublic() {
     .filter(Boolean)
     .join(", ");
 
+  // Validated once here so the raw column value never reaches a style prop.
+  const brand = normalizeBrandColor(business?.brand_color);
+
   return (
     <div className="min-h-screen px-4 py-10">
       <div className="mx-auto max-w-md">
@@ -234,13 +238,35 @@ function BusinessPublic() {
 
         {/* The header renders regardless of cards: a business with none is
             still a real place someone may have scanned a QR code to reach. */}
-        <div className="text-center">
+        <div
+          className="rounded-3xl border px-5 py-6 text-center"
+          style={
+            brand
+              ? {
+                  borderColor: brandTint(brand, 0.35) ?? undefined,
+                  background: `linear-gradient(180deg, ${brandTint(brand, 0.14)}, transparent)`,
+                }
+              : undefined
+          }
+        >
           {business?.logo_url ? (
-            <img src={business.logo_url} alt={`${business.name} logo`} className="mx-auto h-16 w-16 rounded-full object-cover" />
+            <img
+              src={business.logo_url}
+              alt={`${business.name} logo`}
+              className="mx-auto h-16 w-16 rounded-full object-cover ring-2 ring-offset-2 ring-offset-background"
+              style={{ ["--tw-ring-color" as string]: brand ?? "transparent" }}
+            />
           ) : null}
           <h1 className="mt-4 font-display text-3xl font-semibold">{business?.name ?? "Loyalty cards"}</h1>
           {business?.category && (
-            <p className="mt-1 text-xs font-medium uppercase tracking-widest text-muted-foreground">
+            <p
+              className="mt-2 inline-block rounded-full px-3 py-1 text-xs font-medium uppercase tracking-widest"
+              style={
+                brand
+                  ? { backgroundColor: brand, color: isDarkBrandColor(brand) ? "#fff" : "#111" }
+                  : undefined
+              }
+            >
               {business.category}
             </p>
           )}

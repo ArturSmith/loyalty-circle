@@ -17,6 +17,7 @@ import { StampCard } from "@/components/StampCard";
 import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
 import { Carousel, CarouselApi, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import QRCode from "qrcode";
+import { normalizeBrandColor } from "@/lib/brand";
 
 
 type Business = {
@@ -155,6 +156,15 @@ function BusinessDashboard() {
         <div>
           <p className="text-xs uppercase tracking-widest text-muted-foreground">Dashboard</p>
           <div className="flex items-center gap-2">
+            {/* A swatch of the brand colour, so the owner can see the value
+                they picked is actually in use rather than write-only. */}
+            {normalizeBrandColor(biz.brand_color) && (
+              <span
+                className="h-6 w-1.5 shrink-0 rounded-full"
+                style={{ backgroundColor: normalizeBrandColor(biz.brand_color)! }}
+                aria-hidden="true"
+              />
+            )}
             <h1 className="font-display text-3xl font-extrabold tracking-tight">{biz.name}</h1>
             <PlanBadge />
           </div>
