@@ -8,6 +8,7 @@ import { Check, Sparkles, ArrowLeft } from "lucide-react";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { initializePaddle, getPaddlePriceId } from "@/lib/paddle";
 import { useBusinessAccess } from "@/hooks/useBusinessAccess";
+import { formatPlanPrice, planFromTier } from "@/lib/plans";
 
 export const Route = createFileRoute("/_authenticated/subscribe")({
   head: () => ({
@@ -18,6 +19,12 @@ export const Route = createFileRoute("/_authenticated/subscribe")({
   }),
   component: SubscribePage,
 });
+
+// This screen still sells the single legacy `business_monthly` price. Its
+// display price comes from the plan registry so it can never drift from
+// /pricing again.
+const LEGACY_PLAN = planFromTier(null);
+const LEGACY_PRICE = formatPlanPrice(LEGACY_PLAN.price);
 
 const FEATURES = [
   "Unlimited stamp card designs",
@@ -100,7 +107,7 @@ function SubscribePage() {
             </p>
             <OrnamentDivider className="my-5 w-32 mx-auto opacity-60" />
             <div className="flex items-baseline justify-center gap-1">
-              <span className="font-display text-5xl font-semibold">$19</span>
+              <span className="font-display text-5xl font-semibold">{LEGACY_PRICE}</span>
               <span className="text-muted-foreground">/month</span>
             </div>
             {access.reason === "trialing" && access.trialDaysLeft != null && (
@@ -143,8 +150,8 @@ function SubscribePage() {
               {loading
                 ? "Opening checkout…"
                 : access.seatCount > 0
-                  ? "Add another subscription — $19/month"
-                  : "Subscribe — $19/month"}
+                  ? `Add another subscription — ${LEGACY_PRICE}/month`
+                  : `Subscribe — ${LEGACY_PRICE}/month`}
             </Button>
           ) : access.isSubscribed ? (
             <div className="mt-8 rounded-lg bg-secondary p-4 text-center text-sm">
@@ -166,7 +173,7 @@ function SubscribePage() {
               disabled={loading}
               className="mt-8 w-full h-12 text-base"
             >
-              {loading ? "Opening checkout…" : "Subscribe — $19/month"}
+              {loading ? "Opening checkout…" : `Subscribe — ${LEGACY_PRICE}/month`}
             </Button>
           )}
           <p className="mt-3 text-center text-[11px] text-muted-foreground">

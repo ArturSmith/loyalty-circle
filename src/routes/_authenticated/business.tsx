@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Lock, Sparkles } from "lucide-react";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { motion } from "framer-motion";
+import { formatPlanPrice, planFromTier } from "@/lib/plans";
 
 export const Route = createFileRoute("/_authenticated/business")({
   component: BusinessLayout,
@@ -41,7 +42,7 @@ function BusinessLayout() {
             </p>
             <OrnamentDivider className="my-5 w-32 mx-auto opacity-60" />
             <div className="flex items-baseline justify-center gap-1">
-              <span className="font-display text-4xl font-semibold">$19</span>
+              <span className="font-display text-4xl font-semibold">{formatPlanPrice(planFromTier(null).price)}</span>
               <span className="text-muted-foreground">/month</span>
             </div>
             <Button
