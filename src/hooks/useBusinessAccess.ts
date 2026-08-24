@@ -69,10 +69,10 @@ export function useBusinessAccess(): BusinessAccess {
         return;
       }
       const env = getPaddleEnvironment();
-      const [{ data: businesses }, { data: subs }, { data: profile }] = await Promise.all([
+      const [{ data: businesses }, { data: subs }] = await Promise.all([
         supabase
           .from("businesses")
-          .select("id, created_at, comped")
+          .select("id, created_at, comped, trial_started_at")
           .eq("owner_id", u.user.id)
           .order("created_at", { ascending: true }),
         supabase
@@ -81,7 +81,6 @@ export function useBusinessAccess(): BusinessAccess {
           .eq("user_id", u.user.id)
           .eq("environment", env)
           .order("created_at", { ascending: false }),
-        supabase.from("profiles").select("trial_started_at").eq("id", u.user.id).maybeSingle(),
       ]);
 
       const now = Date.now();
@@ -98,10 +97,15 @@ export function useBusinessAccess(): BusinessAccess {
       const seatCount = activeSubs.length;
       const primary = activeSubs[0] ?? subs?.[0] ?? null;
 
-      const trialStart = (profile as { trial_started_at?: string | null } | null)?.trial_started_at;
-      const trialEndsAt = trialStart
-        ? new Date(new Date(trialStart).getTime() + TRIAL_DAYS * 86400_000)
-        : null;
+      // The trial belongs to the business, not the account. Only one business
+      // can ever hold one (profiles.trial_consumed_at enforces that), so the
+      // earliest trial date is the account's trial for display purposes.
+      const trialDates = (businesses ?? [])
+        .map((b) => (b as { trial_started_at?: string | null }).trial_started_at)
+        .filter((d): d is string => !!d)
+        .map((d) => new Date(d).getTime() + TRIAL_DAYS * 86400_000);
+
+      const trialEndsAt = trialDates.length ? new Date(Math.max(...trialDates)) : null;
       const trialActive = trialEndsAt ? trialEndsAt.getTime() > now : false;
       const trialDaysLeft = trialEndsAt
         ? Math.max(0, Math.ceil((trialEndsAt.getTime() - now) / 86400_000))
