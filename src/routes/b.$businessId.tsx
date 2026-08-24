@@ -9,7 +9,7 @@ import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { ArrowLeft, Link2 as LinkIcon, MapPin } from "lucide-react";
+import { ArrowLeft, Globe, Link2 as LinkIcon, MapPin, Phone } from "lucide-react";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { useServerFn } from "@tanstack/react-start";
 import { claimCardToWallet } from "@/utils/cards.functions";
@@ -41,6 +41,28 @@ type BusinessLocation = {
 };
 
 type BusinessSocial = { platform: string; url: string };
+
+/**
+ * Everything get_business_public() already returned. The page previously kept
+ * only four of these fields and discarded the rest, so a business could fill in
+ * a description, phone and website that no visitor ever saw.
+ */
+type PublicBusiness = {
+  id: string;
+  name: string;
+  logo_url: string | null;
+  brand_color: string | null;
+  category: string | null;
+  description: string | null;
+  phone: string | null;
+  website: string | null;
+  address_line1: string | null;
+  address_line2: string | null;
+  city: string | null;
+  postal_code: string | null;
+  region: string | null;
+  country: string | null;
+};
 
 function isNewSupabaseApiKey(value: string): boolean {
   return value.startsWith("sb_publishable_") || value.startsWith("sb_secret_");
@@ -96,7 +118,7 @@ function BusinessPublic() {
   const navigate = useNavigate();
   const claimCard = useServerFn(claimCardToWallet);
   const [templates, setTemplates] = useState<Template[]>([]);
-  const [business, setBusiness] = useState<{ id: string; name: string; logo_url: string | null; brand_color: string | null } | null>(null);
+  const [business, setBusiness] = useState<PublicBusiness | null>(null);
   const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
@@ -129,7 +151,7 @@ function BusinessPublic() {
       setLocations(Array.isArray(d.locations) ? d.locations : []);
       setSocials(Array.isArray(d.socials) ? d.socials : []);
       const brow = Array.isArray(b) ? b[0] : null;
-      if (brow) setBusiness(brow as typeof business extends null ? never : { id: string; name: string; logo_url: string | null; brand_color: string | null });
+      if (brow) setBusiness(brow as PublicBusiness);
       const uid = u.user?.id ?? null;
       setUserId(uid);
       if (uid) {
@@ -187,6 +209,19 @@ function BusinessPublic() {
 
   if (loading) return <ScreenLoader />;
 
+  // Older businesses store a single address on the row itself rather than in
+  // business_locations, so fall back to it when no locations were added.
+  const fallbackAddress = [
+    business?.address_line1,
+    business?.address_line2,
+    business?.postal_code,
+    business?.city,
+    business?.region,
+    business?.country,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
   return (
     <div className="min-h-screen px-4 py-10">
       <div className="mx-auto max-w-md">
@@ -197,23 +232,33 @@ function BusinessPublic() {
           </Link>
         </Button>
 
-        {templates.length === 0 ? (
-          <div className="text-center">
-            <h1 className="mt-4 font-display text-3xl font-semibold">Loyalty cards</h1>
-            <p className="mt-2 text-sm text-muted-foreground">No active cards available.</p>
-          </div>
-        ) : (
-          <>
-            <div className="text-center">
-              {business?.logo_url ? (
-                <img src={business.logo_url} alt={`${business.name} logo`} className="mx-auto h-16 w-16 rounded-full object-cover" />
-              ) : null}
-              <h1 className="mt-4 font-display text-3xl font-semibold">{business?.name ?? "Loyalty cards"}</h1>
-              <p className="mt-2 text-sm text-muted-foreground">Choose a loyalty card to add to your wallet.</p>
-              <OrnamentDivider className="w-40 mx-auto my-6 opacity-60" />
-            </div>
+        {/* The header renders regardless of cards: a business with none is
+            still a real place someone may have scanned a QR code to reach. */}
+        <div className="text-center">
+          {business?.logo_url ? (
+            <img src={business.logo_url} alt={`${business.name} logo`} className="mx-auto h-16 w-16 rounded-full object-cover" />
+          ) : null}
+          <h1 className="mt-4 font-display text-3xl font-semibold">{business?.name ?? "Loyalty cards"}</h1>
+          {business?.category && (
+            <p className="mt-1 text-xs font-medium uppercase tracking-widest text-muted-foreground">
+              {business.category}
+            </p>
+          )}
+          {business?.description && (
+            <p className="mx-auto mt-3 max-w-prose text-sm text-muted-foreground">
+              {business.description}
+            </p>
+          )}
+          <p className="mt-2 text-sm text-muted-foreground">
+            {templates.length === 0
+              ? "No loyalty cards available right now."
+              : "Choose a loyalty card to add to your wallet."}
+          </p>
+          <OrnamentDivider className="w-40 mx-auto my-6 opacity-60" />
+        </div>
 
-            <div className="space-y-6">
+        {templates.length > 0 && (
+          <div className="space-y-6">
               {templates.map((t, i) => {
                 const ownedInstanceId = ownedTemplateIds.get(t.id);
                 const handleCardClick = () => {
@@ -301,7 +346,6 @@ function BusinessPublic() {
                 );
               })}
             </div>
-          </>
         )}
 
         {locations.length > 0 && (
@@ -361,6 +405,55 @@ function BusinessPublic() {
                   </li>
                 );
               })}
+            </ul>
+          </section>
+        )}
+
+        {locations.length === 0 && fallbackAddress && (
+          <section className="mt-10">
+            <h2 className="font-display text-xl font-bold">Where to find us</h2>
+            <div className="mt-3 flex items-start gap-3 rounded-2xl border border-border bg-card p-4">
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm">{fallbackAddress}</p>
+                <a
+                  href={`https://maps.google.com/?q=${encodeURIComponent(fallbackAddress)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-block text-xs font-medium text-primary"
+                >
+                  Directions
+                </a>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {(business?.phone || business?.website) && (
+          <section className="mt-8">
+            <h2 className="font-display text-xl font-bold">Contact</h2>
+            <ul className="mt-3 space-y-2 text-sm">
+              {business?.phone && (
+                <li className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                  <a href={`tel:${business.phone}`} className="font-medium text-primary">
+                    {business.phone}
+                  </a>
+                </li>
+              )}
+              {business?.website && (
+                <li className="flex items-center gap-2">
+                  <Globe className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                  <a
+                    href={business.website}
+                    target="_blank"
+                    rel="noopener noreferrer nofollow"
+                    className="truncate font-medium text-primary"
+                  >
+                    {business.website.replace(/^https?:\/\//, "")}
+                  </a>
+                </li>
+              )}
             </ul>
           </section>
         )}
