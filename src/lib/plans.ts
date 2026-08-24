@@ -12,8 +12,19 @@
 export const PLAN_TIERS = ["starter", "growth", "scale"] as const;
 export type PlanTier = (typeof PLAN_TIERS)[number];
 
-/** Businesses created before tiered pricing, and anyone on the free trial. */
+/**
+ * What a paying subscription grants when it predates tiered pricing and so has
+ * no `plan_tier`. These customers bought "unlimited everything", so downgrading
+ * them silently would take away features they already paid for.
+ */
 export const LEGACY_TIER: PlanTier = "growth";
+
+/**
+ * What the 14-day free trial grants. The trial is a taste of the entry plan,
+ * not of the whole product — otherwise the trial ending feels like a downgrade
+ * and there is nothing left to sell.
+ */
+export const TRIAL_TIER: PlanTier = "starter";
 
 /* ----------------------------------------------------------------- limits */
 
@@ -53,6 +64,12 @@ export type Plan = {
   name: string;
   /** Monthly price in NOK, excluding VAT. */
   price: number;
+  /**
+   * Paddle price `external_id`. A price with exactly this id must exist in both
+   * the sandbox and live Paddle catalogues, or checkout for this tier fails
+   * with "Price not found".
+   */
+  paddlePriceKey: string;
   tagline: string;
   /** Shown as the one-line reason to pick this tier over the previous one. */
   bestFor: string;
@@ -70,6 +87,8 @@ export const PLANS: Record<PlanTier, Plan> = {
     tier: "starter",
     name: "Starter",
     price: 499,
+    // Reuses the original single-tier price so existing checkout keeps working.
+    paddlePriceKey: "business_monthly",
     tagline: "One shop, one card, no fuss.",
     bestFor: "A single location finding its regulars.",
     limits: { locations: 1, loyaltyCards: 1, administrators: 1 },
@@ -87,6 +106,7 @@ export const PLANS: Record<PlanTier, Plan> = {
     tier: "growth",
     name: "Growth",
     price: 899,
+    paddlePriceKey: "business_growth_monthly",
     tagline: "Several locations, a real team.",
     bestFor: "Businesses with more than one door and more than one manager.",
     limits: { locations: 5, loyaltyCards: 5, administrators: 5 },
@@ -117,6 +137,7 @@ export const PLANS: Record<PlanTier, Plan> = {
     tier: "scale",
     name: "Scale",
     price: 1499,
+    paddlePriceKey: "business_scale_monthly",
     tagline: "Chains, franchises, and everything after.",
     bestFor: "Multi-site operators who need no ceiling and an API.",
     limits: { locations: null, loyaltyCards: null, administrators: null },
@@ -155,6 +176,28 @@ export function planFromTier(tier: string | null | undefined): Plan {
   return PLANS[LEGACY_TIER];
 }
 
+/** Where a business's entitlements come from. */
+export type BillingState =
+  /** Paying customer — the tier on their subscription applies. */
+  | { kind: "subscribed"; tier: string | null }
+  /** Inside the 14-day free trial, with no subscription yet. */
+  | { kind: "trialing" }
+  /** Trial is over and nothing was purchased. */
+  | { kind: "expired" };
+
+/**
+ * Resolves the plan actually in force.
+ *
+ * A trial grants the entry plan. A legacy paid subscription (no `plan_tier`)
+ * keeps LEGACY_TIER so existing customers never lose paid features. An expired
+ * trial still resolves to the entry plan for display purposes — access itself
+ * is gated separately by useBusinessAccess, not by entitlements.
+ */
+export function planForBillingState(state: BillingState): Plan {
+  if (state.kind === "subscribed") return planFromTier(state.tier);
+  return PLANS[TRIAL_TIER];
+}
+
 /* ----------------------------------------------------------- entitlements */
 
 export type LimitKey = keyof PlanLimits;
@@ -173,6 +216,8 @@ export type LimitCheck = {
 
 export type Entitlements = {
   plan: Plan;
+  /** True while the business is on the free trial rather than a paid plan. */
+  isTrial: boolean;
   can: (feature: FeatureKey) => boolean;
   limitOf: (key: LimitKey) => Limit;
   /** Whether one more of `key` may be created, given current usage. */
@@ -181,14 +226,15 @@ export type Entitlements = {
   upgradeFor: (feature: FeatureKey) => Plan | null;
 };
 
-const LIMIT_LABELS: Record<LimitKey, string> = {
-  locations: "locations",
-  loyaltyCards: "loyalty cards",
-  administrators: "administrators",
+const LIMIT_LABELS: Record<LimitKey, { one: string; many: string }> = {
+  locations: { one: "location", many: "locations" },
+  loyaltyCards: { one: "loyalty card", many: "loyalty cards" },
+  administrators: { one: "administrator", many: "administrators" },
 };
 
-export function entitlementsFor(tier: string | null | undefined): Entitlements {
-  const plan = planFromTier(tier);
+export function entitlementsFor(state: BillingState): Entitlements {
+  const plan = planForBillingState(state);
+  const isTrial = state.kind !== "subscribed";
 
   const can = (feature: FeatureKey) => plan.features.includes(feature);
   const limitOf = (key: LimitKey) => plan.limits[key];
@@ -199,6 +245,7 @@ export function entitlementsFor(tier: string | null | undefined): Entitlements {
       return { allowed: true, limit: null, used, remaining: null, reason: null };
     }
     const allowed = used < limit;
+    const label = limit === 1 ? LIMIT_LABELS[key].one : LIMIT_LABELS[key].many;
     return {
       allowed,
       limit,
@@ -206,14 +253,16 @@ export function entitlementsFor(tier: string | null | undefined): Entitlements {
       remaining: Math.max(0, limit - used),
       reason: allowed
         ? null
-        : `Your ${plan.name} plan includes ${limit} ${LIMIT_LABELS[key]}. Upgrade to add more.`,
+        : isTrial
+          ? `Your free trial includes ${limit} ${label}. Choose a plan to add more.`
+          : `Your ${plan.name} plan includes ${limit} ${label}. Upgrade to add more.`,
     };
   };
 
   const upgradeFor = (feature: FeatureKey): Plan | null =>
     PLAN_LIST.find((p) => p.features.includes(feature)) ?? null;
 
-  return { plan, can, limitOf, checkLimit, upgradeFor };
+  return { plan, isTrial, can, limitOf, checkLimit, upgradeFor };
 }
 
 /** The cheapest plan that satisfies a set of limits — used by the wizard's review step. */

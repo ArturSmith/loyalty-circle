@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { verifyWebhook, EventName, type PaddleEnv } from "@/lib/paddle.server";
+import { PLAN_LIST, PLAN_TIERS } from "@/lib/plans";
 
 let _supabase: any = null;
 function getSupabase() {
@@ -49,8 +50,22 @@ async function resolveUserId(data: any, env: PaddleEnv): Promise<string | null> 
   }
 }
 
-async function handleSubscriptionCreated(data: any, env: PaddleEnv) {
-  const { id, customerId, items, status, currentBillingPeriod, scheduledChange } = data;
+/**
+ * Which plan was bought. Checkout sends the tier in customData, but that is
+ * client-supplied, so it is only trusted when it matches a known tier. The
+ * Paddle price external_id is the authoritative fallback.
+ */
+function resolvePlanTier(data: any, priceId: string | undefined): string | null {
+  const fromCustomData = data?.customData?.planTier;
+  const known = PLAN_TIERS as readonly string[];
+  if (typeof fromCustomData === "string" && known.includes(fromCustomData)) {
+    return fromCustomData;
+  }
+  const byPrice = PLAN_LIST.find((p) => p.paddlePriceKey === priceId);
+  return byPrice?.tier ?? null;
+}
+
+async function handleSubscriptionCreated(data: any, env: PaddleEnv) {  const { id, customerId, items, status, currentBillingPeriod, scheduledChange } = data;
   const userId = await resolveUserId(data, env);
   if (!userId) {
     console.error("ORPHANED SUBSCRIPTION: could not resolve a user", {
@@ -78,6 +93,7 @@ async function handleSubscriptionCreated(data: any, env: PaddleEnv) {
       paddle_customer_id: customerId,
       product_id: productId,
       price_id: priceId,
+      plan_tier: resolvePlanTier(data, priceId),
       status,
       current_period_start: currentBillingPeriod?.startsAt,
       current_period_end: currentBillingPeriod?.endsAt,
@@ -105,6 +121,10 @@ async function handleSubscriptionUpdated(data: any, env: PaddleEnv) {
   // Keep the plan in sync when the subscription's items change.
   if (priceId) patch.price_id = priceId;
   if (productId) patch.product_id = productId;
+  // An upgrade or downgrade arrives as an update, so the tier must follow the
+  // new price. customData is not resent here, so the price is the only source.
+  const updatedTier = resolvePlanTier(data, priceId);
+  if (updatedTier) patch.plan_tier = updatedTier;
 
   const { data: rows } = await getSupabase()
     .from("subscriptions")

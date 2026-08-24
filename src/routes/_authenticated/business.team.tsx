@@ -205,7 +205,9 @@ function TeamPage() {
               <p className="mt-1 text-xs text-muted-foreground">
                 {limit.limit === null
                   ? `${limit.used} on your team — unlimited on ${ent.plan.name}.`
-                  : `${limit.used} of ${limit.limit} used on your ${ent.plan.name} plan.`}
+                  : ent.isTrial
+                    ? `${limit.used} of ${limit.limit} used. Your free trial includes the ${ent.plan.name} plan.`
+                    : `${limit.used} of ${limit.limit} used on your ${ent.plan.name} plan.`}
               </p>
 
               <form onSubmit={submitInvite} className="mt-4">

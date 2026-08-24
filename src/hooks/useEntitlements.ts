@@ -27,6 +27,8 @@ export type BusinessEntitlements = {
   /** Permission check — distinct from `can`, which is a plan-feature check. */
   may: (permission: Permission) => boolean;
   plan: Entitlements["plan"];
+  /** True while on the free trial — the entry plan applies, not a paid tier. */
+  isTrial: boolean;
   upgradeFor: Entitlements["upgradeFor"];
   usage: Record<LimitKey, number>;
   /** Whether one more of `key` may be created right now. */
@@ -48,6 +50,7 @@ export function useEntitlements(): BusinessEntitlements {
     role: "owner" | "admin" | null;
     permissions: ReadonlySet<Permission>;
     tier: string | null;
+    subscribed: boolean;
     usage: Record<LimitKey, number>;
   }>({
     loading: true,
@@ -55,6 +58,7 @@ export function useEntitlements(): BusinessEntitlements {
     role: null,
     permissions: new Set<Permission>(),
     tier: null,
+    subscribed: false,
     usage: EMPTY_USAGE,
   });
 
@@ -96,7 +100,10 @@ export function useEntitlements(): BusinessEntitlements {
         : new Set<Permission>();
 
       // The plan is billed to the business owner, not to the admin viewing it.
+      // A trial grants the entry plan, so "has an active subscription" and
+      // "which tier" are two separate questions.
       let tier: string | null = null;
+      let subscribed = false;
       if (businessId) {
         const { data: biz } = await supabase
           .from("businesses")
@@ -118,6 +125,7 @@ export function useEntitlements(): BusinessEntitlements {
             if (s.status === "canceled") return end !== null && end > now;
             return false;
           });
+          subscribed = Boolean(active);
           tier = active?.plan_tier ?? null;
         }
       }
@@ -147,7 +155,7 @@ export function useEntitlements(): BusinessEntitlements {
       }
 
       if (!cancelled) {
-        setState({ loading: false, businessId, role, permissions, tier, usage });
+        setState({ loading: false, businessId, role, permissions, tier, subscribed, usage });
       }
     })();
     return () => {
@@ -155,7 +163,9 @@ export function useEntitlements(): BusinessEntitlements {
     };
   }, [tick]);
 
-  const ent = entitlementsFor(state.tier);
+  const ent = entitlementsFor(
+    state.subscribed ? { kind: "subscribed", tier: state.tier } : { kind: "trialing" },
+  );
   const refetch = useCallback(() => setTick((t) => t + 1), []);
 
   return {
@@ -166,6 +176,7 @@ export function useEntitlements(): BusinessEntitlements {
     can: ent.can,
     may: (permission: Permission) => state.permissions.has(permission),
     plan: ent.plan,
+    isTrial: ent.isTrial,
     upgradeFor: ent.upgradeFor,
     usage: state.usage,
     check: (key: LimitKey) => ent.checkLimit(key, state.usage[key] ?? 0),

@@ -8,40 +8,27 @@ import { Check, Sparkles, ArrowLeft } from "lucide-react";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { initializePaddle, getPaddlePriceId } from "@/lib/paddle";
 import { useBusinessAccess } from "@/hooks/useBusinessAccess";
-import { formatPlanPrice, planFromTier } from "@/lib/plans";
+import { PLAN_LIST, TRIAL_TIER, PLANS, formatPlanPrice, type Plan } from "@/lib/plans";
 
 export const Route = createFileRoute("/_authenticated/subscribe")({
   head: () => ({
     meta: [
-      { title: "Subscribe — ClubCarder Business" },
-      { name: "description", content: "Unlock unlimited digital loyalty cards for your business." },
+      { title: "Choose a plan — ClubCarder Business" },
+      { name: "description", content: "Pick the ClubCarder plan that fits your business." },
     ],
   }),
   component: SubscribePage,
 });
 
-// This screen still sells the single legacy `business_monthly` price. Its
-// display price comes from the plan registry so it can never drift from
-// /pricing again.
-const LEGACY_PLAN = planFromTier(null);
-const LEGACY_PRICE = formatPlanPrice(LEGACY_PLAN.price);
-
-const FEATURES = [
-  "Unlimited stamp card designs",
-  "Unlimited customers & stamps",
-  "In-app QR scanner for staff",
-  "Customer analytics & history",
-  "Custom colors, logo & rewards",
-  "Priority support",
-];
+const TRIAL_PLAN = PLANS[TRIAL_TIER];
 
 function SubscribePage() {
   const navigate = useNavigate();
   const access = useBusinessAccess();
-  const [loading, setLoading] = useState(false);
+  const [loadingTier, setLoadingTier] = useState<string | null>(null);
 
-  const startCheckout = async () => {
-    setLoading(true);
+  const startCheckout = async (plan: Plan) => {
+    setLoadingTier(plan.tier);
     try {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) {
@@ -59,11 +46,13 @@ function SubscribePage() {
         sessionStorage.setItem("post_checkout_return", "/business");
       }
       await initializePaddle();
-      const paddlePriceId = await getPaddlePriceId("business_monthly");
+      const paddlePriceId = await getPaddlePriceId(plan.paddlePriceKey);
       window.Paddle.Checkout.open({
         items: [{ priceId: paddlePriceId, quantity: 1 }],
         customer: u.user.email ? { email: u.user.email } : undefined,
-        customData: { userId: u.user.id },
+        // The tier is echoed back by the Paddle webhook so the subscription row
+        // records which plan was bought.
+        customData: { userId: u.user.id, planTier: plan.tier },
         settings: {
           displayMode: "overlay",
           successUrl: `${window.location.origin}/checkout/success`,
@@ -73,15 +62,19 @@ function SubscribePage() {
       });
     } catch (e) {
       console.error(e);
-      toast.error("Could not open checkout. Please try again.");
+      toast.error(`Could not open checkout for ${plan.name}.`, {
+        description: "Please try again, or contact support if it keeps happening.",
+      });
     } finally {
-      setLoading(false);
+      setLoadingTier(null);
     }
   };
 
+  const trialing = access.reason === "trialing";
+
   return (
     <div className="min-h-screen bg-background px-4 py-10">
-      <div className="mx-auto max-w-md">
+      <div className="mx-auto max-w-5xl">
         <button
           onClick={() => navigate({ to: "/business" })}
           className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
@@ -89,97 +82,121 @@ function SubscribePage() {
           <ArrowLeft className="h-4 w-4" /> Back
         </button>
 
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl border-2 border-ink/10 bg-card paper-grain card-shadow p-8"
-        >
-          <div className="text-center">
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-              <Sparkles className="h-3.5 w-3.5" />
-              ClubCarder Business
-            </div>
-            <h1 className="mt-4 font-display text-3xl font-semibold">
-              Grow your regulars
-            </h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Beautiful digital stamp cards for your shop, café, or salon.
-            </p>
-            <OrnamentDivider className="my-5 w-32 mx-auto opacity-60" />
-            <div className="flex items-baseline justify-center gap-1">
-              <span className="font-display text-5xl font-semibold">{LEGACY_PRICE}</span>
-              <span className="text-muted-foreground">/month</span>
-            </div>
-            {access.reason === "trialing" && access.trialDaysLeft != null && (
-              <p className="mt-2 text-xs text-muted-foreground">
-                You have <strong className="text-foreground">{access.trialDaysLeft} day{access.trialDaysLeft === 1 ? "" : "s"}</strong> left in your free trial.
-              </p>
-            )}
-            {access.reason === "needs-more-seats" && (
-              <p className="mt-2 text-xs text-destructive">
-                {access.businessCount} business{access.businessCount === 1 ? "" : "es"} · {access.seatCount} subscription{access.seatCount === 1 ? "" : "s"}. Each business needs its own plan.
-              </p>
-            )}
-            {access.reason === "trial-expired" && (
-              <p className="mt-2 text-xs text-destructive">
-                Your free trial has ended. Subscribe to keep your business active.
-              </p>
-            )}
-            {access.reason === "no-business" && (
-              <p className="mt-2 text-xs text-muted-foreground">
-                Start with a <strong className="text-foreground">14-day free trial</strong> — no card required.
-              </p>
-            )}
+        <div className="text-center">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+            <Sparkles className="h-3.5 w-3.5" />
+            ClubCarder Business
           </div>
+          <h1 className="mt-4 font-display text-3xl font-semibold">
+            {trialing ? "You're on the free trial" : "Choose your plan"}
+          </h1>
 
-          <ul className="mt-6 space-y-2.5">
-            {FEATURES.map((f) => (
-              <li key={f} className="flex items-start gap-2.5 text-sm">
-                <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                <span>{f}</span>
-              </li>
-            ))}
-          </ul>
-
-          {access.uncoveredCount > 0 ? (
-            <Button
-              onClick={startCheckout}
-              disabled={loading}
-              className="mt-8 w-full h-12 text-base"
-            >
-              {loading
-                ? "Opening checkout…"
-                : access.seatCount > 0
-                  ? `Add another subscription — ${LEGACY_PRICE}/month`
-                  : `Subscribe — ${LEGACY_PRICE}/month`}
-            </Button>
-          ) : access.isSubscribed ? (
-            <div className="mt-8 rounded-lg bg-secondary p-4 text-center text-sm">
-              You're subscribed to {access.seatCount} business plan{access.seatCount === 1 ? "" : "s"}.{" "}
-              {access.cancelAtPeriodEnd && access.currentPeriodEnd
-                ? `Access continues until ${access.currentPeriodEnd.toLocaleDateString()}.`
-                : "Thanks for supporting ClubCarder."}
-            </div>
-          ) : access.reason === "no-business" ? (
-            <Button
-              onClick={() => navigate({ to: "/business" })}
-              className="mt-8 w-full h-12 text-base"
-            >
-              Start free trial
-            </Button>
-          ) : (
-            <Button
-              onClick={startCheckout}
-              disabled={loading}
-              className="mt-8 w-full h-12 text-base"
-            >
-              {loading ? "Opening checkout…" : `Subscribe — ${LEGACY_PRICE}/month`}
-            </Button>
+          {trialing && access.trialDaysLeft != null && (
+            <p className="mt-2 text-sm text-muted-foreground">
+              Your trial includes the <strong className="text-foreground">{TRIAL_PLAN.name}</strong>{" "}
+              plan and has{" "}
+              <strong className="text-foreground">
+                {access.trialDaysLeft} day{access.trialDaysLeft === 1 ? "" : "s"}
+              </strong>{" "}
+              left. Upgrade any time for more locations, cards and team members.
+            </p>
           )}
-          <p className="mt-3 text-center text-[11px] text-muted-foreground">
-            Cancel anytime. Billed monthly. Taxes handled at checkout.
-          </p>
-        </motion.div>
+          {access.reason === "trial-expired" && (
+            <p className="mt-2 text-sm text-destructive">
+              Your free trial has ended. Pick a plan to keep your business active.
+            </p>
+          )}
+          {access.reason === "needs-more-seats" && (
+            <p className="mt-2 text-sm text-destructive">
+              {access.businessCount} business{access.businessCount === 1 ? "" : "es"} ·{" "}
+              {access.seatCount} subscription{access.seatCount === 1 ? "" : "s"}. Each business needs
+              its own plan.
+            </p>
+          )}
+          {access.reason === "no-business" && (
+            <p className="mt-2 text-sm text-muted-foreground">
+              Start with a <strong className="text-foreground">14-day free trial</strong> — no card
+              required.
+            </p>
+          )}
+
+          <OrnamentDivider className="my-6 w-32 mx-auto opacity-60" />
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-3">
+          {PLAN_LIST.map((plan, i) => {
+            const isTrialPlan = trialing && plan.tier === TRIAL_PLAN.tier;
+            return (
+              <motion.div
+                key={plan.tier}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.06 }}
+                className={`flex flex-col rounded-2xl border-2 bg-card paper-grain card-shadow p-7 ${
+                  plan.popular ? "border-primary/40 ring-1 ring-primary/30" : "border-ink/10"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <h2 className="font-display text-xl font-semibold">{plan.name}</h2>
+                  {isTrialPlan ? (
+                    <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      In your trial
+                    </span>
+                  ) : plan.popular ? (
+                    <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-primary">
+                      Popular
+                    </span>
+                  ) : null}
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">{plan.tagline}</p>
+
+                <div className="mt-5 flex items-baseline gap-1">
+                  <span className="font-display text-4xl font-semibold">
+                    {formatPlanPrice(plan.price)}
+                  </span>
+                  <span className="text-sm text-muted-foreground">/month</span>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">Excl. VAT. Cancel anytime.</p>
+
+                <ul className="mt-6 flex-1 space-y-2.5">
+                  {plan.highlights.map((f) => (
+                    <li key={f} className="flex items-start gap-2.5 text-sm">
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                      <span className="text-muted-foreground">{f}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <Button
+                  onClick={() => startCheckout(plan)}
+                  disabled={loadingTier !== null}
+                  variant={plan.popular ? "default" : "outline"}
+                  className="mt-7 h-12 w-full text-base"
+                >
+                  {loadingTier === plan.tier
+                    ? "Opening checkout…"
+                    : access.seatCount > 0
+                      ? `Add ${plan.name}`
+                      : `Choose ${plan.name}`}
+                </Button>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {access.isSubscribed && access.uncoveredCount === 0 ? (
+          <div className="mx-auto mt-8 max-w-md rounded-2xl bg-secondary p-4 text-center text-sm">
+            You're subscribed to {access.seatCount} business plan
+            {access.seatCount === 1 ? "" : "s"}.{" "}
+            {access.cancelAtPeriodEnd && access.currentPeriodEnd
+              ? `Access continues until ${access.currentPeriodEnd.toLocaleDateString()}.`
+              : "Thanks for supporting ClubCarder."}
+          </div>
+        ) : null}
+
+        <p className="mt-6 text-center text-[11px] text-muted-foreground">
+          Billed monthly in NOK. Taxes handled at checkout.
+        </p>
       </div>
     </div>
   );

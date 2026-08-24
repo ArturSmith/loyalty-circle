@@ -65,8 +65,14 @@ async function ownedBusinessId(userId: string): Promise<string | null> {
   return (data as { id?: string } | null)?.id ?? null;
 }
 
-/** The owner's active plan tier, used to enforce the administrator limit. */
-async function planTierForOwner(ownerId: string, environment: string): Promise<string | null> {
+/**
+ * The owner's billing state, used to enforce the administrator limit.
+ * A trial is not a subscription, so the two are reported separately.
+ */
+async function billingStateForOwner(
+  ownerId: string,
+  environment: string,
+): Promise<{ subscribed: boolean; tier: string | null }> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data } = await supabaseAdmin
     .from("subscriptions")
@@ -82,7 +88,7 @@ async function planTierForOwner(ownerId: string, environment: string): Promise<s
     if (s.status === "canceled") return end !== null && end > now;
     return false;
   });
-  return active?.plan_tier ?? null;
+  return { subscribed: Boolean(active), tier: active?.plan_tier ?? null };
 }
 
 export async function listMembersForOwner(userId: string): Promise<MemberRow[]> {
@@ -154,7 +160,10 @@ export async function inviteMemberAsOwner(
     .eq("business_id", businessId)
     .neq("status", "revoked");
 
-  const ent = entitlementsFor(await planTierForOwner(userId, environment));
+  const billing = await billingStateForOwner(userId, environment);
+  const ent = entitlementsFor(
+    billing.subscribed ? { kind: "subscribed", tier: billing.tier } : { kind: "trialing" },
+  );
   const existingForEmail = await (supabaseAdmin as any)
     .from("business_members")
     .select("id, status")
