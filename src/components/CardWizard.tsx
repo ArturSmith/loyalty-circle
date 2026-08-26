@@ -170,7 +170,7 @@ export function CardWizard({ templateId, businessId: selectedBusinessId }: Props
   return (
     <div className="min-h-screen px-4 py-6 max-w-2xl mx-auto">
       <header className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" aria-label={step === 0 ? "Back to business dashboard" : "Previous step"} onClick={() => step === 0 ? navigate({ to: "/business" }) : setStep(step - 1)}>
+        <Button variant="ghost" size="icon" aria-label={step === 0 ? "Back to business dashboard" : "Previous step"} onClick={() => step === 0 ? navigate({ to: "/business", search: selectedBusinessId ? { businessId: selectedBusinessId } : {} }) : setStep(step - 1)}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1">
@@ -466,7 +466,7 @@ export function CardWizard({ templateId, businessId: selectedBusinessId }: Props
         </AnimatePresence>
 
         <div className="mt-6 flex justify-between">
-          <Button variant="ghost" onClick={() => step === 0 ? navigate({ to: "/business" }) : setStep(step - 1)}>
+          <Button variant="ghost" onClick={() => step === 0 ? navigate({ to: "/business", search: selectedBusinessId ? { businessId: selectedBusinessId } : {} }) : setStep(step - 1)}>
             <ArrowLeft className="h-4 w-4" /> Back
           </Button>
           {step < stepsLabels.length - 1 ? (

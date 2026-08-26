@@ -14,6 +14,7 @@ import {
   Ticket,
   Clock,
 } from "lucide-react";
+import { z } from "zod";
 
 type Reward = { step: number; label?: string | null };
 
@@ -52,6 +53,7 @@ export const Route = createFileRoute("/_authenticated/business/cards/$id/custome
       { name: "twitter:card", content: "summary" },
     ],
   }),
+  validateSearch: z.object({ businessId: z.string().uuid() }),
   component: CustomerDetails,
 });
 
@@ -70,6 +72,7 @@ const fmt = (d: string | null) =>
 
 function CustomerDetails() {
   const { id, customerId } = Route.useParams();
+  const { businessId } = Route.useSearch();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [tpl, setTpl] = useState<Tpl | null>(null);
@@ -185,7 +188,7 @@ function CustomerDetails() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-muted-foreground">
         <p>This customer has no card yet.</p>
-        <Button variant="outline" onClick={() => navigate({ to: "/business/cards/$id", params: { id } })}>
+        <Button variant="outline" onClick={() => navigate({ to: "/business/cards/$id", params: { id }, search: { businessId } })}>
           Back to card
         </Button>
       </div>
@@ -213,7 +216,7 @@ function CustomerDetails() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate({ to: "/business/cards/$id", params: { id } })}
+          onClick={() => navigate({ to: "/business/cards/$id", params: { id }, search: { businessId } })}
           className="rounded-full"
         >
           <ArrowLeft className="h-5 w-5" />

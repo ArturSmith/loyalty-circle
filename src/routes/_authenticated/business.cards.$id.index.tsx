@@ -180,7 +180,7 @@ function CardDetails() {
   if (!tpl || !biz) return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-muted-foreground">
       <p>Card not found.</p>
-      <Button variant="outline" onClick={() => navigate({ to: "/business" })}>Back to dashboard</Button>
+      <Button variant="outline" onClick={() => navigate({ to: "/business", search: biz ? { businessId: biz.id } : {} })}>Back to dashboard</Button>
     </div>
   );
 
@@ -190,11 +190,11 @@ function CardDetails() {
   return (
     <div className="min-h-screen px-5 py-6 max-w-3xl mx-auto">
       <header className="flex items-center justify-between">
-        <Button variant="ghost" size="icon" onClick={() => navigate({ to: "/business" })} className="rounded-full glass-panel">
+        <Button variant="ghost" size="icon" onClick={() => navigate({ to: "/business", search: biz ? { businessId: biz.id } : {} })} className="rounded-full glass-panel">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <p className="text-xs uppercase tracking-widest text-muted-foreground">Card details</p>
-        <Link to="/business/cards/$id/edit" params={{ id: tpl.id }}>
+        <Link to="/business/cards/$id/edit" params={{ id: tpl.id }} search={{ businessId: biz.id }}>
           <Button size="sm" className="rounded-full gap-2">
             <Pencil className="h-4 w-4" /> Edit
           </Button>
@@ -262,6 +262,7 @@ function CardDetails() {
             key={`${c.customer_id}-${c.created_at}`}
             to="/business/cards/$id/customers/$customerId"
             params={{ id: tpl.id, customerId: c.customer_id }}
+            search={{ businessId: biz.id }}
             className={`flex items-center gap-3 rounded-2xl border-2 border-ink/10 bg-card paper-grain p-3 transition-colors hover:bg-muted/40 ${c.removed_at ? "opacity-60" : ""}`}
           >
             <div className="h-10 w-10 rounded-full bg-muted overflow-hidden flex items-center justify-center text-sm font-semibold shrink-0">
