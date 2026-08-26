@@ -10,9 +10,11 @@ import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { getPaddleEnvironment } from "@/lib/paddle";
 import { useServerFn } from "@tanstack/react-start";
 import { syncWalletPass } from "@/utils/wallet.functions";
+import { z } from "zod";
 
 export const Route = createFileRoute("/_authenticated/business/scan")({
   head: () => ({ meta: [{ title: "Scan customer — ClubCarder" }] }),
+  validateSearch: z.object({ businessId: z.string().uuid() }),
   component: ScanPage,
 });
 
@@ -55,6 +57,7 @@ function describeError(raw: string): Rejection {
 
 function ScanPage() {
   const navigate = useNavigate();
+  const { businessId } = Route.useSearch();
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
   const [voucher, setVoucher] = useState<VoucherResult | null>(null);
@@ -69,7 +72,7 @@ function ScanPage() {
     const customerMatch = text.match(/^stempel:user:([0-9a-f-]+)$/i);
     if (customerMatch) {
       setPaused(true);
-      navigate({ to: "/business/customers", search: { q: customerMatch[1]! } });
+      navigate({ to: "/business/customers", search: { businessId, q: customerMatch[1]! } });
       return;
     }
     const voucherMatch = text.match(/^stempel:voucher:([0-9a-f-]+)$/i);
@@ -106,7 +109,7 @@ function ScanPage() {
   return (
     <div className="min-h-screen px-4 py-6 max-w-md mx-auto">
       <header className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate({ to: "/business" })}><ArrowLeft className="h-4 w-4" /></Button>
+        <Button variant="ghost" size="icon" onClick={() => navigate({ to: "/business", search: { businessId } })}><ArrowLeft className="h-4 w-4" /></Button>
         <div>
           <p className="text-xs uppercase tracking-widest text-muted-foreground">Scan to stamp</p>
           <h1 className="font-display text-2xl font-semibold">Point at customer's QR</h1>
@@ -193,7 +196,7 @@ function ScanPage() {
               <h2 className="font-display text-3xl mt-4">{rejection.title}</h2>
               <p className="mt-2 text-sm text-muted-foreground">{rejection.message}</p>
               <Button className="mt-6 w-full h-11" onClick={reset}>Scan another card</Button>
-              <Button variant="ghost" className="mt-2 w-full h-10" onClick={() => navigate({ to: "/business" })}>
+              <Button variant="ghost" className="mt-2 w-full h-10" onClick={() => navigate({ to: "/business", search: { businessId } })}>
                 Back to dashboard
               </Button>
             </motion.div>

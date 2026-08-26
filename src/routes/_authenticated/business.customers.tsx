@@ -15,13 +15,13 @@ export const Route = createFileRoute("/_authenticated/business/customers")({
   head: () => ({ meta: [{ title: "Find a customer — ClubCarder" }] }),
   // `q` lets the scanner hand off a result by navigating here, so the scanned
   // and typed paths converge on one screen.
-  validateSearch: z.object({ q: z.string().optional() }),
+  validateSearch: z.object({ businessId: z.string().uuid(), q: z.string().optional() }),
   component: FindCustomer,
 });
 
 function FindCustomer() {
   const navigate = useNavigate();
-  const { q } = Route.useSearch();
+  const { q, businessId } = Route.useSearch();
   const lookup = useServerFn(findCustomer);
 
   const [input, setInput] = useState(q ?? "");
@@ -37,7 +37,7 @@ function FindCustomer() {
       setResult(null);
       setAvatar(null);
       try {
-        const found = await lookup({ data: { query } });
+        const found = await lookup({ data: { businessId, query } });
         setResult(found);
         if (found.status === "found" && found.customer.avatar_url) {
           setAvatar(await resolveAvatarUrl(found.customer.avatar_url));
@@ -48,7 +48,7 @@ function FindCustomer() {
         setBusy(false);
       }
     },
-    [lookup],
+    [businessId, lookup],
   );
 
   // Run automatically when arriving from the scanner.
@@ -59,7 +59,7 @@ function FindCustomer() {
   return (
     <div className="min-h-screen px-5 py-6 max-w-md mx-auto">
       <header className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate({ to: "/business" })} className="rounded-full glass-panel">
+        <Button variant="ghost" size="icon" onClick={() => navigate({ to: "/business", search: { businessId } })} className="rounded-full glass-panel">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <h1 className="font-display text-2xl font-semibold">Find a customer</h1>
@@ -96,7 +96,7 @@ function FindCustomer() {
         </p>
       </form>
 
-      <Link to="/business/scan" className="mt-3 block">
+      <Link to="/business/scan" search={{ businessId }} className="mt-3 block">
         <Button variant="outline" className="w-full gap-2">
           <ScanLine className="h-4 w-4" /> Scan customer QR
         </Button>

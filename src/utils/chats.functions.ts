@@ -16,9 +16,9 @@ const asScope = (value: unknown): ChatScope => (value === "business" ? "business
 
 export const getConversations = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data?: { scope?: string }) => ({ scope: asScope(data?.scope) }))
+  .inputValidator((data?: { scope?: string; businessId?: string }) => ({ scope: asScope(data?.scope), businessId: data?.businessId }))
   .handler(async ({ data, context }): Promise<{ conversations: ChatConversation[] }> => {
-    return { conversations: await listConversationsFor(context.userId, data.scope) };
+    return { conversations: await listConversationsFor(context.userId, data.scope, data.businessId) };
   });
 
 export const getUnreadChatCount = createServerFn({ method: "GET" })

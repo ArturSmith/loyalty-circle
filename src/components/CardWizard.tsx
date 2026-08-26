@@ -36,9 +36,9 @@ function matchPreset(bg: string, accent: string, text: string): number {
   return i === -1 ? -1 : i;
 }
 
-type Props = { templateId?: string };
+type Props = { templateId?: string; businessId?: string };
 
-export function CardWizard({ templateId }: Props) {
+export function CardWizard({ templateId, businessId: selectedBusinessId }: Props) {
   const isEdit = !!templateId;
   const navigate = useNavigate();
   const [businessId, setBusinessId] = useState<string | null>(null);
@@ -64,14 +64,13 @@ export function CardWizard({ templateId }: Props) {
     (async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
-      const { data: b } = await supabase
+      const query = supabase
         .from("businesses")
-        .select("id")
-        .eq("owner_id", u.user.id)
-        .order("created_at", { ascending: true })
-        .limit(1)
-        .maybeSingle();
-      if (!b) { navigate({ to: "/business" }); return; }
+        .select("id");
+      const { data: b } = selectedBusinessId
+        ? await query.eq("id", selectedBusinessId).maybeSingle()
+        : await query.eq("owner_id", u.user.id).order("created_at", { ascending: true }).limit(1).maybeSingle();
+      if (!b) { navigate({ to: "/workspace" }); return; }
       setBusinessId((b as { id: string }).id);
 
       if (isEdit && templateId) {
@@ -103,7 +102,7 @@ export function CardWizard({ templateId }: Props) {
         setLoading(false);
       }
     })();
-  }, [navigate, isEdit, templateId]);
+  }, [navigate, isEdit, selectedBusinessId, templateId]);
 
   const { bg, accent, text } = customColors ?? PRESETS[preset];
 
@@ -125,7 +124,7 @@ export function CardWizard({ templateId }: Props) {
     setSaving(false);
     if (error) { toast.error(error.message); return; }
     toast.success(isEdit ? "Saved" : "Card created");
-    navigate({ to: "/business" });
+    navigate({ to: "/business", search: selectedBusinessId ? { businessId: selectedBusinessId } : {} });
   };
 
   const remove = async () => {
@@ -134,7 +133,7 @@ export function CardWizard({ templateId }: Props) {
     const { error } = await supabase.from("card_templates").delete().eq("id", templateId);
     if (error) { toast.error(error.message); return; }
     toast.success("Deleted");
-    navigate({ to: "/business" });
+    navigate({ to: "/business", search: selectedBusinessId ? { businessId: selectedBusinessId } : {} });
   };
 
   const stepsLabels = ["Basics", "Style", "Steps & rewards", "Review"];

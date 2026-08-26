@@ -95,6 +95,7 @@ export type ChatScope = "customer" | "business";
 export async function listConversationsFor(
   userId: string,
   scope: ChatScope = "customer",
+  businessId?: string,
 ): Promise<ChatConversation[]> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -107,6 +108,12 @@ export async function listConversationsFor(
   if (scope === "customer") {
     query = query.eq("customer_id", userId);
   } else {
+    if (businessId) {
+      const { data: business } = await supabaseAdmin.from("businesses").select("owner_id").eq("id", businessId).maybeSingle();
+      const { data: member } = await (supabaseAdmin as any).from("business_members").select("id").eq("business_id", businessId).eq("user_id", userId).eq("status", "active").maybeSingle();
+      if (!business || (business.owner_id !== userId && !member)) return [];
+      query = query.eq("business_id", businessId);
+    } else {
     const { data: ownedBusinesses } = await supabaseAdmin
       .from("businesses")
       .select("id")
@@ -114,6 +121,7 @@ export async function listConversationsFor(
     const ownedIds = (ownedBusinesses ?? []).map((b: { id: string }) => b.id);
     if (ownedIds.length === 0) return [];
     query = query.in("business_id", ownedIds);
+    }
   }
 
   const { data: rows, error } = await query.order("last_message_at", { ascending: false });

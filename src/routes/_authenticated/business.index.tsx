@@ -202,7 +202,7 @@ function BusinessDashboard() {
                   <Building2 className="h-4 w-4" /> Workspace
                 </Button>
               </Link>
-              <Link to="/business/chats" className="w-full">
+              <Link to="/business/chats" search={{ businessId: biz.id }} className="w-full">
                 <Button variant="ghost" className="w-full justify-start gap-3">
                   <MessageCircle className="h-4 w-4" /> Messages
                   {unreadChats > 0 && (
@@ -262,19 +262,19 @@ function BusinessDashboard() {
           <span className="text-xs font-semibold">Business QR</span>
         </Button>
         <Button asChild variant="outline" className="h-auto flex-col gap-1.5 py-3 rounded-2xl glass-panel">
-          <Link to="/business/scan">
+          <Link to="/business/scan" search={{ businessId: biz.id }}>
             <ScanLine className="h-5 w-5" />
             <span className="text-xs font-semibold">Scan customer</span>
           </Link>
         </Button>
         <Button asChild variant="outline" className="h-auto flex-col gap-1.5 py-3 rounded-2xl glass-panel">
-          <Link to="/business/customers">
+          <Link to="/business/customers" search={{ businessId: biz.id }}>
             <Search className="h-5 w-5" />
             <span className="text-xs font-semibold">Find customer</span>
           </Link>
         </Button>
         <Button asChild className="h-auto flex-col gap-1.5 py-3 rounded-2xl bg-primary text-primary-foreground border-0 hover:bg-primary/90">
-          <Link to="/business/cards/new">
+          <Link to="/business/cards/new" search={{ businessId: biz.id }}>
             <Plus className="h-5 w-5" />
             <span className="text-xs font-semibold">New card</span>
           </Link>

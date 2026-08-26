@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { findCustomerForOwner } from "@/lib/customers.server";
+import { findCustomerForBusiness } from "@/lib/customers.server";
 import type { CustomerLookupResult, CustomerCardSummary } from "@/lib/customers.server";
 
 export type { CustomerLookupResult, CustomerCardSummary };
@@ -12,11 +12,11 @@ export type { CustomerLookupResult, CustomerCardSummary };
  */
 export const findCustomer = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { query: string }) => {
+  .inputValidator((data: { businessId: string; query: string }) => {
     const query = (data?.query ?? "").trim();
     if (!query) throw new Error("Enter a customer code");
-    return { query };
+    return { businessId: String(data?.businessId ?? ""), query };
   })
   .handler(async ({ data, context }): Promise<CustomerLookupResult> => {
-    return findCustomerForOwner(context.userId, data.query);
+    return findCustomerForBusiness(context.userId, data.businessId, data.query);
   });

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { getConversations } from "@/utils/chats.functions";
 import { publishUnreadChatCount } from "@/hooks/useUnreadChatCount";
 import type { ChatConversation } from "@/utils/chats.functions";
+import { z } from "zod";
 
 export const Route = createFileRoute("/_authenticated/business/chats")({
   head: () => ({
@@ -19,6 +20,7 @@ export const Route = createFileRoute("/_authenticated/business/chats")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
+  validateSearch: z.object({ businessId: z.string().uuid() }),
   component: BusinessChats,
 });
 
@@ -34,13 +36,14 @@ function timeLabel(iso: string) {
 }
 
 function BusinessChats() {
+  const { businessId } = Route.useSearch();
   const load = useServerFn(getConversations);
   const [conversations, setConversations] = useState<ChatConversation[]>(() => cachedConversations ?? []);
   const [loading, setLoading] = useState(() => cachedConversations === null);
 
   useEffect(() => {
     let alive = true;
-    load({ data: { scope: "business" } })
+    load({ data: { scope: "business", businessId } })
       .then((result) => {
         if (!alive) return;
         cachedConversations = result.conversations;
@@ -56,14 +59,14 @@ function BusinessChats() {
       alive = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [businessId, load]);
 
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
         <div className="mx-auto flex min-h-[56px] w-full max-w-3xl items-center gap-3 px-3 py-3">
           <Button variant="ghost" size="icon" asChild aria-label="Back to dashboard">
-            <Link to="/business">
+            <Link to="/business" search={{ businessId }}>
               <ArrowLeft className="h-5 w-5" />
             </Link>
           </Button>

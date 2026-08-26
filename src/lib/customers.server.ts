@@ -32,7 +32,7 @@ export type CustomerLookupResult = CustomerLookupHit | CustomerLookupMiss;
 /** UUIDs are stored with dashes; codes are typed without. Compare on bare hex. */
 const bareHex = (value: string) => value.replace(/-/g, "").toLowerCase();
 
-export async function findCustomerForOwner(ownerId: string, rawQuery: string): Promise<CustomerLookupResult> {
+export async function findCustomerForBusiness(userId: string, businessId: string, rawQuery: string): Promise<CustomerLookupResult> {
   const query = parseCustomerQuery(rawQuery);
   if (!query) return { status: "invalid" };
 
@@ -41,9 +41,24 @@ export async function findCustomerForOwner(ownerId: string, rawQuery: string): P
   const { data: business } = await supabaseAdmin
     .from("businesses")
     .select("id")
-    .eq("owner_id", ownerId)
+    .eq("id", businessId)
     .maybeSingle();
   if (!business) return { status: "not_found" };
+
+  const { data: membership } = await (supabaseAdmin as any)
+    .from("business_members")
+    .select("id")
+    .eq("business_id", businessId)
+    .eq("user_id", userId)
+    .eq("status", "active")
+    .maybeSingle();
+  const { data: ownership } = await supabaseAdmin
+    .from("businesses")
+    .select("id")
+    .eq("id", businessId)
+    .eq("owner_id", userId)
+    .maybeSingle();
+  if (!membership && !ownership) return { status: "not_found" };
 
   const { data: templates } = await supabaseAdmin
     .from("card_templates")
