@@ -24,6 +24,7 @@ import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as ClaimInstanceIdRouteImport } from './routes/claim.$instanceId'
 import { Route as CheckoutSuccessRouteImport } from './routes/checkout.success'
 import { Route as BBusinessIdRouteImport } from './routes/b.$businessId'
+import { Route as AuthenticatedWorkspaceRouteImport } from './routes/_authenticated/workspace'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
 import { Route as AuthenticatedVouchersRouteImport } from './routes/_authenticated/vouchers'
 import { Route as AuthenticatedSubscribeRouteImport } from './routes/_authenticated/subscribe'
@@ -123,6 +124,11 @@ const BBusinessIdRoute = BBusinessIdRouteImport.update({
   id: '/b/$businessId',
   path: '/b/$businessId',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedWorkspaceRoute = AuthenticatedWorkspaceRouteImport.update({
+  id: '/workspace',
+  path: '/workspace',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
   id: '/wallet',
@@ -283,6 +289,7 @@ export interface FileRoutesByFullPath {
   '/subscribe': typeof AuthenticatedSubscribeRoute
   '/vouchers': typeof AuthenticatedVouchersRoute
   '/wallet': typeof AuthenticatedWalletRoute
+  '/workspace': typeof AuthenticatedWorkspaceRoute
   '/b/$businessId': typeof BBusinessIdRoute
   '/checkout/success': typeof CheckoutSuccessRoute
   '/claim/$instanceId': typeof ClaimInstanceIdRoute
@@ -323,6 +330,7 @@ export interface FileRoutesByTo {
   '/subscribe': typeof AuthenticatedSubscribeRoute
   '/vouchers': typeof AuthenticatedVouchersRoute
   '/wallet': typeof AuthenticatedWalletRoute
+  '/workspace': typeof AuthenticatedWorkspaceRoute
   '/b/$businessId': typeof BBusinessIdRoute
   '/checkout/success': typeof CheckoutSuccessRoute
   '/claim/$instanceId': typeof ClaimInstanceIdRoute
@@ -366,6 +374,7 @@ export interface FileRoutesById {
   '/_authenticated/subscribe': typeof AuthenticatedSubscribeRoute
   '/_authenticated/vouchers': typeof AuthenticatedVouchersRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
+  '/_authenticated/workspace': typeof AuthenticatedWorkspaceRoute
   '/b/$businessId': typeof BBusinessIdRoute
   '/checkout/success': typeof CheckoutSuccessRoute
   '/claim/$instanceId': typeof ClaimInstanceIdRoute
@@ -409,6 +418,7 @@ export interface FileRouteTypes {
     | '/subscribe'
     | '/vouchers'
     | '/wallet'
+    | '/workspace'
     | '/b/$businessId'
     | '/checkout/success'
     | '/claim/$instanceId'
@@ -449,6 +459,7 @@ export interface FileRouteTypes {
     | '/subscribe'
     | '/vouchers'
     | '/wallet'
+    | '/workspace'
     | '/b/$businessId'
     | '/checkout/success'
     | '/claim/$instanceId'
@@ -491,6 +502,7 @@ export interface FileRouteTypes {
     | '/_authenticated/subscribe'
     | '/_authenticated/vouchers'
     | '/_authenticated/wallet'
+    | '/_authenticated/workspace'
     | '/b/$businessId'
     | '/checkout/success'
     | '/claim/$instanceId'
@@ -643,6 +655,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/b/$businessId'
       preLoaderRoute: typeof BBusinessIdRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/workspace': {
+      id: '/_authenticated/workspace'
+      path: '/workspace'
+      fullPath: '/workspace'
+      preLoaderRoute: typeof AuthenticatedWorkspaceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/wallet': {
       id: '/_authenticated/wallet'
@@ -865,6 +884,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSubscribeRoute: typeof AuthenticatedSubscribeRoute
   AuthenticatedVouchersRoute: typeof AuthenticatedVouchersRoute
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
+  AuthenticatedWorkspaceRoute: typeof AuthenticatedWorkspaceRoute
   AuthenticatedChatsConversationIdRoute: typeof AuthenticatedChatsConversationIdRoute
   AuthenticatedSettingsBillingRoute: typeof AuthenticatedSettingsBillingRoute
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
@@ -878,6 +898,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSubscribeRoute: AuthenticatedSubscribeRoute,
   AuthenticatedVouchersRoute: AuthenticatedVouchersRoute,
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
+  AuthenticatedWorkspaceRoute: AuthenticatedWorkspaceRoute,
   AuthenticatedChatsConversationIdRoute: AuthenticatedChatsConversationIdRoute,
   AuthenticatedSettingsBillingRoute: AuthenticatedSettingsBillingRoute,
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,

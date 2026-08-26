@@ -11,13 +11,14 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
-import { Plus, QrCode, ScanLine, Search, Users, Stamp as StampIco, Wallet as WalletIcon, Pencil, Menu, Settings, LogOut, Download, CreditCard, Sparkles, HelpCircle, Mail, ArrowLeft, MessageCircle } from "lucide-react";
+import { Plus, QrCode, ScanLine, Search, Users, Stamp as StampIco, Wallet as WalletIcon, Pencil, Menu, Settings, LogOut, Download, CreditCard, Sparkles, HelpCircle, Mail, ArrowLeft, MessageCircle, Building2 } from "lucide-react";
 import { useBusinessAccess } from "@/hooks/useBusinessAccess";
 import { StampCard } from "@/components/StampCard";
 import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
 import { Carousel, CarouselApi, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import QRCode from "qrcode";
 import { normalizeBrandColor } from "@/lib/brand";
+import { z } from "zod";
 
 
 type Business = {
@@ -39,11 +40,13 @@ type Tpl = {
 
 export const Route = createFileRoute("/_authenticated/business/")({
   head: () => ({ meta: [{ title: "Business dashboard — ClubCarder" }] }),
+  validateSearch: z.object({ businessId: z.string().uuid().optional() }),
   component: BusinessDashboard,
 });
 
 function BusinessDashboard() {
   const navigate = useNavigate();
+  const { businessId: selectedBusinessId } = Route.useSearch();
   const unreadChats = useUnreadChatCount("business");
   const [biz, setBiz] = useState<Business | null>(null);
   const [tpls, setTpls] = useState<Tpl[]>([]);
@@ -63,14 +66,27 @@ function BusinessDashboard() {
       // limit(1) matters: maybeSingle() errors outright when the account owns
       // more than one business, which would look identical to owning none and
       // bounce the user into the onboarding wizard.
-      let { data: b } = await supabase
-        .from("businesses")
-        .select("*")
-        .eq("owner_id", u.user.id)
-        .order("created_at", { ascending: true })
-        .limit(1)
-        .maybeSingle();
-      if (!b) {
+      let b;
+      if (selectedBusinessId) {
+        // The select is still protected by RLS, so a hand-edited URL cannot
+        // open a business the signed-in user is unrelated to.
+        const { data } = await supabase
+          .from("businesses")
+          .select("*")
+          .eq("id", selectedBusinessId)
+          .maybeSingle();
+        b = data;
+      } else {
+        const { data } = await supabase
+          .from("businesses")
+          .select("*")
+          .eq("owner_id", u.user.id)
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        b = data;
+      }
+      if (!b && !selectedBusinessId) {
         // Invited administrators own no business — resolve the one they were
         // added to, otherwise they would be shown the "create a business" form.
         const { data: membership } = await (supabase as any)
@@ -103,7 +119,7 @@ function BusinessDashboard() {
       }
       setLoading(false);
     })();
-  }, []);
+  }, [selectedBusinessId]);
 
   useEffect(() => {
     if (!api) return;
@@ -141,7 +157,7 @@ function BusinessDashboard() {
   // Business creation now lives in the onboarding wizard, so there is exactly
   // one path into the product and `onboarding_step` is always meaningful.
   if (!biz) {
-    return <Navigate to="/business/onboarding" replace />;
+    return <Navigate to={selectedBusinessId ? "/workspace" : "/business/onboarding"} replace />;
   }
 
 
@@ -178,6 +194,11 @@ function BusinessDashboard() {
               <SheetTitle className="font-display">Menu</SheetTitle>
             </SheetHeader>
             <nav className="mt-8 flex flex-col gap-2">
+              <Link to="/workspace" className="w-full">
+                <Button variant="ghost" className="w-full justify-start gap-3">
+                  <Building2 className="h-4 w-4" /> Workspace
+                </Button>
+              </Link>
               <Link to="/business/chats" className="w-full">
                 <Button variant="ghost" className="w-full justify-start gap-3">
                   <MessageCircle className="h-4 w-4" /> Messages

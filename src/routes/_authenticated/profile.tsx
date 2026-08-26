@@ -304,9 +304,9 @@ function BusinessSection({ profile }: { profile: ProfileInfo }) {
           <Row label="Your role">Administrator</Row>
           <Row label="Business">{profile.businessName ?? "—"}</Row>
         </dl>
-        <Link to="/business" className="mt-4 block">
+        <Link to="/workspace" className="mt-4 block">
           <Button variant="outline" className="w-full gap-2">
-            <Store className="h-4 w-4" /> Open dashboard
+            <Store className="h-4 w-4" /> Open workspace
           </Button>
         </Link>
       </section>
@@ -358,6 +358,11 @@ function BusinessSection({ profile }: { profile: ProfileInfo }) {
       )}
 
       <div className="mt-4 grid grid-cols-2 gap-2">
+        <Link to="/workspace" className="col-span-2">
+          <Button variant="outline" className="w-full gap-2">
+            <Building2 className="h-4 w-4" /> Workspace
+          </Button>
+        </Link>
         <Link to="/business">
           <Button variant="outline" className="w-full gap-2">
             <Store className="h-4 w-4" /> Dashboard
