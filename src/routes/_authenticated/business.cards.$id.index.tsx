@@ -41,6 +41,7 @@ export const Route = createFileRoute("/_authenticated/business/cards/$id/")({
 
 function CardDetails() {
   const { id } = Route.useParams();
+  const { businessId } = Route.useSearch();
   const navigate = useNavigate();
   const [tpl, setTpl] = useState<Tpl | null>(null);
   const [biz, setBiz] = useState<Biz | null>(null);
@@ -56,10 +57,19 @@ function CardDetails() {
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const { data: t } = await supabase.from("card_templates").select("*").eq("id", id).maybeSingle();
+      const { data: t } = await supabase
+        .from("card_templates")
+        .select("*")
+        .eq("id", id)
+        .eq("business_id", businessId)
+        .maybeSingle();
       if (!t) { setLoading(false); return; }
       setTpl(t as Tpl);
-      const { data: b } = await supabase.from("businesses").select("id,name,owner_id").eq("id", (t as Tpl).business_id).maybeSingle();
+      const { data: b } = await supabase
+        .from("businesses")
+        .select("id,name,owner_id")
+        .eq("id", businessId)
+        .maybeSingle();
       setBiz(b as Biz | null);
 
       // Analytics come from the permanent event log, so history survives a
@@ -175,14 +185,14 @@ function CardDetails() {
 
       setLoading(false);
     })();
-  }, [id]);
+  }, [businessId, id]);
 
 
   if (loading) return <ScreenLoader />;
   if (!tpl || !biz) return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-muted-foreground">
       <p>Card not found.</p>
-      <Button variant="outline" onClick={() => navigate({ to: "/business", search: biz ? { businessId: biz.id } : {} })}>Back to dashboard</Button>
+      <Button variant="outline" onClick={() => navigate({ to: "/business", search: { businessId } })}>Back to dashboard</Button>
     </div>
   );
 
@@ -192,7 +202,7 @@ function CardDetails() {
   return (
     <div className="min-h-screen px-5 py-6 max-w-3xl mx-auto">
       <header className="flex items-center justify-between">
-        <Button variant="ghost" size="icon" onClick={() => navigate({ to: "/business", search: biz ? { businessId: biz.id } : {} })} className="rounded-full glass-panel">
+        <Button variant="ghost" size="icon" onClick={() => navigate({ to: "/business", search: { businessId } })} className="rounded-full glass-panel">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <p className="text-xs uppercase tracking-widest text-muted-foreground">Card details</p>

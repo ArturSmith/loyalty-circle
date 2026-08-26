@@ -762,9 +762,10 @@ export type Database = {
         Args: { _env?: string; _user_id: string }
         Returns: number
       }
-      add_stamp:
-        | { Args: { _card_instance_id: string }; Returns: Json }
-        | { Args: { _card_instance_id: string; _env?: string }; Returns: Json }
+      add_stamp: {
+        Args: { _business_id: string; _card_instance_id: string; _env?: string }
+        Returns: Json
+      }
       business_has_access: {
         Args: { _business_created_at: string; _owner_id: string }
         Returns: boolean
@@ -905,7 +906,7 @@ export type Database = {
         Args: { _conversation_id: string }
         Returns: undefined
       }
-      redeem_voucher: { Args: { _voucher_id: string }; Returns: Json }
+      redeem_voucher: { Args: { _business_id: string; _voucher_id: string }; Returns: Json }
       renew_card: { Args: { _card_instance_id: string }; Returns: undefined }
       set_business_paused: {
         Args: { _business_id: string; _paused: boolean }

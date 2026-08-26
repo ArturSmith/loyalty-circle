@@ -36,7 +36,8 @@ function matchPreset(bg: string, accent: string, text: string): number {
   return i === -1 ? -1 : i;
 }
 
-type Props = { templateId?: string; businessId?: string };
+/** A card is always created or edited in an explicitly selected business. */
+type Props = { templateId?: string; businessId: string };
 
 export function CardWizard({ templateId, businessId: selectedBusinessId }: Props) {
   const isEdit = !!templateId;
@@ -44,7 +45,7 @@ export function CardWizard({ templateId, businessId: selectedBusinessId }: Props
   const [businessId, setBusinessId] = useState<string | null>(null);
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
-  const [loading, setLoading] = useState(isEdit);
+  const [loading, setLoading] = useState(true);
 
   const [title, setTitle] = useState("Loyalty Card");
   const [subtitle, setSubtitle] = useState("");
@@ -64,12 +65,14 @@ export function CardWizard({ templateId, businessId: selectedBusinessId }: Props
     (async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
-      const query = supabase
+      // Never resolve "the first business I own" here. The dashboard has
+      // already selected the business and this ID must remain authoritative
+      // for owners with multiple businesses as well as invited admins.
+      const { data: b } = await supabase
         .from("businesses")
-        .select("id");
-      const { data: b } = selectedBusinessId
-        ? await query.eq("id", selectedBusinessId).maybeSingle()
-        : await query.eq("owner_id", u.user.id).order("created_at", { ascending: true }).limit(1).maybeSingle();
+        .select("id")
+        .eq("id", selectedBusinessId)
+        .maybeSingle();
       if (!b) { navigate({ to: "/workspace" }); return; }
       setBusinessId((b as { id: string }).id);
 
@@ -99,8 +102,8 @@ export function CardWizard({ templateId, businessId: selectedBusinessId }: Props
           setGridCols(tpl.grid_cols ?? null);
           setActive(tpl.active);
         }
-        setLoading(false);
       }
+      setLoading(false);
     })();
   }, [navigate, isEdit, selectedBusinessId, templateId]);
 

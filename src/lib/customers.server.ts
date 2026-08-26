@@ -40,25 +40,24 @@ export async function findCustomerForBusiness(userId: string, businessId: string
 
   const { data: business } = await supabaseAdmin
     .from("businesses")
-    .select("id")
+    .select("id, owner_id")
     .eq("id", businessId)
     .maybeSingle();
   if (!business) return { status: "not_found" };
 
   const { data: membership } = await (supabaseAdmin as any)
     .from("business_members")
-    .select("id")
+    .select("role, permissions")
     .eq("business_id", businessId)
     .eq("user_id", userId)
     .eq("status", "active")
     .maybeSingle();
-  const { data: ownership } = await supabaseAdmin
-    .from("businesses")
-    .select("id")
-    .eq("id", businessId)
-    .eq("owner_id", userId)
-    .maybeSingle();
-  if (!membership && !ownership) return { status: "not_found" };
+  const isOwner = business.owner_id === userId;
+  const memberPermissions = (membership as { role?: string; permissions?: string[] } | null)?.permissions ?? [];
+  const canViewCustomers = isOwner ||
+    (membership as { role?: string } | null)?.role === "owner" ||
+    memberPermissions.includes("customers.view");
+  if (!canViewCustomers) return { status: "not_found" };
 
   const { data: templates } = await supabaseAdmin
     .from("card_templates")

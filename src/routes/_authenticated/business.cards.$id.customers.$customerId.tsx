@@ -20,6 +20,7 @@ type Reward = { step: number; label?: string | null };
 
 type Tpl = {
   id: string;
+  business_id: string;
   title: string;
   total_steps: number;
   rewards: Reward[] | null;
@@ -90,7 +91,12 @@ function CustomerDetails() {
     (async () => {
       setLoading(true);
       const [{ data: t }, { data: inst }, { data: prof }, { data: vs }] = await Promise.all([
-        supabase.from("card_templates").select("id,title,total_steps,rewards").eq("id", id).maybeSingle(),
+        supabase
+          .from("card_templates")
+          .select("id,business_id,title,total_steps,rewards")
+          .eq("id", id)
+          .eq("business_id", businessId)
+          .maybeSingle(),
         supabase
           .from("card_instances")
           .select("id,stamps_count,completed_at,created_at")
@@ -180,7 +186,7 @@ function CustomerDetails() {
       }
       setLoading(false);
     })();
-  }, [id, customerId]);
+  }, [businessId, id, customerId]);
 
   if (loading) return <ScreenLoader />;
 

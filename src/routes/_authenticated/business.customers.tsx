@@ -129,6 +129,7 @@ function FindCustomer() {
                     key={card.instance_id}
                     to="/business/cards/$id/customers/$customerId"
                     params={{ id: card.template_id, customerId: result.customer.id }}
+                    search={{ businessId }}
                     className="flex items-center gap-3 rounded-2xl border-2 border-ink/10 bg-card p-3 transition-colors hover:bg-muted/40"
                   >
                     <div className="min-w-0 flex-1">

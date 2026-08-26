@@ -81,7 +81,10 @@ function ScanPage() {
     setBusy(true); setPaused(true);
     try {
       if (voucherMatch) {
-        const { data, error } = await supabase.rpc("redeem_voucher", { _voucher_id: voucherMatch[1]! });
+        const { data, error } = await supabase.rpc("redeem_voucher", {
+          _voucher_id: voucherMatch[1]!,
+          _business_id: businessId,
+        });
         if (error) { setRejection(describeError(error.message)); return; }
         const v = data as unknown as { label?: string; business_name?: string };
         setVoucher({ label: v?.label ?? "Reward", business_name: v?.business_name ?? "" });
@@ -89,6 +92,7 @@ function ScanPage() {
       }
       const { data, error } = await supabase.rpc("add_stamp", {
         _card_instance_id: m![1]!,
+        _business_id: businessId,
         _env: getPaddleEnvironment(),
       });
       if (error) { setRejection(describeError(error.message)); return; }
@@ -100,7 +104,7 @@ function ScanPage() {
     } finally {
       setBusy(false);
     }
-  }, [busy, paused, syncPass]);
+  }, [businessId, busy, paused, syncPass]);
 
   const reset = () => { setResult(null); setRejection(null); setVoucher(null); setPaused(false); };
 
