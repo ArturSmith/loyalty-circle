@@ -1,12 +1,12 @@
 export type TeamMember = { id: string; name: string | null; avatarUrl: string | null; role: "owner" | "admin" };
-export type TeamMessage = { id: string; body: string; createdAt: string; senderId: string; senderName: string | null; senderAvatarUrl: string | null };
+export type TeamMessage = { id: string; body: string; createdAt: string; senderId: string; senderName: string | null; senderAvatarUrl: string | null; isMine: boolean };
 
-async function withSenderDetails(rows: any[]): Promise<TeamMessage[]> {
+async function withSenderDetails(rows: any[], viewerId: string): Promise<TeamMessage[]> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const ids = Array.from(new Set(rows.map((row) => row.sender_id)));
   const { data: profiles } = ids.length ? await supabaseAdmin.from("profiles").select("id,display_name,avatar_url").in("id", ids) : { data: [] };
   const byId = new Map((profiles ?? []).map((profile: any) => [profile.id, profile]));
-  return rows.map((row) => ({ id: row.id, body: row.body, createdAt: row.created_at, senderId: row.sender_id, senderName: byId.get(row.sender_id)?.display_name ?? null, senderAvatarUrl: byId.get(row.sender_id)?.avatar_url ?? null }));
+  return rows.map((row) => ({ id: row.id, body: row.body, createdAt: row.created_at, senderId: row.sender_id, senderName: byId.get(row.sender_id)?.display_name ?? null, senderAvatarUrl: byId.get(row.sender_id)?.avatar_url ?? null, isMine: row.sender_id === viewerId }));
 }
 
 async function assertTeamAccess(userId: string, businessId: string) {
@@ -51,7 +51,7 @@ export async function loadTeamThread(userId: string, businessId: string, memberI
   }
   if (!thread) throw new Error("Could not open team chat.");
   const { data: messages } = await (supabaseAdmin as any).from("business_team_messages").select("id,body,created_at,sender_id").eq("thread_id", thread.id).order("created_at", { ascending: true });
-  return { threadId: thread.id as string, messages: await withSenderDetails((messages ?? []) as any[]) };
+  return { threadId: thread.id as string, messages: await withSenderDetails((messages ?? []) as any[], userId) };
 }
 
 export async function postTeamMessage(userId: string, threadId: string, body: string): Promise<TeamMessage> {
@@ -64,5 +64,5 @@ export async function postTeamMessage(userId: string, threadId: string, body: st
   const { data, error } = await (supabaseAdmin as any).from("business_team_messages").insert({ thread_id: threadId, sender_id: userId, body: text }).select("id,body,created_at,sender_id").single();
   if (error) throw error;
   await (supabaseAdmin as any).from("business_team_threads").update({ last_message_at: new Date().toISOString() }).eq("id", threadId);
-  return (await withSenderDetails([data]))[0]!;
+  return (await withSenderDetails([data], userId))[0]!;
 }
