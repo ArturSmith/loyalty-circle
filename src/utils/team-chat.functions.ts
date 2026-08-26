@@ -1,0 +1,6 @@
+import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+const id = (value: unknown) => String(value ?? "");
+export const getTeamMembers = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).inputValidator((d: { businessId: string }) => ({ businessId: id(d.businessId) })).handler(async ({ data, context }) => (await import("@/lib/team-chat.server")).listTeamMembers(context.userId, data.businessId));
+export const getTeamThread = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth]).inputValidator((d: { businessId: string; memberId?: string }) => ({ businessId: id(d.businessId), memberId: d.memberId ? id(d.memberId) : undefined })).handler(async ({ data, context }) => (await import("@/lib/team-chat.server")).loadTeamThread(context.userId, data.businessId, data.memberId));
+export const sendTeamMessage = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((d: { threadId: string; body: string }) => ({ threadId: id(d.threadId), body: String(d.body ?? "") })).handler(async ({ data, context }) => (await import("@/lib/team-chat.server")).postTeamMessage(context.userId, data.threadId, data.body));

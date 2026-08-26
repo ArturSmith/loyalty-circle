@@ -199,7 +199,7 @@ function BusinessDashboard() {
             <nav className="mt-8 flex flex-col gap-2">
               <Link to="/business/workspace" search={{ businessId: biz.id }} className="w-full">
                 <Button variant="ghost" className="w-full justify-start gap-3">
-                  <Building2 className="h-4 w-4" /> Workspace
+                  <Building2 className="h-4 w-4" /> Team
                 </Button>
               </Link>
               <Link to="/business/chats" search={{ businessId: biz.id }} className="w-full">
