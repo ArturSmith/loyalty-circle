@@ -7,6 +7,7 @@ import { BackButton } from "@/components/BackButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getTeamMembers, getTeamThread, sendTeamMessage } from "@/utils/team-chat.functions";
+import { toast } from "sonner";
 
 type Member = { id: string; name: string | null; avatarUrl: string | null; role: "owner" | "admin" };
 type Message = { id: string; body: string; createdAt: string; senderId: string };
@@ -22,7 +23,7 @@ function TeamChat() {
   const [members, setMembers] = useState<Member[]>([]), [messages, setMessages] = useState<Message[]>([]), [threadId, setThreadId] = useState<string | null>(null), [selected, setSelected] = useState<string | null>(null), [draft, setDraft] = useState("");
   useEffect(() => { void membersFn({ data: { businessId } }).then(setMembers); }, [businessId, membersFn]);
   useEffect(() => { void threadFn({ data: { businessId, memberId: selected ?? undefined } }).then((r) => { setThreadId(r.threadId); setMessages(r.messages); }); }, [businessId, selected, threadFn]);
-  const send = async (e: React.FormEvent) => { e.preventDefault(); if (!threadId || !draft.trim()) return; const m = await sendFn({ data: { threadId, body: draft } }); setMessages((v) => [...v, m]); setDraft(""); };
+  const send = async (e: React.FormEvent) => { e.preventDefault(); if (!threadId || !draft.trim()) return; try { const m = await sendFn({ data: { threadId, body: draft } }); setMessages((v) => [...v, m]); setDraft(""); } catch (error) { toast.error(error instanceof Error ? error.message : "Message could not be sent."); } };
   return <div className="flex min-h-screen flex-col bg-background">
     <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur"><div className="mx-auto flex min-h-14 max-w-3xl items-center gap-3 px-5 py-3"><BackButton label="Back to dashboard" onClick={() => navigate({ to: "/business", search: { businessId } })} /><h1 className="font-display text-2xl font-semibold">Team</h1></div></header>
     <div className="border-b border-border px-5 py-3"><div className="mx-auto flex max-w-3xl gap-3 overflow-x-auto"><Tile group active={!selected} label="Group Chat" role="Team" onClick={() => setSelected(null)} icon={<Users className="h-5 w-5" />} />{members.map((m) => <Tile key={m.id} active={selected === m.id} label={m.name ?? "Member"} role={m.role} image={m.avatarUrl} onClick={() => setSelected(m.id)} />)}</div></div>

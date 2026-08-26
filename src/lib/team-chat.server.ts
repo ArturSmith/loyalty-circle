@@ -22,12 +22,28 @@ export async function listTeamMembers(userId: string, businessId: string): Promi
 export async function loadTeamThread(userId: string, businessId: string, memberId?: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   await assertTeamAccess(userId, businessId);
-  const thread = memberId && memberId !== userId
-    ? await (supabaseAdmin as any).from("business_team_threads").upsert({ business_id: businessId, kind: "direct", member_a: [userId, memberId].sort()[0], member_b: [userId, memberId].sort()[1] }, { onConflict: "business_id,member_a,member_b" }).select("id,kind,member_a,member_b").single()
-    : await (supabaseAdmin as any).from("business_team_threads").upsert({ business_id: businessId, kind: "group" }, { onConflict: "business_id" }).select("id,kind,member_a,member_b").single();
-  if (thread.error || !thread.data) throw new Error("Could not open team chat.");
-  const { data: messages } = await (supabaseAdmin as any).from("business_team_messages").select("id,body,created_at,sender_id").eq("thread_id", thread.data.id).order("created_at", { ascending: true });
-  return { threadId: thread.data.id as string, messages: ((messages ?? []) as any[]).map((m) => ({ id: m.id, body: m.body, createdAt: m.created_at, senderId: m.sender_id })) as TeamMessage[] };
+  const direct = Boolean(memberId && memberId !== userId);
+  if (direct) await assertTeamAccess(memberId!, businessId);
+  const pair = direct ? [userId, memberId!].sort() : null;
+  let query = (supabaseAdmin as any).from("business_team_threads").select("id,kind,member_a,member_b").eq("business_id", businessId);
+  query = direct
+    ? query.eq("kind", "direct").eq("member_a", pair![0]).eq("member_b", pair![1])
+    : query.eq("kind", "group");
+  let { data: thread } = await query.maybeSingle();
+  if (!thread) {
+    const { data: created } = await (supabaseAdmin as any).from("business_team_threads")
+      .insert(direct ? { business_id: businessId, kind: "direct", member_a: pair![0], member_b: pair![1] } : { business_id: businessId, kind: "group" })
+      .select("id,kind,member_a,member_b").maybeSingle();
+    thread = created;
+    // A concurrent first open can win the unique-index race; read its thread.
+    if (!thread) {
+      const { data: existing } = await query.maybeSingle();
+      thread = existing;
+    }
+  }
+  if (!thread) throw new Error("Could not open team chat.");
+  const { data: messages } = await (supabaseAdmin as any).from("business_team_messages").select("id,body,created_at,sender_id").eq("thread_id", thread.id).order("created_at", { ascending: true });
+  return { threadId: thread.id as string, messages: ((messages ?? []) as any[]).map((m) => ({ id: m.id, body: m.body, createdAt: m.created_at, senderId: m.sender_id })) as TeamMessage[] };
 }
 
 export async function postTeamMessage(userId: string, threadId: string, body: string): Promise<TeamMessage> {
