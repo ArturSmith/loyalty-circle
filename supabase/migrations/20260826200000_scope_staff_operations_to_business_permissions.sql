@@ -16,12 +16,11 @@ create policy "Members read business stamps" on public.stamps
   for select to authenticated
   using (public.can_on_business(business_id, 'analytics.view'));
 
--- The selected dashboard business is part of the scan contract.  This keeps an
+-- The selected dashboard business is part of the scan contract. This keeps an
 -- owner of two businesses from accidentally stamping a Business A card while
--- operating Business B's scanner.
-drop function if exists public.add_stamp(uuid);
-drop function if exists public.add_stamp(uuid, text);
-create function public.add_stamp(
+-- operating Business B's scanner. New function names deliberately leave the
+-- legacy RPCs untouched, so applying this migration is safe and repeatable.
+create or replace function public.stamp_business_card(
   _card_instance_id uuid,
   _business_id uuid,
   _env text default 'live'::text
@@ -101,8 +100,7 @@ begin
 end;
 $$;
 
-drop function if exists public.redeem_voucher(uuid);
-create function public.redeem_voucher(_voucher_id uuid, _business_id uuid)
+create or replace function public.redeem_business_voucher(_voucher_id uuid, _business_id uuid)
 returns jsonb
 language plpgsql
 security definer
@@ -132,7 +130,7 @@ begin
 end;
 $$;
 
-revoke all on function public.add_stamp(uuid, uuid, text) from public, anon;
-grant execute on function public.add_stamp(uuid, uuid, text) to authenticated;
-revoke all on function public.redeem_voucher(uuid, uuid) from public, anon;
-grant execute on function public.redeem_voucher(uuid, uuid) to authenticated;
+revoke all on function public.stamp_business_card(uuid, uuid, text) from public, anon;
+grant execute on function public.stamp_business_card(uuid, uuid, text) to authenticated;
+revoke all on function public.redeem_business_voucher(uuid, uuid) from public, anon;
+grant execute on function public.redeem_business_voucher(uuid, uuid) to authenticated;

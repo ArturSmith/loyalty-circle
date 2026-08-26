@@ -81,7 +81,7 @@ function ScanPage() {
     setBusy(true); setPaused(true);
     try {
       if (voucherMatch) {
-        const { data, error } = await supabase.rpc("redeem_voucher", {
+        const { data, error } = await supabase.rpc("redeem_business_voucher", {
           _voucher_id: voucherMatch[1]!,
           _business_id: businessId,
         });
@@ -90,7 +90,7 @@ function ScanPage() {
         setVoucher({ label: v?.label ?? "Reward", business_name: v?.business_name ?? "" });
         return;
       }
-      const { data, error } = await supabase.rpc("add_stamp", {
+      const { data, error } = await supabase.rpc("stamp_business_card", {
         _card_instance_id: m![1]!,
         _business_id: businessId,
         _env: getPaddleEnvironment(),
