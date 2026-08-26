@@ -23,6 +23,7 @@ import { z } from "zod";
 
 type Business = {
   id: string;
+  owner_id: string;
   name: string;
   logo_url: string | null;
   brand_color: string | null;
@@ -49,6 +50,7 @@ function BusinessDashboard() {
   const { businessId: selectedBusinessId } = Route.useSearch();
   const unreadChats = useUnreadChatCount("business");
   const [biz, setBiz] = useState<Business | null>(null);
+  const [isBusinessOwner, setIsBusinessOwner] = useState(false);
   const [tpls, setTpls] = useState<Tpl[]>([]);
   const [stats, setStats] = useState({ stamps: 0, customers: 0, active: 0 });
   const [loading, setLoading] = useState(true);
@@ -107,6 +109,7 @@ function BusinessDashboard() {
         }
       }
       setBiz(b as Business | null);
+      setIsBusinessOwner(!!b && (b as Business).owner_id === u.user.id);
       if (b) {
         const [{ data: t }, { count: sCount }, { data: instRows }] = await Promise.all([
           supabase.from("card_templates").select("id,title,subtitle,description,corner_title,total_steps,active,shape,bg_color,accent_color,text_color,stamp_icon,logo_url,rewards,grid_cols").eq("business_id", b.id).order("created_at", { ascending: false }),
@@ -209,21 +212,25 @@ function BusinessDashboard() {
                   )}
                 </Button>
               </Link>
-              <Link to="/business/edit" className="w-full">
-                <Button variant="ghost" className="w-full justify-start gap-3">
-                  <Settings className="h-4 w-4" /> Edit business info
-                </Button>
-              </Link>
-              <Link to="/business/team" className="w-full">
+              {isBusinessOwner && (
+                <Link to="/business/edit" search={{ businessId: biz.id }} className="w-full">
+                  <Button variant="ghost" className="w-full justify-start gap-3">
+                    <Settings className="h-4 w-4" /> Edit business info
+                  </Button>
+                </Link>
+              )}
+              <Link to="/business/team" search={{ businessId: biz.id }} className="w-full">
                 <Button variant="ghost" className="w-full justify-start gap-3">
                   <Users className="h-4 w-4" /> Team & permissions
                 </Button>
               </Link>
-              <Link to="/settings/billing" className="w-full">
-                <Button variant="ghost" className="w-full justify-start gap-3">
-                  <CreditCard className="h-4 w-4" /> Billing & plan
-                </Button>
-              </Link>
+              {isBusinessOwner && (
+                <Link to="/settings/billing" className="w-full">
+                  <Button variant="ghost" className="w-full justify-start gap-3">
+                    <CreditCard className="h-4 w-4" /> Billing & plan
+                  </Button>
+                </Link>
+              )}
               <Link to="/wallet" className="w-full">
                 <Button variant="ghost" className="w-full justify-start gap-3">
                   <WalletIcon className="h-4 w-4" /> My wallet

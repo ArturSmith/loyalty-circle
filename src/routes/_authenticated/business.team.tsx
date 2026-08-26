@@ -22,9 +22,12 @@ import {
 } from "@/lib/plans";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { getPaddleEnvironment } from "@/lib/paddle";
+import { supabase } from "@/integrations/supabase/client";
+import { z } from "zod";
 
 export const Route = createFileRoute("/_authenticated/business/team")({
   head: () => ({ meta: [{ title: "Team — ClubCarder Business" }] }),
+  validateSearch: z.object({ businessId: z.string().uuid() }),
   component: TeamPage,
 });
 
@@ -52,6 +55,7 @@ function StatusPill({ status }: { status: MemberRow["status"] }) {
 }
 
 function TeamPage() {
+  const { businessId } = Route.useSearch();
   const load = useServerFn(listMembers);
   const invite = useServerFn(inviteMember);
   const updatePerms = useServerFn(updateMemberPermissions);
@@ -65,10 +69,24 @@ function TeamPage() {
   const [inviting, setInviting] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [isOwner, setIsOwner] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user) { setIsOwner(false); return; }
+      const { data: business } = await supabase
+        .from("businesses")
+        .select("owner_id")
+        .eq("id", businessId)
+        .maybeSingle();
+      setIsOwner(business?.owner_id === auth.user.id);
+    })();
+  }, [businessId]);
 
   const refresh = useCallback(async () => {
     try {
-      setMembers(await load({}));
+      setMembers(await load({ data: { businessId } }));
     } catch (error) {
       toast.error("Couldn't load your team", {
         description: error instanceof Error ? error.message : undefined,
@@ -76,7 +94,7 @@ function TeamPage() {
     } finally {
       setLoading(false);
     }
-  }, [load]);
+  }, [businessId, load]);
 
   useEffect(() => {
     refresh();
@@ -90,7 +108,7 @@ function TeamPage() {
     setInviting(true);
     try {
       const result = await invite({
-        data: { email, permissions, environment: getPaddleEnvironment() },
+        data: { businessId, email, permissions, environment: getPaddleEnvironment() },
       });
       if (result.status === "error") {
         toast.error(result.message);
@@ -125,7 +143,7 @@ function TeamPage() {
     // Optimistic: the checkbox should not lag behind the pointer.
     setMembers((prev) => prev.map((m) => (m.id === member.id ? { ...m, permissions: next } : m)));
     try {
-      const result = await updatePerms({ data: { memberId: member.id, permissions: next } });
+      const result = await updatePerms({ data: { businessId, memberId: member.id, permissions: next } });
       if (!result.ok) {
         toast.error(result.message ?? "Couldn't update permissions");
         await refresh();
@@ -143,7 +161,7 @@ function TeamPage() {
   const removeMember = async (member: MemberRow) => {
     if (!confirm(`Remove ${member.email}'s access to this business?`)) return;
     try {
-      const result = await revoke({ data: { memberId: member.id } });
+      const result = await revoke({ data: { businessId, memberId: member.id } });
       if (!result.ok) {
         toast.error(result.message ?? "Couldn't remove access");
         return;
@@ -169,14 +187,12 @@ function TeamPage() {
     }
   };
 
-  if (loading) return <ScreenLoader />;
-
-  const isOwner = ent.role === "owner";
+  if (loading || isOwner === null) return <ScreenLoader />;
 
   return (
     <div className="min-h-screen flex flex-col">
       <header className="flex items-center justify-between px-5 py-4">
-        <Link to="/business">
+        <Link to="/business" search={{ businessId }}>
           <Button variant="ghost" size="icon" aria-label="Back to dashboard" className="rounded-full glass-panel">
             <ChevronLeft className="h-5 w-5" />
           </Button>

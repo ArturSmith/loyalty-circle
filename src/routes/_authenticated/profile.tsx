@@ -12,7 +12,6 @@ import { QrDisplay } from "@/components/QrDisplay";
 import { customerQrValue, shortCustomerCode } from "@/lib/customer-code";
 import { useProfile } from "@/hooks/useProfile";
 import type { ProfileInfo } from "@/hooks/useProfile";
-import { useBusinessAccess } from "@/hooks/useBusinessAccess";
 import { AVATAR_BUCKET, initialsFrom, resolveAvatarUrl } from "@/lib/avatar";
 import { TabScreen } from "@/components/TabScreen";
 
@@ -277,8 +276,6 @@ function Profile() {
  * rest of the profile still renders while it's in flight.
  */
 function BusinessSection({ profile }: { profile: ProfileInfo }) {
-  const access = useBusinessAccess();
-
   if (!profile.hasBusiness) {
     return (
       <section className="mt-6 rounded-2xl glass-panel p-4">
@@ -296,84 +293,13 @@ function BusinessSection({ profile }: { profile: ProfileInfo }) {
     );
   }
 
-  if (profile.businessRole === "admin") {
-    return (
-      <section className="mt-6 rounded-2xl glass-panel p-4">
-        <h2 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Business</h2>
-        <dl className="mt-3 space-y-2.5 text-sm">
-          <Row label="Your role">Administrator</Row>
-          <Row label="Business">{profile.businessName ?? "—"}</Row>
-        </dl>
-        <Link to="/workspace" className="mt-4 block">
-          <Button variant="outline" className="w-full gap-2">
-            <Store className="h-4 w-4" /> Open workspace
-          </Button>
-        </Link>
-      </section>
-    );
-  }
-
-  const plan = access.loading
-    ? "Checking…"
-    : access.isPastDue
-      ? "Payment failed"
-      : access.uncoveredCount > 0
-        ? access.reason === "trial-expired"
-          ? "Trial ended"
-          : "Needs more seats"
-        : access.isSubscribed
-          ? access.cancelAtPeriodEnd
-            ? "Cancels at period end"
-            : "Subscribed"
-          : access.trialDaysLeft !== null
-            ? `Trial — ${access.trialDaysLeft} ${access.trialDaysLeft === 1 ? "day" : "days"} left`
-            : "Trial";
-
-  // Anything that stops stamping, or will soon, is worth surfacing here rather
-  // than leaving the owner to discover it at the counter.
-  const needsAttention = !access.loading && (access.isPastDue || access.uncoveredCount > 0);
-
   return (
     <section className="mt-6 rounded-2xl glass-panel p-4">
-      <h2 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Business</h2>
-      <dl className="mt-3 space-y-2.5 text-sm">
-        <Row label="Your role">Owner</Row>
-        <Row label={access.businessCount > 1 ? "Businesses" : "Business"}>
-          {access.businessCount > 1
-            ? `${profile.businessName} +${access.businessCount - 1} more`
-            : profile.businessName ?? "—"}
-        </Row>
-        <Row label="Plan">{plan}</Row>
-        {!access.loading && access.seatCount > 0 && (
-          <Row label="Seats">{`${access.seatCount} active`}</Row>
-        )}
-      </dl>
-
-      {needsAttention && (
-        <p className="mt-3 rounded-xl bg-destructive/10 px-3 py-2 text-xs text-destructive">
-          {access.isPastDue
-            ? "Your last payment failed. Update your card to keep stamping."
-            : `${access.uncoveredCount} of your businesses ${access.uncoveredCount === 1 ? "isn't" : "aren't"} covered — stamping is paused for ${access.uncoveredCount === 1 ? "it" : "them"}.`}
-        </p>
-      )}
-
-      <div className="mt-4 grid grid-cols-2 gap-2">
-        <Link to="/workspace" className="col-span-2">
-          <Button variant="outline" className="w-full gap-2">
-            <Building2 className="h-4 w-4" /> Workspace
-          </Button>
-        </Link>
-        <Link to="/business">
-          <Button variant="outline" className="w-full gap-2">
-            <Store className="h-4 w-4" /> Dashboard
-          </Button>
-        </Link>
-        <Link to="/settings/billing">
-          <Button variant={needsAttention ? "default" : "outline"} className="w-full gap-2">
-            <CreditCard className="h-4 w-4" /> Billing
-          </Button>
-        </Link>
-      </div>
+      <Link to="/workspace" className="block">
+        <Button className="h-11 w-full gap-2">
+          <Building2 className="h-4 w-4" /> Workspace
+        </Button>
+      </Link>
     </section>
   );
 }

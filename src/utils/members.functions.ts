@@ -7,14 +7,16 @@ export type { MemberRow, InviteResult, AcceptResult };
 /** Everyone on the team, as seen by the owner. */
 export const listMembers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<MemberRow[]> => {
+  .inputValidator((data: { businessId?: string }) => ({ businessId: String(data?.businessId ?? "") || undefined }))
+  .handler(async ({ data, context }): Promise<MemberRow[]> => {
     const { listMembersForOwner } = await import("@/lib/members.server");
-    return listMembersForOwner(context.userId);
+    return listMembersForOwner(context.userId, data.businessId);
   });
 
 export const inviteMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { email: string; permissions?: string[]; environment?: string }) => ({
+  .inputValidator((data: { businessId?: string; email: string; permissions?: string[]; environment?: string }) => ({
+    businessId: String(data?.businessId ?? "") || undefined,
     email: String(data?.email ?? ""),
     permissions: Array.isArray(data?.permissions) ? data.permissions : undefined,
     environment: data?.environment === "sandbox" ? "sandbox" : "live",
@@ -23,14 +25,15 @@ export const inviteMember = createServerFn({ method: "POST" })
     const { inviteMemberAsOwner } = await import("@/lib/members.server");
     return inviteMemberAsOwner(
       context.userId,
-      { email: data.email, permissions: data.permissions },
+      { businessId: data.businessId, email: data.email, permissions: data.permissions },
       data.environment,
     );
   });
 
 export const updateMemberPermissions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { memberId: string; permissions: string[] }) => ({
+  .inputValidator((data: { businessId?: string; memberId: string; permissions: string[] }) => ({
+    businessId: String(data?.businessId ?? "") || undefined,
     memberId: String(data?.memberId ?? ""),
     permissions: Array.isArray(data?.permissions) ? data.permissions : [],
   }))
@@ -41,10 +44,13 @@ export const updateMemberPermissions = createServerFn({ method: "POST" })
 
 export const revokeMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { memberId: string }) => ({ memberId: String(data?.memberId ?? "") }))
+  .inputValidator((data: { businessId?: string; memberId: string }) => ({
+    businessId: String(data?.businessId ?? "") || undefined,
+    memberId: String(data?.memberId ?? ""),
+  }))
   .handler(async ({ data, context }) => {
     const { revokeMemberAsOwner } = await import("@/lib/members.server");
-    return revokeMemberAsOwner(context.userId, data.memberId);
+    return revokeMemberAsOwner(context.userId, data);
   });
 
 export const acceptInvite = createServerFn({ method: "POST" })

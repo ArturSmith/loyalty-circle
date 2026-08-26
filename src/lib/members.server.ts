@@ -73,15 +73,18 @@ async function userIdForEmail(email: string): Promise<string | null> {
   }
 }
 
-/** Resolves the business this user owns. Returns null when they own none. */
-async function ownedBusinessId(userId: string): Promise<string | null> {
+/**
+ * Resolves an owner-controlled business. A supplied ID is always honoured;
+ * never silently fall back to a different business the user happens to own.
+ */
+async function ownedBusinessId(userId: string, requestedBusinessId?: string): Promise<string | null> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin
+  let query = supabaseAdmin
     .from("businesses")
     .select("id")
-    .eq("owner_id", userId)
-    .limit(1)
-    .maybeSingle();
+    .eq("owner_id", userId);
+  if (requestedBusinessId) query = query.eq("id", requestedBusinessId);
+  const { data } = await query.limit(1).maybeSingle();
   return (data as { id?: string } | null)?.id ?? null;
 }
 
@@ -111,15 +114,15 @@ async function billingStateForOwner(
   return { subscribed: Boolean(active), tier: active?.plan_tier ?? null };
 }
 
-export async function listMembersForOwner(userId: string): Promise<MemberRow[]> {
+export async function listMembersForOwner(userId: string, businessId?: string): Promise<MemberRow[]> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const businessId = await ownedBusinessId(userId);
-  if (!businessId) return [];
+  const ownedBusinessIdForRequest = await ownedBusinessId(userId, businessId);
+  if (!ownedBusinessIdForRequest) return [];
 
   const { data } = await (supabaseAdmin as any)
     .from("business_members")
     .select("id, email, role, permissions, status, invited_at, accepted_at, invite_token, user_id")
-    .eq("business_id", businessId)
+    .eq("business_id", ownedBusinessIdForRequest)
     .order("role", { ascending: true })
     .order("invited_at", { ascending: true });
 
@@ -158,7 +161,7 @@ export type InviteResult =
 
 export async function inviteMemberAsOwner(
   userId: string,
-  input: { email: string; permissions?: unknown },
+  input: { businessId?: string; email: string; permissions?: unknown },
   environment: string,
 ): Promise<InviteResult> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -168,8 +171,8 @@ export async function inviteMemberAsOwner(
     return { status: "error", message: "Enter a valid email address." };
   }
 
-  const businessId = await ownedBusinessId(userId);
-  if (!businessId) {
+  const ownedBusinessIdForRequest = await ownedBusinessId(userId, input.businessId);
+  if (!ownedBusinessIdForRequest) {
     return { status: "error", message: "Only a business owner can invite administrators." };
   }
 
@@ -178,7 +181,7 @@ export async function inviteMemberAsOwner(
   const { count } = await (supabaseAdmin as any)
     .from("business_members")
     .select("id", { count: "exact", head: true })
-    .eq("business_id", businessId)
+    .eq("business_id", ownedBusinessIdForRequest)
     .eq("role", "admin")
     .neq("status", "revoked");
 
@@ -189,7 +192,7 @@ export async function inviteMemberAsOwner(
   const existingForEmail = await (supabaseAdmin as any)
     .from("business_members")
     .select("id, status")
-    .eq("business_id", businessId)
+    .eq("business_id", ownedBusinessIdForRequest)
     .eq("email", email)
     .maybeSingle();
 
@@ -221,7 +224,7 @@ export async function inviteMemberAsOwner(
   // exclusion constraint matching the ON CONFLICT specification".
   const existingId = (existingForEmail.data as { id?: string } | null)?.id ?? null;
   const invitation = {
-    business_id: businessId,
+    business_id: ownedBusinessIdForRequest,
     email,
     user_id: inviteeUserId,
     role: "admin",
@@ -292,11 +295,11 @@ export async function inviteMemberAsOwner(
 
 export async function updateMemberAsOwner(
   userId: string,
-  input: { memberId: string; permissions: unknown },
+  input: { businessId?: string; memberId: string; permissions: unknown },
 ): Promise<{ ok: boolean; message?: string }> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const businessId = await ownedBusinessId(userId);
-  if (!businessId) return { ok: false, message: "Only a business owner can change permissions." };
+  const ownedBusinessIdForRequest = await ownedBusinessId(userId, input.businessId);
+  if (!ownedBusinessIdForRequest) return { ok: false, message: "Only a business owner can change permissions." };
 
   const { data: member } = await (supabaseAdmin as any)
     .from("business_members")
@@ -304,7 +307,7 @@ export async function updateMemberAsOwner(
     .eq("id", input.memberId)
     .maybeSingle();
 
-  if (!member || member.business_id !== businessId) {
+  if (!member || member.business_id !== ownedBusinessIdForRequest) {
     return { ok: false, message: "Member not found." };
   }
   if (member.role === "owner") {
@@ -321,19 +324,19 @@ export async function updateMemberAsOwner(
 
 export async function revokeMemberAsOwner(
   userId: string,
-  memberId: string,
+  input: { businessId?: string; memberId: string },
 ): Promise<{ ok: boolean; message?: string }> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const businessId = await ownedBusinessId(userId);
-  if (!businessId) return { ok: false, message: "Only a business owner can remove access." };
+  const ownedBusinessIdForRequest = await ownedBusinessId(userId, input.businessId);
+  if (!ownedBusinessIdForRequest) return { ok: false, message: "Only a business owner can remove access." };
 
   const { data: member } = await (supabaseAdmin as any)
     .from("business_members")
     .select("id, role, business_id")
-    .eq("id", memberId)
+    .eq("id", input.memberId)
     .maybeSingle();
 
-  if (!member || member.business_id !== businessId) {
+  if (!member || member.business_id !== ownedBusinessIdForRequest) {
     return { ok: false, message: "Member not found." };
   }
   if (member.role === "owner") {
@@ -345,7 +348,7 @@ export async function revokeMemberAsOwner(
   const { error } = await (supabaseAdmin as any)
     .from("business_members")
     .delete()
-    .eq("id", memberId);
+    .eq("id", input.memberId);
 
   return error ? { ok: false, message: error.message } : { ok: true };
 }

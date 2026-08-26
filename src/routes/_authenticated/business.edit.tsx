@@ -18,17 +18,20 @@ import { LocationsEditor } from "@/components/business/LocationsEditor";
 import { SocialsEditor } from "@/components/business/SocialsEditor";
 import { VisibilityEditor } from "@/components/business/VisibilityEditor";
 import { BusinessLifecycle } from "@/components/business/BusinessLifecycle";
+import { z } from "zod";
 
 /** Rendered as separate cards; BusinessForm supplies each heading. */
 const DETAIL_SECTIONS: BusinessFormSection[] = ["basics", "address", "contact", "about"];
 
 export const Route = createFileRoute("/_authenticated/business/edit")({
   head: () => ({ meta: [{ title: "Edit business — ClubCarder" }] }),
+  validateSearch: z.object({ businessId: z.string().uuid() }),
   component: EditBusiness,
 });
 
 function EditBusiness() {
   const navigate = useNavigate();
+  const { businessId } = Route.useSearch();
   const [bizId, setBizId] = useState<string | null>(null);
   const [details, setDetails] = useState<BusinessDetails>(emptyBusinessDetails);
   const [loading, setLoading] = useState(true);
@@ -41,9 +44,7 @@ function EditBusiness() {
       const { data } = await supabase
         .from("businesses")
         .select("*")
-        .eq("owner_id", u.user.id)
-        .order("created_at", { ascending: true })
-        .limit(1)
+        .eq("id", businessId)
         .maybeSingle();
       if (data) {
         setBizId((data as { id: string }).id);
@@ -51,7 +52,7 @@ function EditBusiness() {
       }
       setLoading(false);
     })();
-  }, []);
+  }, [businessId]);
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,7 +69,7 @@ function EditBusiness() {
     setSaving(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Business updated");
-    navigate({ to: "/business" });
+    navigate({ to: "/business", search: { businessId } });
   };
 
   if (loading) return <ScreenLoader />;
@@ -77,7 +78,7 @@ function EditBusiness() {
   return (
     <div className="min-h-screen flex flex-col">
       <header className="flex items-center justify-between px-5 py-4">
-        <Link to="/business">
+        <Link to="/business" search={{ businessId }}>
           <Button variant="ghost" size="icon" aria-label="Back to dashboard" className="rounded-full glass-panel"><ChevronLeft className="h-5 w-5" /></Button>
         </Link>
         <h1 className="font-display text-2xl font-extrabold tracking-tight">Edit business</h1>
