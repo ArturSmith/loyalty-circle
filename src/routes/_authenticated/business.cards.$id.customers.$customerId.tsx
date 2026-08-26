@@ -103,7 +103,7 @@ function CustomerDetails() {
           .eq("template_id", id)
           .eq("customer_id", customerId)
           .maybeSingle(),
-        supabase.from("profiles").select("display_name,avatar_url").eq("id", customerId).maybeSingle(),
+        supabase.from("profiles_public").select("display_name,avatar_url").eq("id", customerId).maybeSingle(),
         supabase
           .from("vouchers")
           .select("id,label,status,step_number,created_at,redeemed_at")

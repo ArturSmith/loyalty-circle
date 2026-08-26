@@ -754,7 +754,14 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      profiles_public: {
+        Row: {
+          avatar_url: string | null
+          display_name: string | null
+          id: string
+        }
+        Relationships: []
+      }
     }
     Functions: {
       account_trial_active: { Args: { _user_id: string }; Returns: boolean }

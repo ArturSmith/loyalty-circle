@@ -147,7 +147,7 @@ function CardDetails() {
 
       const customerIds = Array.from(new Set(aggs.map((a) => a.customer_id).filter(Boolean)));
       const { data: profiles } = customerIds.length
-        ? await supabase.from("profiles").select("id,display_name,avatar_url").in("id", customerIds)
+        ? await supabase.from("profiles_public").select("id,display_name,avatar_url").in("id", customerIds)
         : { data: [] as { id: string; display_name: string | null; avatar_url: string | null }[] };
 
       const profMap = new Map((profiles ?? []).map(p => [p.id, p]));
