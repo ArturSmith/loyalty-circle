@@ -1,11 +1,14 @@
-import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { ScreenLoader } from "@/components/Spinner";
-import { useBusinessAccess } from "@/hooks/useBusinessAccess";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { TRIAL_DAYS, useBusinessAccess } from "@/hooks/useBusinessAccess";
 import { Button } from "@/components/ui/button";
 import { Lock, Sparkles } from "lucide-react";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { motion } from "framer-motion";
 import { formatPlanPrice, PLAN_LIST } from "@/lib/plans";
+import { getPaddleEnvironment } from "@/lib/paddle";
 
 export const Route = createFileRoute("/_authenticated/business")({
   component: BusinessLayout,
@@ -14,9 +17,94 @@ export const Route = createFileRoute("/_authenticated/business")({
 function BusinessLayout() {
   const access = useBusinessAccess();
   const navigate = useNavigate();
+  const selectedBusinessId = useRouterState({
+    select: (state) => (state.location.search as { businessId?: string }).businessId,
+  });
+  const [isBusinessOwner, setIsBusinessOwner] = useState(false);
+  const [adminAccessRestricted, setAdminAccessRestricted] = useState<boolean | null>(null);
 
-  if (access.loading) {
+  useEffect(() => {
+    (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user) { setIsBusinessOwner(false); return; }
+      if (!selectedBusinessId) { setIsBusinessOwner(true); return; }
+      const { data: business } = await supabase
+        .from("businesses")
+        .select("owner_id")
+        .eq("id", selectedBusinessId)
+        .maybeSingle();
+      setIsBusinessOwner(business?.owner_id === auth.user.id);
+    })();
+  }, [selectedBusinessId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!selectedBusinessId) {
+        if (!cancelled) setAdminAccessRestricted(false);
+        return;
+      }
+
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user) {
+        if (!cancelled) setAdminAccessRestricted(false);
+        return;
+      }
+      const { data: business } = await supabase
+        .from("businesses")
+        .select("owner_id,trial_started_at,comped")
+        .eq("id", selectedBusinessId)
+        .maybeSingle();
+      if (!business || business.owner_id === auth.user.id || business.comped) {
+        if (!cancelled) setAdminAccessRestricted(false);
+        return;
+      }
+
+      const { data: subscriptions } = await supabase
+        .from("subscriptions")
+        .select("status,current_period_end")
+        .eq("user_id", business.owner_id)
+        .eq("environment", getPaddleEnvironment());
+      const now = Date.now();
+      const ownerHasActiveSubscription = (subscriptions ?? []).some((subscription) => {
+        const periodEnd = subscription.current_period_end
+          ? new Date(subscription.current_period_end).getTime()
+          : null;
+        return ["active", "trialing", "past_due"].includes(subscription.status) &&
+          (periodEnd === null || periodEnd > now);
+      });
+      const trialEndsAt = business.trial_started_at
+        ? new Date(business.trial_started_at).getTime() + TRIAL_DAYS * 86400_000
+        : 0;
+      if (!cancelled) {
+        setAdminAccessRestricted(!ownerHasActiveSubscription && trialEndsAt <= now);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [selectedBusinessId]);
+
+  if (access.loading || adminAccessRestricted === null) {
     return <ScreenLoader />;
+  }
+
+  if (adminAccessRestricted) {
+    return (
+      <div className="min-h-screen bg-background px-4 py-10">
+        <div className="mx-auto max-w-md rounded-2xl border-2 border-ink/10 bg-card p-8 text-center">
+          <Lock className="mx-auto h-6 w-6 text-muted-foreground" />
+          <h1 className="mt-4 font-display text-2xl font-semibold">Business access restricted</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            The business owner’s free trial has ended and there is no active subscription for this business.
+          </p>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Please contact the business manager to restore access.
+          </p>
+          <Button onClick={() => navigate({ to: "/workspace" })} variant="outline" className="mt-6 w-full">
+            Back to workspace
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   if (!access.hasAccess) {
@@ -85,7 +173,7 @@ function BusinessLayout() {
           </button>
         </div>
       )}
-      {access.reason === "trialing" && access.trialDaysLeft != null && (
+      {isBusinessOwner && access.reason === "trialing" && access.trialDaysLeft != null && (
         <div className="w-full bg-primary/10 border-b border-primary/20 px-4 py-2 text-center text-xs">
           <span className="text-foreground">
             Free trial: <strong>{access.trialDaysLeft} day{access.trialDaysLeft === 1 ? "" : "s"} left</strong>
@@ -113,4 +201,3 @@ function BusinessLayout() {
     </>
   );
 }
-

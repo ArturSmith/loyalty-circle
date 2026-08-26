@@ -185,7 +185,7 @@ function BusinessDashboard() {
               />
             )}
             <h1 className="font-display text-3xl font-extrabold tracking-tight">{biz.name}</h1>
-            <PlanBadge />
+            <PlanBadge isOwner={isBusinessOwner} />
           </div>
         </div>
         <Sheet>
@@ -197,7 +197,7 @@ function BusinessDashboard() {
               <SheetTitle className="font-display">Menu</SheetTitle>
             </SheetHeader>
             <nav className="mt-8 flex flex-col gap-2">
-              <Link to="/workspace" className="w-full">
+              <Link to="/business/workspace" search={{ businessId: biz.id }} className="w-full">
                 <Button variant="ghost" className="w-full justify-start gap-3">
                   <Building2 className="h-4 w-4" /> Workspace
                 </Button>
@@ -219,11 +219,13 @@ function BusinessDashboard() {
                   </Button>
                 </Link>
               )}
-              <Link to="/business/team" search={{ businessId: biz.id }} className="w-full">
-                <Button variant="ghost" className="w-full justify-start gap-3">
-                  <Users className="h-4 w-4" /> Team & permissions
-                </Button>
-              </Link>
+              {isBusinessOwner && (
+                <Link to="/business/team" search={{ businessId: biz.id }} className="w-full">
+                  <Button variant="ghost" className="w-full justify-start gap-3">
+                    <Users className="h-4 w-4" /> Team & permissions
+                  </Button>
+                </Link>
+              )}
               {isBusinessOwner && (
                 <Link to="/settings/billing" className="w-full">
                   <Button variant="ghost" className="w-full justify-start gap-3">
@@ -410,9 +412,9 @@ function Stat({ icon: Icon, label, value }: { icon: typeof QrCode; label: string
   );
 }
 
-function PlanBadge() {
+function PlanBadge({ isOwner }: { isOwner: boolean }) {
   const access = useBusinessAccess();
-  if (access.loading) return null;
+  if (!isOwner || access.loading) return null;
   if (access.isSubscribed) {
     return (
       <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
