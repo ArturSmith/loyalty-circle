@@ -53,6 +53,26 @@ function inviteUrlFor(token: string): string {
   return `${base}/invite/${token}`;
 }
 
+/**
+ * Auth has no lookup-by-email endpoint for administrators. Search every page
+ * instead of just the first 200 accounts; otherwise a real user can be
+ * mistaken for a new invitee as the customer base grows.
+ */
+async function userIdForEmail(email: string): Promise<string | null> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const perPage = 200;
+
+  for (let page = 1; ; page += 1) {
+    const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage });
+    if (error) throw error;
+
+    const users = data.users ?? [];
+    const matchingUser = users.find((user) => normalizeEmail(user.email ?? "") === email);
+    if (matchingUser) return matchingUser.id;
+    if (users.length < perPage) return null;
+  }
+}
+
 /** Resolves the business this user owns. Returns null when they own none. */
 async function ownedBusinessId(userId: string): Promise<string | null> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -133,7 +153,7 @@ export async function listMembersForOwner(userId: string): Promise<MemberRow[]> 
 }
 
 export type InviteResult =
-  | { status: "invited"; member: MemberRow; emailSent: boolean }
+  | { status: "invited"; member: MemberRow; emailSent: boolean; accessGranted: boolean }
   | { status: "error"; message: string };
 
 export async function inviteMemberAsOwner(
@@ -183,8 +203,7 @@ export async function inviteMemberAsOwner(
   // simply sign in instead of chasing an email.
   let inviteeUserId: string | null = null;
   try {
-    const { data: list } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 200 });
-    inviteeUserId = list?.users?.find((u: any) => u.email?.toLowerCase() === email)?.id ?? null;
+    inviteeUserId = await userIdForEmail(email);
   } catch (error) {
     console.error("listUsers failed while inviting member", error);
   }
@@ -194,6 +213,7 @@ export async function inviteMemberAsOwner(
   }
 
   const permissions = sanitizePermissions(input.permissions);
+  const activatedAt = new Date().toISOString();
 
   // Deliberately not an upsert. The uniqueness rule is a functional index on
   // (business_id, lower(email)), and Postgres cannot match ON CONFLICT
@@ -206,10 +226,13 @@ export async function inviteMemberAsOwner(
     user_id: inviteeUserId,
     role: "admin",
     permissions,
-    status: "invited",
+    // An account we can identify by email has already proved ownership of that
+    // mailbox. Grant access immediately; requiring them to click an invite
+    // link left their membership permanently invisible to the business UI.
+    status: inviteeUserId ? "active" : "invited",
     invited_by: userId,
-    invited_at: new Date().toISOString(),
-    accepted_at: null,
+    invited_at: activatedAt,
+    accepted_at: inviteeUserId ? activatedAt : null,
   };
   const columns =
     "id, email, role, permissions, status, invited_at, accepted_at, invite_token, user_id";
@@ -250,6 +273,7 @@ export async function inviteMemberAsOwner(
   return {
     status: "invited",
     emailSent,
+    accessGranted: Boolean(inviteeUserId),
     member: {
       id: upserted.id,
       email: upserted.email,
@@ -258,7 +282,7 @@ export async function inviteMemberAsOwner(
       status: upserted.status,
       invitedAt: upserted.invited_at,
       acceptedAt: upserted.accepted_at,
-      inviteUrl: inviteUrlFor(upserted.invite_token),
+      inviteUrl: upserted.status === "invited" ? inviteUrlFor(upserted.invite_token) : null,
       displayName: null,
       avatarUrl: null,
       isYou: false,

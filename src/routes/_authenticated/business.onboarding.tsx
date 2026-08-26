@@ -351,7 +351,13 @@ function AdministratorsStep() {
       setEmail("");
       await refresh();
       ent.refetch();
-      toast.success(res.emailSent ? "Invitation sent" : "Invitation created — copy the link below");
+      toast.success(
+        res.accessGranted
+          ? "Administrator added"
+          : res.emailSent
+            ? "Invitation sent"
+            : "Invitation created — copy the link below",
+      );
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not send the invitation");
     } finally {

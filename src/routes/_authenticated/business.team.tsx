@@ -101,9 +101,9 @@ function TeamPage() {
       await refresh();
       ent.refetch();
       toast.success(
-        result.emailSent ? "Invitation sent" : "Invitation created",
+        result.accessGranted ? "Administrator added" : result.emailSent ? "Invitation sent" : "Invitation created",
         {
-          description: result.emailSent
+          description: result.accessGranted || result.emailSent
             ? undefined
             : "Copy the invite link and send it to them yourself.",
         },

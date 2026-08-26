@@ -296,6 +296,23 @@ function BusinessSection({ profile }: { profile: ProfileInfo }) {
     );
   }
 
+  if (profile.businessRole === "admin") {
+    return (
+      <section className="mt-6 rounded-2xl glass-panel p-4">
+        <h2 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Business</h2>
+        <dl className="mt-3 space-y-2.5 text-sm">
+          <Row label="Your role">Administrator</Row>
+          <Row label="Business">{profile.businessName ?? "—"}</Row>
+        </dl>
+        <Link to="/business" className="mt-4 block">
+          <Button variant="outline" className="w-full gap-2">
+            <Store className="h-4 w-4" /> Open dashboard
+          </Button>
+        </Link>
+      </section>
+    );
+  }
+
   const plan = access.loading
     ? "Checking…"
     : access.isPastDue

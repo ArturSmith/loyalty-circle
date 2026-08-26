@@ -15,6 +15,7 @@ export type ProfileInfo = {
   createdAt: string | null;
   hasBusiness: boolean;
   businessName: string | null;
+  businessRole: "owner" | "admin" | null;
 };
 
 export function useProfile() {
@@ -28,10 +29,28 @@ export function useProfile() {
     const user = userData.user;
     if (!user) { setProfile(null); setLoading(false); return; }
 
-    const [{ data: row }, { data: biz }] = await Promise.all([
+    const [{ data: row }, { data: ownedBusiness }, { data: membership }] = await Promise.all([
       supabase.from("profiles").select("display_name, avatar_url, created_at").eq("id", user.id).maybeSingle(),
       supabase.from("businesses").select("id,name").eq("owner_id", user.id).limit(1).maybeSingle(),
+      (supabase as any)
+        .from("business_members")
+        .select("business_id")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .limit(1)
+        .maybeSingle(),
     ]);
+
+    const memberBusinessId = (membership as { business_id?: string } | null)?.business_id;
+    const { data: memberBusiness } = !ownedBusiness && memberBusinessId
+      ? await supabase.from("businesses").select("id,name").eq("id", memberBusinessId).maybeSingle()
+      : { data: null };
+    const business = ownedBusiness ?? memberBusiness;
+    const businessRole: ProfileInfo["businessRole"] = ownedBusiness
+      ? "owner"
+      : memberBusiness
+        ? "admin"
+        : null;
 
     const avatarPath = row?.avatar_url ?? (user.user_metadata?.avatar_url as string | undefined) ?? null;
     const avatarUrl = await resolveAvatarUrl(avatarPath);
@@ -47,8 +66,9 @@ export function useProfile() {
       avatarPath,
       avatarUrl,
       createdAt: row?.created_at ?? user.created_at ?? null,
-      hasBusiness: !!biz,
-      businessName: biz?.name ?? null,
+      hasBusiness: !!business,
+      businessName: business?.name ?? null,
+      businessRole,
     };
     setTabCache(PROFILE_CACHE_KEY, next);
     setProfile(next);
