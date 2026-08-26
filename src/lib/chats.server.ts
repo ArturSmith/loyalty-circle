@@ -28,6 +28,35 @@ export type ChatConversation = {
 const DEFAULT_WELCOME = (name: string) =>
   `Welcome to ${name}! Thanks for adding our loyalty card — message us here any time.`;
 
+/** Whether the user may act as this business in customer conversations. */
+async function canUseBusinessMessages(
+  supabaseAdmin: Awaited<typeof import("@/integrations/supabase/client.server")>["supabaseAdmin"],
+  userId: string,
+  businessId: string,
+  ownerId?: string,
+): Promise<boolean> {
+  let resolvedOwnerId = ownerId;
+  if (!resolvedOwnerId) {
+    const { data: business } = await supabaseAdmin
+      .from("businesses")
+      .select("owner_id")
+      .eq("id", businessId)
+      .maybeSingle();
+    resolvedOwnerId = business?.owner_id;
+  }
+  if (resolvedOwnerId === userId) return true;
+
+  const { data: membership } = await (supabaseAdmin as any)
+    .from("business_members")
+    .select("role, permissions")
+    .eq("business_id", businessId)
+    .eq("user_id", userId)
+    .eq("status", "active")
+    .maybeSingle();
+  const member = membership as { role?: string; permissions?: string[] } | null;
+  return member?.role === "owner" || (member?.permissions ?? []).includes("customers.message");
+}
+
 /**
  * Opens (or reuses) the conversation between a customer and a business and posts
  * the business welcome message on first contact. Never throws into the caller's
@@ -110,17 +139,25 @@ export async function listConversationsFor(
   } else {
     if (businessId) {
       const { data: business } = await supabaseAdmin.from("businesses").select("owner_id").eq("id", businessId).maybeSingle();
-      const { data: member } = await (supabaseAdmin as any).from("business_members").select("id").eq("business_id", businessId).eq("user_id", userId).eq("status", "active").maybeSingle();
-      if (!business || (business.owner_id !== userId && !member)) return [];
+      if (!business || !await canUseBusinessMessages(supabaseAdmin, userId, businessId, business.owner_id)) return [];
       query = query.eq("business_id", businessId);
     } else {
-    const { data: ownedBusinesses } = await supabaseAdmin
-      .from("businesses")
-      .select("id")
-      .eq("owner_id", userId);
-    const ownedIds = (ownedBusinesses ?? []).map((b: { id: string }) => b.id);
-    if (ownedIds.length === 0) return [];
-    query = query.in("business_id", ownedIds);
+      const [{ data: ownedBusinesses }, { data: memberships }] = await Promise.all([
+        supabaseAdmin.from("businesses").select("id").eq("owner_id", userId),
+        (supabaseAdmin as any)
+          .from("business_members")
+          .select("business_id, role, permissions")
+          .eq("user_id", userId)
+          .eq("status", "active"),
+      ]);
+      const permittedIds = new Set((ownedBusinesses ?? []).map((b: { id: string }) => b.id));
+      (memberships as { business_id: string; role?: string; permissions?: string[] }[] | null ?? []).forEach((member) => {
+        if (member.role === "owner" || (member.permissions ?? []).includes("customers.message")) {
+          permittedIds.add(member.business_id);
+        }
+      });
+      if (permittedIds.size === 0) return [];
+      query = query.in("business_id", [...permittedIds]);
     }
   }
 
@@ -211,8 +248,13 @@ export async function loadConversation(conversationId: string, userId: string, s
   // conversation from their personal Chats tab is not acting as the business, so
   // asking as a customer for a conversation you merely own is a miss.
   const isCustomer = scope === "customer" && conversation.customer_id === userId;
-  const isOwner = scope === "business" && conversation.business.owner_id === userId;
-  if (!isCustomer && !isOwner) throw new Error("Conversation not found");
+  const isBusinessMember = scope === "business" && await canUseBusinessMessages(
+    supabaseAdmin,
+    userId,
+    conversation.business_id,
+    conversation.business.owner_id,
+  );
+  if (!isCustomer && !isBusinessMember) throw new Error("Conversation not found");
 
   const { data: messages } = await supabaseAdmin
     .from("chat_messages")
@@ -222,7 +264,7 @@ export async function loadConversation(conversationId: string, userId: string, s
 
   let customerName: string | null = null;
   let customerAvatarUrl: string | null = null;
-  if (isOwner) {
+  if (isBusinessMember) {
     const { data: profile } = await supabaseAdmin
       .from("profiles")
       .select("display_name, avatar_url")
@@ -260,7 +302,7 @@ export async function markConversationRead(
 
   const { data: row } = await supabaseAdmin
     .from("conversations")
-    .select("id, customer_id, business:businesses(owner_id)")
+    .select("id, business_id, customer_id, business:businesses(owner_id)")
     .eq("id", conversationId)
     .maybeSingle();
 
@@ -268,8 +310,13 @@ export async function markConversationRead(
   if (!conversation) return;
 
   const isCustomer = scope === "customer" && conversation.customer_id === userId;
-  const isOwner = scope === "business" && conversation.business?.owner_id === userId;
-  if (!isCustomer && !isOwner) return;
+  const isBusinessMember = scope === "business" && await canUseBusinessMessages(
+    supabaseAdmin,
+    userId,
+    conversation.business_id,
+    conversation.business?.owner_id,
+  );
+  if (!isCustomer && !isBusinessMember) return;
 
   await supabaseAdmin
     .from("conversations")
@@ -291,7 +338,7 @@ export async function postMessage(
 
   const { data: row, error } = await supabaseAdmin
     .from("conversations")
-    .select("id, customer_id, business:businesses(owner_id)")
+    .select("id, business_id, customer_id, business:businesses(owner_id)")
     .eq("id", conversationId)
     .maybeSingle();
 
@@ -302,8 +349,13 @@ export async function postMessage(
   // The scope decides who you're speaking as, so a reply from the business
   // inbox is always stamped 'business' and one from the Chats tab 'customer'.
   const isCustomer = scope === "customer" && conversation.customer_id === userId;
-  const isOwner = scope === "business" && conversation.business?.owner_id === userId;
-  if (!isCustomer && !isOwner) throw new Error("Conversation not found");
+  const isBusinessMember = scope === "business" && await canUseBusinessMessages(
+    supabaseAdmin,
+    userId,
+    conversation.business_id,
+    conversation.business?.owner_id,
+  );
+  if (!isCustomer && !isBusinessMember) throw new Error("Conversation not found");
 
   const { data: created, error: insertError } = await supabaseAdmin
     .from("chat_messages")
