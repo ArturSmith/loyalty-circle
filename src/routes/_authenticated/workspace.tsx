@@ -1,10 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Building2, ChevronRight, Store } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageLoader } from "@/components/Spinner";
 import { Button } from "@/components/ui/button";
 import { TabScreen } from "@/components/TabScreen";
+import { BackButton } from "@/components/BackButton";
 
 type WorkspaceBusiness = {
   id: string;
@@ -20,6 +21,7 @@ export const Route = createFileRoute("/_authenticated/workspace")({
 });
 
 function Workspace() {
+  const navigate = useNavigate();
   const [businesses, setBusinesses] = useState<WorkspaceBusiness[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -71,6 +73,7 @@ function Workspace() {
     <TabScreen
       title="Workspace"
       subtitle="Choose a business you own or help manage."
+      backAction={<BackButton label="Back to profile" onClick={() => navigate({ to: "/profile" })} />}
       contentClassName="flex-1 px-5 py-6"
     >
       <div className="mx-auto w-full max-w-md">

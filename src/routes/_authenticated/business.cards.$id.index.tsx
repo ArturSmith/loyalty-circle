@@ -10,6 +10,7 @@ import { motion } from "framer-motion";
 import { resolveAvatarUrls } from "@/lib/avatar";
 import { CardAnalytics } from "@/components/CardAnalytics";
 import type { AnalyticsInstance, AnalyticsStamp, AnalyticsVoucher, AnalyticsPassEvent } from "@/components/CardAnalytics";
+import { z } from "zod";
 
 
 type Tpl = {
@@ -34,6 +35,7 @@ type Customer = {
 
 export const Route = createFileRoute("/_authenticated/business/cards/$id/")({
   head: () => ({ meta: [{ title: "Card details — ClubCarder" }] }),
+  validateSearch: z.object({ businessId: z.string().uuid() }),
   component: CardDetails,
 });
 

@@ -341,6 +341,7 @@ function BusinessDashboard() {
                   <Link
                     to="/business/cards/$id"
                     params={{ id: t.id }}
+                    search={{ businessId: biz.id }}
                     className="group relative block rounded-2xl focus:outline-none focus:ring-2 focus:ring-ink/40"
                   >
                     <StampCard

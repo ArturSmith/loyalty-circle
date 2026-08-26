@@ -8,12 +8,14 @@ import { TabTransition } from "@/components/TabTransition";
 export function TabScreen({
   title,
   subtitle,
+  backAction,
   action,
   children,
   contentClassName,
 }: {
   title: string;
   subtitle?: string;
+  backAction?: ReactNode;
   action?: ReactNode;
   children: ReactNode;
   contentClassName?: string;
@@ -21,12 +23,13 @@ export function TabScreen({
   return (
     <div className="flex min-h-screen flex-col pb-24">
       <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
-        <div className="mx-auto flex min-h-[56px] w-full max-w-3xl items-center justify-between gap-3 px-5 py-3">
+        <div className="mx-auto flex min-h-[56px] w-full max-w-3xl items-center gap-3 px-5 py-3">
+          {backAction}
           <div className="min-w-0">
             <h1 className="truncate font-display text-2xl font-semibold">{title}</h1>
             {subtitle && <p className="truncate text-xs text-muted-foreground">{subtitle}</p>}
           </div>
-          {action}
+          <div className="ml-auto">{action}</div>
         </div>
       </header>
 
