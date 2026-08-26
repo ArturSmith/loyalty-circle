@@ -16,7 +16,7 @@ export async function listTeamMembers(userId: string, businessId: string): Promi
   const ids = Array.from(new Set([business.owner_id, ...((rows ?? []).map((r: any) => r.user_id).filter(Boolean))]));
   const { data: profiles } = await supabaseAdmin.from("profiles").select("id,display_name,avatar_url").in("id", ids);
   const profile = new Map((profiles ?? []).map((p: any) => [p.id, p]));
-  return ids.map((id) => ({ id, name: profile.get(id)?.display_name ?? null, avatarUrl: profile.get(id)?.avatar_url ?? null, role: id === business.owner_id ? "owner" : "admin" }));
+  return ids.filter((id) => id !== userId).map((id) => ({ id, name: profile.get(id)?.display_name ?? null, avatarUrl: profile.get(id)?.avatar_url ?? null, role: id === business.owner_id ? "owner" : "admin" }));
 }
 
 export async function loadTeamThread(userId: string, businessId: string, memberId?: string) {
