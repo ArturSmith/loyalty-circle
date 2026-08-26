@@ -96,7 +96,7 @@ function BusinessChats() {
                   <Link
                     to="/chats/$conversationId"
                     params={{ conversationId: conversation.id }}
-                    search={{ scope: "business" }}
+                    search={{ scope: "business", businessId }}
                     aria-label={
                       conversation.unread_count > 0
                         ? `${title}, ${conversation.unread_count} unread`

@@ -15,7 +15,7 @@ import type { ChatMessage } from "@/utils/chats.functions";
 // serve a customer's chat and a business inbox thread without guessing — and so
 // that a shared or bookmarked link keeps its meaning.
 const searchSchema = z
-  .object({ scope: z.enum(["customer", "business"]).optional() })
+  .object({ scope: z.enum(["customer", "business"]).optional(), businessId: z.string().uuid().optional() })
   .catch({ scope: undefined });
 
 export const Route = createFileRoute("/_authenticated/chats/$conversationId")({
@@ -35,7 +35,7 @@ export const Route = createFileRoute("/_authenticated/chats/$conversationId")({
 
 function ConversationPage() {
   const { conversationId } = Route.useParams();
-  const { scope: scopeParam } = Route.useSearch();
+  const { scope: scopeParam, businessId } = Route.useSearch();
   const scope = scopeParam ?? "customer";
   const load = useServerFn(getConversation);
   const send = useServerFn(sendChatMessage);
@@ -122,7 +122,10 @@ function ConversationPage() {
       <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
         <div className="mx-auto flex min-h-[56px] w-full max-w-3xl items-center gap-3 px-3 py-3">
           <Button variant="ghost" size="icon" asChild aria-label={scope === "business" ? "Back to inbox" : "Back to chats"}>
-            <Link to={scope === "business" ? "/business/chats" : "/chats"}>
+            <Link
+              to={scope === "business" ? "/business/chats" : "/chats"}
+              search={scope === "business" && businessId ? { businessId } : {}}
+            >
               <ArrowLeft className="h-5 w-5" />
             </Link>
           </Button>
