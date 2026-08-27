@@ -13,6 +13,7 @@ import { BusinessPermissionGate } from "@/components/business/BusinessPermission
 import { BackButton } from "@/components/BackButton";
 import { TabScreen } from "@/components/TabScreen";
 import { useBusinessPermissions } from "@/hooks/useBusinessPermissions";
+import { BusinessSummaryStat } from "@/components/business/BusinessSummaryStat";
 
 export const Route = createFileRoute("/_authenticated/business/customers")({
   head: () => ({ meta: [{ title: "Customers — ClubCarder" }] }),
@@ -36,6 +37,7 @@ function CustomersContent() {
   const fetchCustomers = useServerFn(listBusinessCustomers);
   const permissions = useBusinessPermissions(businessId);
   const [customers, setCustomers] = useState<BusinessCustomerSummary[]>([]);
+  const [activeCardCount, setActiveCardCount] = useState(0);
   const [avatarUrls, setAvatarUrls] = useState<Map<string, string>>(new Map());
   const [query, setQuery] = useState(q ?? "");
   const [loading, setLoading] = useState(true);
@@ -48,15 +50,17 @@ function CustomersContent() {
     setLoading(true);
     setError(null);
     void fetchCustomers({ data: { businessId } })
-      .then(async ({ customers: rows }) => {
+      .then(async ({ customers: rows, activeCardCount: nextActiveCardCount }) => {
         if (cancelled) return;
         setCustomers(rows);
+        setActiveCardCount(nextActiveCardCount);
         const resolved = await resolveAvatarUrls(rows.map((customer) => customer.avatar_url));
         if (!cancelled) setAvatarUrls(resolved);
       })
       .catch((reason) => {
         if (!cancelled) {
           setCustomers([]);
+          setActiveCardCount(0);
           setError(reason instanceof Error ? reason.message : "Customers could not be loaded");
         }
       })
@@ -87,7 +91,6 @@ function CustomersContent() {
     const cards = customers.flatMap((customer) => customer.cards);
     return {
       customers: customers.length,
-      cards: cards.length,
       completed: cards.filter((card) => card.completed_at !== null).length,
     };
   }, [customers]);
@@ -122,9 +125,9 @@ function CustomersContent() {
         ) : (
           <>
             <div className="grid grid-cols-3 gap-3">
-              <Summary label="Customers" value={totals.customers} icon={Users} />
-              <Summary label="Active cards" value={totals.cards} icon={CreditCard} />
-              <Summary label="Completed" value={totals.completed} icon={CheckCircle2} />
+              <BusinessSummaryStat label="Customers" value={totals.customers} icon={Users} />
+              <BusinessSummaryStat label="Active cards" value={activeCardCount} icon={CreditCard} />
+              <BusinessSummaryStat label="Completed" value={totals.completed} icon={CheckCircle2} />
             </div>
 
             <div className="relative mt-6">
@@ -278,24 +281,6 @@ function EmptyCustomers({ businessId, canStamp }: { businessId: string; canStamp
           </Link>
         </Button>
       )}
-    </div>
-  );
-}
-
-function Summary({
-  label,
-  value,
-  icon: Icon,
-}: {
-  label: string;
-  value: number;
-  icon: typeof Users;
-}) {
-  return (
-    <div className="rounded-2xl border border-border bg-card p-3 text-center shadow-sm">
-      <Icon className="mx-auto h-4 w-4 text-primary" aria-hidden="true" />
-      <p className="mt-1 font-display text-xl font-bold">{value}</p>
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
     </div>
   );
 }

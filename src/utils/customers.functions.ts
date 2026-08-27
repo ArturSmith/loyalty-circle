@@ -16,9 +16,10 @@ export const listBusinessCustomers = createServerFn({ method: "GET" })
     if (!businessId) throw new Error("Business is required");
     return { businessId };
   })
-  .handler(async ({ data, context }): Promise<{ customers: BusinessCustomerSummary[] }> => ({
-    customers: await listCustomersForBusiness(context.userId, data.businessId),
-  }));
+  .handler(async ({ data, context }): Promise<{
+    customers: BusinessCustomerSummary[];
+    activeCardCount: number;
+  }> => listCustomersForBusiness(context.userId, data.businessId));
 
 /**
  * Looks up one of the calling business's own customers by scanned QR or typed

@@ -67,20 +67,21 @@ async function canViewBusinessCustomers(userId: string, businessId: string) {
 export async function listCustomersForBusiness(
   userId: string,
   businessId: string,
-): Promise<BusinessCustomerSummary[]> {
+): Promise<{ customers: BusinessCustomerSummary[]; activeCardCount: number }> {
   const access = await canViewBusinessCustomers(userId, businessId);
   if (!access.allowed || !access.business) throw new Error("You do not have permission to view customers");
 
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data: templates, error: templatesError } = await supabaseAdmin
     .from("card_templates")
-    .select("id, title, total_steps")
+    .select("id, title, total_steps, active")
     .eq("business_id", businessId);
   if (templatesError) throw templatesError;
 
   const templateById = new Map((templates ?? []).map((template) => [template.id, template]));
   const templateIds = [...templateById.keys()];
-  if (templateIds.length === 0) return [];
+  const activeCardCount = (templates ?? []).filter((template) => template.active).length;
+  if (templateIds.length === 0) return { customers: [], activeCardCount };
 
   type InstanceRow = {
     id: string;
@@ -108,7 +109,7 @@ export async function listCustomersForBusiness(
     instances.push(...page);
     if (page.length < PAGE_SIZE) break;
   }
-  if (instances.length === 0) return [];
+  if (instances.length === 0) return { customers: [], activeCardCount };
 
   const customerIds = Array.from(new Set(instances.map((instance) => instance.customer_id)));
   const profiles: Array<{ id: string; display_name: string | null; avatar_url: string | null }> = [];
@@ -151,7 +152,7 @@ export async function listCustomersForBusiness(
     });
   }
 
-  return [...byCustomer.values()].sort((a, b) => {
+  const customers = [...byCustomer.values()].sort((a, b) => {
     const aName = a.display_name?.trim();
     const bName = b.display_name?.trim();
     if (aName && bName) return aName.localeCompare(bName);
@@ -159,6 +160,7 @@ export async function listCustomersForBusiness(
     if (bName) return 1;
     return b.joined_at.localeCompare(a.joined_at);
   });
+  return { customers, activeCardCount };
 }
 
 export async function findCustomerForBusiness(userId: string, businessId: string, rawQuery: string): Promise<CustomerLookupResult> {

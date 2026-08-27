@@ -20,6 +20,7 @@ import { Carousel, CarouselApi, CarouselContent, CarouselItem } from "@/componen
 import QRCode from "qrcode";
 import { normalizeBrandColor } from "@/lib/brand";
 import { z } from "zod";
+import { BusinessSummaryStat } from "@/components/business/BusinessSummaryStat";
 
 
 type Business = {
@@ -322,9 +323,9 @@ function BusinessDashboard() {
       )}
 
       <div className="mt-8 grid grid-cols-3 gap-3">
-        <Stat icon={StampIco} label="Stamps issued" value={stats.stamps} />
-        <Stat icon={Users} label="Customers" value={stats.customers} />
-        <Stat icon={WalletIcon} label="Active cards" value={stats.active} />
+        <BusinessSummaryStat icon={StampIco} label="Stamps issued" value={stats.stamps} />
+        <BusinessSummaryStat icon={Users} label="Customers" value={stats.customers} />
+        <BusinessSummaryStat icon={WalletIcon} label="Active cards" value={stats.active} />
       </div>
 
       <div className="mt-10"><h2 className="font-display text-xl">Your cards</h2></div>
@@ -406,16 +407,6 @@ function BusinessDashboard() {
           </Carousel>
         )}
       </div>
-    </div>
-  );
-}
-
-function Stat({ icon: Icon, label, value }: { icon: typeof QrCode; label: string; value: number }) {
-  return (
-    <div className="rounded-xl border-2 border-ink/10 bg-card paper-grain p-4">
-      <Icon className="h-4 w-4 text-muted-foreground" />
-      <div className="mt-2 font-display text-2xl">{value}</div>
-      <div className="text-[11px] uppercase tracking-widest text-muted-foreground">{label}</div>
     </div>
   );
 }
