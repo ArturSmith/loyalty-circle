@@ -8,6 +8,7 @@ import { getConversations } from "@/utils/chats.functions";
 import { publishUnreadChatCount } from "@/hooks/useUnreadChatCount";
 import type { ChatConversation } from "@/utils/chats.functions";
 import { z } from "zod";
+import { BusinessPermissionGate } from "@/components/business/BusinessPermissionGate";
 
 export const Route = createFileRoute("/_authenticated/business/chats")({
   head: () => ({
@@ -36,6 +37,15 @@ function timeLabel(iso: string) {
 }
 
 function BusinessChats() {
+  const { businessId } = Route.useSearch();
+  return (
+    <BusinessPermissionGate businessId={businessId} permission="customers.message">
+      <BusinessChatsContent />
+    </BusinessPermissionGate>
+  );
+}
+
+function BusinessChatsContent() {
   const { businessId } = Route.useSearch();
   const load = useServerFn(getConversations);
   const [conversations, setConversations] = useState<ChatConversation[]>(() => cachedConversations ?? []);

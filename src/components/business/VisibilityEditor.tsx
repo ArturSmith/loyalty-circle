@@ -31,7 +31,7 @@ const OPTIONS: { key: MarketplaceStatus; title: string; blurb: string }[] = [
  * toggle that silently does nothing until you scroll up and submit a different
  * form is exactly the kind of thing people get wrong.
  */
-export function VisibilityEditor({ businessId }: { businessId: string }) {
+export function VisibilityEditor({ businessId, showSubscriptionNotice = true }: { businessId: string; showSubscriptionNotice?: boolean }) {
   const [value, setValue] = useState<MarketplaceStatus | null>(null);
   const [saving, setSaving] = useState(false);
   const access = useBusinessAccess();
@@ -60,14 +60,10 @@ export function VisibilityEditor({ businessId }: { businessId: string }) {
     const previous = value;
     setValue(next); // optimistic: the radio should feel instant
     setSaving(true);
-    const { error } = await supabase
-      .from("businesses")
-      .update({
-        marketplace_status: next,
-        marketplace_submitted_at: next === "published" ? new Date().toISOString() : null,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", businessId);
+    const { error } = await supabase.rpc("set_business_marketplace_status", {
+      _business_id: businessId,
+      _status: next,
+    });
     setSaving(false);
     if (error) {
       setValue(previous);
@@ -87,7 +83,7 @@ export function VisibilityEditor({ businessId }: { businessId: string }) {
 
   return (
     <div className="space-y-3">
-      {!access.loading && !access.hasAccess && value === "published" && (
+      {showSubscriptionNotice && !access.loading && !access.hasAccess && value === "published" && (
         // Being listed is a paid feature, so the preference is kept but not
         // honoured. Saying so beats letting the owner believe they're visible.
         <p className="rounded-xl bg-destructive/10 px-3 py-2 text-xs text-destructive">

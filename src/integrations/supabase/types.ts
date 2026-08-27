@@ -989,6 +989,10 @@ export type Database = {
         Args: { _business_id: string; _paused: boolean }
         Returns: undefined
       }
+      set_business_marketplace_status: {
+        Args: { _business_id: string; _status: string }
+        Returns: undefined
+      }
       stamp_business_card: {
         Args: { _business_id: string; _card_instance_id: string; _env?: string }
         Returns: Json

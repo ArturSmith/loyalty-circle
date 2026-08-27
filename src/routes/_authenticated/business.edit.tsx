@@ -19,6 +19,8 @@ import { SocialsEditor } from "@/components/business/SocialsEditor";
 import { VisibilityEditor } from "@/components/business/VisibilityEditor";
 import { BusinessLifecycle } from "@/components/business/BusinessLifecycle";
 import { z } from "zod";
+import { BusinessPermissionGate } from "@/components/business/BusinessPermissionGate";
+import { useBusinessPermissions } from "@/hooks/useBusinessPermissions";
 
 /** Rendered as separate cards; BusinessForm supplies each heading. */
 const DETAIL_SECTIONS: BusinessFormSection[] = ["basics", "address", "contact", "about"];
@@ -26,8 +28,17 @@ const DETAIL_SECTIONS: BusinessFormSection[] = ["basics", "address", "contact", 
 export const Route = createFileRoute("/_authenticated/business/edit")({
   head: () => ({ meta: [{ title: "Edit business — ClubCarder" }] }),
   validateSearch: z.object({ businessId: z.string().uuid() }),
-  component: EditBusiness,
+  component: EditBusinessAccess,
 });
+
+function EditBusinessAccess() {
+  const { businessId } = Route.useSearch();
+  return (
+    <BusinessPermissionGate businessId={businessId} anyOf={["locations.manage", "marketplace.manage"]}>
+      <EditBusiness />
+    </BusinessPermissionGate>
+  );
+}
 
 function EditBusiness() {
   const navigate = useNavigate();
@@ -36,6 +47,7 @@ function EditBusiness() {
   const [details, setDetails] = useState<BusinessDetails>(emptyBusinessDetails);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const permissions = useBusinessPermissions(businessId);
 
   useEffect(() => {
     (async () => {
@@ -72,7 +84,7 @@ function EditBusiness() {
     navigate({ to: "/business", search: { businessId } });
   };
 
-  if (loading) return <ScreenLoader />;
+  if (loading || permissions.loading) return <ScreenLoader />;
   if (!bizId) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">No business found.</div>;
 
   return (
@@ -89,7 +101,7 @@ function EditBusiness() {
         {/* Each concern is its own card, matching the profile page. The
             details form still submits as one unit, so it keeps a single
             surrounding <form> spanning its cards. */}
-        <form onSubmit={save} className="space-y-4">
+        {permissions.isOwner && <form onSubmit={save} className="space-y-4">
           {DETAIL_SECTIONS.map((section) => (
             <section key={section} className="rounded-2xl glass-panel p-4">
               <BusinessForm value={details} onChange={setDetails} sections={[section]} />
@@ -98,42 +110,42 @@ function EditBusiness() {
           <Button type="submit" disabled={saving} className="w-full h-11">
             {saving ? "Saving…" : "Save changes"}
           </Button>
-        </form>
+        </form>}
 
         {/* Locations, networks and visibility save themselves, so they sit
             outside the form. */}
-        <section className="rounded-2xl glass-panel p-4">
+        {permissions.has("locations.manage") && <section className="rounded-2xl glass-panel p-4">
           <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             Locations
           </h2>
           <div className="mt-4">
             <LocationsEditor businessId={bizId} />
           </div>
-        </section>
-        <section className="rounded-2xl glass-panel p-4">
+        </section>}
+        {permissions.has("marketplace.manage") && <section className="rounded-2xl glass-panel p-4">
           <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             My Networks
           </h2>
           <div className="mt-4">
             <SocialsEditor businessId={bizId} />
           </div>
-        </section>
-        <section className="rounded-2xl glass-panel p-4">
+        </section>}
+        {permissions.has("marketplace.manage") && <section className="rounded-2xl glass-panel p-4">
           <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             Visibility
           </h2>
           <div className="mt-4">
-            <VisibilityEditor businessId={bizId} />
+            <VisibilityEditor businessId={bizId} showSubscriptionNotice={permissions.isOwner} />
           </div>
-        </section>
-        <section className="rounded-2xl glass-panel p-4">
+        </section>}
+        {permissions.isOwner && <section className="rounded-2xl glass-panel p-4">
           <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             Business status
           </h2>
           <div className="mt-4">
             <BusinessLifecycle businessId={bizId} businessName={details.name} />
           </div>
-        </section>
+        </section>}
       </div>
     </div>
   );

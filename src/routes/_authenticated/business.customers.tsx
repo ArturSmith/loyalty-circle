@@ -10,6 +10,8 @@ import { findCustomer } from "@/utils/customers.functions";
 import type { CustomerLookupResult } from "@/utils/customers.functions";
 import { MIN_CODE_LENGTH, shortCustomerCode } from "@/lib/customer-code";
 import { resolveAvatarUrl } from "@/lib/avatar";
+import { BusinessPermissionGate } from "@/components/business/BusinessPermissionGate";
+import { useBusinessPermissions } from "@/hooks/useBusinessPermissions";
 
 export const Route = createFileRoute("/_authenticated/business/customers")({
   head: () => ({ meta: [{ title: "Find a customer — ClubCarder" }] }),
@@ -20,9 +22,19 @@ export const Route = createFileRoute("/_authenticated/business/customers")({
 });
 
 function FindCustomer() {
+  const { businessId } = Route.useSearch();
+  return (
+    <BusinessPermissionGate businessId={businessId} permission="customers.view">
+      <FindCustomerContent />
+    </BusinessPermissionGate>
+  );
+}
+
+function FindCustomerContent() {
   const navigate = useNavigate();
   const { q, businessId } = Route.useSearch();
   const lookup = useServerFn(findCustomer);
+  const permissions = useBusinessPermissions(businessId);
 
   const [input, setInput] = useState(q ?? "");
   const [result, setResult] = useState<CustomerLookupResult | null>(null);
@@ -96,11 +108,13 @@ function FindCustomer() {
         </p>
       </form>
 
-      <Link to="/business/scan" search={{ businessId }} className="mt-3 block">
-        <Button variant="outline" className="w-full gap-2">
-          <ScanLine className="h-4 w-4" /> Scan customer QR
-        </Button>
-      </Link>
+      {permissions.has("cards.stamp") && (
+        <Link to="/business/scan" search={{ businessId }} className="mt-3 block">
+          <Button variant="outline" className="w-full gap-2">
+            <ScanLine className="h-4 w-4" /> Scan customer QR
+          </Button>
+        </Link>
+      )}
 
       {result && (
         <div className="mt-8">

@@ -15,6 +15,7 @@ import {
   Clock,
 } from "lucide-react";
 import { z } from "zod";
+import { BusinessPermissionGate } from "@/components/business/BusinessPermissionGate";
 
 type Reward = { step: number; label?: string | null };
 
@@ -72,6 +73,15 @@ const fmt = (d: string | null) =>
   d ? new Date(d).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }) : "—";
 
 function CustomerDetails() {
+  const { businessId } = Route.useSearch();
+  return (
+    <BusinessPermissionGate businessId={businessId} allOf={["customers.view", "analytics.view"]}>
+      <CustomerDetailsContent />
+    </BusinessPermissionGate>
+  );
+}
+
+function CustomerDetailsContent() {
   const { id, customerId } = Route.useParams();
   const { businessId } = Route.useSearch();
   const navigate = useNavigate();

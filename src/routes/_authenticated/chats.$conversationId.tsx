@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getConversation, markChatRead, sendChatMessage } from "@/utils/chats.functions";
 import { invalidateUnreadChatCount } from "@/hooks/useUnreadChatCount";
 import type { ChatMessage } from "@/utils/chats.functions";
+import { BusinessPermissionGate } from "@/components/business/BusinessPermissionGate";
 
 // Which side the reader is acting as. Carried in the URL so the same screen can
 // serve a customer's chat and a business inbox thread without guessing — and so
@@ -30,8 +31,20 @@ export const Route = createFileRoute("/_authenticated/chats/$conversationId")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: ConversationPage,
+  component: ConversationAccess,
 });
+
+function ConversationAccess() {
+  const { scope: scopeParam, businessId } = Route.useSearch();
+  if ((scopeParam ?? "customer") === "business" && businessId) {
+    return (
+      <BusinessPermissionGate businessId={businessId} permission="customers.message">
+        <ConversationPage />
+      </BusinessPermissionGate>
+    );
+  }
+  return <ConversationPage />;
+}
 
 function ConversationPage() {
   const { conversationId } = Route.useParams();

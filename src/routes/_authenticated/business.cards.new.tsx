@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CardWizard } from "@/components/CardWizard";
 import { z } from "zod";
+import { BusinessPermissionGate } from "@/components/business/BusinessPermissionGate";
 
 export const Route = createFileRoute("/_authenticated/business/cards/new")({
   head: () => ({ meta: [{ title: "New card — ClubCarder" }] }),
@@ -9,5 +10,10 @@ export const Route = createFileRoute("/_authenticated/business/cards/new")({
 });
 
 function NewCard() {
-  return <CardWizard businessId={Route.useSearch().businessId} />;
+  const { businessId } = Route.useSearch();
+  return (
+    <BusinessPermissionGate businessId={businessId} permission="cards.manage">
+      <CardWizard businessId={businessId} />
+    </BusinessPermissionGate>
+  );
 }

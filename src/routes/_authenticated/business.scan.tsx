@@ -11,6 +11,7 @@ import { getPaddleEnvironment } from "@/lib/paddle";
 import { useServerFn } from "@tanstack/react-start";
 import { syncWalletPass } from "@/utils/wallet.functions";
 import { z } from "zod";
+import { BusinessPermissionGate } from "@/components/business/BusinessPermissionGate";
 
 export const Route = createFileRoute("/_authenticated/business/scan")({
   head: () => ({ meta: [{ title: "Scan customer — ClubCarder" }] }),
@@ -56,6 +57,15 @@ function describeError(raw: string): Rejection {
 }
 
 function ScanPage() {
+  const { businessId } = Route.useSearch();
+  return (
+    <BusinessPermissionGate businessId={businessId} permission="cards.stamp">
+      <ScanPageContent />
+    </BusinessPermissionGate>
+  );
+}
+
+function ScanPageContent() {
   const navigate = useNavigate();
   const { businessId } = Route.useSearch();
   const [busy, setBusy] = useState(false);

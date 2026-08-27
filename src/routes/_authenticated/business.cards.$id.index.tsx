@@ -11,6 +11,8 @@ import { resolveAvatarUrls } from "@/lib/avatar";
 import { CardAnalytics } from "@/components/CardAnalytics";
 import type { AnalyticsInstance, AnalyticsStamp, AnalyticsVoucher, AnalyticsPassEvent } from "@/components/CardAnalytics";
 import { z } from "zod";
+import { BusinessPermissionGate } from "@/components/business/BusinessPermissionGate";
+import { useBusinessPermissions } from "@/hooks/useBusinessPermissions";
 
 
 type Tpl = {
@@ -36,8 +38,17 @@ type Customer = {
 export const Route = createFileRoute("/_authenticated/business/cards/$id/")({
   head: () => ({ meta: [{ title: "Card details — ClubCarder" }] }),
   validateSearch: z.object({ businessId: z.string().uuid() }),
-  component: CardDetails,
+  component: CardDetailsAccess,
 });
+
+function CardDetailsAccess() {
+  const { businessId } = Route.useSearch();
+  return (
+    <BusinessPermissionGate businessId={businessId} anyOf={["cards.manage", "customers.view", "analytics.view"]}>
+      <CardDetails />
+    </BusinessPermissionGate>
+  );
+}
 
 function CardDetails() {
   const { id } = Route.useParams();
@@ -51,6 +62,7 @@ function CardDetails() {
   const [face, setFace] = useState<CardFace>("info");
   const [analytics, setAnalytics] = useState<{ instances: AnalyticsInstance[]; stamps: AnalyticsStamp[]; vouchers: AnalyticsVoucher[] }>({ instances: [], stamps: [], vouchers: [] });
   const [passEvents, setPassEvents] = useState<AnalyticsPassEvent[]>([]);
+  const permissions = useBusinessPermissions(businessId);
 
 
 
@@ -188,7 +200,7 @@ function CardDetails() {
   }, [businessId, id]);
 
 
-  if (loading) return <ScreenLoader />;
+  if (loading || permissions.loading) return <ScreenLoader />;
   if (!tpl || !biz) return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-muted-foreground">
       <p>Card not found.</p>
@@ -206,11 +218,13 @@ function CardDetails() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <p className="text-xs uppercase tracking-widest text-muted-foreground">Card details</p>
-        <Link to="/business/cards/$id/edit" params={{ id: tpl.id }} search={{ businessId: biz.id }}>
-          <Button size="sm" className="rounded-full gap-2">
-            <Pencil className="h-4 w-4" /> Edit
-          </Button>
-        </Link>
+        {permissions.has("cards.manage") ? (
+          <Link to="/business/cards/$id/edit" params={{ id: tpl.id }} search={{ businessId: biz.id }}>
+            <Button size="sm" className="rounded-full gap-2">
+              <Pencil className="h-4 w-4" /> Edit
+            </Button>
+          </Link>
+        ) : <div className="w-9" />}
       </header>
 
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mt-6">
@@ -243,7 +257,7 @@ function CardDetails() {
         <span className={tpl.active ? "text-emerald-600" : ""}>{tpl.active ? "Active" : "Paused"}</span>
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {permissions.has("analytics.view") && <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat
           icon={Users}
           label="Active users"
@@ -253,12 +267,13 @@ function CardDetails() {
         <Stat icon={StampIco} label="Stamps" value={stats.stamps} />
         <Stat icon={CheckCircle2} label="Completed" value={stats.completed} />
         <Stat icon={Ticket} label="Vouchers out" value={stats.outstandingVouchers} />
-      </div>
+      </div>}
 
-      <CardAnalytics totalSteps={tpl.total_steps} instances={analytics.instances} stamps={analytics.stamps} vouchers={analytics.vouchers} passEvents={passEvents} />
+      {permissions.has("analytics.view") && (
+        <CardAnalytics totalSteps={tpl.total_steps} instances={analytics.instances} stamps={analytics.stamps} vouchers={analytics.vouchers} passEvents={passEvents} />
+      )}
 
-
-      <div className="mt-10">
+      {permissions.has("customers.view") && permissions.has("analytics.view") && <><div className="mt-10">
         <h2 className="font-display text-xl">Customers</h2>
         <p className="text-xs text-muted-foreground mt-1">Who's using this card and when they last stamped.</p>
       </div>
@@ -310,7 +325,7 @@ function CardDetails() {
           </Link>
 
         ))}
-      </div>
+      </div></>}
     </div>
   );
 }
