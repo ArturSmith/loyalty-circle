@@ -73,7 +73,7 @@ function TeamChat() {
   };
 
   return (
-    <div className="relative flex h-dvh min-h-screen flex-col overflow-hidden bg-background">
+    <div className="fixed inset-0 flex flex-col overflow-hidden overscroll-none bg-background">
       <div className="z-30 shrink-0 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
         <header className="mx-auto flex min-h-[56px] w-full max-w-3xl items-center gap-3 px-3 py-3">
           <Button variant="ghost" size="icon" asChild aria-label="Back to dashboard">
@@ -90,7 +90,7 @@ function TeamChat() {
         </div>
       </div>
 
-      <main className="mx-auto min-h-0 w-full max-w-3xl flex-1 overflow-y-auto px-4 py-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
+      <main className="mx-auto min-h-0 w-full max-w-3xl flex-1 overflow-y-auto overscroll-contain px-4 py-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
         <div className="space-y-3">
           {threadLoading ? <div className="flex h-32 items-center justify-center"><Spinner label="Loading conversation…" /></div> : messages.length === 0 ? <p className="py-10 text-center text-sm text-muted-foreground">No messages yet — say hello.</p> : messages.map((message) => {
             const mine = message.isMine;
