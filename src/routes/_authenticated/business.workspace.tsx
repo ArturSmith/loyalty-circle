@@ -74,7 +74,14 @@ function TeamChat() {
 
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden overscroll-none bg-background">
-      <div className="z-30 shrink-0 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+      <div
+        className="z-30 shrink-0 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80"
+        style={{
+          paddingTop: "env(safe-area-inset-top)",
+          paddingLeft: "env(safe-area-inset-left)",
+          paddingRight: "env(safe-area-inset-right)",
+        }}
+      >
         <header className="mx-auto flex min-h-[56px] w-full max-w-3xl items-center gap-3 px-3 py-3">
           <Button variant="ghost" size="icon" asChild aria-label="Back to dashboard">
             <Link to="/business" search={{ businessId }}><ArrowLeft className="h-5 w-5" /></Link>
@@ -90,7 +97,13 @@ function TeamChat() {
         </div>
       </div>
 
-      <main className="mx-auto min-h-0 w-full max-w-3xl flex-1 overflow-y-auto overscroll-contain px-4 py-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
+      <main
+        className="mx-auto min-h-0 w-full max-w-3xl flex-1 overflow-y-auto overscroll-contain py-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))]"
+        style={{
+          paddingLeft: "max(1rem, env(safe-area-inset-left))",
+          paddingRight: "max(1rem, env(safe-area-inset-right))",
+        }}
+      >
         <div className="space-y-3">
           {threadLoading ? <div className="flex h-32 items-center justify-center"><Spinner label="Loading conversation…" /></div> : messages.length === 0 ? <p className="py-10 text-center text-sm text-muted-foreground">No messages yet — say hello.</p> : messages.map((message) => {
             const mine = message.isMine;
@@ -106,7 +119,14 @@ function TeamChat() {
         </div>
       </main>
 
-      <div className="absolute inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 backdrop-blur" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+      <div
+        className="absolute inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 backdrop-blur"
+        style={{
+          paddingBottom: "env(safe-area-inset-bottom)",
+          paddingLeft: "env(safe-area-inset-left)",
+          paddingRight: "env(safe-area-inset-right)",
+        }}
+      >
         <form onSubmit={(event) => { event.preventDefault(); void submit(); }} className="mx-auto flex w-full max-w-3xl items-end gap-2 px-4 py-3">
           <Textarea ref={inputRef} rows={1} value={draft} maxLength={2000} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void submit(); } }} placeholder="Write a message…" className="max-h-32 min-h-[44px] resize-none" disabled={!threadId} />
           <Button type="submit" disabled={sending || threadLoading || !draft.trim()} size="icon" aria-label="Send message">{sending ? <Spinner size={16} label={null} /> : <Send className="h-4 w-4" />}</Button>
