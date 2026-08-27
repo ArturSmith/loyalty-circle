@@ -322,7 +322,7 @@ function AdministratorsStep() {
 
   const refresh = useCallback(async () => {
     try {
-      setMembers(await load({}));
+      setMembers(await load({ data: {} }));
     } catch {
       // A missing team is not an error worth interrupting setup for.
     } finally {
@@ -535,7 +535,7 @@ function ReviewStep({
         Next up: create your first loyalty card so customers have something to collect.
       </p>
       <Button asChild variant="outline">
-        <Link to="/business/cards/new">Create a loyalty card</Link>
+        <Link to="/business/cards/new" search={{ businessId: biz.id }}>Create a loyalty card</Link>
       </Button>
     </div>
   );
