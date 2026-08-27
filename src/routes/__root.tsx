@@ -8,7 +8,7 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -17,6 +17,7 @@ import { Toaster } from "sonner";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { BottomNav, isTabRoute } from "@/components/BottomNav";
 import { clearTabCaches } from "@/lib/tabCache";
+import { PullToRefresh } from "@/components/PullToRefresh";
 
 function NotFoundComponent() {
   return (
@@ -93,6 +94,15 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
+  const [refreshVersion, setRefreshVersion] = useState(0);
+
+  const refreshApp = useCallback(async () => {
+    // Most screens load directly from Supabase in mount effects, while a few
+    // use React Query or the tab cache. Refresh all three data paths together.
+    clearTabCaches();
+    await Promise.all([queryClient.invalidateQueries(), router.invalidate()]);
+    setRefreshVersion((version) => version + 1);
+  }, [queryClient, router]);
 
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event) => {
@@ -157,8 +167,9 @@ function RootComponent() {
           app's scroll container so the document itself never scrolls. On web
           this is an inert wrapper and the page scrolls as usual. */}
       <div id="app-scroll">
-        <Outlet />
+        <Outlet key={refreshVersion} />
       </div>
+      <PullToRefresh onRefresh={refreshApp} />
       <PersistentBottomNav />
       <Toaster position="top-center" richColors />
     </QueryClientProvider>
