@@ -322,7 +322,7 @@ function AdministratorsStep() {
 
   const refresh = useCallback(async () => {
     try {
-      setMembers(await load({}));
+      setMembers(await load({ data: {} }));
     } catch {
       // A missing team is not an error worth interrupting setup for.
     } finally {
