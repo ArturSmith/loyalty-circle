@@ -7,6 +7,9 @@ export type WalletInstance = {
   stamps_count: number;
   completed_at: string | null;
   created_at: string;
+  terms_accepted_at: string | null;
+  terms_accepted_text: string | null;
+  terms_accepted_version: number | null;
   template: {
     id: string;
     title: string;
@@ -22,6 +25,8 @@ export type WalletInstance = {
     logo_url: string | null;
     rewards: Reward[];
     grid_cols: number | null;
+    terms_and_conditions: string;
+    terms_version: number;
     business: {
       id: string;
       name: string;
@@ -43,24 +48,30 @@ export type WalletInstance = {
 
 export const claimCardToWallet = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { templateId: string }) => {
+  .inputValidator((data: { templateId: string; acceptedTermsVersion: number }) => {
     if (!data || typeof data.templateId !== "string" || data.templateId.length === 0) {
       throw new Error("Card is required");
     }
-    return { templateId: data.templateId };
+    if (!Number.isInteger(data.acceptedTermsVersion) || data.acceptedTermsVersion < 1) {
+      throw new Error("You must accept the card terms before adding it");
+    }
+    return { templateId: data.templateId, acceptedTermsVersion: data.acceptedTermsVersion };
   })
   .handler(async ({ data, context }): Promise<{ instanceId: string; alreadyOwned: boolean }> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: template, error: templateError } = await supabaseAdmin
       .from("card_templates")
-      .select("id, business_id")
+      .select("id, business_id, terms_and_conditions, terms_version")
       .eq("id", data.templateId)
       .eq("active", true)
       .maybeSingle();
 
     if (templateError) throw templateError;
     if (!template) throw new Error("This card is not available anymore");
+    if (template.terms_version !== data.acceptedTermsVersion) {
+      throw new Error("The card terms changed. Please review and accept the latest version.");
+    }
 
     const { data: existingRows, error: existingError } = await supabaseAdmin
       .from("card_instances")
@@ -75,7 +86,14 @@ export const claimCardToWallet = createServerFn({ method: "POST" })
 
     const { data: created, error: createError } = await supabaseAdmin
       .from("card_instances")
-      .insert({ template_id: data.templateId, customer_id: context.userId })
+      .insert({
+        template_id: data.templateId,
+        customer_id: context.userId,
+        terms_accepted_at: new Date().toISOString(),
+        terms_accepted_by: context.userId,
+        terms_accepted_version: template.terms_version,
+        terms_accepted_text: template.terms_and_conditions,
+      })
       .select("id")
       .single();
 
@@ -102,7 +120,9 @@ export const getWalletCards = createServerFn({ method: "GET" })
       // Fetch card instances with template IDs only (simpler query)
       const { data: instanceData, error: instanceError } = await supabaseAdmin
         .from("card_instances")
-        .select(`id, stamps_count, completed_at, created_at, template_id`)
+        .select(
+          `id, stamps_count, completed_at, created_at, template_id, terms_accepted_at, terms_accepted_text, terms_accepted_version`,
+        )
         .eq("customer_id", context.userId)
         .order("created_at", { ascending: false });
 
@@ -121,7 +141,7 @@ export const getWalletCards = createServerFn({ method: "GET" })
       // Fetch templates with business data
       const { data: templateData, error: templateError } = await supabaseAdmin
         .from("card_templates")
-        .select(`id, title, subtitle, description, corner_title, total_steps, shape, bg_color, accent_color, text_color, stamp_icon, logo_url, rewards, grid_cols, business_id,
+        .select(`id, title, subtitle, description, corner_title, total_steps, shape, bg_color, accent_color, text_color, stamp_icon, logo_url, rewards, grid_cols, terms_and_conditions, terms_version, business_id,
           business:businesses(id, name, logo_url, category, description, welcome_message, phone, website, address_line1, address_line2, city, postal_code, region, country)`)
         .in("id", templateIds);
 
@@ -143,6 +163,9 @@ export const getWalletCards = createServerFn({ method: "GET" })
             stamps_count: inst.stamps_count,
             completed_at: inst.completed_at,
             created_at: inst.created_at,
+            terms_accepted_at: inst.terms_accepted_at,
+            terms_accepted_text: inst.terms_accepted_text,
+            terms_accepted_version: inst.terms_accepted_version,
             template: {
               id: template.id,
               title: template.title,
@@ -158,6 +181,8 @@ export const getWalletCards = createServerFn({ method: "GET" })
               logo_url: template.logo_url,
               rewards: template.rewards,
               grid_cols: template.grid_cols,
+              terms_and_conditions: template.terms_and_conditions,
+              terms_version: template.terms_version,
               business: template.business,
             },
           };

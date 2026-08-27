@@ -20,6 +20,7 @@ type Tpl = {
   total_steps: number; active: boolean; shape: CardShape;
   bg_color: string; accent_color: string; text_color: string; stamp_icon: StampIconName;
   logo_url: string | null; rewards: Reward[] | null; created_at: string; grid_cols: number | null;
+  terms_and_conditions: string; terms_version: number;
 };
 type Biz = { id: string; name: string; owner_id: string };
 type Customer = {
@@ -246,6 +247,18 @@ function CardDetails() {
         <span className="mx-1">•</span>
         <span className={tpl.active ? "text-emerald-600" : ""}>{tpl.active ? "Active" : "Paused"}</span>
       </div>
+
+      <section className="mt-6 rounded-2xl border border-border bg-card p-5">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="font-display text-lg font-bold">Terms &amp; conditions</h2>
+          <span className="shrink-0 text-[10px] uppercase tracking-wider text-muted-foreground">
+            Version {tpl.terms_version}
+          </span>
+        </div>
+        <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
+          {tpl.terms_and_conditions}
+        </p>
+      </section>
 
       {permissions.has("analytics.view") && <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat

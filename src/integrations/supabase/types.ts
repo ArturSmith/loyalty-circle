@@ -378,6 +378,10 @@ export type Database = {
           order_index: number | null
           stamps_count: number
           template_id: string
+          terms_accepted_at: string | null
+          terms_accepted_by: string | null
+          terms_accepted_text: string | null
+          terms_accepted_version: number | null
         }
         Insert: {
           anon_secret?: string | null
@@ -390,6 +394,10 @@ export type Database = {
           order_index?: number | null
           stamps_count?: number
           template_id: string
+          terms_accepted_at?: string | null
+          terms_accepted_by?: string | null
+          terms_accepted_text?: string | null
+          terms_accepted_version?: number | null
         }
         Update: {
           anon_secret?: string | null
@@ -402,6 +410,10 @@ export type Database = {
           order_index?: number | null
           stamps_count?: number
           template_id?: string
+          terms_accepted_at?: string | null
+          terms_accepted_by?: string | null
+          terms_accepted_text?: string | null
+          terms_accepted_version?: number | null
         }
         Relationships: [
           {
@@ -433,6 +445,8 @@ export type Database = {
           step_size: string
           subtitle: string | null
           text_color: string
+          terms_and_conditions: string
+          terms_version: number
           title: string
           total_steps: number
           updated_at: string
@@ -456,6 +470,8 @@ export type Database = {
           step_size?: string
           subtitle?: string | null
           text_color?: string
+          terms_and_conditions: string
+          terms_version?: number
           title: string
           total_steps?: number
           updated_at?: string
@@ -479,6 +495,8 @@ export type Database = {
           step_size?: string
           subtitle?: string | null
           text_color?: string
+          terms_and_conditions?: string
+          terms_version?: number
           title?: string
           total_steps?: number
           updated_at?: string

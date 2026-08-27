@@ -12,6 +12,7 @@ type Props = {
   googleReady: boolean;
   /** Shown only when Apple Wallet passes can actually be generated. */
   appleReady: boolean;
+  acceptedTermsVersion: number | null;
   /** Sends the visitor to sign-in so the card lands in the in-app wallet. */
   onUseInAppWallet: () => void;
   className?: string;
@@ -30,6 +31,7 @@ export function WalletChooser({
   cardTitle,
   googleReady,
   appleReady,
+  acceptedTermsVersion,
   onUseInAppWallet,
   className,
 }: Props) {
@@ -37,9 +39,10 @@ export function WalletChooser({
   const [busy, setBusy] = useState(false);
 
   const addToGoogle = async () => {
+    if (acceptedTermsVersion == null) return;
     setBusy(true);
     try {
-      const { saveUrl } = await create({ data: { templateId } });
+      const { saveUrl } = await create({ data: { templateId, acceptedTermsVersion } });
       window.location.href = saveUrl;
     } catch (error) {
       toast.error("Couldn't create the wallet pass", {
@@ -57,7 +60,7 @@ export function WalletChooser({
         <button
           type="button"
           onClick={() => toast.info("Apple Wallet is coming soon")}
-          disabled={busy}
+          disabled={busy || acceptedTermsVersion == null}
           aria-label={`Add ${cardTitle} to Apple Wallet`}
           className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-ink px-5 text-sm font-semibold text-paper transition-opacity disabled:opacity-60"
         >
@@ -70,7 +73,7 @@ export function WalletChooser({
         <button
           type="button"
           onClick={addToGoogle}
-          disabled={busy}
+          disabled={busy || acceptedTermsVersion == null}
           aria-label={`Add ${cardTitle} to Google Wallet`}
           className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-ink px-5 text-sm font-semibold text-paper transition-opacity disabled:opacity-60"
         >
@@ -88,7 +91,7 @@ export function WalletChooser({
       <button
         type="button"
         onClick={onUseInAppWallet}
-        disabled={busy}
+        disabled={busy || acceptedTermsVersion == null}
         aria-label={`Add ${cardTitle} to the ClubCarder wallet`}
         className={`inline-flex h-11 w-full items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold transition-opacity disabled:opacity-60 ${
           anyNativeWallet

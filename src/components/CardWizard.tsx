@@ -50,6 +50,7 @@ export function CardWizard({ templateId, businessId: selectedBusinessId }: Props
   const [title, setTitle] = useState("Loyalty Card");
   const [subtitle, setSubtitle] = useState("");
   const [description, setDescription] = useState("");
+  const [terms, setTerms] = useState("");
   const [cornerTitle, setCornerTitle] = useState<string | null>(null);
   const [totalSteps, setTotalSteps] = useState(10);
   const [shape, setShape] = useState<CardShape>("rounded");
@@ -86,10 +87,12 @@ export function CardWizard({ templateId, businessId: selectedBusinessId }: Props
             bg_color: string; accent_color: string; text_color: string; stamp_icon: StampIconName;
             logo_url: string | null; rewards: Reward[] | null; active: boolean;
             grid_cols: number | null;
+            terms_and_conditions: string;
           };
           setTitle(tpl.title);
           setSubtitle(tpl.subtitle ?? "");
           setDescription(tpl.description ?? "");
+          setTerms(tpl.terms_and_conditions ?? "");
           setCornerTitle(tpl.corner_title);
           setTotalSteps(tpl.total_steps);
           setShape(tpl.shape);
@@ -111,6 +114,8 @@ export function CardWizard({ templateId, businessId: selectedBusinessId }: Props
 
   const save = async () => {
     if (!businessId) return;
+    if (title.trim().length === 0) { toast.error("Add a card title"); return; }
+    if (terms.trim().length < 10) { toast.error("Add terms and conditions for this card"); return; }
     setSaving(true);
     const cleanRewards = rewards.filter((r) => r.step >= 1 && r.step <= totalSteps && r.label.trim().length > 0);
     const payload = {
@@ -120,6 +125,7 @@ export function CardWizard({ templateId, businessId: selectedBusinessId }: Props
       bg_color: bg, accent_color: accent, text_color: text,
       stamp_icon: icon ?? "star", logo_url: logoUrl || null, rewards: cleanRewards, active,
       grid_cols: gridCols,
+      terms_and_conditions: terms.trim(),
     };
     const { error } = isEdit && templateId
       ? await supabase.from("card_templates").update(payload).eq("id", templateId)
@@ -139,7 +145,7 @@ export function CardWizard({ templateId, businessId: selectedBusinessId }: Props
     navigate({ to: "/business", search: selectedBusinessId ? { businessId: selectedBusinessId } : {} });
   };
 
-  const stepsLabels = ["Basics", "Style", "Steps & rewards", "Review"];
+  const stepsLabels = ["Basics", "Style", "Steps & rewards", "Terms", "Review"];
   const face = step >= 2 ? "stamps" : "info";
 
   const [editingStep, setEditingStep] = useState<number | null>(null);
@@ -450,6 +456,26 @@ export function CardWizard({ templateId, businessId: selectedBusinessId }: Props
               </div>
             )}
             {step === 3 && (
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="card-terms">Terms &amp; conditions</Label>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Customers must read and accept these terms before adding the card to any wallet.
+                  </p>
+                  <Textarea
+                    id="card-terms"
+                    value={terms}
+                    onChange={(event) => setTerms(event.target.value)}
+                    placeholder="Explain how stamps are earned, when rewards can be used, expiry rules, exclusions, and any other conditions."
+                    rows={10}
+                    maxLength={20000}
+                    className="mt-3"
+                  />
+                  <p className="mt-1 text-right text-[11px] text-muted-foreground">{terms.length}/20,000</p>
+                </div>
+              </div>
+            )}
+            {step === 4 && (
               <div className="space-y-4">
                 <div className="text-center space-y-3">
                   <OrnamentDivider className="w-32 mx-auto opacity-60" />
@@ -473,7 +499,11 @@ export function CardWizard({ templateId, businessId: selectedBusinessId }: Props
             <ArrowLeft className="h-4 w-4" /> Back
           </Button>
           {step < stepsLabels.length - 1 ? (
-            <Button onClick={() => setStep(step + 1)}>Next <ArrowRight className="h-4 w-4" /></Button>
+            <Button onClick={() => {
+              if (step === 0 && title.trim().length === 0) { toast.error("Add a card title"); return; }
+              if (step === 3 && terms.trim().length < 10) { toast.error("Add terms and conditions for this card"); return; }
+              setStep(step + 1);
+            }}>Next <ArrowRight className="h-4 w-4" /></Button>
           ) : (
             <Button onClick={save} disabled={saving}>
               <Check className="h-4 w-4" /> {saving ? (isEdit ? "Saving…" : "Creating…") : (isEdit ? "Save changes" : "Create card")}

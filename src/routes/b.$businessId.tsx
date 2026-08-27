@@ -17,6 +17,7 @@ import { claimCardToWallet } from "@/utils/cards.functions";
 import { isGoogleWalletEnabled, isAppleWalletEnabled } from "@/utils/wallet.functions";
 import { GoogleWalletButton } from "@/components/GoogleWalletButton";
 import { WalletChooser } from "@/components/WalletChooser";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type Template = {
   id: string; business_id: string; title: string; subtitle: string | null; description: string | null;
@@ -24,6 +25,7 @@ type Template = {
   total_steps: number; shape: CardShape;
   bg_color: string; accent_color: string; text_color: string;
   stamp_icon: StampIconName; logo_url: string | null; rewards: Reward[]; active: boolean; grid_cols: number | null;
+  terms_and_conditions: string; terms_version: number;
 };
 
 type BusinessLocation = {
@@ -131,6 +133,7 @@ function BusinessPublic() {
   const appleWalletEnabled = useServerFn(isAppleWalletEnabled);
   const [googleWalletReady, setGoogleWalletReady] = useState(false);
   const [appleWalletReady, setAppleWalletReady] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     walletEnabled({}).then((r) => setGoogleWalletReady(r.enabled)).catch(() => setGoogleWalletReady(false));
@@ -169,15 +172,16 @@ function BusinessPublic() {
   }, [businessId]);
 
 
-  const claim = async (templateId: string) => {
+  const claim = async (templateId: string, acceptedTermsVersion: number) => {
     if (!userId) {
       try { sessionStorage.setItem(`pending_claim:${businessId}`, templateId); } catch {}
+      try { sessionStorage.setItem(`pending_claim_terms:${businessId}`, String(acceptedTermsVersion)); } catch {}
       navigate({ to: "/auth", search: { redirect: `/b/${businessId}` } });
       return;
     }
     setClaiming(templateId);
     try {
-      const result = await claimCard({ data: { templateId } });
+      const result = await claimCard({ data: { templateId, acceptedTermsVersion } });
       setOwnedTemplateIds((prev) => {
         const next = new Map(prev);
         next.set(templateId, result.instanceId);
@@ -197,12 +201,19 @@ function BusinessPublic() {
   useEffect(() => {
     if (!userId || loading || templates.length === 0) return;
     let pending: string | null = null;
+    let acceptedVersion: number | null = null;
     try { pending = sessionStorage.getItem(`pending_claim:${businessId}`); } catch {}
+    try {
+      const raw = sessionStorage.getItem(`pending_claim_terms:${businessId}`);
+      acceptedVersion = raw ? Number(raw) : null;
+    } catch {}
     if (!pending) return;
     try { sessionStorage.removeItem(`pending_claim:${businessId}`); } catch {}
+    try { sessionStorage.removeItem(`pending_claim_terms:${businessId}`); } catch {}
     if (ownedTemplateIds.has(pending)) { navigate({ to: "/wallet" }); return; }
-    if (templates.find((t) => t.id === pending)) {
-      claim(pending);
+    const template = templates.find((t) => t.id === pending);
+    if (template && acceptedVersion === template.terms_version) {
+      claim(pending, acceptedVersion);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, loading, templates, businessId]);
@@ -288,6 +299,8 @@ function BusinessPublic() {
           <div className="space-y-6">
               {templates.map((t, i) => {
                 const ownedInstanceId = ownedTemplateIds.get(t.id);
+                const termsKey = `${t.id}:${t.terms_version}`;
+                const hasAcceptedTerms = acceptedTerms.has(termsKey);
                 const handleCardClick = () => {
                   // Signed-out visitors pick a wallet from the options below the
                   // card, so tapping the card itself must not hijack them into
@@ -298,7 +311,11 @@ function BusinessPublic() {
                     navigate({ to: "/wallet" });
                     return;
                   }
-                  claim(t.id);
+                  if (!hasAcceptedTerms) {
+                    toast.info("Accept the card terms before adding it");
+                    return;
+                  }
+                  claim(t.id, t.terms_version);
                 };
                 return (
                 <motion.div key={t.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}>
@@ -335,11 +352,34 @@ function BusinessPublic() {
                       onFlip={() => setFlippedTemplateId((prev) => prev === t.id ? null : t.id)}
                     />
                   </div>
+                  <section className="mt-3 rounded-2xl border border-border bg-card p-4">
+                    <h3 className="text-sm font-semibold">Terms &amp; conditions</h3>
+                    <div className="mt-2 max-h-40 overflow-y-auto whitespace-pre-wrap text-xs leading-relaxed text-muted-foreground">
+                      {t.terms_and_conditions}
+                    </div>
+                    {!ownedInstanceId && (
+                      <label className="mt-3 flex cursor-pointer items-start gap-3 border-t border-border pt-3 text-sm">
+                        <Checkbox
+                          checked={hasAcceptedTerms}
+                          onCheckedChange={(checked) => {
+                            setAcceptedTerms((previous) => {
+                              const next = new Set(previous);
+                              if (checked === true) next.add(termsKey);
+                              else next.delete(termsKey);
+                              return next;
+                            });
+                          }}
+                          aria-label={`Accept terms for ${t.title}`}
+                        />
+                        <span>I have read and accept these terms and conditions.</span>
+                      </label>
+                    )}
+                  </section>
                   {userId ? (
                     <>
                       <Button
                         className="mt-3 w-full h-11"
-                        disabled={claiming === t.id}
+                        disabled={claiming === t.id || (!ownedInstanceId && !hasAcceptedTerms)}
                         onClick={handleCardClick}
                       >
                         {claiming === t.id
@@ -350,7 +390,11 @@ function BusinessPublic() {
                       </Button>
                       {googleWalletReady && !ownedInstanceId ? (
                         <>
-                          <GoogleWalletButton templateId={t.id} className="mt-2" />
+                          <GoogleWalletButton
+                            templateId={t.id}
+                            acceptedTermsVersion={hasAcceptedTerms ? t.terms_version : null}
+                            className="mt-2"
+                          />
                           <p className="mt-1.5 text-center text-[11px] text-muted-foreground">
                             No account needed — the pass goes straight to your phone.
                           </p>
@@ -363,8 +407,10 @@ function BusinessPublic() {
                       cardTitle={t.title}
                       googleReady={googleWalletReady}
                       appleReady={appleWalletReady}
+                      acceptedTermsVersion={hasAcceptedTerms ? t.terms_version : null}
                       onUseInAppWallet={() => {
                         try { sessionStorage.setItem(`pending_claim:${businessId}`, t.id); } catch {}
+                        try { sessionStorage.setItem(`pending_claim_terms:${businessId}`, String(t.terms_version)); } catch {}
                         navigate({ to: "/auth", search: { redirect: `/b/${businessId}` } });
                       }}
                     />

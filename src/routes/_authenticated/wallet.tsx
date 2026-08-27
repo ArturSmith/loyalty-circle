@@ -508,7 +508,7 @@ function Wallet() {
               initial={{ scale: 0.85, rotateY: 90 }} animate={{ scale: 1, rotateY: 0 }} exit={{ scale: 0.85, rotateY: -90 }}
               transition={{ type: "spring", damping: 22, stiffness: 200 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-sm rounded-3xl bg-paper paper-grain card-shadow p-8 text-center"
+              className="relative max-h-[90dvh] w-full max-w-sm overflow-y-auto rounded-3xl bg-paper paper-grain card-shadow p-8 text-center"
             >
               <button onClick={() => setFlippedId(null)} className="absolute top-3 right-3 p-2 opacity-60 hover:opacity-100">
                 <X className="h-4 w-4" />
@@ -547,6 +547,21 @@ function Wallet() {
               </div>
               <OrnamentDivider className="w-40 mx-auto mt-6 opacity-70" />
               {inst && <BusinessInfoPanel business={inst.template.business} businessId={inst.template.business.id} />}
+              {inst && (
+                <section className="mt-4 rounded-2xl border border-ink/10 bg-secondary p-4 text-left">
+                  <div className="flex items-center justify-between gap-2">
+                    <h4 className="text-sm font-semibold">Terms &amp; conditions</h4>
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                      {inst.terms_accepted_version
+                        ? `Accepted version ${inst.terms_accepted_version}`
+                        : `Version ${inst.template.terms_version}`}
+                    </span>
+                  </div>
+                  <p className="mt-2 whitespace-pre-wrap text-xs leading-relaxed text-muted-foreground">
+                    {inst.terms_accepted_text ?? inst.template.terms_and_conditions}
+                  </p>
+                </section>
+              )}
 
               {isCompleted && (
                 <Button

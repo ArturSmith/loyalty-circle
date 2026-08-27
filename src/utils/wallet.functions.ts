@@ -36,11 +36,14 @@ export const isAppleWalletEnabled = createServerFn({ method: "GET" }).handler(
 );
 
 export const createWalletPass = createServerFn({ method: "POST" })
-  .inputValidator((data: { templateId: string }) => {
+  .inputValidator((data: { templateId: string; acceptedTermsVersion: number }) => {
     if (!data || typeof data.templateId !== "string" || data.templateId.length === 0) {
       throw new Error("Card is required");
     }
-    return { templateId: data.templateId };
+    if (!Number.isInteger(data.acceptedTermsVersion) || data.acceptedTermsVersion < 1) {
+      throw new Error("You must accept the card terms before adding it");
+    }
+    return { templateId: data.templateId, acceptedTermsVersion: data.acceptedTermsVersion };
   })
   .handler(async ({ data }): Promise<WalletPassResult> => {
     const { getWalletConfig, ensureLoyaltyClass, createLoyaltyObject, buildSaveUrl } = await import(
@@ -58,7 +61,7 @@ export const createWalletPass = createServerFn({ method: "POST" })
     const { data: template, error: templateError } = await supabaseAdmin
       .from("card_templates")
       .select(
-        "id, title, total_steps, rewards, accent_color, bg_color, logo_url, active, google_class_id, business:businesses(id, name, logo_url)",
+        "id, title, total_steps, rewards, accent_color, bg_color, logo_url, active, google_class_id, terms_and_conditions, terms_version, business:businesses(id, name, logo_url)",
       )
       .eq("id", data.templateId)
       .eq("active", true)
@@ -66,6 +69,9 @@ export const createWalletPass = createServerFn({ method: "POST" })
 
     if (templateError) throw templateError;
     if (!template) throw new Error("This card is not available anymore");
+    if ((template as any).terms_version !== data.acceptedTermsVersion) {
+      throw new Error("The card terms changed. Please review and accept the latest version.");
+    }
 
     const tpl = template as any;
     const business = tpl.business as { id: string; name: string; logo_url: string | null } | null;
@@ -86,7 +92,14 @@ export const createWalletPass = createServerFn({ method: "POST" })
     const anonSecret = crypto.randomUUID();
     const { data: created, error: createError } = await supabaseAdmin
       .from("card_instances")
-      .insert({ template_id: tpl.id, customer_id: null, anon_secret: anonSecret } as any)
+      .insert({
+        template_id: tpl.id,
+        customer_id: null,
+        anon_secret: anonSecret,
+        terms_accepted_at: new Date().toISOString(),
+        terms_accepted_version: tpl.terms_version,
+        terms_accepted_text: tpl.terms_and_conditions,
+      } as any)
       .select("id")
       .single();
 
@@ -186,22 +199,26 @@ export const getClaimPreview = createServerFn({ method: "POST" })
       alreadyClaimed: boolean;
       title: string | null;
       businessName: string | null;
+      terms: string | null;
+      termsVersion: number | null;
     }> => {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { data: row } = await supabaseAdmin
         .from("card_instances")
-        .select("id, customer_id, anon_secret, template:card_templates(title, business:businesses(name))")
+        .select("id, customer_id, anon_secret, template:card_templates(title, terms_and_conditions, terms_version, business:businesses(name))")
         .eq("id", data.instanceId)
         .maybeSingle();
 
       const instance = row as any;
-      if (!instance) return { valid: false, alreadyClaimed: false, title: null, businessName: null };
+      if (!instance) return { valid: false, alreadyClaimed: false, title: null, businessName: null, terms: null, termsVersion: null };
       const title = instance.template?.title ?? null;
       const businessName = instance.template?.business?.name ?? null;
+      const terms = instance.template?.terms_and_conditions ?? null;
+      const termsVersion = instance.template?.terms_version ?? null;
 
-      if (instance.customer_id) return { valid: false, alreadyClaimed: true, title, businessName };
+      if (instance.customer_id) return { valid: false, alreadyClaimed: true, title, businessName, terms, termsVersion };
       const valid = Boolean(instance.anon_secret) && instance.anon_secret === data.secret;
-      return { valid, alreadyClaimed: false, title, businessName };
+      return { valid, alreadyClaimed: false, title, businessName, terms, termsVersion };
     },
   );
 
@@ -218,6 +235,17 @@ export const claimAnonymousCard = createServerFn({ method: "POST" })
     });
     if (error) throw new Error(error.message);
     const instanceId = (claimedId as string | null) ?? data.instanceId;
+
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await supabaseAdmin
+        .from("card_instances")
+        .update({ terms_accepted_by: context.userId })
+        .eq("id", instanceId)
+        .is("terms_accepted_by", null);
+    } catch (acceptanceError) {
+      console.error("claimAnonymousCard: linking terms acceptance failed", acceptanceError);
+    }
 
     // A pass claimed from Google Wallet lands in the same place as one added in
     // the app, so it deserves the same greeting.

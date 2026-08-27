@@ -5,14 +5,23 @@ import { toast } from "sonner";
 import { Wallet } from "lucide-react";
 import { Spinner } from "@/components/Spinner";
 
-export function GoogleWalletButton({ templateId, className }: { templateId: string; className?: string }) {
+export function GoogleWalletButton({
+  templateId,
+  acceptedTermsVersion,
+  className,
+}: {
+  templateId: string;
+  acceptedTermsVersion: number | null;
+  className?: string;
+}) {
   const create = useServerFn(createWalletPass);
   const [busy, setBusy] = useState(false);
 
   const onClick = async () => {
     setBusy(true);
     try {
-      const { saveUrl } = await create({ data: { templateId } });
+      if (acceptedTermsVersion == null) return;
+      const { saveUrl } = await create({ data: { templateId, acceptedTermsVersion } });
       window.location.href = saveUrl;
     } catch (error) {
       toast.error("Couldn't create the wallet pass", {
@@ -26,7 +35,7 @@ export function GoogleWalletButton({ templateId, className }: { templateId: stri
     <button
       type="button"
       onClick={onClick}
-      disabled={busy}
+      disabled={busy || acceptedTermsVersion == null}
       aria-label="Add this loyalty card to Google Wallet"
       className={`inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-ink px-5 text-sm font-semibold text-paper transition-opacity disabled:opacity-60 ${className ?? ""}`}
     >
