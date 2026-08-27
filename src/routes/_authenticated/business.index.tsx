@@ -111,14 +111,13 @@ function BusinessDashboard() {
       }
       setBiz(b as Business | null);
       if (b) {
-        const [{ data: t }, { count: sCount }, { data: instRows }] = await Promise.all([
+        const [{ data: t }, { data: dashboardStats }] = await Promise.all([
           supabase.from("card_templates").select("id,title,subtitle,description,corner_title,total_steps,active,shape,bg_color,accent_color,text_color,stamp_icon,logo_url,rewards,grid_cols").eq("business_id", b.id).order("created_at", { ascending: false }),
-          supabase.from("stamps").select("id", { count: "exact", head: true }).eq("business_id", b.id),
-          supabase.from("card_instances").select("customer_id, template:card_templates!inner(business_id)").eq("template.business_id", b.id),
+          supabase.rpc("get_business_dashboard_stats", { _business_id: b.id }),
         ]);
         setTpls((t as Tpl[]) ?? []);
-        const uniq = new Set(((instRows as { customer_id: string }[] | null) ?? []).map((r) => r.customer_id));
-        setStats({ stamps: sCount ?? 0, customers: uniq.size, active: (t as Tpl[] | null)?.filter(x => x.active).length ?? 0 });
+        const basic = (dashboardStats ?? {}) as { stamps?: number; customers?: number; active?: number };
+        setStats({ stamps: basic.stamps ?? 0, customers: basic.customers ?? 0, active: basic.active ?? 0 });
       }
       setLoading(false);
     })();
@@ -170,7 +169,6 @@ function BusinessDashboard() {
   const bizUrl = `${PUBLIC_SITE_URL}/b/${biz.id}`;
   const isOwner = permissions.isOwner;
   const canEditSettings = isOwner || permissions.hasAny(["locations.manage", "marketplace.manage"]);
-  const canViewCards = permissions.hasAny(["cards.manage", "customers.view", "analytics.view"]);
 
   return (
     <div className="min-h-screen px-5 py-6 max-w-3xl mx-auto">
@@ -323,17 +321,15 @@ function BusinessDashboard() {
         </Link>
       )}
 
-      {permissions.has("analytics.view") && (
-        <div className="mt-8 grid grid-cols-3 gap-3">
-          <Stat icon={StampIco} label="Stamps issued" value={stats.stamps} />
-          <Stat icon={Users} label="Customers" value={stats.customers} />
-          <Stat icon={WalletIcon} label="Active cards" value={stats.active} />
-        </div>
-      )}
+      <div className="mt-8 grid grid-cols-3 gap-3">
+        <Stat icon={StampIco} label="Stamps issued" value={stats.stamps} />
+        <Stat icon={Users} label="Customers" value={stats.customers} />
+        <Stat icon={WalletIcon} label="Active cards" value={stats.active} />
+      </div>
 
-      {canViewCards && <div className="mt-10"><h2 className="font-display text-xl">Your cards</h2></div>}
+      <div className="mt-10"><h2 className="font-display text-xl">Your cards</h2></div>
 
-      {canViewCards && <div className="mt-4">
+      <div className="mt-4">
         {tpls.length === 0 && (
           <div className="rounded-xl border-2 border-dashed border-border p-8 text-center text-sm text-muted-foreground">
             No cards yet. Create your first loyalty card to share with customers.
@@ -409,7 +405,7 @@ function BusinessDashboard() {
             )}
           </Carousel>
         )}
-      </div>}
+      </div>
     </div>
   );
 }

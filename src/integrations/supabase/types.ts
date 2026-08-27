@@ -956,6 +956,10 @@ export type Database = {
         Args: { check_env?: string; user_uuid: string }
         Returns: boolean
       }
+      get_business_dashboard_stats: {
+        Args: { _business_id: string }
+        Returns: Json
+      }
       has_business_permission: {
         Args: { _business_id: string; _permission: string; _user_id: string }
         Returns: boolean

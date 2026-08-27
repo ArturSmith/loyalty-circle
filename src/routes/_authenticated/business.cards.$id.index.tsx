@@ -11,7 +11,6 @@ import { resolveAvatarUrls } from "@/lib/avatar";
 import { CardAnalytics } from "@/components/CardAnalytics";
 import type { AnalyticsInstance, AnalyticsStamp, AnalyticsVoucher, AnalyticsPassEvent } from "@/components/CardAnalytics";
 import { z } from "zod";
-import { BusinessPermissionGate } from "@/components/business/BusinessPermissionGate";
 import { useBusinessPermissions } from "@/hooks/useBusinessPermissions";
 
 
@@ -38,17 +37,8 @@ type Customer = {
 export const Route = createFileRoute("/_authenticated/business/cards/$id/")({
   head: () => ({ meta: [{ title: "Card details — ClubCarder" }] }),
   validateSearch: z.object({ businessId: z.string().uuid() }),
-  component: CardDetailsAccess,
+  component: CardDetails,
 });
-
-function CardDetailsAccess() {
-  const { businessId } = Route.useSearch();
-  return (
-    <BusinessPermissionGate businessId={businessId} anyOf={["cards.manage", "customers.view", "analytics.view"]}>
-      <CardDetails />
-    </BusinessPermissionGate>
-  );
-}
 
 function CardDetails() {
   const { id } = Route.useParams();
