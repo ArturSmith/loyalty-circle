@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
@@ -154,6 +154,76 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "business_socials_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_team_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          sender_id: string
+          thread_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          sender_id: string
+          thread_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          sender_id?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_team_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "business_team_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_team_threads: {
+        Row: {
+          business_id: string
+          created_at: string
+          id: string
+          kind: string
+          last_message_at: string
+          member_a: string | null
+          member_b: string | null
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          id?: string
+          kind: string
+          last_message_at?: string
+          member_a?: string | null
+          member_b?: string | null
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          last_message_at?: string
+          member_a?: string | null
+          member_b?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_team_threads_business_id_fkey"
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses"
@@ -779,6 +849,10 @@ export type Database = {
         Args: { _business_id: string }
         Returns: boolean
       }
+      can_access_business_team_thread: {
+        Args: { _thread_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_on_business: {
         Args: { _business_id: string; _permission: string }
         Returns: boolean
@@ -911,13 +985,13 @@ export type Database = {
       }
       redeem_voucher: { Args: { _voucher_id: string }; Returns: Json }
       renew_card: { Args: { _card_instance_id: string }; Returns: undefined }
-      stamp_business_card: {
-        Args: { _business_id: string; _card_instance_id: string; _env?: string }
-        Returns: Json
-      }
       set_business_paused: {
         Args: { _business_id: string; _paused: boolean }
         Returns: undefined
+      }
+      stamp_business_card: {
+        Args: { _business_id: string; _card_instance_id: string; _env?: string }
+        Returns: Json
       }
       user_holds_card_for_business: {
         Args: { _business_id: string }
