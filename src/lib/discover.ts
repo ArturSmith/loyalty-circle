@@ -245,3 +245,25 @@ export function groupByCategory(cards: DiscoverCard[]): Array<{ category: string
     .map(([category, list]) => ({ category, cards: list }))
     .sort((a, b) => (a.category === "Other" ? 1 : b.category === "Other" ? -1 : a.category.localeCompare(b.category)));
 }
+
+export function groupBusinessesByCategory(
+  businesses: DiscoverBusiness[],
+): Array<{ category: string; businesses: DiscoverBusiness[] }> {
+  const map = new Map<string, DiscoverBusiness[]>();
+  for (const business of businesses) {
+    const key = business.category?.trim() || "Other";
+    const list = map.get(key);
+    if (list) list.push(business);
+    else map.set(key, [business]);
+  }
+
+  return [...map.entries()]
+    .map(([category, list]) => ({ category, businesses: list }))
+    .sort((a, b) =>
+      a.category === "Other"
+        ? 1
+        : b.category === "Other"
+          ? -1
+          : a.category.localeCompare(b.category),
+    );
+}

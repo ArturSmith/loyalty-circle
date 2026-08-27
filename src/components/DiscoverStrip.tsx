@@ -2,12 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { Spinner } from "@/components/Spinner";
 import { Link } from "@tanstack/react-router";
 import { ChevronRight, Compass } from "lucide-react";
-import { DiscoverCardTile } from "@/components/DiscoverCardTile";
-import { fetchDiscoverCards, useUserLocation, type DiscoverCard } from "@/lib/discover";
+import { DiscoverBusinessTile } from "@/components/DiscoverBusinessTile";
+import { fetchDiscoverBusinesses, useUserLocation, type DiscoverBusiness } from "@/lib/discover";
 
 export function DiscoverStrip() {
   const { coords, asked } = useUserLocation(true);
-  const [cards, setCards] = useState<DiscoverCard[]>([]);
+  const [businesses, setBusinesses] = useState<DiscoverBusiness[]>([]);
   const [loading, setLoading] = useState(true);
   const scrollerRef = useRef<HTMLDivElement | null>(null);
 
@@ -16,10 +16,10 @@ export function DiscoverStrip() {
     let cancelled = false;
     (async () => {
       try {
-        const rows = await fetchDiscoverCards({ coords, limit: 20 });
-        if (!cancelled) setCards(rows);
+        const rows = await fetchDiscoverBusinesses({ coords, limit: 20 });
+        if (!cancelled) setBusinesses(rows);
       } catch {
-        if (!cancelled) setCards([]);
+        if (!cancelled) setBusinesses([]);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -32,7 +32,7 @@ export function DiscoverStrip() {
   // Gentle auto-scroll that pauses on interaction.
   useEffect(() => {
     const el = scrollerRef.current;
-    if (!el || cards.length < 2) return;
+    if (!el || businesses.length < 2) return;
     let paused = false;
     let raf = 0;
     let last = performance.now();
@@ -61,12 +61,12 @@ export function DiscoverStrip() {
       el.removeEventListener("wheel", pause);
       el.removeEventListener("touchstart", pause);
     };
-  }, [cards.length]);
+  }, [businesses.length]);
 
-  if (!loading && cards.length === 0) return null;
+  if (!loading && businesses.length === 0) return null;
 
   return (
-    <section className="relative pt-2 pb-4" aria-label="Discover nearby loyalty cards">
+    <section className="relative pt-2 pb-4" aria-label="Discover businesses with loyalty programs">
       <Link to="/discover" className="mx-auto flex max-w-md items-center justify-between gap-2 px-5">
         <h2 className="flex items-center gap-2 font-display text-lg font-bold">
           <Compass className="h-4 w-4" /> {coords ? "Nearby loyalty programs" : "Discover loyalty programs"}
@@ -81,12 +81,17 @@ export function DiscoverStrip() {
         className="mx-auto mt-2 flex max-w-md gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {loading ? (
-          <div className="flex h-[116px] w-full items-center justify-center">
+          <div className="flex h-[150px] w-full items-center justify-center">
             <Spinner size={28} />
           </div>
         ) : (
-          cards.map((card) => (
-            <DiscoverCardTile key={card.template_id} card={card} compact className="first:ml-5 last:mr-5" />
+          businesses.map((business) => (
+            <DiscoverBusinessTile
+              key={business.business_id}
+              business={business}
+              compact
+              className="first:ml-5 last:mr-5"
+            />
           ))
         )}
       </div>
