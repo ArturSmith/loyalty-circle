@@ -11,7 +11,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
-import { Plus, QrCode, ScanLine, Search, Users, Stamp as StampIco, Wallet as WalletIcon, Pencil, Menu, Settings, LogOut, Download, CreditCard, Sparkles, HelpCircle, Mail, ArrowLeft, MessageCircle, Building2 } from "lucide-react";
+import { Plus, QrCode, ScanLine, Users, Stamp as StampIco, Wallet as WalletIcon, Pencil, Menu, Settings, LogOut, Download, CreditCard, Sparkles, HelpCircle, Mail, ArrowLeft, MessageCircle, Building2 } from "lucide-react";
 import { useBusinessAccess } from "@/hooks/useBusinessAccess";
 import { useBusinessPermissions } from "@/hooks/useBusinessPermissions";
 import { StampCard } from "@/components/StampCard";
@@ -275,8 +275,8 @@ function BusinessDashboard() {
         {permissions.has("customers.view") && (
           <Button asChild variant="outline" className="h-auto flex-col gap-1.5 py-3 rounded-2xl glass-panel">
             <Link to="/business/customers" search={{ businessId: biz.id }}>
-              <Search className="h-5 w-5" />
-              <span className="text-xs font-semibold">Find customer</span>
+              <Users className="h-5 w-5" />
+              <span className="text-xs font-semibold">Customers</span>
             </Link>
           </Button>
         )}

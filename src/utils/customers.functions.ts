@@ -1,9 +1,24 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { findCustomerForBusiness } from "@/lib/customers.server";
-import type { CustomerLookupResult, CustomerCardSummary } from "@/lib/customers.server";
+import { findCustomerForBusiness, listCustomersForBusiness } from "@/lib/customers.server";
+import type {
+  BusinessCustomerSummary,
+  CustomerLookupResult,
+  CustomerCardSummary,
+} from "@/lib/customers.server";
 
-export type { CustomerLookupResult, CustomerCardSummary };
+export type { BusinessCustomerSummary, CustomerLookupResult, CustomerCardSummary };
+
+export const listBusinessCustomers = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { businessId: string }) => {
+    const businessId = String(data?.businessId ?? "");
+    if (!businessId) throw new Error("Business is required");
+    return { businessId };
+  })
+  .handler(async ({ data, context }): Promise<{ customers: BusinessCustomerSummary[] }> => ({
+    customers: await listCustomersForBusiness(context.userId, data.businessId),
+  }));
 
 /**
  * Looks up one of the calling business's own customers by scanned QR or typed

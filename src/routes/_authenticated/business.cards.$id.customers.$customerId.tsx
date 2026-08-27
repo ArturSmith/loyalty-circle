@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { resolveAvatarUrls } from "@/lib/avatar";
 import { motion } from "framer-motion";
 import {
-  ArrowLeft,
   CalendarDays,
   CheckCircle2,
   Gift,
@@ -16,6 +15,7 @@ import {
 } from "lucide-react";
 import { z } from "zod";
 import { BusinessPermissionGate } from "@/components/business/BusinessPermissionGate";
+import { BackButton } from "@/components/BackButton";
 
 type Reward = { step: number; label?: string | null };
 
@@ -55,7 +55,10 @@ export const Route = createFileRoute("/_authenticated/business/cards/$id/custome
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  validateSearch: z.object({ businessId: z.string().uuid() }),
+  validateSearch: z.object({
+    businessId: z.string().uuid(),
+    from: z.enum(["customers", "card"]).optional(),
+  }),
   component: CustomerDetails,
 });
 
@@ -83,7 +86,7 @@ function CustomerDetails() {
 
 function CustomerDetailsContent() {
   const { id, customerId } = Route.useParams();
-  const { businessId } = Route.useSearch();
+  const { businessId, from } = Route.useSearch();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [tpl, setTpl] = useState<Tpl | null>(null);
@@ -204,8 +207,10 @@ function CustomerDetailsContent() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-muted-foreground">
         <p>This customer has no card yet.</p>
-        <Button variant="outline" onClick={() => navigate({ to: "/business/cards/$id", params: { id }, search: { businessId } })}>
-          Back to card
+        <Button variant="outline" onClick={() => from === "customers"
+          ? navigate({ to: "/business/customers", search: { businessId } })
+          : navigate({ to: "/business/cards/$id", params: { id }, search: { businessId } })}>
+          Go back
         </Button>
       </div>
     );
@@ -229,14 +234,12 @@ function CustomerDetailsContent() {
   return (
     <div className="min-h-screen px-5 py-6 max-w-3xl mx-auto pb-16">
       <header className="flex items-center justify-between">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate({ to: "/business/cards/$id", params: { id }, search: { businessId } })}
-          className="rounded-full"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
+        <BackButton
+          label={from === "customers" ? "Back to customers" : "Back to card"}
+          onClick={() => from === "customers"
+            ? navigate({ to: "/business/customers", search: { businessId } })
+            : navigate({ to: "/business/cards/$id", params: { id }, search: { businessId } })}
+        />
         <p className="text-xs uppercase tracking-widest text-muted-foreground">Customer activity</p>
         <div className="w-10" />
       </header>
