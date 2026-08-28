@@ -40,6 +40,7 @@ export type AdminModerationSubmission = {
   business_name: string;
   entity_name: string;
   change_kind: "create" | "update";
+  current_data: Json | null;
   proposed_data: Json;
   submitted_at: string;
   submitted_by: string | null;
@@ -52,7 +53,7 @@ export const listModerationForAdmin = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows, error } = await (supabaseAdmin as any)
       .from("moderation_submissions")
-      .select("id,entity_type,entity_id,business_id,change_kind,proposed_data,submitted_at,submitted_by")
+      .select("id,entity_type,entity_id,business_id,change_kind,current_data,proposed_data,submitted_at,submitted_by")
       .eq("status", "pending")
       .order("submitted_at", { ascending: true })
       .limit(200);

@@ -134,6 +134,7 @@ function BusinessPublic() {
   const [googleWalletReady, setGoogleWalletReady] = useState(false);
   const [appleWalletReady, setAppleWalletReady] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState<Set<string>>(new Set());
+  const [cardsLoadError, setCardsLoadError] = useState(false);
 
   useEffect(() => {
     walletEnabled({}).then((r) => setGoogleWalletReady(r.enabled)).catch(() => setGoogleWalletReady(false));
@@ -143,13 +144,15 @@ function BusinessPublic() {
 
   useEffect(() => {
     (async () => {
-      const [{ data: t }, { data: b }, { data: u }, { data: detail }] = await Promise.all([
-        publicSupabase.from("card_templates").select("*").eq("business_id", businessId).eq("active", true).order("created_at"),
+      const [{ data: t, error: cardsError }, { data: b }, { data: u }, { data: detail }] = await Promise.all([
+        publicSupabase.rpc("get_business_cards_public", { _id: businessId }),
         publicSupabase.rpc("get_business_public", { _id: businessId }),
         supabase.auth.getUser(),
         // Cast until Supabase types are regenerated with the new RPC.
         (publicSupabase.rpc as any)("get_business_detail_public", { _id: businessId }),
       ]);
+      setCardsLoadError(Boolean(cardsError));
+      if (cardsError) console.error("Could not load public business cards", cardsError);
       setTemplates((t as Template[] | null) ?? []);
       const d = (detail ?? {}) as { locations?: BusinessLocation[]; socials?: BusinessSocial[] };
       setLocations(Array.isArray(d.locations) ? d.locations : []);
@@ -304,7 +307,9 @@ function BusinessPublic() {
             </p>
           )}
           <p className="mt-2 text-sm text-muted-foreground">
-            {templates.length === 0
+            {cardsLoadError
+              ? "Loyalty cards could not be loaded. Please try again shortly."
+              : templates.length === 0
               ? "No loyalty cards available right now."
               : "Choose a loyalty card to add to your wallet."}
           </p>

@@ -595,6 +595,7 @@ export type Database = {
           business_id: string
           change_kind: string
           created_at: string
+          current_data: Json | null
           entity_id: string
           entity_type: string
           id: string
@@ -611,6 +612,7 @@ export type Database = {
           business_id: string
           change_kind: string
           created_at?: string
+          current_data?: Json | null
           entity_id: string
           entity_type: string
           id?: string
@@ -627,6 +629,7 @@ export type Database = {
           business_id?: string
           change_kind?: string
           created_at?: string
+          current_data?: Json | null
           entity_id?: string
           entity_type?: string
           id?: string
@@ -998,6 +1001,29 @@ export type Database = {
         }[]
       }
       get_business_detail_public: { Args: { _id: string }; Returns: Json }
+      get_business_cards_public: {
+        Args: { _id: string }
+        Returns: {
+          accent_color: string
+          active: boolean
+          bg_color: string
+          business_id: string
+          corner_title: string
+          description: string
+          grid_cols: number
+          id: string
+          logo_url: string
+          rewards: Json
+          shape: string
+          stamp_icon: string
+          subtitle: string
+          terms_and_conditions: string
+          terms_version: number
+          text_color: string
+          title: string
+          total_steps: number
+        }[]
+      }
       get_pending_moderation: {
         Args: { _entity_id: string; _entity_type: string }
         Returns: Json
