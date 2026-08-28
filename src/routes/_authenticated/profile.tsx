@@ -16,6 +16,7 @@ import { AVATAR_BUCKET, initialsFrom, resolveAvatarUrl } from "@/lib/avatar";
 import { TabScreen } from "@/components/TabScreen";
 import { useServerFn } from "@tanstack/react-start";
 import { amIAdmin } from "@/utils/admin.functions";
+import { NotificationButton } from "@/components/NotificationButton";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
@@ -140,7 +141,7 @@ function Profile() {
     d ? new Date(d).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }) : "—";
 
   return (
-    <TabScreen title="Profile">
+    <TabScreen title="Profile" action={<NotificationButton scope="customer" />}>
       <div className="flex-1 px-6 py-4 max-w-md mx-auto w-full">
         {loading || !profile ? (
           <PageLoader />
