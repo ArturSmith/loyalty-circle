@@ -430,8 +430,8 @@ export type Database = {
       }
       card_templates: {
         Row: {
-          accepted_by_platform: boolean
           accent_color: string
+          accepted_by_platform: boolean
           active: boolean
           bg_color: string
           business_id: string
@@ -448,16 +448,16 @@ export type Database = {
           stamp_shape: string
           step_size: string
           subtitle: string | null
-          text_color: string
           terms_and_conditions: string
           terms_version: number
+          text_color: string
           title: string
           total_steps: number
           updated_at: string
         }
         Insert: {
-          accepted_by_platform?: boolean
           accent_color?: string
+          accepted_by_platform?: boolean
           active?: boolean
           bg_color?: string
           business_id: string
@@ -474,16 +474,16 @@ export type Database = {
           stamp_shape?: string
           step_size?: string
           subtitle?: string | null
-          text_color?: string
           terms_and_conditions: string
           terms_version?: number
+          text_color?: string
           title: string
           total_steps?: number
           updated_at?: string
         }
         Update: {
-          accepted_by_platform?: boolean
           accent_color?: string
+          accepted_by_platform?: boolean
           active?: boolean
           bg_color?: string
           business_id?: string
@@ -500,9 +500,9 @@ export type Database = {
           stamp_shape?: string
           step_size?: string
           subtitle?: string | null
-          text_color?: string
           terms_and_conditions?: string
           terms_version?: number
+          text_color?: string
           title?: string
           total_steps?: number
           updated_at?: string
@@ -997,11 +997,11 @@ export type Database = {
           total_steps: number
         }[]
       }
-      get_business_detail_public: { Args: { _id: string }; Returns: Json }
-      get_pending_moderation: {
-        Args: { _entity_id: string; _entity_type: string }
+      get_business_dashboard_stats: {
+        Args: { _business_id: string }
         Returns: Json
       }
+      get_business_detail_public: { Args: { _id: string }; Returns: Json }
       get_business_public: {
         Args: { _id: string }
         Returns: {
@@ -1039,13 +1039,13 @@ export type Database = {
               business_id: string
             }[]
           }
+      get_pending_moderation: {
+        Args: { _entity_id: string; _entity_type: string }
+        Returns: Json
+      }
       has_active_subscription: {
         Args: { check_env?: string; user_uuid: string }
         Returns: boolean
-      }
-      get_business_dashboard_stats: {
-        Args: { _business_id: string }
-        Returns: Json
       }
       has_business_permission: {
         Args: { _business_id: string; _permission: string; _user_id: string }
@@ -1070,11 +1070,35 @@ export type Database = {
         Args: { _conversation_id: string }
         Returns: undefined
       }
+      moderation_business_snapshot: {
+        Args: { _business_id: string }
+        Returns: Json
+      }
+      moderation_card_snapshot: {
+        Args: { _template_id: string }
+        Returns: Json
+      }
       redeem_business_voucher: {
         Args: { _business_id: string; _voucher_id: string }
         Returns: Json
       }
       redeem_voucher: { Args: { _voucher_id: string }; Returns: Json }
+      refresh_business_moderation: {
+        Args: {
+          _business_id: string
+          _change_kind: string
+          _submitted_by: string
+        }
+        Returns: string
+      }
+      refresh_card_moderation: {
+        Args: {
+          _change_kind: string
+          _submitted_by: string
+          _template_id: string
+        }
+        Returns: string
+      }
       renew_card: { Args: { _card_instance_id: string }; Returns: undefined }
       review_moderation_submission: {
         Args: {
@@ -1085,9 +1109,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      set_business_marketplace_status: {
+        Args: { _business_id: string; _status: string }
+        Returns: undefined
+      }
       set_business_paused: {
         Args: { _business_id: string; _paused: boolean }
         Returns: undefined
+      }
+      stamp_business_card: {
+        Args: { _business_id: string; _card_instance_id: string; _env?: string }
+        Returns: Json
       }
       submit_business_changes: {
         Args: { _business_id: string; _changes: Json }
@@ -1109,13 +1141,16 @@ export type Database = {
         Args: { _changes: Json; _template_id: string }
         Returns: string
       }
-      set_business_marketplace_status: {
-        Args: { _business_id: string; _status: string }
-        Returns: undefined
-      }
-      stamp_business_card: {
-        Args: { _business_id: string; _card_instance_id: string; _env?: string }
-        Returns: Json
+      upsert_moderation_submission: {
+        Args: {
+          _business_id: string
+          _change_kind: string
+          _entity_id: string
+          _entity_type: string
+          _proposed_data: Json
+          _submitted_by: string
+        }
+        Returns: string
       }
       user_holds_card_for_business: {
         Args: { _business_id: string }
