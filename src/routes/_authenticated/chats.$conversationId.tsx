@@ -57,6 +57,8 @@ function ConversationPage() {
   const [title, setTitle] = useState("Chat");
   const [logo, setLogo] = useState<string | null>(null);
   const [viewerRole, setViewerRole] = useState<"business" | "customer">("customer");
+  const [publicBusinessId, setPublicBusinessId] = useState<string | null>(null);
+  const [customerActivity, setCustomerActivity] = useState<{ customerId: string; cardId: string } | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [body, setBody] = useState("");
@@ -76,6 +78,12 @@ function ConversationPage() {
         setTitle(isBusinessViewer ? result.customer_name ?? "Customer" : result.business.name);
         setLogo(isBusinessViewer ? result.customer_avatar_url : result.business.logo_url);
         setViewerRole(result.viewer_role);
+        setPublicBusinessId(result.business.id);
+        setCustomerActivity(
+          isBusinessViewer && result.customer_id && result.customer_activity_card_id
+            ? { customerId: result.customer_id, cardId: result.customer_activity_card_id }
+            : null,
+        );
         setMessages(result.messages);
       })
       .catch(() => {})
@@ -130,6 +138,19 @@ function ConversationPage() {
     }
   };
 
+  const counterparty = (
+    <>
+      {logo ? (
+        <img src={logo} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />
+      ) : (
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold">
+          {title.slice(0, 1).toUpperCase()}
+        </span>
+      )}
+      <h1 className="min-w-0 truncate font-display text-lg font-semibold">{title}</h1>
+    </>
+  );
+
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
@@ -142,14 +163,28 @@ function ConversationPage() {
               <ArrowLeft className="h-5 w-5" />
             </Link>
           </Button>
-          {logo ? (
-            <img src={logo} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" />
+          {scope === "customer" && publicBusinessId ? (
+            <Link
+              to="/b/$businessId"
+              params={{ businessId: publicBusinessId }}
+              className="flex min-w-0 items-center gap-3 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label={`Open ${title} business page`}
+            >
+              {counterparty}
+            </Link>
+          ) : scope === "business" && businessId && customerActivity ? (
+            <Link
+              to="/business/cards/$id/customers/$customerId"
+              params={{ id: customerActivity.cardId, customerId: customerActivity.customerId }}
+              search={{ businessId, from: "messages", conversationId }}
+              className="flex min-w-0 items-center gap-3 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label={`Open ${title} customer activity`}
+            >
+              {counterparty}
+            </Link>
           ) : (
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold">
-              {title.slice(0, 1).toUpperCase()}
-            </div>
+            <div className="flex min-w-0 items-center gap-3">{counterparty}</div>
           )}
-          <h1 className="min-w-0 truncate font-display text-lg font-semibold">{title}</h1>
         </div>
       </header>
 

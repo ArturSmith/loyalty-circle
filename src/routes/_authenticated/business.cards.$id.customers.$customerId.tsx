@@ -57,7 +57,8 @@ export const Route = createFileRoute("/_authenticated/business/cards/$id/custome
   }),
   validateSearch: z.object({
     businessId: z.string().uuid(),
-    from: z.enum(["customers", "card"]).optional(),
+    from: z.enum(["customers", "card", "messages"]).optional(),
+    conversationId: z.string().uuid().optional(),
   }),
   component: CustomerDetails,
 });
@@ -86,7 +87,7 @@ function CustomerDetails() {
 
 function CustomerDetailsContent() {
   const { id, customerId } = Route.useParams();
-  const { businessId, from } = Route.useSearch();
+  const { businessId, from, conversationId } = Route.useSearch();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [tpl, setTpl] = useState<Tpl | null>(null);
@@ -209,7 +210,13 @@ function CustomerDetailsContent() {
         <p>This customer has no card yet.</p>
         <Button variant="outline" onClick={() => from === "customers"
           ? navigate({ to: "/business/customers", search: { businessId } })
-          : navigate({ to: "/business/cards/$id", params: { id }, search: { businessId } })}>
+          : from === "messages" && conversationId
+            ? navigate({
+                to: "/chats/$conversationId",
+                params: { conversationId },
+                search: { scope: "business", businessId },
+              })
+            : navigate({ to: "/business/cards/$id", params: { id }, search: { businessId } })}>
           Go back
         </Button>
       </div>
@@ -235,10 +242,16 @@ function CustomerDetailsContent() {
     <div className="min-h-screen px-5 py-6 max-w-3xl mx-auto pb-16">
       <header className="flex items-center justify-between">
         <BackButton
-          label={from === "customers" ? "Back to customers" : "Back to card"}
+          label={from === "customers" ? "Back to customers" : from === "messages" ? "Back to messages" : "Back to card"}
           onClick={() => from === "customers"
             ? navigate({ to: "/business/customers", search: { businessId } })
-            : navigate({ to: "/business/cards/$id", params: { id }, search: { businessId } })}
+            : from === "messages" && conversationId
+              ? navigate({
+                  to: "/chats/$conversationId",
+                  params: { conversationId },
+                  search: { scope: "business", businessId },
+                })
+              : navigate({ to: "/business/cards/$id", params: { id }, search: { businessId } })}
         />
         <p className="text-xs uppercase tracking-widest text-muted-foreground">Customer activity</p>
         <div className="w-10" />

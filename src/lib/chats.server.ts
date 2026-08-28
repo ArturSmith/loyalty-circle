@@ -264,14 +264,27 @@ export async function loadConversation(conversationId: string, userId: string, s
 
   let customerName: string | null = null;
   let customerAvatarUrl: string | null = null;
+  let customerActivityCardId: string | null = null;
   if (isBusinessMember) {
-    const { data: profile } = await supabaseAdmin
-      .from("profiles")
-      .select("display_name, avatar_url")
-      .eq("id", conversation.customer_id)
-      .maybeSingle();
+    const [{ data: profile }, { data: latestActivity }] = await Promise.all([
+      supabaseAdmin
+        .from("profiles")
+        .select("display_name, avatar_url")
+        .eq("id", conversation.customer_id)
+        .maybeSingle(),
+      supabaseAdmin
+        .from("card_events")
+        .select("template_id")
+        .eq("business_id", conversation.business_id)
+        .eq("customer_id", conversation.customer_id)
+        .not("template_id", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
     customerName = profile?.display_name ?? null;
     customerAvatarUrl = profile?.avatar_url ?? null;
+    customerActivityCardId = latestActivity?.template_id ?? null;
   }
 
   return {
@@ -282,8 +295,10 @@ export async function loadConversation(conversationId: string, userId: string, s
       logo_url: conversation.business.logo_url,
     } as ChatBusiness,
     viewer_role: (isCustomer ? "customer" : "business") as "customer" | "business",
+    customer_id: isBusinessMember ? conversation.customer_id as string : null,
     customer_name: customerName,
     customer_avatar_url: customerAvatarUrl,
+    customer_activity_card_id: customerActivityCardId,
     messages: (messages ?? []) as ChatMessage[],
   };
 }
