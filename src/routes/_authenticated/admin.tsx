@@ -95,17 +95,38 @@ function AdminPage() {
   };
 
   useEffect(() => {
-    checkAdmin({})
-      .then((r) => {
+    let cancelled = false;
+    (async () => {
+      // Wait until the Supabase session is restored, otherwise the bearer token
+      // isn't attached yet and every admin server fn 401s on first paint.
+      let session = (await supabase.auth.getSession()).data.session;
+      for (let i = 0; !session && i < 20; i++) {
+        await new Promise((r) => setTimeout(r, 100));
+        session = (await supabase.auth.getSession()).data.session;
+      }
+      if (cancelled) return;
+      if (!session) {
+        setAdminState(false);
+        return;
+      }
+      try {
+        const r = await checkAdmin({});
+        if (cancelled) return;
         setAdminState(r.admin);
         if (r.admin) {
           load("");
           loadModeration();
         }
-      })
-      .catch(() => setAdminState(false));
+      } catch {
+        if (!cancelled) setAdminState(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
 
   const toggle = async (b: AdminBusiness, next: boolean) => {
     setRows((prev) => prev.map((r) => (r.id === b.id ? { ...r, comped: next } : r)));
