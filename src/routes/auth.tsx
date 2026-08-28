@@ -10,6 +10,7 @@ import { Logo } from "@/components/Logo";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { z } from "zod";
+import { LanguageSwitcher } from "@/i18n";
 
 const searchSchema = z.object({ redirect: z.string().optional() }).catch({ redirect: undefined });
 
@@ -140,12 +141,15 @@ function AuthPage() {
   return (
     <div className="min-h-screen px-4 py-10">
       <div className="mx-auto w-full max-w-sm">
-        <Button variant="ghost" className="hide-in-app mb-3 -ml-2 gap-2 text-muted-foreground" asChild>
-          <Link to="/">
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </Link>
-        </Button>
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <Button variant="ghost" className="hide-in-app -ml-2 gap-2 text-muted-foreground" asChild>
+            <Link to="/">
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </Link>
+          </Button>
+          <LanguageSwitcher compact className="ml-auto" />
+        </div>
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}

@@ -17,6 +17,7 @@ import { TabScreen } from "@/components/TabScreen";
 import { useServerFn } from "@tanstack/react-start";
 import { amIAdmin } from "@/utils/admin.functions";
 import { NotificationButton } from "@/components/NotificationButton";
+import { LanguageSwitcher } from "@/i18n";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
@@ -233,6 +234,14 @@ function Profile() {
             </section>
 
             <BusinessSection profile={profile} />
+
+            <section className="mt-6 flex items-center justify-between gap-4 rounded-2xl glass-panel p-4">
+              <div>
+                <h2 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Language</h2>
+                <p className="mt-1 text-sm text-muted-foreground">English or Norwegian Bokmål</p>
+              </div>
+              <LanguageSwitcher compact />
+            </section>
 
             <section className="mt-6 rounded-2xl glass-panel p-4">
               <h2 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Your ID</h2>

@@ -25,6 +25,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getDefaultHome } from "@/lib/defaultHome";
+import { LanguageSwitcher } from "@/i18n";
 
 export const Route = createFileRoute("/")({
   ssr: false,
@@ -114,6 +115,7 @@ function Landing() {
           <span className="font-display text-xl font-extrabold tracking-tight">ClubCarder</span>
         </Link>
         <div className="flex items-center gap-2">
+          <LanguageSwitcher compact />
           <Link to="/auth">
             <Button variant="ghost" size="sm" className="rounded-full">Sign in</Button>
           </Link>

@@ -205,7 +205,7 @@ function ConversationPage() {
                       (mine ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground")
                     }
                   >
-                    <p className="whitespace-pre-wrap break-words">{message.body}</p>
+                    <p data-i18n-ignore className="whitespace-pre-wrap break-words">{message.body}</p>
                   </div>
                   <p className={"mt-1 text-[10px] text-muted-foreground " + (mine ? "text-right" : "text-left")}>
                     {new Date(message.created_at).toLocaleString([], {

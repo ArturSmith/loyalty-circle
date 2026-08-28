@@ -18,6 +18,7 @@ import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { BottomNav, isTabRoute } from "@/components/BottomNav";
 import { clearTabCaches } from "@/lib/tabCache";
 import { PullToRefresh } from "@/components/PullToRefresh";
+import { LanguageProvider } from "@/i18n";
 
 function NotFoundComponent() {
   return (
@@ -161,18 +162,20 @@ function RootComponent() {
 
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <PaymentTestModeBanner />
-      {/* Styled only in the native shell (see styles.css), where it becomes the
-          app's scroll container so the document itself never scrolls. On web
-          this is an inert wrapper and the page scrolls as usual. */}
-      <div id="app-scroll">
-        <Outlet key={refreshVersion} />
-      </div>
-      <PullToRefresh onRefresh={refreshApp} />
-      <PersistentBottomNav />
-      <Toaster position="top-center" richColors />
-    </QueryClientProvider>
+    <LanguageProvider>
+      <QueryClientProvider client={queryClient}>
+        <PaymentTestModeBanner />
+        {/* Styled only in the native shell (see styles.css), where it becomes the
+            app's scroll container so the document itself never scrolls. On web
+            this is an inert wrapper and the page scrolls as usual. */}
+        <div id="app-scroll">
+          <Outlet key={refreshVersion} />
+        </div>
+        <PullToRefresh onRefresh={refreshApp} />
+        <PersistentBottomNav />
+        <Toaster position="top-center" richColors />
+      </QueryClientProvider>
+    </LanguageProvider>
   );
 }
 
