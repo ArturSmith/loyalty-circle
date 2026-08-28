@@ -71,51 +71,36 @@ export function DiscoverBusinessTile({
     <Link
       to="/b/$businessId"
       params={{ businessId: business.business_id }}
-      className={`group relative block overflow-hidden rounded-3xl border border-border bg-card p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${className}`}
+      className={`group relative block overflow-hidden rounded-2xl border border-border bg-card px-4 py-3.5 shadow-sm transition hover:-translate-y-0.5 hover:border-border/80 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${className}`}
       style={{ borderColor: brandBorder ?? undefined }}
       aria-label={`Open ${business.name}`}
     >
       <span
-        className="absolute inset-x-0 top-0 h-1.5"
+        className="absolute inset-y-3 left-0 w-1 rounded-r-full"
         style={{ backgroundColor: brandColor ?? "var(--primary)" }}
         aria-hidden="true"
       />
-      <div className="flex items-start gap-4">
+      <div className="flex items-center gap-3">
         <BusinessLogo business={business} size="full" />
-        <span className="min-w-0 flex-1">
-          <span className="inline-flex max-w-full rounded-full bg-background/75 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-            <span className="truncate">{business.category?.trim() || "Other"}</span>
+        <span className="min-w-0 flex-1 py-0.5">
+          <span className="block w-fit max-w-full truncate rounded-full bg-muted/70 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">
+            {business.category?.trim() || "Other"}
           </span>
-          <span className="mt-1.5 block truncate font-display text-xl font-bold">{business.name}</span>
-          {business.description && (
-            <span className="mt-1 block line-clamp-2 text-sm leading-relaxed text-muted-foreground">
-              {business.description}
+          <span className="mt-1 block truncate font-display text-lg font-bold leading-tight">
+            {business.name}
+          </span>
+          <span className="mt-1.5 flex min-w-0 items-center gap-3 text-[11px] font-medium text-muted-foreground">
+            <span className="inline-flex shrink-0 items-center gap-1 text-foreground">
+              <CreditCard className="h-3.5 w-3.5" aria-hidden="true" />
+              {programLabel}
             </span>
-          )}
-        </span>
-        <ChevronRight className="mt-5 h-5 w-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
-      </div>
-
-      <div className="mt-4 flex flex-wrap gap-2 text-xs font-medium">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-background/80 px-3 py-1.5 text-foreground">
-          <CreditCard className="h-3.5 w-3.5" aria-hidden="true" />
-          {programLabel}
-        </span>
-        {business.location_count > 0 && (
-          <span className="rounded-full bg-background/80 px-3 py-1.5 text-muted-foreground">
-            {business.location_count} {business.location_count === 1 ? "location" : "locations"}
+            <span className="inline-flex min-w-0 items-center gap-1">
+              <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <span className="truncate">{distance ? `${distance} away` : locationLabel}</span>
+            </span>
           </span>
-        )}
-        {distance && (
-          <span className="rounded-full bg-background/80 px-3 py-1.5 text-muted-foreground">
-            {distance} away
-          </span>
-        )}
-      </div>
-
-      <div className="mt-4 flex items-start gap-2 border-t border-border/70 pt-3 text-xs text-muted-foreground">
-        <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-        <span className="line-clamp-1">{locationLabel}</span>
+        </span>
+        <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
       </div>
     </Link>
   );
@@ -131,7 +116,7 @@ function BusinessLogo({
   return (
     <span
       className={`flex shrink-0 items-center justify-center overflow-hidden border border-border bg-background shadow-sm ${
-        size === "full" ? "h-16 w-16 rounded-2xl" : "h-12 w-12 rounded-xl"
+        size === "full" ? "h-14 w-14 rounded-xl" : "h-12 w-12 rounded-xl"
       }`}
       style={{
         borderColor: brandTint(business.brand_color, 0.33) ?? undefined,
