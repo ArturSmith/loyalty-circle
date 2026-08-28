@@ -595,7 +595,6 @@ export type Database = {
           business_id: string
           change_kind: string
           created_at: string
-          current_data: Json | null
           entity_id: string
           entity_type: string
           id: string
@@ -612,7 +611,6 @@ export type Database = {
           business_id: string
           change_kind: string
           created_at?: string
-          current_data?: Json | null
           entity_id: string
           entity_type: string
           id?: string
@@ -629,7 +627,6 @@ export type Database = {
           business_id?: string
           change_kind?: string
           created_at?: string
-          current_data?: Json | null
           entity_id?: string
           entity_type?: string
           id?: string
