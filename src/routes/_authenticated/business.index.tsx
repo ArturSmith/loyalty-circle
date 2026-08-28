@@ -174,10 +174,9 @@ function BusinessDashboard() {
 
   return (
     <div className="min-h-screen px-5 py-6 max-w-3xl mx-auto">
-      <header className="flex items-center justify-between">
-        <div>
-          <p className="text-xs uppercase tracking-widest text-muted-foreground">Dashboard</p>
-          <div className="flex items-center gap-2">
+      <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2">
+        <p className="min-w-0 text-xs uppercase tracking-widest text-muted-foreground">Dashboard</p>
+        <div className="col-span-2 flex min-w-0 flex-wrap items-center gap-2">
             {/* A swatch of the brand colour, so the owner can see the value
                 they picked is actually in use rather than write-only. */}
             {normalizeBrandColor(biz.brand_color) && (
@@ -187,11 +186,12 @@ function BusinessDashboard() {
                 aria-hidden="true"
               />
             )}
-            <h1 className="font-display text-3xl font-extrabold tracking-tight">{biz.name}</h1>
+            <h1 className="min-w-0 max-w-full font-display text-2xl font-extrabold leading-tight tracking-tight [overflow-wrap:anywhere] sm:text-3xl">
+              {biz.name}
+            </h1>
             <PlanBadge isOwner={isOwner} />
-          </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="col-start-2 row-start-1 flex shrink-0 items-center gap-2">
           <NotificationButton scope="business" businessId={biz.id} />
           <Sheet>
             <SheetTrigger asChild>
