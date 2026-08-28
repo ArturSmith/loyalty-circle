@@ -18,6 +18,7 @@ import { isGoogleWalletEnabled, isAppleWalletEnabled } from "@/utils/wallet.func
 import { GoogleWalletButton } from "@/components/GoogleWalletButton";
 import { WalletChooser } from "@/components/WalletChooser";
 import { Checkbox } from "@/components/ui/checkbox";
+import { CardTermsSection } from "@/components/CardTermsSection";
 
 type Template = {
   id: string; business_id: string; title: string; subtitle: string | null; description: string | null;
@@ -373,11 +374,11 @@ function BusinessPublic() {
                       onFlip={() => setFlippedTemplateId((prev) => prev === t.id ? null : t.id)}
                     />
                   </div>
-                  <section className="mt-3 rounded-2xl border border-border bg-card p-4">
-                    <h3 className="text-sm font-semibold">Terms &amp; conditions</h3>
-                    <div className="mt-2 max-h-40 overflow-y-auto whitespace-pre-wrap text-xs leading-relaxed text-muted-foreground">
-                      {t.terms_and_conditions}
-                    </div>
+                  <CardTermsSection
+                    terms={t.terms_and_conditions}
+                    className="mt-3"
+                    termsClassName="max-h-40 overflow-y-auto"
+                  >
                     {!ownedInstanceId && (
                       <label className="mt-3 flex cursor-pointer items-start gap-3 border-t border-border pt-3 text-sm">
                         <Checkbox
@@ -395,7 +396,7 @@ function BusinessPublic() {
                         <span>I have read and accept these terms and conditions.</span>
                       </label>
                     )}
-                  </section>
+                  </CardTermsSection>
                   {userId ? (
                     <>
                       <Button

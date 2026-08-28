@@ -20,6 +20,7 @@ import { DiscoverStrip } from "@/components/DiscoverStrip";
 import { TabTransition } from "@/components/TabTransition";
 import { ScreenLoader } from "@/components/Spinner";
 import { getTabCache, setTabCache } from "@/lib/tabCache";
+import { CardTermsSection } from "@/components/CardTermsSection";
 
 
 type Instance = WalletInstance;
@@ -548,19 +549,17 @@ function Wallet() {
               <OrnamentDivider className="w-40 mx-auto mt-6 opacity-70" />
               {inst && <BusinessInfoPanel business={inst.template.business} businessId={inst.template.business.id} />}
               {inst && (
-                <section className="mt-4 rounded-2xl border border-ink/10 bg-secondary p-4 text-left">
-                  <div className="flex items-center justify-between gap-2">
-                    <h4 className="text-sm font-semibold">Terms &amp; conditions</h4>
-                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                <CardTermsSection
+                  terms={inst.terms_accepted_text ?? inst.template.terms_and_conditions}
+                  className="mt-4 border-ink/10 bg-secondary text-left"
+                  meta={
+                    <span className="shrink-0 text-[10px] uppercase tracking-wider text-muted-foreground">
                       {inst.terms_accepted_version
                         ? `Accepted version ${inst.terms_accepted_version}`
                         : `Version ${inst.template.terms_version}`}
                     </span>
-                  </div>
-                  <p className="mt-2 whitespace-pre-wrap text-xs leading-relaxed text-muted-foreground">
-                    {inst.terms_accepted_text ?? inst.template.terms_and_conditions}
-                  </p>
-                </section>
+                  }
+                />
               )}
 
               {isCompleted && (

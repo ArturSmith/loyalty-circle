@@ -12,6 +12,7 @@ import { CardAnalytics } from "@/components/CardAnalytics";
 import type { AnalyticsInstance, AnalyticsStamp, AnalyticsVoucher, AnalyticsPassEvent } from "@/components/CardAnalytics";
 import { z } from "zod";
 import { useBusinessPermissions } from "@/hooks/useBusinessPermissions";
+import { CardTermsSection } from "@/components/CardTermsSection";
 
 
 type Tpl = {
@@ -248,17 +249,17 @@ function CardDetails() {
         <span className={tpl.active ? "text-emerald-600" : ""}>{tpl.active ? "Active" : "Paused"}</span>
       </div>
 
-      <section className="mt-6 rounded-2xl border border-border bg-card p-5">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="font-display text-lg font-bold">Terms &amp; conditions</h2>
+      <CardTermsSection
+        terms={tpl.terms_and_conditions}
+        className="mt-6"
+        titleClassName="font-display text-lg font-bold"
+        termsClassName="text-sm"
+        meta={
           <span className="shrink-0 text-[10px] uppercase tracking-wider text-muted-foreground">
             Version {tpl.terms_version}
           </span>
-        </div>
-        <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
-          {tpl.terms_and_conditions}
-        </p>
-      </section>
+        }
+      />
 
       {permissions.has("analytics.view") && <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat
