@@ -1,12 +1,19 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { Check, Sparkles, ArrowLeft } from "lucide-react";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
-import { initializePaddle, getPaddlePriceId } from "@/lib/paddle";
+import {
+  closePaddleCheckout,
+  describePaddleCheckoutError,
+  getPaddlePriceId,
+  initializePaddle,
+  isPaddleCheckoutError,
+  subscribeToPaddleEvents,
+} from "@/lib/paddle";
 import { useBusinessAccess } from "@/hooks/useBusinessAccess";
 import { PLAN_LIST, TRIAL_TIER, PLANS, formatPlanPrice, type Plan } from "@/lib/plans";
 
@@ -26,6 +33,20 @@ function SubscribePage() {
   const navigate = useNavigate();
   const access = useBusinessAccess();
   const [loadingTier, setLoadingTier] = useState<string | null>(null);
+
+  useEffect(
+    () =>
+      subscribeToPaddleEvents((event) => {
+        if (!isPaddleCheckoutError(event)) return;
+        console.error("Paddle checkout error", event);
+        if (event.name === "checkout.error") closePaddleCheckout();
+        toast.error("Checkout could not be loaded", {
+          description: describePaddleCheckoutError(event),
+        });
+        setLoadingTier(null);
+      }),
+    [],
+  );
 
   const startCheckout = async (plan: Plan) => {
     setLoadingTier(plan.tier);
@@ -47,9 +68,10 @@ function SubscribePage() {
       }
       // Remember where to send the user after payment — default to business dashboard.
       try {
-        const prev = document.referrer && new URL(document.referrer).origin === window.location.origin
-          ? new URL(document.referrer).pathname + new URL(document.referrer).search
-          : "/business";
+        const prev =
+          document.referrer && new URL(document.referrer).origin === window.location.origin
+            ? new URL(document.referrer).pathname + new URL(document.referrer).search
+            : "/business";
         const returnTo = prev && prev !== "/subscribe" && prev.startsWith("/") ? prev : "/business";
         sessionStorage.setItem("post_checkout_return", returnTo);
       } catch {
@@ -73,7 +95,10 @@ function SubscribePage() {
     } catch (e) {
       console.error(e);
       toast.error(`Could not open checkout for ${plan.name}.`, {
-        description: "Please try again, or contact support if it keeps happening.",
+        description:
+          e instanceof Error && e.message
+            ? e.message
+            : "Please try again, or contact support if it keeps happening.",
       });
     } finally {
       setLoadingTier(null);
@@ -111,8 +136,8 @@ function SubscribePage() {
             <div className="mx-auto mt-4 max-w-md rounded-xl border border-dashed border-border bg-muted/40 p-4">
               <p className="text-sm text-muted-foreground">
                 These plans cover a business. Set yours up first — the first{" "}
-                <strong className="text-foreground">14 days are free</strong>, so there's nothing
-                to pay yet.
+                <strong className="text-foreground">14 days are free</strong>, so there's nothing to
+                pay yet.
               </p>
               <Button className="mt-3" onClick={() => navigate({ to: "/business/onboarding" })}>
                 Set up my business
@@ -137,8 +162,8 @@ function SubscribePage() {
           {access.reason === "needs-more-seats" && (
             <p className="mt-2 text-sm text-destructive">
               {access.businessCount} business{access.businessCount === 1 ? "" : "es"} ·{" "}
-              {access.seatCount} subscription{access.seatCount === 1 ? "" : "s"}. Each business needs
-              its own plan.
+              {access.seatCount} subscription{access.seatCount === 1 ? "" : "s"}. Each business
+              needs its own plan.
             </p>
           )}
           {access.reason === "no-business" && (

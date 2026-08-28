@@ -2,21 +2,48 @@ import { createServerFn } from "@tanstack/react-start";
 import { gatewayFetch, getPaddleClient, type PaddleEnv } from "@/lib/paddle.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+type PaddleTransaction = {
+  id: string;
+  status: string;
+  billed_at?: string | null;
+  created_at?: string | null;
+  currency_code: string;
+  details?: { totals?: { total?: string } };
+  invoice_number?: string | null;
+  invoice_id?: string | null;
+};
+
 export const resolvePaddlePrice = createServerFn({ method: "GET" })
-  .inputValidator((data: { priceId: string; environment: PaddleEnv }) => data)
+  .validator((data: { priceId: string; environment: PaddleEnv }) => data)
   .handler(async ({ data }) => {
     const response = await gatewayFetch(
       data.environment,
-      `/prices?external_id=${encodeURIComponent(data.priceId)}`
+      `/prices?external_id=${encodeURIComponent(data.priceId)}`,
     );
-    const result = (await response.json()) as { data?: Array<{ id: string }> };
-    if (!result.data?.length) throw new Error("Price not found");
-    return result.data[0].id;
+    const result = (await response.json()) as {
+      data?: Array<{ id?: string; status?: string }>;
+      error?: { code?: string; detail?: string };
+    };
+    if (!response.ok) {
+      const detail = result.error?.detail || "Paddle could not read the plan catalogue";
+      const code = result.error?.code ? ` (${result.error.code})` : "";
+      throw new Error(`${detail}${code}`);
+    }
+    const price = result.data?.find(
+      (candidate) =>
+        candidate.status !== "archived" && /^pri_[a-z\d]{26}$/.test(candidate.id ?? ""),
+    );
+    if (!price?.id) {
+      throw new Error(
+        `No active Paddle price is configured for ${data.priceId} in ${data.environment}`,
+      );
+    }
+    return price.id;
   });
 
 export const getBillingPortalUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { environment: PaddleEnv }) => data)
+  .validator((data: { environment: PaddleEnv }) => data)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: sub, error } = await supabase
@@ -34,7 +61,7 @@ export const getBillingPortalUrl = createServerFn({ method: "POST" })
     const paddle = getPaddleClient(data.environment);
     const session = await paddle.customerPortalSessions.create(
       sub.paddle_customer_id,
-      sub.paddle_subscription_id ? [sub.paddle_subscription_id] : []
+      sub.paddle_subscription_id ? [sub.paddle_subscription_id] : [],
     );
 
     const subscriptionUrl = session.urls?.subscriptions?.[0];
@@ -47,7 +74,7 @@ export const getBillingPortalUrl = createServerFn({ method: "POST" })
 
 export const listTransactions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { environment: PaddleEnv; after?: string }) => data)
+  .validator((data: { environment: PaddleEnv; after?: string }) => data)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { data: sub } = await supabase
@@ -69,7 +96,7 @@ export const listTransactions = createServerFn({ method: "GET" })
 
     const res = await gatewayFetch(data.environment, `${url.pathname}${url.search}`);
     const json = (await res.json()) as {
-      data?: any[];
+      data?: PaddleTransaction[];
       meta?: { pagination?: { next?: string; has_more?: boolean } };
     };
     const items = json.data ?? [];
@@ -89,7 +116,7 @@ export const listTransactions = createServerFn({ method: "GET" })
 
 export const getInvoicePdfUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { transactionId: string; environment: PaddleEnv }) => data)
+  .validator((data: { transactionId: string; environment: PaddleEnv }) => data)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     // Verify the transaction belongs to this user's customer
@@ -105,7 +132,7 @@ export const getInvoicePdfUrl = createServerFn({ method: "POST" })
 
     const txRes = await gatewayFetch(
       data.environment,
-      `/transactions/${encodeURIComponent(data.transactionId)}`
+      `/transactions/${encodeURIComponent(data.transactionId)}`,
     );
     const txJson = (await txRes.json()) as { data?: { customer_id?: string } };
     if (txJson.data?.customer_id !== sub.paddle_customer_id) {
@@ -114,7 +141,7 @@ export const getInvoicePdfUrl = createServerFn({ method: "POST" })
 
     const res = await gatewayFetch(
       data.environment,
-      `/transactions/${encodeURIComponent(data.transactionId)}/invoice`
+      `/transactions/${encodeURIComponent(data.transactionId)}/invoice`,
     );
     const json = (await res.json()) as { data?: { url?: string } };
     if (!json.data?.url) throw new Error("Invoice not available");
