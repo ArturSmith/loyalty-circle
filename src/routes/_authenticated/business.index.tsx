@@ -29,6 +29,7 @@ type Business = {
   name: string;
   logo_url: string | null;
   brand_color: string | null;
+  accepted_by_platform: boolean;
   onboarding_step?: number | null;
   onboarding_completed_at?: string | null;
 };
@@ -39,7 +40,9 @@ type Tpl = {
   shape: CardShape;
   bg_color: string; accent_color: string; text_color: string;
   stamp_icon: StampIconName; logo_url: string | null; rewards: Reward[] | null; grid_cols: number | null;
+  accepted_by_platform: boolean;
 };
+type ModerationState = { status: "pending" | "rejected"; rejection_reason: string | null };
 
 export const Route = createFileRoute("/_authenticated/business/")({
   head: () => ({ meta: [{ title: "Business dashboard — ClubCarder" }] }),
@@ -59,6 +62,7 @@ function BusinessDashboard() {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
   const [flipped, setFlipped] = useState<Set<string>>(new Set());
+  const [moderationStates, setModerationStates] = useState<Map<string, ModerationState>>(new Map());
   const permissions = useBusinessPermissions(biz?.id);
 
 
@@ -112,11 +116,23 @@ function BusinessDashboard() {
       }
       setBiz(b as Business | null);
       if (b) {
-        const [{ data: t }, { data: dashboardStats }] = await Promise.all([
-          supabase.from("card_templates").select("id,title,subtitle,description,corner_title,total_steps,active,shape,bg_color,accent_color,text_color,stamp_icon,logo_url,rewards,grid_cols").eq("business_id", b.id).order("created_at", { ascending: false }),
+        const [{ data: t }, { data: dashboardStats }, { data: moderation }] = await Promise.all([
+          supabase.from("card_templates").select("id,title,subtitle,description,corner_title,total_steps,active,shape,bg_color,accent_color,text_color,stamp_icon,logo_url,rewards,grid_cols,accepted_by_platform").eq("business_id", b.id).order("created_at", { ascending: false }),
           supabase.rpc("get_business_dashboard_stats", { _business_id: b.id }),
+          (supabase as any)
+            .from("moderation_submissions")
+            .select("entity_type,entity_id,status,rejection_reason,updated_at")
+            .eq("business_id", b.id)
+            .in("status", ["pending", "rejected"])
+            .order("updated_at", { ascending: false }),
         ]);
         setTpls((t as Tpl[]) ?? []);
+        const states = new Map<string, ModerationState>();
+        for (const row of (moderation as ({ entity_type: string; entity_id: string } & ModerationState)[] | null) ?? []) {
+          const key = `${row.entity_type}:${row.entity_id}`;
+          if (!states.has(key)) states.set(key, { status: row.status, rejection_reason: row.rejection_reason });
+        }
+        setModerationStates(states);
         const basic = (dashboardStats ?? {}) as { stamps?: number; customers?: number; active?: number };
         setStats({ stamps: basic.stamps ?? 0, customers: basic.customers ?? 0, active: basic.active ?? 0 });
       }
@@ -188,6 +204,13 @@ function BusinessDashboard() {
             )}
             <h1 className="font-display text-3xl font-extrabold tracking-tight">{biz.name}</h1>
             <PlanBadge isOwner={isOwner} />
+            {(!biz.accepted_by_platform || moderationStates.has(`business:${biz.id}`)) && (
+              <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${moderationStates.get(`business:${biz.id}`)?.status === "rejected" ? "bg-destructive/10 text-destructive" : "bg-amber-500/10 text-amber-700"}`}>
+                {moderationStates.get(`business:${biz.id}`)?.status === "rejected"
+                  ? "Changes rejected"
+                  : biz.accepted_by_platform ? "Changes in review" : "Awaiting review"}
+              </span>
+            )}
           </div>
         </div>
         <Sheet>
@@ -259,6 +282,12 @@ function BusinessDashboard() {
           </SheetContent>
         </Sheet>
       </header>
+
+      {moderationStates.get(`business:${biz.id}`)?.status === "rejected" && (
+        <p className="mt-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          Platform review: {moderationStates.get(`business:${biz.id}`)?.rejection_reason ?? "Changes were rejected. Update the business details and submit again."}
+        </p>
+      )}
 
       <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4">
         <Button variant="outline" onClick={() => setShowQr((v) => !v)} className="h-auto flex-col gap-1.5 py-3 rounded-2xl glass-panel">
@@ -383,6 +412,16 @@ function BusinessDashboard() {
                     {!t.active && (
                       <div className="absolute top-2 left-2 rounded-full bg-background/80 backdrop-blur px-2 py-1 text-[10px] font-medium uppercase tracking-wider shadow-sm">
                         Paused
+                      </div>
+                    )}
+                    {(!t.accepted_by_platform || moderationStates.has(`card:${t.id}`)) && (
+                      <div
+                        className={`absolute right-2 top-2 rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wider shadow-sm backdrop-blur ${moderationStates.get(`card:${t.id}`)?.status === "rejected" ? "bg-destructive/90 text-destructive-foreground" : "bg-amber-50/90 text-amber-800"}`}
+                        title={moderationStates.get(`card:${t.id}`)?.rejection_reason ?? undefined}
+                      >
+                        {moderationStates.get(`card:${t.id}`)?.status === "rejected"
+                          ? "Rejected"
+                          : t.accepted_by_platform ? "Changes in review" : "Awaiting review"}
                       </div>
                     )}
                   </Link>

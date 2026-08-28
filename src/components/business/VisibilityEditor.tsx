@@ -34,6 +34,7 @@ const OPTIONS: { key: MarketplaceStatus; title: string; blurb: string }[] = [
 export function VisibilityEditor({ businessId, showSubscriptionNotice = true }: { businessId: string; showSubscriptionNotice?: boolean }) {
   const [value, setValue] = useState<MarketplaceStatus | null>(null);
   const [saving, setSaving] = useState(false);
+  const [accepted, setAccepted] = useState(true);
   const access = useBusinessAccess();
 
   useEffect(() => {
@@ -41,7 +42,7 @@ export function VisibilityEditor({ businessId, showSubscriptionNotice = true }: 
     (async () => {
       const { data } = await supabase
         .from("businesses")
-        .select("marketplace_status")
+        .select("marketplace_status,accepted_by_platform")
         .eq("id", businessId)
         .maybeSingle();
       if (cancelled) return;
@@ -49,6 +50,7 @@ export function VisibilityEditor({ businessId, showSubscriptionNotice = true }: 
       // was never built; treat anything that isn't 'published' as private.
       const status = (data as { marketplace_status?: string } | null)?.marketplace_status;
       setValue(status === "published" ? "published" : "unpublished");
+      setAccepted(Boolean((data as { accepted_by_platform?: boolean } | null)?.accepted_by_platform));
     })();
     return () => {
       cancelled = true;
@@ -72,7 +74,9 @@ export function VisibilityEditor({ businessId, showSubscriptionNotice = true }: 
     }
     toast.success(
       next === "published"
-        ? "Your business is listed in Discover"
+        ? accepted
+          ? "Your business is listed in Discover"
+          : "Visibility saved. Your listing will appear after platform approval"
         : "Your business is hidden from Discover",
     );
   };
@@ -83,6 +87,11 @@ export function VisibilityEditor({ businessId, showSubscriptionNotice = true }: 
 
   return (
     <div className="space-y-3">
+      {!accepted && (
+        <p className="rounded-xl bg-amber-500/10 px-3 py-2 text-xs text-amber-800">
+          This business is awaiting platform review. It cannot appear publicly until accepted.
+        </p>
+      )}
       {showSubscriptionNotice && !access.loading && !access.hasAccess && value === "published" && (
         // Being listed is a paid feature, so the preference is kept but not
         // honoured. Saying so beats letting the owner believe they're visible.

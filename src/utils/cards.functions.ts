@@ -62,13 +62,16 @@ export const claimCardToWallet = createServerFn({ method: "POST" })
 
     const { data: template, error: templateError } = await supabaseAdmin
       .from("card_templates")
-      .select("id, business_id, terms_and_conditions, terms_version")
+      .select("id, business_id, terms_and_conditions, terms_version, accepted_by_platform, business:businesses(accepted_by_platform)")
       .eq("id", data.templateId)
       .eq("active", true)
       .maybeSingle();
 
     if (templateError) throw templateError;
     if (!template) throw new Error("This card is not available anymore");
+    if (!(template as any).accepted_by_platform || !(template as any).business?.accepted_by_platform) {
+      throw new Error("This card is awaiting platform review");
+    }
     if (template.terms_version !== data.acceptedTermsVersion) {
       throw new Error("The card terms changed. Please review and accept the latest version.");
     }

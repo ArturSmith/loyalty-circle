@@ -59,8 +59,14 @@ function EditBusiness() {
         .eq("id", businessId)
         .maybeSingle();
       if (data) {
+        const { data: pending } = await (supabase.rpc as any)("get_pending_moderation", {
+          _entity_type: "business",
+          _entity_id: businessId,
+        });
+        const proposed = (pending as { proposed_data?: { business?: Record<string, unknown> } } | null)
+          ?.proposed_data?.business;
         setBizId((data as { id: string }).id);
-        setDetails(businessDetailsFromRow(data as Record<string, unknown>));
+        setDetails(businessDetailsFromRow(proposed ?? (data as Record<string, unknown>)));
       }
       setLoading(false);
     })();
@@ -74,13 +80,13 @@ function EditBusiness() {
       return;
     }
     setSaving(true);
-    const { error } = await supabase
-      .from("businesses")
-      .update({ ...businessDetailsToPayload(details), updated_at: new Date().toISOString() })
-      .eq("id", bizId);
+    const { error } = await (supabase.rpc as any)("submit_business_changes", {
+      _business_id: bizId,
+      _changes: businessDetailsToPayload(details),
+    });
     setSaving(false);
     if (error) { toast.error(error.message); return; }
-    toast.success("Business updated");
+    toast.success("Business changes submitted for review");
     navigate({ to: "/business", search: { businessId } });
   };
 

@@ -61,7 +61,7 @@ export const createWalletPass = createServerFn({ method: "POST" })
     const { data: template, error: templateError } = await supabaseAdmin
       .from("card_templates")
       .select(
-        "id, title, total_steps, rewards, accent_color, bg_color, logo_url, active, google_class_id, terms_and_conditions, terms_version, business:businesses(id, name, logo_url)",
+        "id, title, total_steps, rewards, accent_color, bg_color, logo_url, active, accepted_by_platform, google_class_id, terms_and_conditions, terms_version, business:businesses(id, name, logo_url, accepted_by_platform)",
       )
       .eq("id", data.templateId)
       .eq("active", true)
@@ -74,7 +74,10 @@ export const createWalletPass = createServerFn({ method: "POST" })
     }
 
     const tpl = template as any;
-    const business = tpl.business as { id: string; name: string; logo_url: string | null } | null;
+    const business = tpl.business as { id: string; name: string; logo_url: string | null; accepted_by_platform: boolean } | null;
+    if (!tpl.accepted_by_platform || !business?.accepted_by_platform) {
+      throw new Error("This card is awaiting platform review");
+    }
 
     const classId = await ensureLoyaltyClass(config, {
       templateId: tpl.id,

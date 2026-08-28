@@ -221,6 +221,22 @@ function BusinessPublic() {
 
   if (loading) return <ScreenLoader />;
 
+  if (!business) {
+    return (
+      <div className="min-h-screen px-4 py-16">
+        <div className="mx-auto max-w-md rounded-2xl border-2 border-ink/10 bg-card p-8 text-center card-shadow">
+          <h1 className="font-display text-2xl font-semibold">Business unavailable</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            This business is not currently published. It may still be awaiting platform review.
+          </p>
+          <Button className="mt-6" asChild>
+            <Link to="/discover">Browse loyalty programs</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   // Older businesses store a single address on the row itself rather than in
   // business_locations, so fall back to it when no locations were added.
   const fallbackAddress = [

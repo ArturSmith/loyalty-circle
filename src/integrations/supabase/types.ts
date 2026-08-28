@@ -233,6 +233,7 @@ export type Database = {
       }
       businesses: {
         Row: {
+          accepted_by_platform: boolean
           address_line1: string | null
           address_line2: string | null
           brand_color: string | null
@@ -265,6 +266,7 @@ export type Database = {
           welcome_message: string | null
         }
         Insert: {
+          accepted_by_platform?: boolean
           address_line1?: string | null
           address_line2?: string | null
           brand_color?: string | null
@@ -297,6 +299,7 @@ export type Database = {
           welcome_message?: string | null
         }
         Update: {
+          accepted_by_platform?: boolean
           address_line1?: string | null
           address_line2?: string | null
           brand_color?: string | null
@@ -427,6 +430,7 @@ export type Database = {
       }
       card_templates: {
         Row: {
+          accepted_by_platform: boolean
           accent_color: string
           active: boolean
           bg_color: string
@@ -452,6 +456,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          accepted_by_platform?: boolean
           accent_color?: string
           active?: boolean
           bg_color?: string
@@ -477,6 +482,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          accepted_by_platform?: boolean
           accent_color?: string
           active?: boolean
           bg_color?: string
@@ -577,6 +583,65 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "conversations_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      moderation_submissions: {
+        Row: {
+          business_id: string
+          change_kind: string
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          proposed_data: Json
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_at: string
+          submitted_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          change_kind: string
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          proposed_data: Json
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          submitted_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          change_kind?: string
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          proposed_data?: Json
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          submitted_by?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "moderation_submissions_business_id_fkey"
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses"
@@ -933,6 +998,10 @@ export type Database = {
         }[]
       }
       get_business_detail_public: { Args: { _id: string }; Returns: Json }
+      get_pending_moderation: {
+        Args: { _entity_id: string; _entity_type: string }
+        Returns: Json
+      }
       get_business_public: {
         Args: { _id: string }
         Returns: {
@@ -1007,9 +1076,38 @@ export type Database = {
       }
       redeem_voucher: { Args: { _voucher_id: string }; Returns: Json }
       renew_card: { Args: { _card_instance_id: string }; Returns: undefined }
+      review_moderation_submission: {
+        Args: {
+          _decision: string
+          _reason?: string
+          _reviewer_id: string
+          _submission_id: string
+        }
+        Returns: undefined
+      }
       set_business_paused: {
         Args: { _business_id: string; _paused: boolean }
         Returns: undefined
+      }
+      submit_business_changes: {
+        Args: { _business_id: string; _changes: Json }
+        Returns: string
+      }
+      submit_business_for_moderation: {
+        Args: { _business_id: string }
+        Returns: string
+      }
+      submit_business_locations: {
+        Args: { _business_id: string; _locations: Json }
+        Returns: Json
+      }
+      submit_business_socials: {
+        Args: { _business_id: string; _socials: Json }
+        Returns: Json
+      }
+      submit_card_changes: {
+        Args: { _changes: Json; _template_id: string }
+        Returns: string
       }
       set_business_marketplace_status: {
         Args: { _business_id: string; _status: string }

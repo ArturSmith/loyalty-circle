@@ -27,7 +27,7 @@ export const SOCIAL_PLATFORMS = [
 
 type PlatformKey = (typeof SOCIAL_PLATFORMS)[number]["key"];
 
-type Row = { id: string; platform: string; url: string };
+type Row = { id?: string; platform: string; url: string };
 
 const emptyValues = () =>
   Object.fromEntries(SOCIAL_PLATFORMS.map((p) => [p.key, ""])) as Record<PlatformKey, string>;
@@ -56,26 +56,35 @@ export function SocialsEditor({
   onSaved?: () => void;
 }) {
   const [values, setValues] = useState<Record<PlatformKey, string>>(emptyValues);
-  const [existing, setExisting] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [requiresModeration, setRequiresModeration] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data, error } = await (supabase as any)
-        .from("business_socials")
-        .select("id,platform,url")
-        .eq("business_id", businessId);
+      const [{ data, error }, { data: pending }, { data: business }] = await Promise.all([
+        (supabase as any)
+          .from("business_socials")
+          .select("id,platform,url")
+          .eq("business_id", businessId),
+        (supabase.rpc as any)("get_pending_moderation", {
+          _entity_type: "business",
+          _entity_id: businessId,
+        }),
+        supabase.from("businesses").select("accepted_by_platform").eq("id", businessId).maybeSingle(),
+      ]);
       if (cancelled) return;
       if (error) toast.error(error.message);
-      const rows = ((data as Row[] | null) ?? []).filter((r) =>
+      const pendingSocials = (pending as { proposed_data?: { socials?: Row[] } } | null)
+        ?.proposed_data?.socials;
+      const rows = (Array.isArray(pendingSocials) ? pendingSocials : ((data as Row[] | null) ?? [])).filter((r) =>
         SOCIAL_PLATFORMS.some((p) => p.key === r.platform),
       );
-      setExisting(rows);
       const next = emptyValues();
       for (const r of rows) next[r.platform as PlatformKey] = r.url;
       setValues(next);
+      setRequiresModeration(Boolean((business as { accepted_by_platform?: boolean } | null)?.accepted_by_platform));
       setLoading(false);
     })();
     return () => {
@@ -86,14 +95,11 @@ export function SocialsEditor({
   const save = async () => {
     // Validate everything before touching the database, so a single bad URL
     // can't leave half the links saved.
-    const upserts: { business_id: string; platform: string; url: string }[] = [];
-    const removals: string[] = [];
+    const links: { platform: string; url: string }[] = [];
 
     for (const p of SOCIAL_PLATFORMS) {
       const raw = values[p.key];
-      const was = existing.find((r) => r.platform === p.key);
       if (!raw.trim()) {
-        if (was) removals.push(was.id);
         continue;
       }
       const url = normalizeUrl(raw);
@@ -101,27 +107,21 @@ export function SocialsEditor({
         toast.error(`${p.label} doesn't look like a valid link`);
         return;
       }
-      upserts.push({ business_id: businessId, platform: p.key, url });
+      links.push({ platform: p.key, url });
     }
 
     setSaving(true);
     try {
-      if (removals.length) {
-        const { error } = await (supabase as any).from("business_socials").delete().in("id", removals);
-        if (error) throw error;
-      }
-      if (upserts.length) {
-        const { error } = await (supabase as any)
-          .from("business_socials")
-          .upsert(upserts, { onConflict: "business_id,platform" });
-        if (error) throw error;
-      }
-      const { data } = await (supabase as any)
-        .from("business_socials")
-        .select("id,platform,url")
-        .eq("business_id", businessId);
-      setExisting((data as Row[] | null) ?? []);
-      toast.success("Networks saved");
+      const { data, error } = await (supabase.rpc as any)("submit_business_socials", {
+        _business_id: businessId,
+        _socials: links,
+      });
+      if (error) throw error;
+      const saved = (data as Row[] | null) ?? links;
+      const next = emptyValues();
+      for (const row of saved) next[row.platform as PlatformKey] = row.url;
+      setValues(next);
+      toast.success(requiresModeration ? "Network changes submitted for review" : "Networks saved");
       onSaved?.();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not save your networks");

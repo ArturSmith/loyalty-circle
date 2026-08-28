@@ -3,16 +3,19 @@ import { ScreenLoader, Spinner } from "@/components/Spinner";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Gift, Search, ShieldCheck } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock3, Gift, Search, ShieldCheck, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import {
   amIAdmin,
   listBusinessesForAdmin,
+  listModerationForAdmin,
+  reviewModerationForAdmin,
   setAdminByEmail,
   setBusinessComped,
   type AdminBusiness,
+  type AdminModerationSubmission,
 } from "@/utils/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -31,12 +34,17 @@ function AdminPage() {
   const list = useServerFn(listBusinessesForAdmin);
   const setComped = useServerFn(setBusinessComped);
   const setAdmin = useServerFn(setAdminByEmail);
+  const listModeration = useServerFn(listModerationForAdmin);
+  const reviewModeration = useServerFn(reviewModerationForAdmin);
 
   const [admin, setAdminState] = useState<boolean | null>(null);
   const [rows, setRows] = useState<AdminBusiness[]>([]);
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
+  const [moderation, setModeration] = useState<AdminModerationSubmission[]>([]);
+  const [moderationLoading, setModerationLoading] = useState(false);
+  const [reviewingId, setReviewingId] = useState<string | null>(null);
 
   const load = async (query = q) => {
     setLoading(true);
@@ -50,11 +58,49 @@ function AdminPage() {
     }
   };
 
+  const loadModeration = async () => {
+    setModerationLoading(true);
+    try {
+      setModeration(await listModeration({}));
+    } catch (e) {
+      console.error(e);
+      toast.error("Could not load moderation queue.");
+    } finally {
+      setModerationLoading(false);
+    }
+  };
+
+  const decide = async (submission: AdminModerationSubmission, decision: "accepted" | "rejected") => {
+    const reason = decision === "rejected"
+      ? window.prompt("Tell the business why this submission was rejected:")
+      : "";
+    if (decision === "rejected" && reason === null) return;
+    if (decision === "rejected" && (reason ?? "").trim().length < 3) {
+      toast.error("Add a short rejection reason.");
+      return;
+    }
+    setReviewingId(submission.id);
+    try {
+      await reviewModeration({
+        data: { submissionId: submission.id, decision, reason: reason ?? undefined },
+      });
+      setModeration((current) => current.filter((row) => row.id !== submission.id));
+      toast.success(decision === "accepted" ? "Submission accepted and published" : "Submission rejected");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not review this submission.");
+    } finally {
+      setReviewingId(null);
+    }
+  };
+
   useEffect(() => {
     checkAdmin({})
       .then((r) => {
         setAdminState(r.admin);
-        if (r.admin) load("");
+        if (r.admin) {
+          load("");
+          loadModeration();
+        }
       })
       .catch(() => setAdminState(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -108,8 +154,77 @@ function AdminPage() {
           <ShieldCheck className="h-5 w-5 text-primary" /> Staff admin
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Give a business free access — it works exactly like a paid plan, with no payment required.
+          Review content before publication and manage platform access.
         </p>
+
+        <section className="mt-6 rounded-2xl border-2 border-ink/10 bg-card p-4 card-shadow">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="flex items-center gap-2 text-sm font-semibold">
+                <Clock3 className="h-4 w-4 text-primary" /> Moderation queue
+              </h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Accepting publishes the proposed business or card data. Rejected submissions stay private.
+              </p>
+            </div>
+            <Button variant="ghost" size="sm" onClick={loadModeration} disabled={moderationLoading}>
+              Refresh
+            </Button>
+          </div>
+
+          {moderationLoading && <Spinner size={24} className="mx-auto my-5" />}
+          {!moderationLoading && moderation.length === 0 && (
+            <p className="mt-4 rounded-xl bg-muted/40 p-4 text-center text-sm text-muted-foreground">
+              Nothing is waiting for review.
+            </p>
+          )}
+          <div className="mt-4 space-y-3">
+            {moderation.map((submission) => (
+              <article key={submission.id} className="rounded-xl border border-border p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold">{submission.entity_name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {submission.entity_type === "business" ? "Business" : `Card · ${submission.business_name}`}
+                      {` · ${submission.change_kind === "create" ? "New" : "Changes"}`}
+                    </p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      Submitted {new Date(submission.submitted_at).toLocaleString()}
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-amber-500/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+                    Pending
+                  </span>
+                </div>
+                <details className="mt-3 rounded-lg bg-muted/40 p-2">
+                  <summary className="cursor-pointer text-xs font-medium">Review proposed data</summary>
+                  <pre className="mt-2 max-h-72 overflow-auto whitespace-pre-wrap break-words text-[10px] text-muted-foreground">
+                    {JSON.stringify(submission.proposed_data, null, 2)}
+                  </pre>
+                </details>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <Button
+                    size="sm"
+                    className="gap-2"
+                    disabled={reviewingId === submission.id}
+                    onClick={() => void decide(submission, "accepted")}
+                  >
+                    <CheckCircle2 className="h-4 w-4" /> Accept
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-2 text-destructive"
+                    disabled={reviewingId === submission.id}
+                    onClick={() => void decide(submission, "rejected")}
+                  >
+                    <XCircle className="h-4 w-4" /> Reject
+                  </Button>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
 
         <div className="mt-6 rounded-2xl border-2 border-ink/10 bg-card p-4 card-shadow">
           <p className="text-sm font-semibold">Staff admins</p>

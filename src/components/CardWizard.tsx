@@ -80,7 +80,13 @@ export function CardWizard({ templateId, businessId: selectedBusinessId }: Props
       if (isEdit && templateId) {
         const { data: t } = await supabase.from("card_templates").select("*").eq("id", templateId).maybeSingle();
         if (t) {
-          const tpl = t as {
+          const { data: pending } = await (supabase.rpc as any)("get_pending_moderation", {
+            _entity_type: "card",
+            _entity_id: templateId,
+          });
+          const proposed = (pending as { proposed_data?: { card?: Record<string, unknown> } } | null)
+            ?.proposed_data?.card;
+          const tpl = (proposed ?? t) as unknown as {
             title: string; subtitle: string | null; description: string | null;
             corner_title: string | null;
             total_steps: number; shape: CardShape;
@@ -128,11 +134,14 @@ export function CardWizard({ templateId, businessId: selectedBusinessId }: Props
       terms_and_conditions: terms.trim(),
     };
     const { error } = isEdit && templateId
-      ? await supabase.from("card_templates").update(payload).eq("id", templateId)
+      ? await (supabase.rpc as any)("submit_card_changes", {
+          _template_id: templateId,
+          _changes: payload,
+        })
       : await supabase.from("card_templates").insert({ business_id: businessId, ...payload });
     setSaving(false);
     if (error) { toast.error(error.message); return; }
-    toast.success(isEdit ? "Saved" : "Card created");
+    toast.success(isEdit ? "Card changes submitted for review" : "Card submitted for review");
     navigate({ to: "/business", search: selectedBusinessId ? { businessId: selectedBusinessId } : {} });
   };
 

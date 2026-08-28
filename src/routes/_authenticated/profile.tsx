@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { postSignOutDestination } from "@/lib/post-sign-out";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Camera, LogOut, Store, HelpCircle, Mail, CreditCard, ChevronRight, Building2, Copy, Check, Pencil } from "lucide-react";
+import { Camera, LogOut, Store, HelpCircle, Mail, ChevronRight, Building2, Copy, Check, Pencil, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { QrDisplay } from "@/components/QrDisplay";
@@ -14,6 +14,8 @@ import { useProfile } from "@/hooks/useProfile";
 import type { ProfileInfo } from "@/hooks/useProfile";
 import { AVATAR_BUCKET, initialsFrom, resolveAvatarUrl } from "@/lib/avatar";
 import { TabScreen } from "@/components/TabScreen";
+import { useServerFn } from "@tanstack/react-start";
+import { amIAdmin } from "@/utils/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
@@ -40,7 +42,9 @@ function Profile() {
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isStaffAdmin, setIsStaffAdmin] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const checkStaffAdmin = useServerFn(amIAdmin);
 
   const copyId = async (id: string) => {
     try {
@@ -63,6 +67,13 @@ function Profile() {
     setAvatarUrl(profile.avatarUrl);
     setAvatarPath(profile.avatarPath);
   }, [profile]);
+
+  useEffect(() => {
+    checkStaffAdmin({}).then((result) => setIsStaffAdmin(result.admin)).catch(() => setIsStaffAdmin(false));
+    // The server-function wrapper is recreated by the hook; this check only
+    // belongs to the page mount, not every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onPickFile = async (file: File) => {
     if (!profile) return;
@@ -254,6 +265,7 @@ function Profile() {
             </section>
 
             <nav className="mt-8 overflow-hidden rounded-2xl border border-border divide-y divide-border" aria-label="Account menu">
+              {isStaffAdmin && <MenuLink to="/admin" icon={ShieldCheck} label="Platform moderation" />}
               <MenuLink to="/help" icon={HelpCircle} label="Help" />
               <MenuLink to="/contact" icon={Mail} label="Contact us" />
             </nav>

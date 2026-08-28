@@ -73,6 +73,7 @@ const STEPS: StepDef[] = [
 type BizRow = {
   id: string;
   name: string;
+  accepted_by_platform: boolean;
   onboarding_step: number | null;
   onboarding_completed_at: string | null;
   marketplace_status: string | null;
@@ -154,7 +155,10 @@ function OnboardingWizard() {
       return true;
     }
 
-    const { error } = await supabase.from("businesses").update(payload).eq("id", biz.id);
+    const { error } = await (supabase.rpc as any)("submit_business_changes", {
+      _business_id: biz.id,
+      _changes: payload,
+    });
     if (error) {
       toast.error(error.message);
       return false;
@@ -181,7 +185,14 @@ function OnboardingWizard() {
       }
       if (step === TOTAL_STEPS) {
         await persistStep(TOTAL_STEPS, { onboarding_completed_at: new Date().toISOString() });
-        toast.success("Your business is set up");
+        const { error } = await (supabase.rpc as any)("submit_business_for_moderation", {
+          _business_id: biz?.id,
+        });
+        if (error && !error.message?.includes("already accepted")) {
+          toast.error(error.message);
+          return;
+        }
+        toast.success("Your business was submitted for review");
         navigate({ to: "/business" });
         return;
       }

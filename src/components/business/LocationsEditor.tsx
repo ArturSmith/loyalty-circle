@@ -53,17 +53,30 @@ export function LocationsEditor({
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [adding, setAdding] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [requiresModeration, setRequiresModeration] = useState(false);
 
   const load = useCallback(async () => {
-    const { data, error } = await (supabase as any)
-      .from("business_locations")
-      .select("id,name,address_line1,address_line2,city,region,postal_code,country,phone,is_primary")
-      .eq("business_id", businessId)
-      .order("is_primary", { ascending: false })
-      .order("created_at", { ascending: true });
+    const [{ data, error }, { data: pending }, { data: business }] = await Promise.all([
+      (supabase as any)
+        .from("business_locations")
+        .select("id,name,address_line1,address_line2,city,region,postal_code,country,phone,is_primary")
+        .eq("business_id", businessId)
+        .order("is_primary", { ascending: false })
+        .order("created_at", { ascending: true }),
+      (supabase.rpc as any)("get_pending_moderation", {
+        _entity_type: "business",
+        _entity_id: businessId,
+      }),
+      supabase.from("businesses").select("accepted_by_platform").eq("id", businessId).maybeSingle(),
+    ]);
     if (error) toast.error(error.message);
-    const list = (data as BusinessLocation[] | null) ?? [];
+    const pendingLocations = (pending as { proposed_data?: { locations?: BusinessLocation[] } } | null)
+      ?.proposed_data?.locations;
+    const list = Array.isArray(pendingLocations)
+      ? pendingLocations
+      : ((data as BusinessLocation[] | null) ?? []);
     setRows(list);
+    setRequiresModeration(Boolean((business as { accepted_by_platform?: boolean } | null)?.accepted_by_platform));
     setLoading(false);
     onChanged?.(list.length);
     // `onChanged` is a render-time callback; excluding it keeps this stable.
@@ -92,8 +105,8 @@ export function LocationsEditor({
     }
     setAdding(true);
     const nn = (s: string) => (s.trim() ? s.trim() : null);
-    const { error } = await (supabase as any).from("business_locations").insert({
-      business_id: businessId,
+    const next: BusinessLocation[] = [...rows, {
+      id: crypto.randomUUID(),
       name: draft.name.trim(),
       address_line1: nn(draft.address_line1),
       address_line2: nn(draft.address_line2),
@@ -103,6 +116,10 @@ export function LocationsEditor({
       country: nn(draft.country),
       phone: nn(draft.phone),
       is_primary: rows.length === 0,
+    }];
+    const { data, error } = await (supabase.rpc as any)("submit_business_locations", {
+      _business_id: businessId,
+      _locations: next,
     });
     setAdding(false);
     if (error) {
@@ -110,37 +127,46 @@ export function LocationsEditor({
       return;
     }
     setDraft(emptyDraft);
-    await load();
+    setRows((data as BusinessLocation[] | null) ?? next);
+    onChanged?.(next.length);
     ent.refetch();
-    toast.success("Location added");
+    toast.success(requiresModeration ? "Location changes submitted for review" : "Location added");
   };
 
   const remove = async (id: string) => {
     setBusyId(id);
-    const { error } = await (supabase as any).from("business_locations").delete().eq("id", id);
+    const next = rows.filter((row) => row.id !== id).map((row, index) => ({
+      ...row,
+      is_primary: row.is_primary || (index === 0 && !rows.some((item) => item.id !== id && item.is_primary)),
+    }));
+    const { data, error } = await (supabase.rpc as any)("submit_business_locations", {
+      _business_id: businessId,
+      _locations: next,
+    });
     setBusyId(null);
     if (error) {
       toast.error(error.message);
       return;
     }
-    await load();
+    setRows((data as BusinessLocation[] | null) ?? next);
+    onChanged?.(next.length);
     ent.refetch();
+    if (requiresModeration) toast.success("Location changes submitted for review");
   };
 
   const makePrimary = async (id: string) => {
     setBusyId(id);
-    // Two writes rather than one: there is no partial unique index enforcing a
-    // single primary, so clear the flag first to avoid two primaries on failure.
-    const { error: clearErr } = await (supabase as any)
-      .from("business_locations")
-      .update({ is_primary: false })
-      .eq("business_id", businessId);
-    if (!clearErr) {
-      await (supabase as any).from("business_locations").update({ is_primary: true }).eq("id", id);
-    }
+    const next = rows.map((row) => ({ ...row, is_primary: row.id === id }));
+    const { data, error: clearErr } = await (supabase.rpc as any)("submit_business_locations", {
+      _business_id: businessId,
+      _locations: next,
+    });
     setBusyId(null);
     if (clearErr) toast.error(clearErr.message);
-    await load();
+    else {
+      setRows((data as BusinessLocation[] | null) ?? next);
+      if (requiresModeration) toast.success("Location changes submitted for review");
+    }
   };
 
   if (loading) return <Spinner label="Loading locations…" />;

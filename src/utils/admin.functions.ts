@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Json } from "@/integrations/supabase/types";
 
 async function assertAdmin(context: { supabase: any; userId: string }) {
   const { data, error } = await context.supabase.rpc("has_role", {
@@ -30,6 +31,83 @@ export type AdminBusiness = {
   comped_note: string | null;
   created_at: string;
 };
+
+export type AdminModerationSubmission = {
+  id: string;
+  entity_type: "business" | "card";
+  entity_id: string;
+  business_id: string;
+  business_name: string;
+  entity_name: string;
+  change_kind: "create" | "update";
+  proposed_data: Json;
+  submitted_at: string;
+  submitted_by: string | null;
+};
+
+export const listModerationForAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<AdminModerationSubmission[]> => {
+    await assertAdmin(context as any);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error } = await (supabaseAdmin as any)
+      .from("moderation_submissions")
+      .select("id,entity_type,entity_id,business_id,change_kind,proposed_data,submitted_at,submitted_by")
+      .eq("status", "pending")
+      .order("submitted_at", { ascending: true })
+      .limit(200);
+    if (error) throw error;
+
+    const businessIds = Array.from(new Set((rows ?? []).map((row: any) => row.business_id))) as string[];
+    const cardIds = (rows ?? [])
+      .filter((row: any) => row.entity_type === "card")
+      .map((row: any) => row.entity_id) as string[];
+    const [{ data: businesses }, { data: cards }] = await Promise.all([
+      businessIds.length
+        ? supabaseAdmin.from("businesses").select("id,name").in("id", businessIds)
+        : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+      cardIds.length
+        ? supabaseAdmin.from("card_templates").select("id,title").in("id", cardIds)
+        : Promise.resolve({ data: [] as { id: string; title: string }[] }),
+    ]);
+    const businessNames = new Map((businesses ?? []).map((row: any) => [row.id, row.name]));
+    const cardNames = new Map((cards ?? []).map((row: any) => [row.id, row.title]));
+
+    return (rows ?? []).map((row: any) => {
+      const proposed = row.proposed_data as Record<string, any>;
+      const businessName = proposed?.business?.name ?? businessNames.get(row.business_id) ?? "Business";
+      const entityName = row.entity_type === "card"
+        ? proposed?.card?.title ?? cardNames.get(row.entity_id) ?? "Loyalty card"
+        : businessName;
+      return {
+        ...row,
+        business_name: businessName,
+        entity_name: entityName,
+      } as AdminModerationSubmission;
+    });
+  });
+
+export const reviewModerationForAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { submissionId: string; decision: "accepted" | "rejected"; reason?: string }) => {
+    if (!data?.submissionId) throw new Error("submissionId required");
+    if (data.decision !== "accepted" && data.decision !== "rejected") throw new Error("Invalid decision");
+    const reason = (data.reason ?? "").trim();
+    if (data.decision === "rejected" && reason.length < 3) throw new Error("A rejection reason is required");
+    return { submissionId: data.submissionId, decision: data.decision, reason: reason || null };
+  })
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    await assertAdmin(context as any);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await (supabaseAdmin.rpc as any)("review_moderation_submission", {
+      _submission_id: data.submissionId,
+      _decision: data.decision,
+      _reviewer_id: context.userId,
+      _reason: data.reason,
+    });
+    if (error) throw error;
+    return { ok: true };
+  });
 
 export const listBusinessesForAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
