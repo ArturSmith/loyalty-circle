@@ -46,33 +46,114 @@ export type AdminModerationSubmission = {
   submitted_by: string | null;
 };
 
+const moderationColumns =
+  "id,entity_type,entity_id,business_id,change_kind,current_data,proposed_data,submitted_at,submitted_by";
+const legacyModerationColumns =
+  "id,entity_type,entity_id,business_id,change_kind,proposed_data,submitted_at,submitted_by";
+
+function isMissingCurrentDataColumn(error: { code?: string; message?: string } | null) {
+  return Boolean(
+    error &&
+      (error.code === "42703" ||
+        (error.message?.includes("moderation_submissions.current_data") ?? false)),
+  );
+}
+
 export const listModerationForAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<AdminModerationSubmission[]> => {
     await assertAdmin(context as any);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: rows, error } = await (supabaseAdmin as any)
+    let result = await (supabaseAdmin as any)
       .from("moderation_submissions")
-      .select("id,entity_type,entity_id,business_id,change_kind,current_data,proposed_data,submitted_at,submitted_by")
+      .select(moderationColumns)
       .eq("status", "pending")
       .order("submitted_at", { ascending: true })
       .limit(200);
-    if (error) throw error;
+
+    // Deployments can briefly run newer application code before the matching
+    // database migration. Fall back to the old projection instead of turning
+    // that harmless rollout window into a blank moderation screen.
+    if (isMissingCurrentDataColumn(result.error)) {
+      result = await (supabaseAdmin as any)
+        .from("moderation_submissions")
+        .select(legacyModerationColumns)
+        .eq("status", "pending")
+        .order("submitted_at", { ascending: true })
+        .limit(200);
+    }
+    if (result.error) throw result.error;
+
+    const rows = (result.data ?? []).map((row: any) => ({ current_data: null, ...row }));
 
     const businessIds = Array.from(new Set((rows ?? []).map((row: any) => row.business_id))) as string[];
     const cardIds = (rows ?? [])
       .filter((row: any) => row.entity_type === "card")
       .map((row: any) => row.entity_id) as string[];
-    const [{ data: businesses }, { data: cards }] = await Promise.all([
+    const [{ data: businesses }, { data: cards }, { data: locations }, { data: socials }] = await Promise.all([
       businessIds.length
-        ? supabaseAdmin.from("businesses").select("id,name").in("id", businessIds)
-        : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+        ? supabaseAdmin
+            .from("businesses")
+            .select(
+              "id,name,category,logo_url,brand_color,description,welcome_message,phone,website,address_line1,address_line2,city,postal_code,region,country,latitude,longitude",
+            )
+            .in("id", businessIds)
+        : Promise.resolve({ data: [] }),
       cardIds.length
-        ? supabaseAdmin.from("card_templates").select("id,title").in("id", cardIds)
-        : Promise.resolve({ data: [] as { id: string; title: string }[] }),
+        ? supabaseAdmin
+            .from("card_templates")
+            .select(
+              "id,title,subtitle,description,corner_title,total_steps,shape,bg_color,accent_color,text_color,stamp_icon,stamp_shape,step_size,logo_url,rewards,grid_cols,active,terms_and_conditions",
+            )
+            .in("id", cardIds)
+        : Promise.resolve({ data: [] }),
+      businessIds.length
+        ? supabaseAdmin
+            .from("business_locations")
+            .select(
+              "id,business_id,name,address_line1,address_line2,city,region,postal_code,country,phone,latitude,longitude,is_primary,created_at",
+            )
+            .in("business_id", businessIds)
+            .order("is_primary", { ascending: false })
+            .order("created_at", { ascending: true })
+        : Promise.resolve({ data: [] }),
+      businessIds.length
+        ? supabaseAdmin
+            .from("business_socials")
+            .select("business_id,platform,url")
+            .in("business_id", businessIds)
+            .order("platform", { ascending: true })
+        : Promise.resolve({ data: [] }),
     ]);
     const businessNames = new Map((businesses ?? []).map((row: any) => [row.id, row.name]));
     const cardNames = new Map((cards ?? []).map((row: any) => [row.id, row.title]));
+    const locationsByBusiness = new Map<string, Json[]>();
+    const socialsByBusiness = new Map<string, Json[]>();
+
+    (locations ?? []).forEach(({ business_id, created_at: _createdAt, ...location }: any) => {
+      const current = locationsByBusiness.get(business_id) ?? [];
+      current.push(location);
+      locationsByBusiness.set(business_id, current);
+    });
+    (socials ?? []).forEach(({ business_id, ...social }: any) => {
+      const current = socialsByBusiness.get(business_id) ?? [];
+      current.push(social);
+      socialsByBusiness.set(business_id, current);
+    });
+
+    const businessSnapshots = new Map<string, Json>(
+      (businesses ?? []).map(({ id, ...business }: any) => [
+        id,
+        {
+          business,
+          locations: locationsByBusiness.get(id) ?? [],
+          socials: socialsByBusiness.get(id) ?? [],
+        },
+      ]),
+    );
+    const cardSnapshots = new Map<string, Json>(
+      (cards ?? []).map(({ id, ...card }: any) => [id, { card }]),
+    );
 
     return (rows ?? []).map((row: any) => {
       const proposed = row.proposed_data as Record<string, any>;
@@ -82,6 +163,13 @@ export const listModerationForAdmin = createServerFn({ method: "POST" })
         : businessName;
       return {
         ...row,
+        current_data:
+          row.current_data ??
+          (row.change_kind === "update"
+            ? row.entity_type === "business"
+              ? businessSnapshots.get(row.entity_id) ?? null
+              : cardSnapshots.get(row.entity_id) ?? null
+            : null),
         business_name: businessName,
         entity_name: entityName,
       } as AdminModerationSubmission;
