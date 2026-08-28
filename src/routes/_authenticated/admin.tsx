@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import type { Json } from "@/integrations/supabase/types";
+import { supabase } from "@/integrations/supabase/client";
 import {
   amIAdmin,
   listBusinessesForAdmin,
