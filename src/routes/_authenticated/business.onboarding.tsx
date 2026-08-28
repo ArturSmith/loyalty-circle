@@ -120,7 +120,7 @@ function OnboardingWizard() {
   /** Persist the furthest step reached — never move the marker backwards. */
   const persistStep = useCallback(
     async (next: number, extra: Record<string, unknown> = {}) => {
-      if (!biz) return;
+      if (!biz) return false;
       const furthest = Math.max(next, biz.onboarding_step ?? 1);
       const { error } = await (supabase as any)
         .from("businesses")
@@ -128,9 +128,10 @@ function OnboardingWizard() {
         .eq("id", biz.id);
       if (error) {
         toast.error(error.message);
-        return;
+        return false;
       }
       setBiz((b) => (b ? { ...b, onboarding_step: furthest, ...(extra as object) } : b));
+      return true;
     },
     [biz],
   );
@@ -184,14 +185,13 @@ function OnboardingWizard() {
           .eq("id", biz.id);
       }
       if (step === TOTAL_STEPS) {
-        await persistStep(TOTAL_STEPS, { onboarding_completed_at: new Date().toISOString() });
-        const { error } = await (supabase.rpc as any)("submit_business_for_moderation", {
-          _business_id: biz?.id,
+        const submitted = await persistStep(TOTAL_STEPS, {
+          onboarding_completed_at: new Date().toISOString(),
         });
-        if (error && !error.message?.includes("already accepted")) {
-          toast.error(error.message);
-          return;
-        }
+        if (!submitted) return;
+        // Completing onboarding queues moderation through
+        // queue_unaccepted_business_trg. Calling the submission RPC here as
+        // well refreshed the same row and produced a duplicate notification.
         toast.success("Your business was submitted for review");
         navigate({ to: "/business" });
         return;
