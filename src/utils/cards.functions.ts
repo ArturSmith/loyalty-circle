@@ -58,9 +58,7 @@ export const claimCardToWallet = createServerFn({ method: "POST" })
     return { templateId: data.templateId, acceptedTermsVersion: data.acceptedTermsVersion };
   })
   .handler(async ({ data, context }): Promise<{ instanceId: string; alreadyOwned: boolean }> => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-    const { data: template, error: templateError } = await supabaseAdmin
+    const { data: template, error: templateError } = await context.supabase
       .from("card_templates")
       .select("id, business_id, terms_and_conditions, terms_version, accepted_by_platform, business:businesses(accepted_by_platform)")
       .eq("id", data.templateId)
@@ -76,7 +74,7 @@ export const claimCardToWallet = createServerFn({ method: "POST" })
       throw new Error("The card terms changed. Please review and accept the latest version.");
     }
 
-    const { data: existingRows, error: existingError } = await supabaseAdmin
+    const { data: existingRows, error: existingError } = await context.supabase
       .from("card_instances")
       .select("id")
       .eq("template_id", data.templateId)
@@ -87,7 +85,7 @@ export const claimCardToWallet = createServerFn({ method: "POST" })
     const existing = existingRows?.[0];
     if (existing) return { instanceId: existing.id, alreadyOwned: true };
 
-    const { data: created, error: createError } = await supabaseAdmin
+    const { data: created, error: createError } = await context.supabase
       .from("card_instances")
       .insert({
         template_id: data.templateId,
@@ -117,11 +115,9 @@ export const getWalletCards = createServerFn({ method: "GET" })
     environment: data?.environment === "sandbox" ? "sandbox" : "live",
   }))
   .handler(async ({ data, context }): Promise<{ instances: WalletInstance[]; frozenBusinessIds: string[] }> => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
     try {
       // Fetch card instances with template IDs only (simpler query)
-      const { data: instanceData, error: instanceError } = await supabaseAdmin
+      const { data: instanceData, error: instanceError } = await context.supabase
         .from("card_instances")
         .select(
           `id, stamps_count, completed_at, created_at, template_id, terms_accepted_at, terms_accepted_text, terms_accepted_version`,
@@ -142,7 +138,7 @@ export const getWalletCards = createServerFn({ method: "GET" })
       const templateIds = Array.from(new Set(instanceData.map((inst: any) => inst.template_id)));
 
       // Fetch templates with business data
-      const { data: templateData, error: templateError } = await supabaseAdmin
+      const { data: templateData, error: templateError } = await context.supabase
         .from("card_templates")
         .select(`id, title, subtitle, description, corner_title, total_steps, shape, bg_color, accent_color, text_color, stamp_icon, logo_url, rewards, grid_cols, terms_and_conditions, terms_version, business_id,
           business:businesses(id, name, logo_url, category, description, welcome_message, phone, website, address_line1, address_line2, city, postal_code, region, country)`)
@@ -198,7 +194,7 @@ export const getWalletCards = createServerFn({ method: "GET" })
         return { instances, frozenBusinessIds: [] };
       }
 
-      const { data: frozenRows, error: frozenError } = await supabaseAdmin.rpc("get_frozen_business_ids", {
+      const { data: frozenRows, error: frozenError } = await context.supabase.rpc("get_frozen_business_ids", {
         _ids: businessIds,
         _env: data.environment,
       });

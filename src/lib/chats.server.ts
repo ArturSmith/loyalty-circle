@@ -1,4 +1,9 @@
-/** Server-only chat helpers (admin client): conversations between a customer and a business. */
+/** Server-only chat helpers: conversations between a customer and a business. */
+
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
+
+type AuthenticatedClient = SupabaseClient<Database>;
 
 export type ChatBusiness = {
   id: string;
@@ -30,14 +35,14 @@ const DEFAULT_WELCOME = (name: string) =>
 
 /** Whether the user may act as this business in customer conversations. */
 async function canUseBusinessMessages(
-  supabaseAdmin: Awaited<typeof import("@/integrations/supabase/client.server")>["supabaseAdmin"],
+  supabase: AuthenticatedClient,
   userId: string,
   businessId: string,
   ownerId?: string,
 ): Promise<boolean> {
   let resolvedOwnerId = ownerId;
   if (!resolvedOwnerId) {
-    const { data: business } = await supabaseAdmin
+    const { data: business } = await supabase
       .from("businesses")
       .select("owner_id")
       .eq("id", businessId)
@@ -46,7 +51,7 @@ async function canUseBusinessMessages(
   }
   if (resolvedOwnerId === userId) return true;
 
-  const { data: membership } = await (supabaseAdmin as any)
+  const { data: membership } = await (supabase as any)
     .from("business_members")
     .select("role, permissions")
     .eq("business_id", businessId)
@@ -125,10 +130,11 @@ export async function listConversationsFor(
   userId: string,
   scope: ChatScope = "customer",
   businessId?: string,
+  supabase?: AuthenticatedClient,
 ): Promise<ChatConversation[]> {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  if (!supabase) throw new Error("Authenticated database client is required");
 
-  let query = supabaseAdmin
+  let query = supabase
     .from("conversations")
     .select(
       "id, business_id, customer_id, last_message_at, customer_last_read_at, business_last_read_at, business:businesses(id, name, logo_url)",
@@ -138,13 +144,13 @@ export async function listConversationsFor(
     query = query.eq("customer_id", userId);
   } else {
     if (businessId) {
-      const { data: business } = await supabaseAdmin.from("businesses").select("owner_id").eq("id", businessId).maybeSingle();
-      if (!business || !await canUseBusinessMessages(supabaseAdmin, userId, businessId, business.owner_id)) return [];
+      const { data: business } = await supabase.from("businesses").select("owner_id").eq("id", businessId).maybeSingle();
+      if (!business || !await canUseBusinessMessages(supabase, userId, businessId, business.owner_id)) return [];
       query = query.eq("business_id", businessId);
     } else {
       const [{ data: ownedBusinesses }, { data: memberships }] = await Promise.all([
-        supabaseAdmin.from("businesses").select("id").eq("owner_id", userId),
-        (supabaseAdmin as any)
+        supabase.from("businesses").select("id").eq("owner_id", userId),
+        (supabase as any)
           .from("business_members")
           .select("business_id, role, permissions")
           .eq("user_id", userId)
@@ -167,7 +173,7 @@ export async function listConversationsFor(
   const conversations = (rows ?? []) as any[];
   if (conversations.length === 0) return [];
 
-  const { data: messages } = await supabaseAdmin
+  const { data: messages } = await supabase
     .from("chat_messages")
     .select("conversation_id, body, created_at, sender_role")
     .in("conversation_id", conversations.map((c) => c.id))
@@ -200,7 +206,7 @@ export async function listConversationsFor(
   if (scope === "business") {
     const customerIds = Array.from(new Set(conversations.map((c) => c.customer_id)));
     if (customerIds.length > 0) {
-      const { data: profiles } = await supabaseAdmin
+      const { data: profiles } = await supabase
         .from("profiles")
         .select("id, display_name, avatar_url")
         .in("id", customerIds);
@@ -226,15 +232,24 @@ export async function listConversationsFor(
 }
 
 /** Total unread messages across the conversations in one scope. */
-export async function countUnreadMessagesFor(userId: string, scope: ChatScope = "customer"): Promise<number> {
-  const conversations = await listConversationsFor(userId, scope);
+export async function countUnreadMessagesFor(
+  userId: string,
+  scope: ChatScope = "customer",
+  supabase?: AuthenticatedClient,
+): Promise<number> {
+  const conversations = await listConversationsFor(userId, scope, undefined, supabase);
   return conversations.reduce((total, c) => total + c.unread_count, 0);
 }
 
-export async function loadConversation(conversationId: string, userId: string, scope: ChatScope = "customer") {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+export async function loadConversation(
+  conversationId: string,
+  userId: string,
+  scope: ChatScope = "customer",
+  supabase?: AuthenticatedClient,
+) {
+  if (!supabase) throw new Error("Authenticated database client is required");
 
-  const { data: row, error } = await supabaseAdmin
+  const { data: row, error } = await supabase
     .from("conversations")
     .select("id, business_id, customer_id, business:businesses(id, name, logo_url, owner_id)")
     .eq("id", conversationId)
@@ -249,14 +264,14 @@ export async function loadConversation(conversationId: string, userId: string, s
   // asking as a customer for a conversation you merely own is a miss.
   const isCustomer = scope === "customer" && conversation.customer_id === userId;
   const isBusinessMember = scope === "business" && await canUseBusinessMessages(
-    supabaseAdmin,
+    supabase,
     userId,
     conversation.business_id,
     conversation.business.owner_id,
   );
   if (!isCustomer && !isBusinessMember) throw new Error("Conversation not found");
 
-  const { data: messages } = await supabaseAdmin
+  const { data: messages } = await supabase
     .from("chat_messages")
     .select("id, body, sender_role, created_at")
     .eq("conversation_id", conversationId)
@@ -267,12 +282,12 @@ export async function loadConversation(conversationId: string, userId: string, s
   let customerActivityCardId: string | null = null;
   if (isBusinessMember) {
     const [{ data: profile }, { data: latestActivity }] = await Promise.all([
-      supabaseAdmin
+      supabase
         .from("profiles")
         .select("display_name, avatar_url")
         .eq("id", conversation.customer_id)
         .maybeSingle(),
-      supabaseAdmin
+      supabase
         .from("card_events")
         .select("template_id")
         .eq("business_id", conversation.business_id)
@@ -312,10 +327,11 @@ export async function markConversationRead(
   conversationId: string,
   userId: string,
   scope: ChatScope = "customer",
+  supabase?: AuthenticatedClient,
 ): Promise<void> {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  if (!supabase) throw new Error("Authenticated database client is required");
 
-  const { data: row } = await supabaseAdmin
+  const { data: row } = await supabase
     .from("conversations")
     .select("id, business_id, customer_id, business:businesses(owner_id)")
     .eq("id", conversationId)
@@ -326,14 +342,14 @@ export async function markConversationRead(
 
   const isCustomer = scope === "customer" && conversation.customer_id === userId;
   const isBusinessMember = scope === "business" && await canUseBusinessMessages(
-    supabaseAdmin,
+    supabase,
     userId,
     conversation.business_id,
     conversation.business?.owner_id,
   );
   if (!isCustomer && !isBusinessMember) return;
 
-  await supabaseAdmin
+  await supabase
     .from("conversations")
     .update(
       isCustomer
@@ -348,10 +364,11 @@ export async function postMessage(
   userId: string,
   body: string,
   scope: ChatScope = "customer",
+  supabase?: AuthenticatedClient,
 ): Promise<ChatMessage> {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  if (!supabase) throw new Error("Authenticated database client is required");
 
-  const { data: row, error } = await supabaseAdmin
+  const { data: row, error } = await supabase
     .from("conversations")
     .select("id, business_id, customer_id, business:businesses(owner_id)")
     .eq("id", conversationId)
@@ -365,14 +382,14 @@ export async function postMessage(
   // inbox is always stamped 'business' and one from the Chats tab 'customer'.
   const isCustomer = scope === "customer" && conversation.customer_id === userId;
   const isBusinessMember = scope === "business" && await canUseBusinessMessages(
-    supabaseAdmin,
+    supabase,
     userId,
     conversation.business_id,
     conversation.business?.owner_id,
   );
   if (!isCustomer && !isBusinessMember) throw new Error("Conversation not found");
 
-  const { data: created, error: insertError } = await supabaseAdmin
+  const { data: created, error: insertError } = await supabase
     .from("chat_messages")
     .insert({
       conversation_id: conversationId,
