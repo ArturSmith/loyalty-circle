@@ -18,14 +18,14 @@ export const getConversations = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data?: { scope?: string; businessId?: string }) => ({ scope: asScope(data?.scope), businessId: data?.businessId }))
   .handler(async ({ data, context }): Promise<{ conversations: ChatConversation[] }> => {
-    return { conversations: await listConversationsFor(context.userId, data.scope, data.businessId) };
+    return { conversations: await listConversationsFor(context.userId, data.scope, data.businessId, context.supabase) };
   });
 
 export const getUnreadChatCount = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data?: { scope?: string }) => ({ scope: asScope(data?.scope) }))
   .handler(async ({ data, context }): Promise<{ count: number }> => {
-    return { count: await countUnreadMessagesFor(context.userId, data.scope) };
+    return { count: await countUnreadMessagesFor(context.userId, data.scope, context.supabase) };
   });
 
 export const markChatRead = createServerFn({ method: "POST" })
@@ -35,7 +35,7 @@ export const markChatRead = createServerFn({ method: "POST" })
     return { conversationId: data.conversationId, scope: asScope(data.scope) };
   })
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
-    await markConversationRead(data.conversationId, context.userId, data.scope);
+    await markConversationRead(data.conversationId, context.userId, data.scope, context.supabase);
     return { ok: true };
   });
 
@@ -45,7 +45,7 @@ export const getConversation = createServerFn({ method: "GET" })
     if (!data?.conversationId) throw new Error("Conversation is required");
     return { conversationId: data.conversationId, scope: asScope(data.scope) };
   })
-  .handler(async ({ data, context }) => loadConversation(data.conversationId, context.userId, data.scope));
+  .handler(async ({ data, context }) => loadConversation(data.conversationId, context.userId, data.scope, context.supabase));
 
 export const sendChatMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -57,5 +57,5 @@ export const sendChatMessage = createServerFn({ method: "POST" })
     return { conversationId: data.conversationId, body, scope: asScope(data.scope) };
   })
   .handler(async ({ data, context }): Promise<{ message: ChatMessage }> => {
-    return { message: await postMessage(data.conversationId, context.userId, data.body, data.scope) };
+    return { message: await postMessage(data.conversationId, context.userId, data.body, data.scope, context.supabase) };
   });
