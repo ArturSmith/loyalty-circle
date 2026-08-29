@@ -74,7 +74,7 @@ export function StampCard({
 
   const InfoFace = (
     <div
-      className="absolute inset-0 flex flex-col items-center justify-center text-center px-5 py-4 gap-2"
+      className="absolute inset-0 flex flex-col items-center justify-center text-center px-[clamp(0.75rem,5vw,1.25rem)] py-[clamp(0.625rem,4vw,1rem)] gap-[clamp(0.25rem,1.5vw,0.5rem)]"
       style={{ color: textColor }}
     >
       {(displayedCornerTitle || onCornerTitleClick) && (
@@ -82,14 +82,14 @@ export function StampCard({
           <button
             type="button"
             onClick={onCornerTitleClick}
-            className="absolute top-4 left-5 text-[11px] sm:text-xs font-semibold tracking-wide max-w-[60%] truncate text-left rounded-md hover:bg-black/5 transition px-2 py-1"
+            className="absolute top-[clamp(0.5rem,4vw,1rem)] left-[clamp(0.5rem,5vw,1.25rem)] text-[clamp(0.625rem,3vw,0.75rem)] font-semibold tracking-wide max-w-[60%] truncate text-left rounded-md hover:bg-black/5 transition px-2 py-1"
             style={{ color: accentColor }}
           >
             {displayedCornerTitle || "Add corner title"}
           </button>
         ) : displayedCornerTitle ? (
           <div
-            className="absolute top-4 left-5 text-[11px] sm:text-xs font-semibold tracking-wide max-w-[60%] truncate text-left px-2 py-1"
+            className="absolute top-[clamp(0.5rem,4vw,1rem)] left-[clamp(0.5rem,5vw,1.25rem)] text-[clamp(0.625rem,3vw,0.75rem)] font-semibold tracking-wide max-w-[60%] truncate text-left px-2 py-1"
             style={{ color: accentColor }}
           >
             {displayedCornerTitle}
@@ -98,11 +98,11 @@ export function StampCard({
       )}
       {(() => {
         const inner = logoUrl ? (
-          <img src={logoUrl} alt="" className="h-14 w-14 sm:h-16 sm:w-16 object-contain" />
+          <img src={logoUrl} alt="" className="h-[clamp(2.25rem,15vw,4rem)] w-[clamp(2.25rem,15vw,4rem)] object-contain" />
         ) : Icon ? (
-          <Icon className="h-10 w-10 sm:h-12 sm:w-12" style={{ color: accentColor }} />
+          <Icon className="h-[clamp(2rem,12vw,3rem)] w-[clamp(2rem,12vw,3rem)]" style={{ color: accentColor }} />
         ) : (
-          <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full border-2" style={{ borderColor: accentColor }} />
+          <div className="h-[clamp(2rem,12vw,3rem)] w-[clamp(2rem,12vw,3rem)] rounded-full border-2" style={{ borderColor: accentColor }} />
         );
         return onIconClick ? (
           <button type="button" onClick={onIconClick} className="rounded-full hover:ring-2 hover:ring-black/20 transition p-1" aria-label="Change logo or icon">
@@ -116,32 +116,32 @@ export function StampCard({
         <button
           type="button"
           onClick={onTitleClick}
-          className={`${editable} font-display font-bold tracking-widest text-lg sm:text-xl leading-tight break-words max-w-full`}
+          className={`${editable} font-display font-bold tracking-widest text-[clamp(0.9rem,5vw,1.25rem)] leading-tight break-words max-w-full`}
           style={{ color: accentColor }}
         >
           {title}
         </button>
       ) : (
-        <div className="font-display font-bold tracking-widest text-lg sm:text-xl leading-tight break-words" style={{ color: accentColor }}>
+        <div className="font-display font-bold tracking-widest text-[clamp(0.9rem,5vw,1.25rem)] leading-tight break-words" style={{ color: accentColor }}>
           {title}
         </div>
       )}
       {(subtitle || onSubtitleClick) && (
         onSubtitleClick ? (
-          <button type="button" onClick={onSubtitleClick} className={`${editable} text-xs sm:text-sm font-medium opacity-80 break-words max-w-full px-1`}>
+          <button type="button" onClick={onSubtitleClick} className={`${editable} text-[clamp(0.7rem,3.5vw,0.875rem)] font-medium opacity-80 break-words max-w-full px-1`}>
             {subtitle || "Add subtitle"}
           </button>
         ) : subtitle ? (
-          <div className="text-xs sm:text-sm font-medium opacity-80 break-words">{subtitle}</div>
+          <div className="text-[clamp(0.7rem,3.5vw,0.875rem)] font-medium opacity-80 break-words">{subtitle}</div>
         ) : null
       )}
       {(description || onDescriptionClick) && (
         onDescriptionClick ? (
-          <button type="button" onClick={onDescriptionClick} className={`${editable} text-[11px] sm:text-xs opacity-70 break-words max-w-full px-1 leading-snug`}>
+          <button type="button" onClick={onDescriptionClick} className={`${editable} text-[clamp(0.625rem,3vw,0.75rem)] opacity-70 break-words max-w-full px-1 leading-snug`}>
             {description || "Add description"}
           </button>
         ) : description ? (
-          <div className="text-[11px] sm:text-xs opacity-70 break-words leading-snug">{description}</div>
+          <div className="text-[clamp(0.625rem,3vw,0.75rem)] opacity-70 break-words leading-snug">{description}</div>
         ) : null
       )}
     </div>
@@ -152,7 +152,7 @@ export function StampCard({
 
   const StampsFace = (
     <div
-      className="absolute inset-0 flex items-center justify-center p-4"
+      className="absolute inset-0 flex items-center justify-center p-[clamp(0.625rem,4vw,1rem)]"
       style={{ containerType: "size" }}
     >
       {hideSteps ? (

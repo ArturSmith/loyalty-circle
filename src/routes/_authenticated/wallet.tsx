@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { StampCard } from "@/components/StampCard";
 import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
@@ -63,6 +63,8 @@ function Wallet() {
   const [faceFlipped, setFaceFlipped] = useState<Set<string>>(new Set());
   const [celebration, setCelebration] = useState<Celebration | null>(null);
   const [businessCtaHidden, setBusinessCtaHidden] = useState(true);
+  const cardStackRef = useRef<HTMLDivElement | null>(null);
+  const [cardStackWidth, setCardStackWidth] = useState(0);
 
   const fetchWallet = useServerFn(getWalletCards);
   const { profile, loading: profileLoading } = useProfile();
@@ -82,6 +84,16 @@ function Wallet() {
       setBusinessCtaHidden(false);
     }
   }, []);
+
+  useEffect(() => {
+    const element = cardStackRef.current;
+    if (!element) return;
+    const update = () => setCardStackWidth(element.clientWidth);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [loading, instances.length]);
 
   const dismissBusinessCta = useCallback(() => {
     setBusinessCtaHidden(true);
@@ -317,10 +329,10 @@ function Wallet() {
           onClick={() => setExpandedId(null)}
         >
           {(() => {
-            const CARD_H = 220;
-            const PEEK = 56;
-            const TIGHT = 34;
-            const GAP = 14;
+            const CARD_H = cardStackWidth > 0 ? cardStackWidth / 1.586 : 220;
+            const PEEK = Math.min(56, Math.max(40, CARD_H * 0.24));
+            const TIGHT = Math.min(34, Math.max(26, CARD_H * 0.14));
+            const GAP = Math.min(14, Math.max(9, CARD_H * 0.055));
             const expandedIndex = expandedId ? displayInstances.findIndex((x) => x.id === expandedId) : -1;
             const totalHeight =
               expandedIndex >= 0
@@ -328,7 +340,7 @@ function Wallet() {
                 : (displayInstances.length - 1) * PEEK + CARD_H + 40;
 
             return (
-              <div className="relative mx-auto max-w-md" style={{ height: totalHeight }}>
+              <div ref={cardStackRef} className="relative mx-auto max-w-md" style={{ height: totalHeight }}>
                 {displayInstances.map((inst, i) => {
                   const isExpanded = i === expandedIndex;
                   let top: number;
