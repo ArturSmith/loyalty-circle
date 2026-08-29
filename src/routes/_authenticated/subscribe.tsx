@@ -78,7 +78,7 @@ function SubscribePage() {
         sessionStorage.setItem("post_checkout_return", "/business");
       }
       await initializePaddle();
-      const paddlePriceId = await getPaddlePriceId(plan.paddlePriceKey);
+      const paddlePriceId = await getPaddlePriceId(plan.tier);
       window.Paddle.Checkout.open({
         items: [{ priceId: paddlePriceId, quantity: 1 }],
         customer: u.user.email ? { email: u.user.email } : undefined,

@@ -1,4 +1,5 @@
 import { resolvePaddlePrice } from "@/utils/payments.functions";
+import type { PlanTier } from "@/lib/plans";
 
 const clientToken = import.meta.env.VITE_PAYMENTS_CLIENT_TOKEN as string | undefined;
 
@@ -126,7 +127,7 @@ export async function initializePaddle() {
   return paddleInitialization;
 }
 
-export async function getPaddlePriceId(priceId: string): Promise<string> {
+export async function getPaddlePriceId(planTier: PlanTier): Promise<string> {
   const environment = getPaddleEnvironment();
-  return resolvePaddlePrice({ data: { priceId, environment } });
+  return resolvePaddlePrice({ data: { planTier, environment } });
 }
