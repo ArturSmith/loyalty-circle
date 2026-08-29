@@ -439,10 +439,6 @@ function Wallet() {
               </div>
             );
           })()}
-          <p className="mt-4 text-center text-xs text-muted-foreground">
-            {expandedId ? "Tap again for QR · swipe to flip" : "Tap a card to bring it forward · swipe to flip"}
-          </p>
-
         </div>
 
         </>
