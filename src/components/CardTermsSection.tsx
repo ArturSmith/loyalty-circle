@@ -9,6 +9,8 @@ type CardTermsSectionProps = {
   className?: string;
   titleClassName?: string;
   termsClassName?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 export function CardTermsSection({
@@ -18,11 +20,15 @@ export function CardTermsSection({
   className,
   titleClassName,
   termsClassName,
+  open,
+  onOpenChange,
 }: CardTermsSectionProps) {
   return (
     <Accordion
       type="single"
       collapsible
+      value={open === undefined ? undefined : open ? "terms" : ""}
+      onValueChange={(value) => onOpenChange?.(value === "terms")}
       className={cn("rounded-2xl border border-border bg-card", className)}
     >
       <AccordionItem value="terms" className="border-0">
@@ -47,4 +53,3 @@ export function CardTermsSection({
     </Accordion>
   );
 }
-

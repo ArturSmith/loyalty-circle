@@ -8,19 +8,24 @@ import { Spinner } from "@/components/Spinner";
 export function GoogleWalletButton({
   templateId,
   acceptedTermsVersion,
+  onTermsRequired,
   className,
 }: {
   templateId: string;
   acceptedTermsVersion: number | null;
+  onTermsRequired?: () => void;
   className?: string;
 }) {
   const create = useServerFn(createWalletPass);
   const [busy, setBusy] = useState(false);
 
   const onClick = async () => {
+    if (acceptedTermsVersion == null) {
+      onTermsRequired?.();
+      return;
+    }
     setBusy(true);
     try {
-      if (acceptedTermsVersion == null) return;
       const { saveUrl } = await create({ data: { templateId, acceptedTermsVersion } });
       window.location.href = saveUrl;
     } catch (error) {
@@ -35,7 +40,7 @@ export function GoogleWalletButton({
     <button
       type="button"
       onClick={onClick}
-      disabled={busy || acceptedTermsVersion == null}
+      disabled={busy}
       aria-label="Add this loyalty card to Google Wallet"
       className={`inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-ink px-5 text-sm font-semibold text-paper transition-opacity disabled:opacity-60 ${className ?? ""}`}
     >

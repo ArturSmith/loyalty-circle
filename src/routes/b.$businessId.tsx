@@ -19,6 +19,7 @@ import { GoogleWalletButton } from "@/components/GoogleWalletButton";
 import { WalletChooser } from "@/components/WalletChooser";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CardTermsSection } from "@/components/CardTermsSection";
+import { invalidateTabCache } from "@/lib/tabCache";
 
 type Template = {
   id: string; business_id: string; title: string; subtitle: string | null; description: string | null;
@@ -135,6 +136,7 @@ function BusinessPublic() {
   const [googleWalletReady, setGoogleWalletReady] = useState(false);
   const [appleWalletReady, setAppleWalletReady] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState<Set<string>>(new Set());
+  const [expandedTermsId, setExpandedTermsId] = useState<string | null>(null);
   const [cardsLoadError, setCardsLoadError] = useState(false);
 
   useEffect(() => {
@@ -192,6 +194,10 @@ function BusinessPublic() {
         return next;
       });
       try { sessionStorage.setItem("open_card_id", result.instanceId); } catch {}
+      // Wallet is a persistent bottom tab and may still hold the list from
+      // before this claim. Force its next mount to load the newly-added card
+      // instead of briefly rendering that stale snapshot.
+      invalidateTabCache("wallet");
       toast.success(result.alreadyOwned ? "Card is already in your wallet" : "Card added to your wallet");
       navigate({ to: "/wallet" });
     } catch (error) {
@@ -323,6 +329,10 @@ function BusinessPublic() {
                 const ownedInstanceId = ownedTemplateIds.get(t.id);
                 const termsKey = `${t.id}:${t.terms_version}`;
                 const hasAcceptedTerms = acceptedTerms.has(termsKey);
+                const requestTermsAcceptance = () => {
+                  setExpandedTermsId(t.id);
+                  toast.info("Review and accept the card terms to continue");
+                };
                 const handleCardClick = () => {
                   // Signed-out visitors pick a wallet from the options below the
                   // card, so tapping the card itself must not hijack them into
@@ -334,7 +344,7 @@ function BusinessPublic() {
                     return;
                   }
                   if (!hasAcceptedTerms) {
-                    toast.info("Accept the card terms before adding it");
+                    requestTermsAcceptance();
                     return;
                   }
                   claim(t.id, t.terms_version);
@@ -378,6 +388,8 @@ function BusinessPublic() {
                     terms={t.terms_and_conditions}
                     className="mt-3"
                     termsClassName="max-h-40 overflow-y-auto"
+                    open={expandedTermsId === t.id}
+                    onOpenChange={(open) => setExpandedTermsId(open ? t.id : null)}
                   >
                     {!ownedInstanceId && (
                       <label className="mt-3 flex cursor-pointer items-start gap-3 border-t border-border pt-3 text-sm">
@@ -401,7 +413,7 @@ function BusinessPublic() {
                     <>
                       <Button
                         className="mt-3 w-full h-11"
-                        disabled={claiming === t.id || (!ownedInstanceId && !hasAcceptedTerms)}
+                        disabled={claiming === t.id}
                         onClick={handleCardClick}
                       >
                         {claiming === t.id
@@ -415,6 +427,7 @@ function BusinessPublic() {
                           <GoogleWalletButton
                             templateId={t.id}
                             acceptedTermsVersion={hasAcceptedTerms ? t.terms_version : null}
+                            onTermsRequired={requestTermsAcceptance}
                             className="mt-2"
                           />
                           <p className="mt-1.5 text-center text-[11px] text-muted-foreground">
@@ -430,6 +443,7 @@ function BusinessPublic() {
                       googleReady={googleWalletReady}
                       appleReady={appleWalletReady}
                       acceptedTermsVersion={hasAcceptedTerms ? t.terms_version : null}
+                      onTermsRequired={requestTermsAcceptance}
                       onUseInAppWallet={() => {
                         try { sessionStorage.setItem(`pending_claim:${businessId}`, t.id); } catch {}
                         try { sessionStorage.setItem(`pending_claim_terms:${businessId}`, String(t.terms_version)); } catch {}

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { Spinner } from "@/components/Spinner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
+import { invalidateTabCache } from "@/lib/tabCache";
 
 type Search = { s?: string };
 
@@ -76,6 +77,7 @@ function ClaimPage() {
 
         setStatus("claiming");
         await claim({ data: { instanceId, secret } });
+        invalidateTabCache("wallet");
         setStatus("done");
       } catch (error) {
         setStatus("error");

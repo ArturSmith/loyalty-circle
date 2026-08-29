@@ -13,6 +13,8 @@ type Props = {
   /** Shown only when Apple Wallet passes can actually be generated. */
   appleReady: boolean;
   acceptedTermsVersion: number | null;
+  /** Reveals the terms instead of leaving an apparently broken disabled button. */
+  onTermsRequired: () => void;
   /** Sends the visitor to sign-in so the card lands in the in-app wallet. */
   onUseInAppWallet: () => void;
   className?: string;
@@ -32,6 +34,7 @@ export function WalletChooser({
   googleReady,
   appleReady,
   acceptedTermsVersion,
+  onTermsRequired,
   onUseInAppWallet,
   className,
 }: Props) {
@@ -39,7 +42,10 @@ export function WalletChooser({
   const [busy, setBusy] = useState(false);
 
   const addToGoogle = async () => {
-    if (acceptedTermsVersion == null) return;
+    if (acceptedTermsVersion == null) {
+      onTermsRequired();
+      return;
+    }
     setBusy(true);
     try {
       const { saveUrl } = await create({ data: { templateId, acceptedTermsVersion } });
@@ -59,8 +65,11 @@ export function WalletChooser({
       {appleReady ? (
         <button
           type="button"
-          onClick={() => toast.info("Apple Wallet is coming soon")}
-          disabled={busy || acceptedTermsVersion == null}
+          onClick={() => {
+            if (acceptedTermsVersion == null) onTermsRequired();
+            else toast.info("Apple Wallet is coming soon");
+          }}
+          disabled={busy}
           aria-label={`Add ${cardTitle} to Apple Wallet`}
           className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-ink px-5 text-sm font-semibold text-paper transition-opacity disabled:opacity-60"
         >
@@ -73,7 +82,7 @@ export function WalletChooser({
         <button
           type="button"
           onClick={addToGoogle}
-          disabled={busy || acceptedTermsVersion == null}
+          disabled={busy}
           aria-label={`Add ${cardTitle} to Google Wallet`}
           className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-ink px-5 text-sm font-semibold text-paper transition-opacity disabled:opacity-60"
         >
@@ -90,8 +99,11 @@ export function WalletChooser({
 
       <button
         type="button"
-        onClick={onUseInAppWallet}
-        disabled={busy || acceptedTermsVersion == null}
+        onClick={() => {
+          if (acceptedTermsVersion == null) onTermsRequired();
+          else onUseInAppWallet();
+        }}
+        disabled={busy}
         aria-label={`Add ${cardTitle} to the ClubCarder wallet`}
         className={`inline-flex h-11 w-full items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold transition-opacity disabled:opacity-60 ${
           anyNativeWallet
