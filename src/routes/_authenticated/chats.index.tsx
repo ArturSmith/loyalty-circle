@@ -7,6 +7,7 @@ import { TabScreen } from "@/components/TabScreen";
 import { getConversations } from "@/utils/chats.functions";
 import { publishUnreadChatCount } from "@/hooks/useUnreadChatCount";
 import type { ChatConversation } from "@/utils/chats.functions";
+import { getNavigationCache, setNavigationCache } from "@/lib/navigationCache";
 
 export const Route = createFileRoute("/_authenticated/chats/")({
   head: () => ({
@@ -22,9 +23,6 @@ export const Route = createFileRoute("/_authenticated/chats/")({
   component: ChatsList,
 });
 
-// Kept between tab switches so returning to Chats renders instantly.
-let cachedConversations: ChatConversation[] | null = null;
-
 function timeLabel(iso: string) {
   const date = new Date(iso);
   const sameDay = new Date().toDateString() === date.toDateString();
@@ -34,16 +32,17 @@ function timeLabel(iso: string) {
 }
 
 function ChatsList() {
+  const cached = getNavigationCache<ChatConversation[]>("customer-chats");
   const load = useServerFn(getConversations);
-  const [conversations, setConversations] = useState<ChatConversation[]>(() => cachedConversations ?? []);
-  const [loading, setLoading] = useState(() => cachedConversations === null);
+  const [conversations, setConversations] = useState<ChatConversation[]>(() => cached?.value ?? []);
+  const [loading, setLoading] = useState(() => cached === null);
 
   useEffect(() => {
     let alive = true;
     load({ data: { scope: "customer" } })
       .then((result) => {
         if (!alive) return;
-        cachedConversations = result.conversations;
+        setNavigationCache("customer-chats", result.conversations);
         setConversations(result.conversations);
         // This list is the authoritative count, so hand it to the badge rather
         // than making it run the same query again.

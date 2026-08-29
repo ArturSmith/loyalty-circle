@@ -16,6 +16,7 @@ import {
 import { z } from "zod";
 import { BusinessPermissionGate } from "@/components/business/BusinessPermissionGate";
 import { BackButton } from "@/components/BackButton";
+import { getNavigationCache, invalidateNavigationCache, setNavigationCache } from "@/lib/navigationCache";
 
 type Reward = { step: number; label?: string | null };
 
@@ -42,6 +43,15 @@ type Voucher = {
   step_number: number;
   created_at: string;
   redeemed_at: string | null;
+};
+
+type CustomerDetailsCache = {
+  tpl: Tpl;
+  instance: Instance;
+  stamps: Stamp[];
+  vouchers: Voucher[];
+  profile: { display_name: string | null; avatar_url: string | null };
+  removed: boolean;
 };
 
 export const Route = createFileRoute("/_authenticated/business/cards/$id/customers/$customerId")({
@@ -89,21 +99,40 @@ function CustomerDetailsContent() {
   const { id, customerId } = Route.useParams();
   const { businessId, from, conversationId } = Route.useSearch();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [tpl, setTpl] = useState<Tpl | null>(null);
-  const [instance, setInstance] = useState<Instance | null>(null);
-  const [stamps, setStamps] = useState<Stamp[]>([]);
-  const [vouchers, setVouchers] = useState<Voucher[]>([]);
-  const [profile, setProfile] = useState<{ display_name: string | null; avatar_url: string | null }>({
+  const cacheKey = `customer-activity:${businessId}:${id}:${customerId}`;
+  const cached = getNavigationCache<CustomerDetailsCache>(cacheKey)?.value;
+  const [loading, setLoading] = useState(() => !cached);
+  const [tpl, setTpl] = useState<Tpl | null>(() => cached?.tpl ?? null);
+  const [instance, setInstance] = useState<Instance | null>(() => cached?.instance ?? null);
+  const [stamps, setStamps] = useState<Stamp[]>(() => cached?.stamps ?? []);
+  const [vouchers, setVouchers] = useState<Voucher[]>(() => cached?.vouchers ?? []);
+  const [profile, setProfile] = useState<{ display_name: string | null; avatar_url: string | null }>(() => cached?.profile ?? {
     display_name: null,
     avatar_url: null,
   });
 
-  const [removed, setRemoved] = useState(false);
+  const [removed, setRemoved] = useState(() => cached?.removed ?? false);
 
   useEffect(() => {
-    (async () => {
+    const snapshot = getNavigationCache<CustomerDetailsCache>(cacheKey)?.value;
+    if (snapshot) {
+      setTpl(snapshot.tpl);
+      setInstance(snapshot.instance);
+      setStamps(snapshot.stamps);
+      setVouchers(snapshot.vouchers);
+      setProfile(snapshot.profile);
+      setRemoved(snapshot.removed);
+      setLoading(false);
+    } else {
+      setTpl(null);
+      setInstance(null);
+      setStamps([]);
+      setVouchers([]);
+      setProfile({ display_name: null, avatar_url: null });
+      setRemoved(false);
       setLoading(true);
+    }
+    (async () => {
       const [{ data: t }, { data: inst }, { data: prof }, { data: vs }] = await Promise.all([
         supabase
           .from("card_templates")
@@ -127,6 +156,7 @@ function CustomerDetailsContent() {
       ]);
 
       setTpl((t as Tpl | null) ?? null);
+      if (!t) invalidateNavigationCache(cacheKey);
       setVouchers((vs as Voucher[] | null) ?? []);
 
       if (prof) {
@@ -159,6 +189,7 @@ function CustomerDetailsContent() {
         type Ev = { id: string; card_instance_id: string | null; event_type: string; step_number: number | null; created_at: string };
         const events = (evRows ?? []) as Ev[];
         if (events.length === 0) {
+          invalidateNavigationCache(cacheKey);
           setInstance(null);
           setStamps([]);
         } else {
@@ -200,7 +231,19 @@ function CustomerDetailsContent() {
       }
       setLoading(false);
     })();
-  }, [businessId, id, customerId]);
+  }, [businessId, cacheKey, customerId, id]);
+
+  useEffect(() => {
+    if (loading || !tpl || !instance) return;
+    setNavigationCache<CustomerDetailsCache>(cacheKey, {
+      tpl,
+      instance,
+      stamps,
+      vouchers,
+      profile,
+      removed,
+    });
+  }, [cacheKey, instance, loading, profile, removed, stamps, tpl, vouchers]);
 
   if (loading) return <ScreenLoader />;
 

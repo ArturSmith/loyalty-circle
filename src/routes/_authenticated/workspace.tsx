@@ -6,6 +6,7 @@ import { PageLoader } from "@/components/Spinner";
 import { Button } from "@/components/ui/button";
 import { TabScreen } from "@/components/TabScreen";
 import { BackButton } from "@/components/BackButton";
+import { getNavigationCache, setNavigationCache } from "@/lib/navigationCache";
 
 type WorkspaceBusiness = {
   id: string;
@@ -22,10 +23,12 @@ export const Route = createFileRoute("/_authenticated/workspace")({
 
 function Workspace() {
   const navigate = useNavigate();
-  const [businesses, setBusinesses] = useState<WorkspaceBusiness[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cached = getNavigationCache<WorkspaceBusiness[]>("workspace");
+  const [businesses, setBusinesses] = useState<WorkspaceBusiness[]>(() => cached?.value ?? []);
+  const [loading, setLoading] = useState(() => cached === null);
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
       const { data: auth } = await supabase.auth.getUser();
       if (!auth.user) {
@@ -62,9 +65,15 @@ function Workspace() {
         .filter((business) => !ownRows.some((ownedBusiness) => ownedBusiness.id === business.id))
         .map((business) => ({ ...business, role: "admin" as const }));
 
-      setBusinesses([...ownRows, ...adminRows]);
+      if (cancelled) return;
+      const next = [...ownRows, ...adminRows];
+      setBusinesses(next);
+      setNavigationCache("workspace", next);
       setLoading(false);
     })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   if (loading) return <PageLoader />;

@@ -14,6 +14,13 @@ import { BackButton } from "@/components/BackButton";
 import { TabScreen } from "@/components/TabScreen";
 import { useBusinessPermissions } from "@/hooks/useBusinessPermissions";
 import { BusinessSummaryStat } from "@/components/business/BusinessSummaryStat";
+import { getNavigationCache, setNavigationCache } from "@/lib/navigationCache";
+
+type CustomersCache = {
+  customers: BusinessCustomerSummary[];
+  activeCardCount: number;
+  avatarUrls: Map<string, string>;
+};
 
 export const Route = createFileRoute("/_authenticated/business/customers")({
   head: () => ({ meta: [{ title: "Customers — ClubCarder" }] }),
@@ -34,31 +41,50 @@ function Customers() {
 function CustomersContent() {
   const navigate = useNavigate();
   const { businessId, q } = Route.useSearch();
+  const cacheKey = `business-customers:${businessId}`;
+  const cached = getNavigationCache<CustomersCache>(cacheKey);
   const fetchCustomers = useServerFn(listBusinessCustomers);
   const permissions = useBusinessPermissions(businessId);
-  const [customers, setCustomers] = useState<BusinessCustomerSummary[]>([]);
-  const [activeCardCount, setActiveCardCount] = useState(0);
-  const [avatarUrls, setAvatarUrls] = useState<Map<string, string>>(new Map());
+  const [customers, setCustomers] = useState<BusinessCustomerSummary[]>(() => cached?.value.customers ?? []);
+  const [activeCardCount, setActiveCardCount] = useState(() => cached?.value.activeCardCount ?? 0);
+  const [avatarUrls, setAvatarUrls] = useState<Map<string, string>>(() => cached?.value.avatarUrls ?? new Map());
   const [query, setQuery] = useState(q ?? "");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => cached === null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => setQuery(q ?? ""), [q]);
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
+    const snapshot = getNavigationCache<CustomersCache>(cacheKey);
+    if (snapshot) {
+      setCustomers(snapshot.value.customers);
+      setActiveCardCount(snapshot.value.activeCardCount);
+      setAvatarUrls(snapshot.value.avatarUrls);
+      setLoading(false);
+    } else {
+      setCustomers([]);
+      setActiveCardCount(0);
+      setAvatarUrls(new Map());
+      setLoading(true);
+    }
     setError(null);
     void fetchCustomers({ data: { businessId } })
       .then(async ({ customers: rows, activeCardCount: nextActiveCardCount }) => {
         if (cancelled) return;
+        const resolved = await resolveAvatarUrls(rows.map((customer) => customer.avatar_url));
+        if (cancelled) return;
         setCustomers(rows);
         setActiveCardCount(nextActiveCardCount);
-        const resolved = await resolveAvatarUrls(rows.map((customer) => customer.avatar_url));
-        if (!cancelled) setAvatarUrls(resolved);
+        setAvatarUrls(resolved);
+        setNavigationCache<CustomersCache>(cacheKey, {
+          customers: rows,
+          activeCardCount: nextActiveCardCount,
+          avatarUrls: resolved,
+        });
       })
       .catch((reason) => {
-        if (!cancelled) {
+        if (!cancelled && !snapshot) {
           setCustomers([]);
           setActiveCardCount(0);
           setError(reason instanceof Error ? reason.message : "Customers could not be loaded");
@@ -70,7 +96,7 @@ function CustomersContent() {
     return () => {
       cancelled = true;
     };
-  }, [businessId, fetchCustomers]);
+  }, [businessId, cacheKey, fetchCustomers]);
 
   const filtered = useMemo(() => {
     const text = query.trim().toLowerCase();

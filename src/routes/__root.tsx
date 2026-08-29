@@ -19,6 +19,7 @@ import { BottomNav, isTabRoute } from "@/components/BottomNav";
 import { clearTabCaches } from "@/lib/tabCache";
 import { PullToRefresh } from "@/components/PullToRefresh";
 import { LanguageProvider } from "@/i18n";
+import { invalidateNavigationCache } from "@/lib/navigationCache";
 
 function NotFoundComponent() {
   return (
@@ -101,6 +102,7 @@ function RootComponent() {
     // Most screens load directly from Supabase in mount effects, while a few
     // use React Query or the tab cache. Refresh all three data paths together.
     clearTabCaches();
+    invalidateNavigationCache();
     await Promise.all([queryClient.invalidateQueries(), router.invalidate()]);
     setRefreshVersion((version) => version + 1);
   }, [queryClient, router]);
@@ -109,7 +111,10 @@ function RootComponent() {
     const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();
-      if (event === "SIGNED_OUT") clearTabCaches();
+      if (event === "SIGNED_OUT") {
+        clearTabCaches();
+        invalidateNavigationCache();
+      }
       else queryClient.invalidateQueries();
       if (event === "SIGNED_IN") {
         (async () => {

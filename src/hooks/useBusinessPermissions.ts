@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { permissionsForRole, type Permission } from "@/lib/plans";
+import { getNavigationCache, setNavigationCache } from "@/lib/navigationCache";
 
 type BusinessRole = "owner" | "admin" | null;
 
@@ -14,15 +15,17 @@ const EMPTY = new Set<Permission>();
 
 /** Resolves access for one specific business; it never falls back to another business. */
 export function useBusinessPermissions(businessId: string | null | undefined) {
-  const [state, setState] = useState<PermissionState>({
-    loading: true,
-    role: null,
-    permissions: EMPTY,
+  const cacheKey = businessId ? `business-permissions:${businessId}` : null;
+  const [state, setState] = useState<PermissionState>(() => {
+    const cached = cacheKey ? getNavigationCache<PermissionState>(cacheKey) : null;
+    return cached?.value ?? { loading: true, role: null, permissions: EMPTY };
   });
 
   useEffect(() => {
     let cancelled = false;
-    setState({ loading: true, role: null, permissions: EMPTY });
+    const cached = cacheKey ? getNavigationCache<PermissionState>(cacheKey) : null;
+    if (cached) setState(cached.value);
+    else setState({ loading: true, role: null, permissions: EMPTY });
 
     (async () => {
       if (!businessId) {
@@ -45,7 +48,9 @@ export function useBusinessPermissions(businessId: string | null | undefined) {
 
       if (business?.owner_id === user.id) {
         if (!cancelled) {
-          setState({ loading: false, role: "owner", permissions: permissionsForRole("owner", []) });
+          const next = { loading: false, role: "owner" as const, permissions: permissionsForRole("owner", []) };
+          if (cacheKey) setNavigationCache(cacheKey, next);
+          setState(next);
         }
         return;
       }
@@ -61,18 +66,20 @@ export function useBusinessPermissions(businessId: string | null | undefined) {
       if (!cancelled) {
         const role = membership ? "admin" : null;
         const granted = membership?.permissions ?? [];
-        setState({
+        const next: PermissionState = {
           loading: false,
           role,
           permissions: role ? permissionsForRole(role, granted) : EMPTY,
-        });
+        };
+        if (cacheKey) setNavigationCache(cacheKey, next);
+        setState(next);
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [businessId]);
+  }, [businessId, cacheKey]);
 
   const has = useCallback(
     (permission: Permission) => state.permissions.has(permission),

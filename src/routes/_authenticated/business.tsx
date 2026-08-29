@@ -9,6 +9,7 @@ import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { motion } from "framer-motion";
 import { formatPlanPrice, PLAN_LIST } from "@/lib/plans";
 import { getPaddleEnvironment } from "@/lib/paddle";
+import { getNavigationCache, setNavigationCache } from "@/lib/navigationCache";
 
 export const Route = createFileRoute("/_authenticated/business")({
   component: BusinessLayout,
@@ -20,34 +21,58 @@ function BusinessLayout() {
   const selectedBusinessId = useRouterState({
     select: (state) => (state.location.search as { businessId?: string }).businessId,
   });
-  const [isBusinessOwner, setIsBusinessOwner] = useState(false);
-  const [adminAccessRestricted, setAdminAccessRestricted] = useState<boolean | null>(null);
+  const ownerCacheKey = `business-layout-owner:${selectedBusinessId ?? "default"}`;
+  const restrictionCacheKey = `business-layout-restriction:${selectedBusinessId ?? "default"}`;
+  const [isBusinessOwner, setIsBusinessOwner] = useState(
+    () => getNavigationCache<boolean>(ownerCacheKey)?.value ?? !selectedBusinessId,
+  );
+  const [adminAccessRestricted, setAdminAccessRestricted] = useState<boolean | null>(
+    () => getNavigationCache<boolean>(restrictionCacheKey)?.value ?? (selectedBusinessId ? null : false),
+  );
 
   useEffect(() => {
+    const cached = getNavigationCache<boolean>(ownerCacheKey);
+    if (cached) setIsBusinessOwner(cached.value);
+    else setIsBusinessOwner(!selectedBusinessId);
     (async () => {
       const { data: auth } = await supabase.auth.getUser();
       if (!auth.user) { setIsBusinessOwner(false); return; }
-      if (!selectedBusinessId) { setIsBusinessOwner(true); return; }
+      if (!selectedBusinessId) {
+        setNavigationCache(ownerCacheKey, true);
+        setIsBusinessOwner(true);
+        return;
+      }
       const { data: business } = await supabase
         .from("businesses")
         .select("owner_id")
         .eq("id", selectedBusinessId)
         .maybeSingle();
-      setIsBusinessOwner(business?.owner_id === auth.user.id);
+      const next = business?.owner_id === auth.user.id;
+      setNavigationCache(ownerCacheKey, next);
+      setIsBusinessOwner(next);
     })();
-  }, [selectedBusinessId]);
+  }, [ownerCacheKey, selectedBusinessId]);
 
   useEffect(() => {
     let cancelled = false;
+    const cached = getNavigationCache<boolean>(restrictionCacheKey);
+    if (cached) setAdminAccessRestricted(cached.value);
+    else setAdminAccessRestricted(selectedBusinessId ? null : false);
     (async () => {
       if (!selectedBusinessId) {
-        if (!cancelled) setAdminAccessRestricted(false);
+        if (!cancelled) {
+          setNavigationCache(restrictionCacheKey, false);
+          setAdminAccessRestricted(false);
+        }
         return;
       }
 
       const { data: auth } = await supabase.auth.getUser();
       if (!auth.user) {
-        if (!cancelled) setAdminAccessRestricted(false);
+        if (!cancelled) {
+          setNavigationCache(restrictionCacheKey, false);
+          setAdminAccessRestricted(false);
+        }
         return;
       }
       const { data: business } = await supabase
@@ -56,7 +81,10 @@ function BusinessLayout() {
         .eq("id", selectedBusinessId)
         .maybeSingle();
       if (!business || business.owner_id === auth.user.id || business.comped) {
-        if (!cancelled) setAdminAccessRestricted(false);
+        if (!cancelled) {
+          setNavigationCache(restrictionCacheKey, false);
+          setAdminAccessRestricted(false);
+        }
         return;
       }
 
@@ -77,11 +105,13 @@ function BusinessLayout() {
         ? new Date(business.trial_started_at).getTime() + TRIAL_DAYS * 86400_000
         : 0;
       if (!cancelled) {
-        setAdminAccessRestricted(!ownerHasActiveSubscription && trialEndsAt <= now);
+        const next = !ownerHasActiveSubscription && trialEndsAt <= now;
+        setNavigationCache(restrictionCacheKey, next);
+        setAdminAccessRestricted(next);
       }
     })();
     return () => { cancelled = true; };
-  }, [selectedBusinessId]);
+  }, [restrictionCacheKey, selectedBusinessId]);
 
   if (access.loading || adminAccessRestricted === null) {
     return <ScreenLoader />;

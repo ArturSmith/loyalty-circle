@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getPaddleEnvironment } from "@/lib/paddle";
+import { getNavigationCache, invalidateNavigationCache, setNavigationCache } from "@/lib/navigationCache";
 
 export const TRIAL_DAYS = 14;
 
@@ -49,6 +50,8 @@ const EMPTY: Omit<BusinessAccess, "refetch"> = {
   reason: "loading",
 };
 
+const ACCESS_CACHE_KEY = "business-access";
+
 function isRowActive(sub: { status: string; current_period_end: string | null }, now: number) {
   const end = sub.current_period_end ? new Date(sub.current_period_end).getTime() : null;
   if (["active", "trialing", "past_due"].includes(sub.status)) return end === null || end > now;
@@ -57,11 +60,16 @@ function isRowActive(sub: { status: string; current_period_end: string | null },
 }
 
 export function useBusinessAccess(): BusinessAccess {
-  const [state, setState] = useState<Omit<BusinessAccess, "refetch">>(EMPTY);
+  const [state, setState] = useState<Omit<BusinessAccess, "refetch">>(() =>
+    getNavigationCache<Omit<BusinessAccess, "refetch">>(ACCESS_CACHE_KEY)?.value ?? EMPTY
+  );
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
+    const cached = getNavigationCache<Omit<BusinessAccess, "refetch">>(ACCESS_CACHE_KEY);
+    if (cached) setState(cached.value);
+    else setState(EMPTY);
     (async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) {
@@ -132,7 +140,7 @@ export function useBusinessAccess(): BusinessAccess {
       }
 
       if (cancelled) return;
-      setState({
+      const next: Omit<BusinessAccess, "refetch"> = {
         loading: false,
         hasBusiness,
         businessCount,
@@ -149,12 +157,20 @@ export function useBusinessAccess(): BusinessAccess {
           : null,
         hasAccess,
         reason,
-      });
+      };
+      setNavigationCache(ACCESS_CACHE_KEY, next);
+      setState(next);
     })();
     return () => {
       cancelled = true;
     };
   }, [tick]);
 
-  return { ...state, refetch: () => setTick((t) => t + 1) };
+  return {
+    ...state,
+    refetch: () => {
+      invalidateNavigationCache(ACCESS_CACHE_KEY);
+      setTick((t) => t + 1);
+    },
+  };
 }

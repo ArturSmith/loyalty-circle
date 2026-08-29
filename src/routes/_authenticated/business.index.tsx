@@ -22,6 +22,7 @@ import { normalizeBrandColor } from "@/lib/brand";
 import { z } from "zod";
 import { BusinessSummaryStat } from "@/components/business/BusinessSummaryStat";
 import { NotificationButton } from "@/components/NotificationButton";
+import { getNavigationCache, setNavigationCache } from "@/lib/navigationCache";
 
 
 type Business = {
@@ -41,6 +42,11 @@ type Tpl = {
   bg_color: string; accent_color: string; text_color: string;
   stamp_icon: StampIconName; logo_url: string | null; rewards: Reward[] | null; grid_cols: number | null;
 };
+type DashboardCache = {
+  biz: Business | null;
+  tpls: Tpl[];
+  stats: { stamps: number; customers: number; active: number };
+};
 
 export const Route = createFileRoute("/_authenticated/business/")({
   head: () => ({ meta: [{ title: "Business dashboard — ClubCarder" }] }),
@@ -51,11 +57,13 @@ export const Route = createFileRoute("/_authenticated/business/")({
 function BusinessDashboard() {
   const navigate = useNavigate();
   const { businessId: selectedBusinessId } = Route.useSearch();
+  const cacheKey = `business-dashboard:${selectedBusinessId ?? "default"}`;
+  const cached = getNavigationCache<DashboardCache>(cacheKey);
   const unreadChats = useUnreadChatCount("business");
-  const [biz, setBiz] = useState<Business | null>(null);
-  const [tpls, setTpls] = useState<Tpl[]>([]);
-  const [stats, setStats] = useState({ stamps: 0, customers: 0, active: 0 });
-  const [loading, setLoading] = useState(true);
+  const [biz, setBiz] = useState<Business | null>(() => cached?.value.biz ?? null);
+  const [tpls, setTpls] = useState<Tpl[]>(() => cached?.value.tpls ?? []);
+  const [stats, setStats] = useState(() => cached?.value.stats ?? { stamps: 0, customers: 0, active: 0 });
+  const [loading, setLoading] = useState(() => cached === null);
   const [showQr, setShowQr] = useState(false);
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
@@ -65,9 +73,22 @@ function BusinessDashboard() {
 
 
   useEffect(() => {
+    let cancelled = false;
+    const snapshot = getNavigationCache<DashboardCache>(cacheKey);
+    if (snapshot) {
+      setBiz(snapshot.value.biz);
+      setTpls(snapshot.value.tpls);
+      setStats(snapshot.value.stats);
+      setLoading(false);
+    } else {
+      setBiz(null);
+      setTpls([]);
+      setStats({ stamps: 0, customers: 0, active: 0 });
+      setLoading(true);
+    }
     (async () => {
       const { data: u } = await supabase.auth.getUser();
-      if (!u.user) return;
+      if (!u.user || cancelled) return;
       // limit(1) matters: maybeSingle() errors outright when the account owns
       // more than one business, which would look identical to owning none and
       // bounce the user into the onboarding wizard.
@@ -111,19 +132,29 @@ function BusinessDashboard() {
           b = memberBiz;
         }
       }
-      setBiz(b as Business | null);
+      const nextBiz = b as Business | null;
+      let nextTemplates: Tpl[] = [];
+      let nextStats = { stamps: 0, customers: 0, active: 0 };
       if (b) {
         const [{ data: t }, { data: dashboardStats }] = await Promise.all([
           supabase.from("card_templates").select("id,title,subtitle,description,corner_title,total_steps,active,shape,bg_color,accent_color,text_color,stamp_icon,logo_url,rewards,grid_cols").eq("business_id", b.id).order("created_at", { ascending: false }),
           supabase.rpc("get_business_dashboard_stats", { _business_id: b.id }),
         ]);
-        setTpls((t as Tpl[]) ?? []);
+        nextTemplates = (t as Tpl[]) ?? [];
         const basic = (dashboardStats ?? {}) as { stamps?: number; customers?: number; active?: number };
-        setStats({ stamps: basic.stamps ?? 0, customers: basic.customers ?? 0, active: basic.active ?? 0 });
+        nextStats = { stamps: basic.stamps ?? 0, customers: basic.customers ?? 0, active: basic.active ?? 0 };
       }
+      if (cancelled) return;
+      setBiz(nextBiz);
+      setTpls(nextTemplates);
+      setStats(nextStats);
+      setNavigationCache<DashboardCache>(cacheKey, { biz: nextBiz, tpls: nextTemplates, stats: nextStats });
       setLoading(false);
     })();
-  }, [selectedBusinessId]);
+    return () => {
+      cancelled = true;
+    };
+  }, [cacheKey, selectedBusinessId]);
 
   useEffect(() => {
     if (!api) return;

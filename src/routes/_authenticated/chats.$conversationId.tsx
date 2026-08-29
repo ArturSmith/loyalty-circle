@@ -11,6 +11,16 @@ import { getConversation, markChatRead, sendChatMessage } from "@/utils/chats.fu
 import { invalidateUnreadChatCount } from "@/hooks/useUnreadChatCount";
 import type { ChatMessage } from "@/utils/chats.functions";
 import { BusinessPermissionGate } from "@/components/business/BusinessPermissionGate";
+import { getNavigationCache, setNavigationCache } from "@/lib/navigationCache";
+
+type ConversationCache = {
+  title: string;
+  logo: string | null;
+  viewerRole: "business" | "customer";
+  publicBusinessId: string | null;
+  customerActivity: { customerId: string; cardId: string } | null;
+  messages: ChatMessage[];
+};
 
 // Which side the reader is acting as. Carried in the URL so the same screen can
 // serve a customer's chat and a business inbox thread without guessing — and so
@@ -53,14 +63,23 @@ function ConversationPage() {
   const load = useServerFn(getConversation);
   const send = useServerFn(sendChatMessage);
   const markRead = useServerFn(markChatRead);
+  const cacheKey = `conversation:${scope}:${businessId ?? "customer"}:${conversationId}`;
+  const cached = getNavigationCache<ConversationCache>(cacheKey)?.value;
 
-  const [title, setTitle] = useState("Chat");
-  const [logo, setLogo] = useState<string | null>(null);
-  const [viewerRole, setViewerRole] = useState<"business" | "customer">("customer");
-  const [publicBusinessId, setPublicBusinessId] = useState<string | null>(null);
-  const [customerActivity, setCustomerActivity] = useState<{ customerId: string; cardId: string } | null>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [title, setTitle] = useState(() => cached?.title ?? "Chat");
+  const [logo, setLogo] = useState<string | null>(() => cached?.logo ?? null);
+  const [viewerRole, setViewerRole] = useState<"business" | "customer">(
+    () => cached?.viewerRole ?? "customer",
+  );
+  const [publicBusinessId, setPublicBusinessId] = useState<string | null>(
+    () => cached?.publicBusinessId ?? null,
+  );
+  const [customerActivity, setCustomerActivity] = useState<{
+    customerId: string;
+    cardId: string;
+  } | null>(() => cached?.customerActivity ?? null);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => cached?.messages ?? []);
+  const [loading, setLoading] = useState(() => !cached);
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -68,7 +87,24 @@ function ConversationPage() {
 
   useEffect(() => {
     let alive = true;
-    setLoading(true);
+    const snapshot = getNavigationCache<ConversationCache>(cacheKey)?.value;
+    if (snapshot) {
+      setTitle(snapshot.title);
+      setLogo(snapshot.logo);
+      setViewerRole(snapshot.viewerRole);
+      setPublicBusinessId(snapshot.publicBusinessId);
+      setCustomerActivity(snapshot.customerActivity);
+      setMessages(snapshot.messages);
+      setLoading(false);
+    } else {
+      setTitle("Chat");
+      setLogo(null);
+      setViewerRole("customer");
+      setPublicBusinessId(null);
+      setCustomerActivity(null);
+      setMessages([]);
+      setLoading(true);
+    }
     load({ data: { conversationId, scope } })
       .then((result) => {
         if (!alive) return;
@@ -112,7 +148,19 @@ function ConversationPage() {
       supabase.removeChannel(channel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversationId, scope]);
+  }, [cacheKey, conversationId, scope]);
+
+  useEffect(() => {
+    if (loading) return;
+    setNavigationCache<ConversationCache>(cacheKey, {
+      title,
+      logo,
+      viewerRole,
+      publicBusinessId,
+      customerActivity,
+      messages,
+    });
+  }, [cacheKey, customerActivity, loading, logo, messages, publicBusinessId, title, viewerRole]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: "end" });

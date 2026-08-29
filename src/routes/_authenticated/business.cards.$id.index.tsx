@@ -13,6 +13,7 @@ import type { AnalyticsInstance, AnalyticsStamp, AnalyticsVoucher, AnalyticsPass
 import { z } from "zod";
 import { useBusinessPermissions } from "@/hooks/useBusinessPermissions";
 import { CardTermsSection } from "@/components/CardTermsSection";
+import { getNavigationCache, invalidateNavigationCache, setNavigationCache } from "@/lib/navigationCache";
 
 
 type Tpl = {
@@ -35,6 +36,15 @@ type Customer = {
   removed_at: string | null;
 };
 
+type CardDetailsCache = {
+  tpl: Tpl;
+  biz: Biz | null;
+  stats: { users: number; everUsers: number; stamps: number; completed: number; outstandingVouchers: number };
+  customers: Customer[];
+  analytics: { instances: AnalyticsInstance[]; stamps: AnalyticsStamp[]; vouchers: AnalyticsVoucher[] };
+  passEvents: AnalyticsPassEvent[];
+};
+
 
 export const Route = createFileRoute("/_authenticated/business/cards/$id/")({
   head: () => ({ meta: [{ title: "Card details — ClubCarder" }] }),
@@ -46,28 +56,52 @@ function CardDetails() {
   const { id } = Route.useParams();
   const { businessId } = Route.useSearch();
   const navigate = useNavigate();
-  const [tpl, setTpl] = useState<Tpl | null>(null);
-  const [biz, setBiz] = useState<Biz | null>(null);
-  const [stats, setStats] = useState({ users: 0, everUsers: 0, stamps: 0, completed: 0, outstandingVouchers: 0 });
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cacheKey = `card-details:${businessId}:${id}`;
+  const cached = getNavigationCache<CardDetailsCache>(cacheKey)?.value;
+  const [tpl, setTpl] = useState<Tpl | null>(() => cached?.tpl ?? null);
+  const [biz, setBiz] = useState<Biz | null>(() => cached?.biz ?? null);
+  const [stats, setStats] = useState(() => cached?.stats ?? { users: 0, everUsers: 0, stamps: 0, completed: 0, outstandingVouchers: 0 });
+  const [customers, setCustomers] = useState<Customer[]>(() => cached?.customers ?? []);
+  const [loading, setLoading] = useState(() => !cached);
   const [face, setFace] = useState<CardFace>("info");
-  const [analytics, setAnalytics] = useState<{ instances: AnalyticsInstance[]; stamps: AnalyticsStamp[]; vouchers: AnalyticsVoucher[] }>({ instances: [], stamps: [], vouchers: [] });
-  const [passEvents, setPassEvents] = useState<AnalyticsPassEvent[]>([]);
+  const [analytics, setAnalytics] = useState<{ instances: AnalyticsInstance[]; stamps: AnalyticsStamp[]; vouchers: AnalyticsVoucher[] }>(() => cached?.analytics ?? { instances: [], stamps: [], vouchers: [] });
+  const [passEvents, setPassEvents] = useState<AnalyticsPassEvent[]>(() => cached?.passEvents ?? []);
   const permissions = useBusinessPermissions(businessId);
 
 
 
   useEffect(() => {
-    (async () => {
+    const snapshot = getNavigationCache<CardDetailsCache>(cacheKey)?.value;
+    if (snapshot) {
+      setTpl(snapshot.tpl);
+      setBiz(snapshot.biz);
+      setStats(snapshot.stats);
+      setCustomers(snapshot.customers);
+      setAnalytics(snapshot.analytics);
+      setPassEvents(snapshot.passEvents);
+      setLoading(false);
+    } else {
+      setTpl(null);
+      setBiz(null);
+      setStats({ users: 0, everUsers: 0, stamps: 0, completed: 0, outstandingVouchers: 0 });
+      setCustomers([]);
+      setAnalytics({ instances: [], stamps: [], vouchers: [] });
+      setPassEvents([]);
       setLoading(true);
+    }
+    (async () => {
       const { data: t } = await supabase
         .from("card_templates")
         .select("*")
         .eq("id", id)
         .eq("business_id", businessId)
         .maybeSingle();
-      if (!t) { setLoading(false); return; }
+      if (!t) {
+        invalidateNavigationCache(cacheKey);
+        setTpl(null);
+        setLoading(false);
+        return;
+      }
       setTpl(t as Tpl);
       const { data: b } = await supabase
         .from("businesses")
@@ -189,7 +223,19 @@ function CardDetails() {
 
       setLoading(false);
     })();
-  }, [businessId, id]);
+  }, [businessId, cacheKey, id]);
+
+  useEffect(() => {
+    if (loading || !tpl) return;
+    setNavigationCache<CardDetailsCache>(cacheKey, {
+      tpl,
+      biz,
+      stats,
+      customers,
+      analytics,
+      passEvents,
+    });
+  }, [analytics, biz, cacheKey, customers, loading, passEvents, stats, tpl]);
 
 
   if (loading || permissions.loading) return <ScreenLoader />;

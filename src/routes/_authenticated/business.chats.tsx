@@ -9,6 +9,7 @@ import { publishUnreadChatCount } from "@/hooks/useUnreadChatCount";
 import type { ChatConversation } from "@/utils/chats.functions";
 import { z } from "zod";
 import { BusinessPermissionGate } from "@/components/business/BusinessPermissionGate";
+import { getNavigationCache, setNavigationCache } from "@/lib/navigationCache";
 
 export const Route = createFileRoute("/_authenticated/business/chats")({
   head: () => ({
@@ -24,9 +25,6 @@ export const Route = createFileRoute("/_authenticated/business/chats")({
   validateSearch: z.object({ businessId: z.string().uuid() }),
   component: BusinessChats,
 });
-
-// Kept between visits so returning to the inbox renders instantly.
-let cachedConversations: ChatConversation[] | null = null;
 
 function timeLabel(iso: string) {
   const date = new Date(iso);
@@ -47,16 +45,18 @@ function BusinessChats() {
 
 function BusinessChatsContent() {
   const { businessId } = Route.useSearch();
+  const cacheKey = `business-chats:${businessId}`;
+  const cached = getNavigationCache<ChatConversation[]>(cacheKey);
   const load = useServerFn(getConversations);
-  const [conversations, setConversations] = useState<ChatConversation[]>(() => cachedConversations ?? []);
-  const [loading, setLoading] = useState(() => cachedConversations === null);
+  const [conversations, setConversations] = useState<ChatConversation[]>(() => cached?.value ?? []);
+  const [loading, setLoading] = useState(() => cached === null);
 
   useEffect(() => {
     let alive = true;
     load({ data: { scope: "business", businessId } })
       .then((result) => {
         if (!alive) return;
-        cachedConversations = result.conversations;
+        setNavigationCache(cacheKey, result.conversations);
         setConversations(result.conversations);
         publishUnreadChatCount(
           result.conversations.reduce((n, c) => n + c.unread_count, 0),
@@ -69,7 +69,7 @@ function BusinessChatsContent() {
       alive = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [businessId, load]);
+  }, [businessId, cacheKey, load]);
 
   return (
     <div className="flex min-h-screen flex-col">
