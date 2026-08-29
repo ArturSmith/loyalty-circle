@@ -74,39 +74,26 @@ export const claimCardToWallet = createServerFn({ method: "POST" })
       throw new Error("The card terms changed. Please review and accept the latest version.");
     }
 
-    const { data: existingRows, error: existingError } = await context.supabase
-      .from("card_instances")
-      .select("id")
-      .eq("template_id", data.templateId)
-      .eq("customer_id", context.userId)
-      .limit(1);
+    // Direct INSERT is deliberately revoked from authenticated users. This RPC
+    // performs the narrowly-scoped write as a security definer and repeats all
+    // publication/terms checks inside the same transaction as the insert.
+    const { data: claimedRows, error: claimError } = await context.supabase.rpc("claim_card_to_wallet", {
+      _template_id: data.templateId,
+      _accepted_terms_version: data.acceptedTermsVersion,
+    });
 
-    if (existingError) throw existingError;
-    const existing = existingRows?.[0];
-    if (existing) return { instanceId: existing.id, alreadyOwned: true };
-
-    const { data: created, error: createError } = await context.supabase
-      .from("card_instances")
-      .insert({
-        template_id: data.templateId,
-        customer_id: context.userId,
-        terms_accepted_at: new Date().toISOString(),
-        terms_accepted_by: context.userId,
-        terms_accepted_version: template.terms_version,
-        terms_accepted_text: template.terms_and_conditions,
-      })
-      .select("id")
-      .single();
-
-    if (createError) throw createError;
-    if (!created) throw new Error("Card could not be added");
+    if (claimError) throw claimError;
+    const claimed = claimedRows?.[0];
+    if (!claimed) throw new Error("Card could not be added");
 
     // Say hello. `openWelcomeConversation` swallows its own errors — a chat that
     // fails to open must not cost the customer the card they just added.
     const { openWelcomeConversation } = await import("@/lib/chats.server");
-    await openWelcomeConversation(template.business_id, context.userId);
+    if (!claimed.already_owned) {
+      await openWelcomeConversation(template.business_id, context.userId);
+    }
 
-    return { instanceId: created.id, alreadyOwned: false };
+    return { instanceId: claimed.instance_id, alreadyOwned: claimed.already_owned };
   });
 
 export const getWalletCards = createServerFn({ method: "GET" })

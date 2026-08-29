@@ -1073,6 +1073,13 @@ export type Database = {
           total_steps: number
         }[]
       }
+      claim_card_to_wallet: {
+        Args: { _accepted_terms_version: number; _template_id: string }
+        Returns: {
+          already_owned: boolean
+          instance_id: string
+        }[]
+      }
       get_business_cards_public: {
         Args: { _id: string }
         Returns: {
