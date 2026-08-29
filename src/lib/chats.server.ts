@@ -325,38 +325,18 @@ export async function loadConversation(
  */
 export async function markConversationRead(
   conversationId: string,
-  userId: string,
   scope: ChatScope = "customer",
   supabase?: AuthenticatedClient,
 ): Promise<void> {
   if (!supabase) throw new Error("Authenticated database client is required");
 
-  const { data: row } = await supabase
-    .from("conversations")
-    .select("id, business_id, customer_id, business:businesses(owner_id)")
-    .eq("id", conversationId)
-    .maybeSingle();
-
-  const conversation = row as any;
-  if (!conversation) return;
-
-  const isCustomer = scope === "customer" && conversation.customer_id === userId;
-  const isBusinessMember = scope === "business" && await canUseBusinessMessages(
-    supabase,
-    userId,
-    conversation.business_id,
-    conversation.business?.owner_id,
-  );
-  if (!isCustomer && !isBusinessMember) return;
-
-  await supabase
-    .from("conversations")
-    .update(
-      isCustomer
-        ? ({ customer_last_read_at: new Date().toISOString() } as any)
-        : ({ business_last_read_at: new Date().toISOString() } as any),
-    )
-    .eq("id", conversationId);
+  // Conversation UPDATE is not granted to app users. The RPC updates only the
+  // caller's requested side after checking customer/staff access in PostgreSQL.
+  const { error } = await supabase.rpc("mark_conversation_read", {
+    _conversation_id: conversationId,
+    _scope: scope,
+  });
+  if (error) throw error;
 }
 
 export async function postMessage(

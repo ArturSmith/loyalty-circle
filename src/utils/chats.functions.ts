@@ -35,7 +35,7 @@ export const markChatRead = createServerFn({ method: "POST" })
     return { conversationId: data.conversationId, scope: asScope(data.scope) };
   })
   .handler(async ({ data, context }): Promise<{ ok: true }> => {
-    await markConversationRead(data.conversationId, context.userId, data.scope, context.supabase);
+    await markConversationRead(data.conversationId, data.scope, context.supabase);
     return { ok: true };
   });
 

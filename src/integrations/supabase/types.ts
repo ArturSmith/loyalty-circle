@@ -1173,7 +1173,7 @@ export type Database = {
         Returns: boolean
       }
       mark_conversation_read: {
-        Args: { _conversation_id: string }
+        Args: { _conversation_id: string; _scope: string }
         Returns: undefined
       }
       moderation_business_snapshot: {
