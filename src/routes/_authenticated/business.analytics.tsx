@@ -32,6 +32,29 @@ import {
 import { getNavigationCache, setNavigationCache } from "@/lib/navigationCache";
 import { useLanguage } from "@/i18n";
 
+type AnalyticsLoadError = {
+  title: string;
+  message: string;
+};
+
+function describeAnalyticsError(reason: unknown): AnalyticsLoadError {
+  const candidate = reason as { code?: unknown; message?: unknown } | null;
+  const code = typeof candidate?.code === "string" ? candidate.code : "";
+  const message = typeof candidate?.message === "string" ? candidate.message : "";
+
+  if (code === "PGRST202" || message.includes("get_business_value_analytics")) {
+    return {
+      title: "Analytics setup required",
+      message: "The analytics database update has not been installed yet.",
+    };
+  }
+
+  return {
+    title: "Analytics couldn’t be loaded",
+    message: message || "Please check your connection and try again.",
+  };
+}
+
 const searchSchema = z.object({
   businessId: z.string().uuid(),
   range: z.coerce
@@ -66,7 +89,8 @@ function AnalyticsScreen() {
     () => cached?.value ?? emptyBusinessAnalytics(range),
   );
   const [loading, setLoading] = useState(() => cached === null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<AnalyticsLoadError | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -91,7 +115,7 @@ function AnalyticsScreen() {
       })
       .catch((reason) => {
         if (!cancelled && !snapshot) {
-          setError(reason instanceof Error ? reason.message : "Analytics could not be loaded");
+          setError(describeAnalyticsError(reason));
         }
       })
       .finally(() => {
@@ -101,7 +125,7 @@ function AnalyticsScreen() {
     return () => {
       cancelled = true;
     };
-  }, [businessId, cacheKey, range]);
+  }, [businessId, cacheKey, range, reloadToken]);
 
   const periodLabel = range === 0 ? "all time" : `the last ${range} days`;
 
@@ -133,8 +157,15 @@ function AnalyticsScreen() {
           <PageLoader />
         ) : error ? (
           <div className="mt-6 rounded-2xl border border-destructive/30 bg-destructive/5 p-6 text-center">
-            <p className="font-medium">Analytics couldn’t be loaded</p>
-            <p className="mt-1 text-sm text-muted-foreground">{error}</p>
+            <p className="font-medium">{error.title}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{error.message}</p>
+            <Button
+              className="mt-4 rounded-full"
+              variant="outline"
+              onClick={() => setReloadToken((value) => value + 1)}
+            >
+              Try again
+            </Button>
           </div>
         ) : (
           <>

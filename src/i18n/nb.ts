@@ -822,5 +822,8 @@ export const nb = {
   "Return rate": "Gjenbesøksrate",
   "Trend": "Utvikling",
   "A stamp represents a recorded loyalty visit. Revenue and purchases are not estimated without POS data.": "Et stempel representerer et registrert lojalitetsbesøk. Omsetning og kjøp estimeres ikke uten kassasystemdata.",
+  "Analytics setup required": "Analyseoppsett kreves",
+  "The analytics database update has not been installed yet.": "Databaseoppdateringen for analyse er ikke installert ennå.",
   "Analytics couldn’t be loaded": "Analysen kunne ikke lastes",
+  "Please check your connection and try again.": "Kontroller tilkoblingen og prøv igjen.",
 } as const satisfies Record<string, string>;
