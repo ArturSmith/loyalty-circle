@@ -45,6 +45,14 @@ function translateDynamic(source: string): string {
     [/^(.+) from (.+) is ready to use\.$/, (card, business) => `${card} fra ${business} er klart til bruk.`],
     [/^(.+) added stamp (\d+) to (.+)\.$/, (business, step, card) => `${business} la til stempel ${step} på ${card}.`],
     [/^(.+) is now available on (.+)\.$/, (reward, card) => `${reward} er nå tilgjengelig på ${card}.`],
+    [/^Stamp activity across the last (\d+) days\.$/, (days) => `Stempelaktivitet de siste ${days} dagene.`],
+    [/^Stamp activity across all time\.$/, () => "Stempelaktivitet for hele perioden."],
+    [/^Current progress of customers who joined during the last (\d+) days\.$/, (days) => `Nåværende fremgang for kunder som ble med de siste ${days} dagene.`],
+    [/^(\d+) customers? are close to a reward$/, (count) => `${count} ${count === "1" ? "kunde er" : "kunder er"} nær en belønning`],
+    [/^(\d+) rewards? have waited over 30 days$/, (count) => `${count} ${count === "1" ? "belønning har" : "belønninger har"} ventet i over 30 dager`],
+    [/^(\d+) inactive customers?$/, (count) => `${count} inaktive ${count === "1" ? "kunde" : "kunder"}`],
+    [/^Return visits are down (\d+)%$/, (amount) => `Gjenbesøk er redusert med ${amount} %`],
+    [/^(\d+) active · (\d+) return visits · (\d+) rewards redeemed$/, (active, visits, rewards) => `${active} aktive · ${visits} gjenbesøk · ${rewards} innløste belønninger`],
   ];
   for (const [pattern, replacement] of rules) {
     const match = source.match(pattern);

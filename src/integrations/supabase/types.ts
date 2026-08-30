@@ -1107,6 +1107,10 @@ export type Database = {
         Args: { _business_id: string }
         Returns: Json
       }
+      get_business_value_analytics: {
+        Args: { _business_id: string; _range_days?: number }
+        Returns: Json
+      }
       get_business_detail_public: { Args: { _id: string }; Returns: Json }
       get_business_public: {
         Args: { _id: string }

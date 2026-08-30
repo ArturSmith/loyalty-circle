@@ -11,7 +11,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
-import { Plus, QrCode, ScanLine, Users, Stamp as StampIco, Wallet as WalletIcon, Pencil, Menu, Settings, LogOut, Download, CreditCard, Sparkles, HelpCircle, Mail, ArrowLeft, MessageCircle, Building2 } from "lucide-react";
+import { Plus, QrCode, ScanLine, Users, Stamp as StampIco, Wallet as WalletIcon, Pencil, Menu, Settings, LogOut, Download, CreditCard, Sparkles, HelpCircle, Mail, ArrowLeft, MessageCircle, Building2, BarChart3, RefreshCcw, TicketCheck, UserPlus } from "lucide-react";
 import { useBusinessAccess } from "@/hooks/useBusinessAccess";
 import { useBusinessPermissions } from "@/hooks/useBusinessPermissions";
 import { StampCard } from "@/components/StampCard";
@@ -23,6 +23,8 @@ import { z } from "zod";
 import { BusinessSummaryStat } from "@/components/business/BusinessSummaryStat";
 import { NotificationButton } from "@/components/NotificationButton";
 import { getNavigationCache, setNavigationCache } from "@/lib/navigationCache";
+import { AnalyticsMetricCard } from "@/components/business/AnalyticsMetricCard";
+import { parseBusinessAnalytics, type BusinessAnalytics } from "@/lib/business-analytics";
 
 
 type Business = {
@@ -46,6 +48,7 @@ type DashboardCache = {
   biz: Business | null;
   tpls: Tpl[];
   stats: { stamps: number; customers: number; active: number };
+  analytics: BusinessAnalytics | null;
 };
 
 export const Route = createFileRoute("/_authenticated/business/")({
@@ -63,6 +66,7 @@ function BusinessDashboard() {
   const [biz, setBiz] = useState<Business | null>(() => cached?.value.biz ?? null);
   const [tpls, setTpls] = useState<Tpl[]>(() => cached?.value.tpls ?? []);
   const [stats, setStats] = useState(() => cached?.value.stats ?? { stamps: 0, customers: 0, active: 0 });
+  const [analytics, setAnalytics] = useState<BusinessAnalytics | null>(() => cached?.value.analytics ?? null);
   const [loading, setLoading] = useState(() => cached === null);
   const [showQr, setShowQr] = useState(false);
   const [api, setApi] = useState<CarouselApi>();
@@ -79,11 +83,13 @@ function BusinessDashboard() {
       setBiz(snapshot.value.biz);
       setTpls(snapshot.value.tpls);
       setStats(snapshot.value.stats);
+      setAnalytics(snapshot.value.analytics ?? null);
       setLoading(false);
     } else {
       setBiz(null);
       setTpls([]);
       setStats({ stamps: 0, customers: 0, active: 0 });
+      setAnalytics(null);
       setLoading(true);
     }
     (async () => {
@@ -135,20 +141,35 @@ function BusinessDashboard() {
       const nextBiz = b as Business | null;
       let nextTemplates: Tpl[] = [];
       let nextStats = { stamps: 0, customers: 0, active: 0 };
+      let nextAnalytics: BusinessAnalytics | null = null;
       if (b) {
-        const [{ data: t }, { data: dashboardStats }] = await Promise.all([
+        const [{ data: t }, { data: dashboardStats }, { data: canViewAnalytics }] = await Promise.all([
           supabase.from("card_templates").select("id,title,subtitle,description,corner_title,total_steps,active,shape,bg_color,accent_color,text_color,stamp_icon,logo_url,rewards,grid_cols").eq("business_id", b.id).order("created_at", { ascending: false }),
           supabase.rpc("get_business_dashboard_stats", { _business_id: b.id }),
+          supabase.rpc("can_on_business", { _business_id: b.id, _permission: "analytics.view" }),
         ]);
         nextTemplates = (t as Tpl[]) ?? [];
         const basic = (dashboardStats ?? {}) as { stamps?: number; customers?: number; active?: number };
         nextStats = { stamps: basic.stamps ?? 0, customers: basic.customers ?? 0, active: basic.active ?? 0 };
+        if (canViewAnalytics) {
+          const { data: analyticsData } = await supabase.rpc("get_business_value_analytics", {
+            _business_id: b.id,
+            _range_days: 30,
+          });
+          if (analyticsData) nextAnalytics = parseBusinessAnalytics(analyticsData, 30);
+        }
       }
       if (cancelled) return;
       setBiz(nextBiz);
       setTpls(nextTemplates);
       setStats(nextStats);
-      setNavigationCache<DashboardCache>(cacheKey, { biz: nextBiz, tpls: nextTemplates, stats: nextStats });
+      setAnalytics(nextAnalytics);
+      setNavigationCache<DashboardCache>(cacheKey, {
+        biz: nextBiz,
+        tpls: nextTemplates,
+        stats: nextStats,
+        analytics: nextAnalytics,
+      });
       setLoading(false);
     })();
     return () => {
@@ -259,6 +280,13 @@ function BusinessDashboard() {
                   </Button>
                 </Link>
               )}
+              {permissions.has("analytics.view") && (
+                <Link to="/business/analytics" search={{ businessId: biz.id }} className="w-full">
+                  <Button variant="ghost" className="w-full justify-start gap-3">
+                    <BarChart3 className="h-4 w-4" /> Analytics
+                  </Button>
+                </Link>
+              )}
               {canEditSettings && (
                 <Link to="/business/edit" search={{ businessId: biz.id }} className="w-full">
                   <Button variant="ghost" className="w-full justify-start gap-3">
@@ -366,11 +394,53 @@ function BusinessDashboard() {
         </Link>
       )}
 
-      <div className="mt-8 grid grid-cols-3 gap-3">
-        <BusinessSummaryStat icon={StampIco} label="Stamps issued" value={stats.stamps} />
-        <BusinessSummaryStat icon={Users} label="Customers" value={stats.customers} />
-        <BusinessSummaryStat icon={WalletIcon} label="Active cards" value={stats.active} />
-      </div>
+      {permissions.has("analytics.view") && analytics ? (
+        <section className="mt-8">
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <h2 className="font-display text-xl font-bold">Last 30 days</h2>
+              <p className="mt-1 text-xs text-muted-foreground">The value your loyalty programs are creating.</p>
+            </div>
+            <Button asChild variant="ghost" size="sm" className="shrink-0 rounded-full">
+              <Link to="/business/analytics" search={{ businessId: biz.id }}>
+                View analytics <ArrowLeft className="ml-1 h-3.5 w-3.5 rotate-180" />
+              </Link>
+            </Button>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <AnalyticsMetricCard
+              icon={Users}
+              label="Active customers"
+              value={analytics.current.activeCustomers}
+              previous={analytics.previous.activeCustomers}
+            />
+            <AnalyticsMetricCard
+              icon={RefreshCcw}
+              label="Return visits"
+              value={analytics.current.returnVisits}
+              previous={analytics.previous.returnVisits}
+            />
+            <AnalyticsMetricCard
+              icon={UserPlus}
+              label="New customers"
+              value={analytics.current.newCustomers}
+              previous={analytics.previous.newCustomers}
+            />
+            <AnalyticsMetricCard
+              icon={TicketCheck}
+              label="Rewards redeemed"
+              value={analytics.current.rewardsRedeemed}
+              previous={analytics.previous.rewardsRedeemed}
+            />
+          </div>
+        </section>
+      ) : (
+        <div className="mt-8 grid grid-cols-3 gap-3">
+          <BusinessSummaryStat icon={StampIco} label="Stamps issued" value={stats.stamps} />
+          <BusinessSummaryStat icon={Users} label="Customers" value={stats.customers} />
+          <BusinessSummaryStat icon={WalletIcon} label="Active cards" value={stats.active} />
+        </div>
+      )}
 
       <div className="mt-10"><h2 className="font-display text-xl">Your cards</h2></div>
 

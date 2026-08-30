@@ -45,6 +45,7 @@ import { Route as AuthenticatedBusinessNotificationsRouteImport } from './routes
 import { Route as AuthenticatedBusinessEditRouteImport } from './routes/_authenticated/business.edit'
 import { Route as AuthenticatedBusinessCustomersRouteImport } from './routes/_authenticated/business.customers'
 import { Route as AuthenticatedBusinessChatsRouteImport } from './routes/_authenticated/business.chats'
+import { Route as AuthenticatedBusinessAnalyticsRouteImport } from './routes/_authenticated/business.analytics'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -246,6 +247,12 @@ const AuthenticatedBusinessChatsRoute =
     path: '/chats',
     getParentRoute: () => AuthenticatedBusinessRoute,
   } as any)
+const AuthenticatedBusinessAnalyticsRoute =
+  AuthenticatedBusinessAnalyticsRouteImport.update({
+    id: '/analytics',
+    path: '/analytics',
+    getParentRoute: () => AuthenticatedBusinessRoute,
+  } as any)
 const LovableEmailTransactionalPreviewRoute =
   LovableEmailTransactionalPreviewRouteImport.update({
     id: '/lovable/email/transactional/preview',
@@ -323,6 +330,7 @@ export interface FileRoutesByFullPath {
   '/checkout/success': typeof CheckoutSuccessRoute
   '/claim/$instanceId': typeof ClaimInstanceIdRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/business/analytics': typeof AuthenticatedBusinessAnalyticsRoute
   '/business/chats': typeof AuthenticatedBusinessChatsRoute
   '/business/customers': typeof AuthenticatedBusinessCustomersRoute
   '/business/edit': typeof AuthenticatedBusinessEditRoute
@@ -368,6 +376,7 @@ export interface FileRoutesByTo {
   '/checkout/success': typeof CheckoutSuccessRoute
   '/claim/$instanceId': typeof ClaimInstanceIdRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/business/analytics': typeof AuthenticatedBusinessAnalyticsRoute
   '/business/chats': typeof AuthenticatedBusinessChatsRoute
   '/business/customers': typeof AuthenticatedBusinessCustomersRoute
   '/business/edit': typeof AuthenticatedBusinessEditRoute
@@ -416,6 +425,7 @@ export interface FileRoutesById {
   '/checkout/success': typeof CheckoutSuccessRoute
   '/claim/$instanceId': typeof ClaimInstanceIdRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/_authenticated/business/analytics': typeof AuthenticatedBusinessAnalyticsRoute
   '/_authenticated/business/chats': typeof AuthenticatedBusinessChatsRoute
   '/_authenticated/business/customers': typeof AuthenticatedBusinessCustomersRoute
   '/_authenticated/business/edit': typeof AuthenticatedBusinessEditRoute
@@ -464,6 +474,7 @@ export interface FileRouteTypes {
     | '/checkout/success'
     | '/claim/$instanceId'
     | '/invite/$token'
+    | '/business/analytics'
     | '/business/chats'
     | '/business/customers'
     | '/business/edit'
@@ -509,6 +520,7 @@ export interface FileRouteTypes {
     | '/checkout/success'
     | '/claim/$instanceId'
     | '/invite/$token'
+    | '/business/analytics'
     | '/business/chats'
     | '/business/customers'
     | '/business/edit'
@@ -556,6 +568,7 @@ export interface FileRouteTypes {
     | '/checkout/success'
     | '/claim/$instanceId'
     | '/invite/$token'
+    | '/_authenticated/business/analytics'
     | '/_authenticated/business/chats'
     | '/_authenticated/business/customers'
     | '/_authenticated/business/edit'
@@ -856,6 +869,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBusinessChatsRouteImport
       parentRoute: typeof AuthenticatedBusinessRoute
     }
+    '/_authenticated/business/analytics': {
+      id: '/_authenticated/business/analytics'
+      path: '/analytics'
+      fullPath: '/business/analytics'
+      preLoaderRoute: typeof AuthenticatedBusinessAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedBusinessRoute
+    }
     '/lovable/email/transactional/preview': {
       id: '/lovable/email/transactional/preview'
       path: '/lovable/email/transactional/preview'
@@ -923,6 +943,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedBusinessRouteChildren {
+  AuthenticatedBusinessAnalyticsRoute: typeof AuthenticatedBusinessAnalyticsRoute
   AuthenticatedBusinessChatsRoute: typeof AuthenticatedBusinessChatsRoute
   AuthenticatedBusinessCustomersRoute: typeof AuthenticatedBusinessCustomersRoute
   AuthenticatedBusinessEditRoute: typeof AuthenticatedBusinessEditRoute
@@ -939,6 +960,7 @@ interface AuthenticatedBusinessRouteChildren {
 }
 
 const AuthenticatedBusinessRouteChildren: AuthenticatedBusinessRouteChildren = {
+  AuthenticatedBusinessAnalyticsRoute: AuthenticatedBusinessAnalyticsRoute,
   AuthenticatedBusinessChatsRoute: AuthenticatedBusinessChatsRoute,
   AuthenticatedBusinessCustomersRoute: AuthenticatedBusinessCustomersRoute,
   AuthenticatedBusinessEditRoute: AuthenticatedBusinessEditRoute,
