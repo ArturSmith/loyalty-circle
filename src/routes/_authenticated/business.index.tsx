@@ -228,7 +228,16 @@ function BusinessDashboard() {
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" aria-label="Open menu" className="rounded-full glass-panel" title="Menu"><Menu className="h-5 w-5" /></Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-64">
+            <SheetContent
+              side="right"
+              className="overflow-y-auto overscroll-contain pb-[max(1.5rem,env(safe-area-inset-bottom))]"
+              style={{
+                top: "env(safe-area-inset-top)",
+                height: "calc(100% - env(safe-area-inset-top))",
+                width: "min(92vw, 26rem)",
+                maxWidth: "none",
+              }}
+            >
             <SheetHeader className="text-left">
               <SheetTitle className="font-display">Menu</SheetTitle>
             </SheetHeader>
