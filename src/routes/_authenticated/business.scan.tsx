@@ -57,6 +57,12 @@ function messageFrom(reason: unknown) {
 
 function describeError(raw: string): Rejection {
   const msg = (raw || "").toLowerCase();
+  if (msg.includes("permission required: cards.stamp")) {
+    return {
+      title: "Stamping permission required",
+      message: "The business owner has not granted this administrator permission to scan and stamp cards.",
+    };
+  }
   if (msg.includes("not authorized")) {
     return {
       title: "Not yours to scan",
