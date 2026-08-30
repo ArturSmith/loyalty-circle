@@ -104,14 +104,6 @@
 
 @layer base {
   * { border-color: var(--color-border); }
-  /* Scale the entire rem-based design system smoothly below 400px instead of
-     waiting for a breakpoint. At 320px the root is 14px; at 400px it reaches
-     the normal 16px. Browser zoom and the device text-size setting still apply. */
-  html {
-    font-size: clamp(0.875rem, calc(0.375rem + 2.5vw), 1rem);
-    -webkit-text-size-adjust: 100%;
-    text-size-adjust: 100%;
-  }
   html, body { font-family: var(--font-sans); }
   /* Tab screens slide in from ±28px. Without this the off-screen start position
      widens the document for the length of the animation, which flashes a
@@ -129,22 +121,7 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
   }
-  h1, h2, h3, .font-display {
-    max-width: 100%;
-    overflow-wrap: anywhere;
-    font-family: var(--font-display);
-    letter-spacing: -0.02em;
-    font-weight: 700;
-  }
-  button, [role="button"] { overflow-wrap: anywhere; }
-}
-
-/* Narrow phones need the same components, not a squeezed desktop layout.
-   Reclaim horizontal room from the most common page/card padding utilities. */
-@media (max-width: 360px) {
-  .px-6 { padding-inline: 1rem; }
-  .px-5 { padding-inline: 0.875rem; }
-  .p-8 { padding: 1.25rem; }
+  h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0.02em; font-weight: 700; }
 }
 
 /* Flat replacements for the old decorative utilities */
