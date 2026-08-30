@@ -45,6 +45,7 @@ import { Route as AuthenticatedBusinessNotificationsRouteImport } from './routes
 import { Route as AuthenticatedBusinessEditRouteImport } from './routes/_authenticated/business.edit'
 import { Route as AuthenticatedBusinessCustomersRouteImport } from './routes/_authenticated/business.customers'
 import { Route as AuthenticatedBusinessChatsRouteImport } from './routes/_authenticated/business.chats'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicWalletGoogleCallbackRouteImport } from './routes/api/public/wallet/google-callback'
@@ -245,6 +246,12 @@ const AuthenticatedBusinessChatsRoute =
     path: '/chats',
     getParentRoute: () => AuthenticatedBusinessRoute,
   } as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
   id: '/lovable/email/auth/webhook',
   path: '/lovable/email/auth/webhook',
@@ -333,6 +340,7 @@ export interface FileRoutesByFullPath {
   '/api/public/wallet/google-callback': typeof ApiPublicWalletGoogleCallbackRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/business/cards/$id/edit': typeof AuthenticatedBusinessCardsIdEditRoute
   '/business/cards/$id/': typeof AuthenticatedBusinessCardsIdIndexRoute
   '/business/cards/$id/customers/$customerId': typeof AuthenticatedBusinessCardsIdCustomersCustomerIdRoute
@@ -377,6 +385,7 @@ export interface FileRoutesByTo {
   '/api/public/wallet/google-callback': typeof ApiPublicWalletGoogleCallbackRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/business/cards/$id/edit': typeof AuthenticatedBusinessCardsIdEditRoute
   '/business/cards/$id': typeof AuthenticatedBusinessCardsIdIndexRoute
   '/business/cards/$id/customers/$customerId': typeof AuthenticatedBusinessCardsIdCustomersCustomerIdRoute
@@ -424,6 +433,7 @@ export interface FileRoutesById {
   '/api/public/wallet/google-callback': typeof ApiPublicWalletGoogleCallbackRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/_authenticated/business/cards/$id/edit': typeof AuthenticatedBusinessCardsIdEditRoute
   '/_authenticated/business/cards/$id/': typeof AuthenticatedBusinessCardsIdIndexRoute
   '/_authenticated/business/cards/$id/customers/$customerId': typeof AuthenticatedBusinessCardsIdCustomersCustomerIdRoute
@@ -471,6 +481,7 @@ export interface FileRouteTypes {
     | '/api/public/wallet/google-callback'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
+    | '/lovable/email/transactional/preview'
     | '/business/cards/$id/edit'
     | '/business/cards/$id/'
     | '/business/cards/$id/customers/$customerId'
@@ -515,6 +526,7 @@ export interface FileRouteTypes {
     | '/api/public/wallet/google-callback'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
+    | '/lovable/email/transactional/preview'
     | '/business/cards/$id/edit'
     | '/business/cards/$id'
     | '/business/cards/$id/customers/$customerId'
@@ -561,6 +573,7 @@ export interface FileRouteTypes {
     | '/api/public/wallet/google-callback'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
+    | '/lovable/email/transactional/preview'
     | '/_authenticated/business/cards/$id/edit'
     | '/_authenticated/business/cards/$id/'
     | '/_authenticated/business/cards/$id/customers/$customerId'
@@ -586,6 +599,7 @@ export interface RootRouteChildren {
   ApiPublicWalletGoogleCallbackRoute: typeof ApiPublicWalletGoogleCallbackRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
+  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -842,6 +856,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBusinessChatsRouteImport
       parentRoute: typeof AuthenticatedBusinessRoute
     }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/auth/webhook': {
       id: '/lovable/email/auth/webhook'
       path: '/lovable/email/auth/webhook'
@@ -994,6 +1015,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicWalletGoogleCallbackRoute: ApiPublicWalletGoogleCallbackRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
+  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
