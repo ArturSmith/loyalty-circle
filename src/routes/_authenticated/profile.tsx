@@ -77,7 +77,8 @@ function Profile() {
 
     const { error: saveError } = await supabase
       .from("profiles")
-      .upsert({ id: profile.id, avatar_url: path, updated_at: new Date().toISOString() });
+      .update({ avatar_url: path, updated_at: new Date().toISOString() })
+      .eq("id", profile.id);
     if (saveError) { setUploading(false); toast.error(saveError.message); return; }
 
     if (avatarPath && !/^https?:/i.test(avatarPath)) {
@@ -93,11 +94,13 @@ function Profile() {
   const save = async () => {
     if (!profile) return;
     setSaving(true);
-    const { error } = await supabase.from("profiles").upsert({
-      id: profile.id,
-      display_name: displayName || null,
-      updated_at: new Date().toISOString(),
-    });
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        display_name: displayName || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", profile.id);
     if (error) { setSaving(false); toast.error(error.message); return; }
 
     // Date of birth lives in the auth user's metadata rather than the profiles
