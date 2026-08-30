@@ -13,6 +13,7 @@ export type ProfileInfo = {
   avatarPath: string | null;
   avatarUrl: string | null;
   createdAt: string | null;
+  customerQrToken: string;
   hasBusiness: boolean;
   businessName: string | null;
   businessRole: "owner" | "admin" | null;
@@ -29,7 +30,7 @@ export function useProfile() {
     const user = userData.user;
     if (!user) { setProfile(null); setLoading(false); return; }
 
-    const [{ data: row }, { data: ownedBusiness }, { data: membership }] = await Promise.all([
+    const [{ data: row }, { data: ownedBusiness }, { data: membership }, { data: customerQrToken }] = await Promise.all([
       supabase.from("profiles").select("display_name, avatar_url, created_at").eq("id", user.id).maybeSingle(),
       supabase.from("businesses").select("id,name").eq("owner_id", user.id).limit(1).maybeSingle(),
       (supabase as any)
@@ -39,6 +40,7 @@ export function useProfile() {
         .eq("status", "active")
         .limit(1)
         .maybeSingle(),
+      supabase.rpc("get_my_customer_qr_token"),
     ]);
 
     const memberBusinessId = (membership as { business_id?: string } | null)?.business_id;
@@ -66,6 +68,9 @@ export function useProfile() {
       avatarPath,
       avatarUrl,
       createdAt: row?.created_at ?? user.created_at ?? null,
+      // Keep the existing UUID QR usable until the migration reaches every
+      // environment; once installed, the opaque token becomes canonical.
+      customerQrToken: customerQrToken ?? user.id,
       hasBusiness: !!business,
       businessName: business?.name ?? null,
       businessRole,

@@ -3,7 +3,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { StampCard } from "@/components/StampCard";
 import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
-import { QrDisplay } from "@/components/QrDisplay";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, CreditCard, Gift, RotateCcw, ScanLine, Snowflake, Sparkles, Store, Trash2, X } from "lucide-react";
@@ -21,6 +20,7 @@ import { TabTransition } from "@/components/TabTransition";
 import { ScreenLoader } from "@/components/Spinner";
 import { getTabCache, setTabCache } from "@/lib/tabCache";
 import { CardTermsSection } from "@/components/CardTermsSection";
+import { CustomerQrCard } from "@/components/CustomerQrCard";
 
 
 type Instance = WalletInstance;
@@ -244,6 +244,16 @@ function Wallet() {
 
       </header>
 
+      {profile ? (
+        <div className="relative px-5 pb-4">
+          <CustomerQrCard
+            qrToken={profile.customerQrToken}
+            userId={profile.id}
+            displayName={profile.displayName}
+          />
+        </div>
+      ) : null}
+
       {!profileLoading && !profile?.hasBusiness && !businessCtaHidden && (
         <div className="relative px-5 pt-2 pb-4">
           <motion.div
@@ -391,7 +401,7 @@ function Wallet() {
                             }
                           }}
                           className="relative block w-full text-left focus:outline-none drop-shadow-2xl"
-                          aria-label={isExpanded ? `Show QR for ${inst.template.title}` : `Open ${inst.template.title}`}
+                          aria-label={isExpanded ? `Open details for ${inst.template.title}` : `Open ${inst.template.title}`}
                         >
                           <div className="relative">
                             <div className={isFrozen ? "opacity-75" : undefined}>
@@ -519,12 +529,12 @@ function Wallet() {
                     <Sparkles className="h-4 w-4" />
                   </div>
                   <h3 className="font-display text-2xl mt-2">Reward unlocked</h3>
-                  <p className="text-xs text-muted-foreground">Show this code to redeem, then renew to start again</p>
+                  <p className="text-xs text-muted-foreground">Open Vouchers to redeem it, then renew to start again.</p>
                 </>
               ) : (
                 <>
-                  <h3 className="font-display text-2xl mt-3">Show to stamp</h3>
-                  <p className="text-xs text-muted-foreground">Let the business scan this code</p>
+                  <h3 className="font-display text-2xl mt-3">Use My QR to stamp</h3>
+                  <p className="text-xs text-muted-foreground">Show the customer QR at the top of Wallet.</p>
                 </>
               )}
               {isFrozen && (
@@ -539,9 +549,6 @@ function Wallet() {
                   </p>
                 </div>
               )}
-              <div className="mt-6 flex justify-center">
-                <QrDisplay value={`stempel:card:${flippedId}`} size={260} />
-              </div>
               <OrnamentDivider className="w-40 mx-auto mt-6 opacity-70" />
               {inst && <BusinessInfoPanel business={inst.template.business} businessId={inst.template.business.id} />}
               {inst && (

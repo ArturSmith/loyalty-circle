@@ -5,11 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { postSignOutDestination } from "@/lib/post-sign-out";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Camera, LogOut, Store, HelpCircle, Mail, ChevronRight, Building2, Copy, Check, Pencil, ShieldCheck } from "lucide-react";
+import { Camera, LogOut, Store, HelpCircle, Mail, ChevronRight, Building2, Pencil, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
-import { QrDisplay } from "@/components/QrDisplay";
-import { customerQrValue, shortCustomerCode } from "@/lib/customer-code";
 import { useProfile } from "@/hooks/useProfile";
 import type { ProfileInfo } from "@/hooks/useProfile";
 import { AVATAR_BUCKET, initialsFrom, resolveAvatarUrl } from "@/lib/avatar";
@@ -18,6 +16,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { amIAdmin } from "@/utils/admin.functions";
 import { NotificationButton } from "@/components/NotificationButton";
 import { LanguageSwitcher } from "@/i18n";
+import { CustomerQrCard } from "@/components/CustomerQrCard";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
@@ -43,22 +42,9 @@ function Profile() {
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [isStaffAdmin, setIsStaffAdmin] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const checkStaffAdmin = useServerFn(amIAdmin);
-
-  const copyId = async (id: string) => {
-    try {
-      await navigator.clipboard.writeText(id);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // Clipboard is blocked in some in-app browsers; the id is shown in full
-      // below the code so it can still be selected by hand.
-      toast.error("Couldn't copy — select the ID below instead");
-    }
-  };
 
   useEffect(() => {
     if (!profile) return;
@@ -243,36 +229,12 @@ function Profile() {
               <LanguageSwitcher compact />
             </section>
 
-            <section className="mt-6 rounded-2xl glass-panel p-4">
-              <h2 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Your ID</h2>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Show this to a business so they can find you without searching by name.
-              </p>
-
-              <div className="mt-4 flex justify-center">
-                <div className="rounded-2xl bg-white p-3">
-                  <QrDisplay value={customerQrValue(profile.id)} size={180} />
-                </div>
-              </div>
-
-              <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-border bg-secondary/50 px-3 py-2.5">
-                <div className="min-w-0">
-                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Short code</p>
-                  <p className="font-mono text-lg font-semibold tracking-wider">{shortCustomerCode(profile.id)}</p>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="shrink-0 gap-1.5"
-                  onClick={() => copyId(profile.id)}
-                  aria-label="Copy your full ID"
-                >
-                  {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                  {copied ? "Copied" : "Copy ID"}
-                </Button>
-              </div>
-              <p className="mt-2 break-all font-mono text-[10px] text-muted-foreground">{profile.id}</p>
-            </section>
+            <CustomerQrCard
+              qrToken={profile.customerQrToken}
+              userId={profile.id}
+              displayName={profile.displayName}
+              className="mt-6"
+            />
 
             <nav className="mt-8 overflow-hidden rounded-2xl border border-border divide-y divide-border" aria-label="Account menu">
               {isStaffAdmin && <MenuLink to="/admin" icon={ShieldCheck} label="Platform moderation" />}

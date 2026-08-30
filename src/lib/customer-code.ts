@@ -1,8 +1,9 @@
 /**
- * Customer identification shared by the profile QR and the business lookup.
+ * Customer identification shared by the Wallet/Profile QR and the business lookup.
  *
- * The QR encodes the customer's full user id, matching the existing
- * `stempel:card:` / `stempel:voucher:` scheme so one scanner handles all three.
+ * New QR codes encode an opaque per-customer token, matching the existing
+ * `stempel:card:` / `stempel:voucher:` scheme so one scanner can keep legacy
+ * card/voucher support without exposing the customer's auth id.
  *
  * For typing by hand a 36-character UUID is unusable at a counter, so we also
  * accept a short prefix. That is only safe because lookup is scoped to a single

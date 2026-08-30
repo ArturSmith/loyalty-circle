@@ -25,7 +25,7 @@ const customerFaqs: Faq[] = [
   {
     icon: Wallet,
     q: "How do I collect stamps?",
-    a: "Scan a business's ClubCarder QR code to add their card to your wallet. On each visit, show the card's QR code to the business — they scan it and your stamp is added instantly.",
+    a: "Scan a business's ClubCarder QR code to add their card to your wallet. On each visit, open Wallet and show My QR — the business scans it and your stamp is added instantly.",
   },
   {
     icon: Gift,

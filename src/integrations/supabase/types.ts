@@ -729,6 +729,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          customer_qr_token: string
           date_of_birth: string | null
           display_name: string | null
           id: string
@@ -739,6 +740,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          customer_qr_token?: string
           date_of_birth?: string | null
           display_name?: string | null
           id: string
@@ -749,6 +751,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
+          customer_qr_token?: string
           date_of_birth?: string | null
           display_name?: string | null
           id?: string
@@ -1111,6 +1114,7 @@ export type Database = {
         Args: { _business_id: string; _range_days?: number }
         Returns: Json
       }
+      get_my_customer_qr_token: { Args: never; Returns: string }
       get_business_detail_public: { Args: { _id: string }; Returns: Json }
       get_business_public: {
         Args: { _id: string }
@@ -1190,6 +1194,10 @@ export type Database = {
       }
       redeem_business_voucher: {
         Args: { _business_id: string; _voucher_id: string }
+        Returns: Json
+      }
+      resolve_customer_cards_for_business: {
+        Args: { _business_id: string; _customer_qr_token: string }
         Returns: Json
       }
       redeem_voucher: { Args: { _voucher_id: string }; Returns: Json }
