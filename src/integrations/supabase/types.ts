@@ -1024,6 +1024,13 @@ export type Database = {
         Args: { _instance_id: string; _secret: string }
         Returns: string
       }
+      claim_card_to_wallet: {
+        Args: { _accepted_terms_version: number; _template_id: string }
+        Returns: {
+          already_owned: boolean
+          instance_id: string
+        }[]
+      }
       delete_business: { Args: { _business_id: string }; Returns: undefined }
       discover_businesses: {
         Args: { _lat?: number; _limit?: number; _lng?: number; _q?: string }
@@ -1071,13 +1078,6 @@ export type Database = {
           text_color: string
           title: string
           total_steps: number
-        }[]
-      }
-      claim_card_to_wallet: {
-        Args: { _accepted_terms_version: number; _template_id: string }
-        Returns: {
-          already_owned: boolean
-          instance_id: string
         }[]
       }
       get_business_cards_public: {
