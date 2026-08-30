@@ -14,7 +14,7 @@ export const sendContactMessage = createServerFn({ method: 'POST' })
     const result = await sendTemplateEmail('contact-message', 'support@clubcarder.com', {
       templateData: { name: data.name, email: data.email, message: data.message },
       replyTo: data.email,
-      idempotencyKey: `contact-${data.email}-${data.message.length}-${data.name}`,
+      idempotencyKey: `contact-${data.email}-${Math.floor(Date.now() / 60000)}`,
     })
     return result
   })
