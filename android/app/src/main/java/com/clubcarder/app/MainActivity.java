@@ -54,6 +54,23 @@ public class MainActivity extends BridgeActivity {
         return true;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        // `nativeAuthOpen` only guards against launching twice while the login
+        // screen is already in front. Being resumed means it is not, so the
+        // latch has to be cleared here -- otherwise it stays stuck true for the
+        // life of the process and every later visit to /auth silently falls
+        // through to the web sign-in page.
+        //
+        // The re-check matters because a task restored from recents keeps the
+        // WebView exactly where it was: still on /auth, with no navigation to
+        // re-trigger shouldOverrideUrlLoading or onPageStarted.
+        nativeAuthOpen = false;
+        String currentUrl = getBridge().getWebView().getUrl();
+        if (currentUrl != null) openNativeAuthIfNeeded(Uri.parse(currentUrl));
+    }
+
     private boolean isClubCarderAuthUri(Uri uri) {
         return uri != null
             && "https".equalsIgnoreCase(uri.getScheme())
