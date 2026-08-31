@@ -5,7 +5,7 @@ import { StampCard } from "@/components/StampCard";
 import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, CreditCard, Gift, RotateCcw, ScanLine, Snowflake, Sparkles, Store, Trash2, UserRoundPen, X } from "lucide-react";
+import { Check, ChevronRight, CreditCard, Gift, RotateCcw, ScanLine, Snowflake, Sparkles, Store, Trash2, UserRoundPen, X } from "lucide-react";
 import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { getPaddleEnvironment } from "@/lib/paddle";
@@ -257,40 +257,35 @@ function Wallet() {
       </header>
 
       {!profileLoading && profile && missingProfileFields.length > 0 ? (
-        <section className="relative px-5 pb-4" aria-labelledby="complete-profile-title">
+        <section className="relative px-5 pb-3" aria-labelledby="complete-profile-title">
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mx-auto max-w-md rounded-2xl border border-primary/25 bg-primary/10 p-4 shadow-sm"
+            className="mx-auto max-w-md"
           >
-            <div className="flex items-start gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                <UserRoundPen className="h-5 w-5" />
+            <Link
+              to="/profile"
+              search={{ edit: true }}
+              className="flex min-h-14 items-center gap-3 rounded-xl border border-primary/25 bg-primary/10 px-3 py-2 shadow-sm transition-colors hover:bg-primary/15"
+            >
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                <UserRoundPen className="h-4 w-4" />
               </span>
               <div className="min-w-0 flex-1">
-                <h2 id="complete-profile-title" className="font-display text-base font-bold">
-                  Complete your profile
+                <h2 id="complete-profile-title" className="truncate text-sm font-semibold">
+                  Complete profile
                 </h2>
-                <p className="mt-1 text-sm leading-snug text-muted-foreground">
-                  Add the missing details so businesses can recognize you and you can use all account features.
-                </p>
-                <div className="mt-3 flex flex-wrap gap-1.5" aria-label="Missing information">
+                <p className="truncate text-[11px] text-muted-foreground" aria-label="Missing information">
                   {missingProfileFields.map((field) => (
-                    <span
-                      key={field}
-                      className="rounded-full border border-primary/20 bg-background/80 px-2.5 py-1 text-xs font-medium text-foreground"
-                    >
-                      {field}
+                    <span key={field}>
+                      {field !== missingProfileFields[0] ? <span aria-hidden="true"> · </span> : null}
+                      <span>{field}</span>
                     </span>
                   ))}
-                </div>
-                <Button asChild size="sm" className="mt-4 w-full gap-2 rounded-xl sm:w-auto">
-                  <Link to="/profile" search={{ edit: true }}>
-                    <UserRoundPen className="h-4 w-4" /> Complete profile
-                  </Link>
-                </Button>
+                </p>
               </div>
-            </div>
+              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+            </Link>
           </motion.div>
         </section>
       ) : null}
