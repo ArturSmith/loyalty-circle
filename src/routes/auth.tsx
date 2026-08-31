@@ -141,6 +141,36 @@ function AuthPage() {
     setEmail("");
   };
 
+  const normalizedPhone = phone.trim().replace(/[\s()-]/g, "");
+
+  const handleSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!/^\+[1-9]\d{6,14}$/.test(normalizedPhone)) {
+      toast.error("Enter your phone number in international format, e.g. +4791234567");
+      return;
+    }
+    setSending(true);
+    const { error } = await supabase.auth.signInWithOtp({ phone: normalizedPhone });
+    setSending(false);
+    if (error) { toast.error(error.message); return; }
+    setOtpSent(true);
+    toast.success("We sent you a 6-digit code by SMS");
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const code = otp.trim();
+    if (code.length < 4) { toast.error("Enter the code from the SMS"); return; }
+    setSending(true);
+    const { error } = await supabase.auth.verifyOtp({ phone: normalizedPhone, token: code, type: "sms" });
+    setSending(false);
+    if (error) { toast.error(error.message); return; }
+    setOtp(""); setOtpSent(false);
+    goNext();
+  };
+
+
+
   return (
     <div className="min-h-screen px-4 py-10">
       <div className="mx-auto w-full max-w-sm">
