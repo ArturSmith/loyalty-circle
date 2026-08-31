@@ -21,6 +21,7 @@ import { ScreenLoader } from "@/components/Spinner";
 import { getTabCache, setTabCache } from "@/lib/tabCache";
 import { CardTermsSection } from "@/components/CardTermsSection";
 import { CustomerQrCard } from "@/components/CustomerQrCard";
+import { NotificationButton } from "@/components/NotificationButton";
 
 
 type Instance = WalletInstance;
@@ -247,11 +248,7 @@ function Wallet() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Link to="/scan">
-            <Button variant="ghost" size="icon" aria-label="Scan QR code" title="Scan QR" className="rounded-full glass-panel">
-              <ScanLine className="h-5 w-5" />
-            </Button>
-          </Link>
+          <NotificationButton scope="customer" />
         </div>
 
       </header>

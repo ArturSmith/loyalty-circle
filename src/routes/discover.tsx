@@ -1,8 +1,8 @@
 import { getTabCache, setTabCache } from "@/lib/tabCache";
 import { PageLoader } from "@/components/Spinner";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { MapPin, Search } from "lucide-react";
+import { MapPin, ScanLine, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { TabScreen } from "@/components/TabScreen";
@@ -90,7 +90,16 @@ function Discover() {
   const nothingFound = groups.length === 0;
 
   return (
-    <TabScreen title="Discover">
+    <TabScreen
+      title="Discover"
+      action={
+        <Button asChild variant="ghost" size="icon" className="rounded-full glass-panel">
+          <Link to="/scan" aria-label="Scan QR code" title="Scan QR">
+            <ScanLine className="h-5 w-5" />
+          </Link>
+        </Button>
+      }
+    >
       <div className="mx-auto mt-4 max-w-3xl px-5">
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
