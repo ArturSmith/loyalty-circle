@@ -33,7 +33,6 @@ object AuthColors {
 }
 
 object AuthDimens {
-    val CardCorner = 28.dp
     val FieldCorner = 16.dp
     val ScreenPadding = 20.dp
     val CardPadding = 24.dp

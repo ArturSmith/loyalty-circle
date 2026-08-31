@@ -132,7 +132,6 @@ class LoginActivity : AppCompatActivity() {
     /* ------------------------------------------------------------ wiring */
 
     private fun actionsFor(viewModel: LoginViewModel) = LoginActions(
-        onBack = { onBackPressedDispatcher.onBackPressed() },
         onLanguageChange = ::applyLanguage,
         onPhoneChange = viewModel::setPhone,
         onOtpChange = viewModel::setOtp,

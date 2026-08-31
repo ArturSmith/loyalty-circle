@@ -55,7 +55,6 @@
     <string name="auth_oauth_cancelled">Sign-in was cancelled. Please try again.</string>
     <string name="auth_open_link_failed">Could not open the sign-in page.</string>
     <string name="auth_select_birth_date">Select date of birth</string>
-    <string name="auth_back">Back</string>
     <string name="auth_search_country">Search country or code</string>
     <string name="auth_no_countries">No matching countries</string>
     <string name="auth_language">Language</string>

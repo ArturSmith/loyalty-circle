@@ -19,8 +19,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -45,7 +45,6 @@ import com.clubcarder.app.R
  * does not mean threading another parameter through every preview and caller.
  */
 data class LoginActions(
-    val onBack: () -> Unit = {},
     val onLanguageChange: (norwegian: Boolean) -> Unit = {},
     val onPhoneChange: (String) -> Unit = {},
     val onOtpChange: (String) -> Unit = {},
@@ -89,7 +88,7 @@ fun LoginScreen(state: LoginUiState, actions: LoginActions) {
         ) {
             TopBar(state = state, actions = actions)
             VerticalSpace(12)
-            AuthCard(state = state, actions = actions)
+            AuthContent(state = state, actions = actions)
             VerticalSpace(24)
         }
 
@@ -109,30 +108,14 @@ fun LoginScreen(state: LoginUiState, actions: LoginActions) {
 
 @Composable
 private fun TopBar(state: LoginUiState, actions: LoginActions) {
+    // No back affordance: sign-in is the root of its own task, so there is
+    // nowhere to go back to. The hardware/gesture back still finishes the
+    // activity via the platform default.
     Row(
         modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.End,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(
-            modifier = Modifier
-                .clickable(enabled = !state.loading, onClick = actions.onBack)
-                .padding(vertical = 8.dp, horizontal = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = null,
-                tint = AuthColors.Text,
-            )
-            HorizontalSpace(8)
-            Text(
-                text = stringResource(R.string.auth_back),
-                color = AuthColors.Text,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 17.sp,
-            )
-        }
-        Box(Modifier.weight(1f))
         LanguageToggle(
             isNorwegian = state.isNorwegian,
             enabled = !state.loading,
@@ -142,12 +125,9 @@ private fun TopBar(state: LoginUiState, actions: LoginActions) {
 }
 
 @Composable
-private fun AuthCard(state: LoginUiState, actions: LoginActions) {
+private fun AuthContent(state: LoginUiState, actions: LoginActions) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(AuthColors.Card, RoundedCornerShape(AuthDimens.CardCorner))
-            .padding(AuthDimens.CardPadding),
+        modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Image(
@@ -405,8 +385,11 @@ private fun SocialRow(state: LoginUiState, actions: LoginActions) {
             enabled = !state.loading,
             onClick = actions.onToggleMethod,
         ) {
+            // The icon shows the method the tap will switch *to*, so it flips
+            // to a handset once the user is already on email.
             Icon(
-                imageVector = Icons.Filled.Email,
+                imageVector = if (state.mode == AuthMode.PHONE) Icons.Filled.Email
+                else Icons.Filled.Phone,
                 contentDescription = null,
                 tint = AuthColors.Text,
             )
