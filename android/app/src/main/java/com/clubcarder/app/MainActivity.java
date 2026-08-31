@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
+import android.view.WindowManager;
 
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -20,6 +21,9 @@ import com.getcapacitor.BridgeWebViewClient;
 
 public class MainActivity extends BridgeActivity {
     private boolean nativeAuthOpen;
+    private boolean qrBrightnessEnabled;
+    private float brightnessBeforeQr = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE;
+    private boolean keptScreenOnBeforeQr;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -29,6 +33,7 @@ public class MainActivity extends BridgeActivity {
         WebView webView = bridge.getWebView();
         publishWindowInsets(webView);
         webView.addJavascriptInterface(new AuthNavigationBridge(), "ClubCarderNativeAuth");
+        webView.addJavascriptInterface(new DisplayBridge(), "ClubCarderNativeDisplay");
         bridge.setWebViewClient(new BridgeWebViewClient(bridge) {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
@@ -162,5 +167,38 @@ public class MainActivity extends BridgeActivity {
                 if (isClubCarderAuthUri(current)) launchNativeAuth(redirect);
             });
         }
+    }
+
+    private void setQrBrightness(boolean enabled) {
+        WindowManager.LayoutParams attributes = getWindow().getAttributes();
+        if (enabled) {
+            if (qrBrightnessEnabled) return;
+            qrBrightnessEnabled = true;
+            brightnessBeforeQr = attributes.screenBrightness;
+            keptScreenOnBeforeQr = (attributes.flags & WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) != 0;
+            attributes.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL;
+            attributes.flags |= WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON;
+        } else {
+            if (!qrBrightnessEnabled) return;
+            qrBrightnessEnabled = false;
+            attributes.screenBrightness = brightnessBeforeQr;
+            if (!keptScreenOnBeforeQr) {
+                attributes.flags &= ~WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON;
+            }
+        }
+        getWindow().setAttributes(attributes);
+    }
+
+    private final class DisplayBridge {
+        @JavascriptInterface
+        public void setQrBrightness(boolean enabled) {
+            runOnUiThread(() -> MainActivity.this.setQrBrightness(enabled));
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        setQrBrightness(false);
+        super.onDestroy();
     }
 }

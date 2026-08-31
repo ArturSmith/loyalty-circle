@@ -59,3 +59,19 @@ export async function hapticTap() {
     await Haptics.impact({ style: ImpactStyle.Light });
   } catch {}
 }
+
+type NativeDisplayBridge = {
+  setQrBrightness: (enabled: boolean) => void;
+};
+
+/**
+ * Makes a displayed customer QR easy to scan in the Android shell. The native
+ * bridge restores the previous system-controlled brightness when disabled.
+ */
+export function setUserQrBrightness(enabled: boolean) {
+  if (typeof window === "undefined" || Capacitor.getPlatform() !== "android") return;
+  const displayBridge = (window as typeof window & {
+    ClubCarderNativeDisplay?: NativeDisplayBridge;
+  }).ClubCarderNativeDisplay;
+  displayBridge?.setQrBrightness(enabled);
+}

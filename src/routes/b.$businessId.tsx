@@ -9,7 +9,7 @@ import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { ArrowLeft, Globe, Link2 as LinkIcon, MapPin, Phone } from "lucide-react";
+import { ArrowLeft, Globe, Link2 as LinkIcon, MapPin, Phone, Trash2 } from "lucide-react";
 import { brandTint, isDarkBrandColor, normalizeBrandColor } from "@/lib/brand";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { useServerFn } from "@tanstack/react-start";
@@ -126,6 +126,7 @@ function BusinessPublic() {
   const [business, setBusiness] = useState<PublicBusiness | null>(null);
   const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState<string | null>(null);
+  const [removing, setRemoving] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [ownedTemplateIds, setOwnedTemplateIds] = useState<Map<string, string>>(new Map());
   const [flippedTemplateId, setFlippedTemplateId] = useState<string | null>(null);
@@ -206,6 +207,48 @@ function BusinessPublic() {
       toast.error("Couldn't add card", { description: error instanceof Error ? error.message : "Please try again." });
     } finally {
       setClaiming(null);
+    }
+  };
+
+  const openInWallet = (instanceId: string) => {
+    try {
+      sessionStorage.setItem("open_card_id", instanceId);
+    } catch {
+      // The wallet still opens normally when session storage is unavailable.
+    }
+    navigate({ to: "/wallet" });
+  };
+
+  const removeFromWallet = async (template: Template, instanceId: string) => {
+    if (!window.confirm(`Remove "${template.title}" from your wallet? This cannot be undone.`)) {
+      return;
+    }
+
+    setRemoving(template.id);
+    try {
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) throw new Error("Please sign in again to remove cards.");
+
+      const { error } = await supabase
+        .from("card_instances")
+        .delete()
+        .eq("id", instanceId)
+        .eq("customer_id", data.user.id);
+      if (error) throw error;
+
+      setOwnedTemplateIds((previous) => {
+        const next = new Map(previous);
+        next.delete(template.id);
+        return next;
+      });
+      invalidateTabCache("wallet");
+      toast.success("Card removed from your wallet");
+    } catch (error) {
+      toast.error("Couldn't remove card", {
+        description: error instanceof Error ? error.message : "Please try again.",
+      });
+    } finally {
+      setRemoving(null);
     }
   };
 
@@ -341,8 +384,7 @@ function BusinessPublic() {
                   // the sign-in flow.
                   if (!userId) return;
                   if (ownedInstanceId) {
-                    try { sessionStorage.setItem("open_card_id", ownedInstanceId); } catch {}
-                    navigate({ to: "/wallet" });
+                    openInWallet(ownedInstanceId);
                     return;
                   }
                   if (!hasAcceptedTerms) {
@@ -413,17 +455,33 @@ function BusinessPublic() {
                   </CardTermsSection>
                   {userId ? (
                     <>
-                      <Button
-                        className="mt-3 w-full h-11"
-                        disabled={claiming === t.id}
-                        onClick={handleCardClick}
-                      >
-                        {claiming === t.id
-                          ? "Adding…"
-                          : ownedInstanceId
-                          ? "Open in my wallet"
-                          : "Add to my wallet"}
-                      </Button>
+                      {ownedInstanceId ? (
+                        <div className="mt-3 flex gap-2">
+                          <Button
+                            className="h-11 min-w-0 flex-1"
+                            onClick={() => openInWallet(ownedInstanceId)}
+                          >
+                            Open in my wallet
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="h-11 gap-1.5 border-destructive/30 px-3 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                            disabled={removing === t.id}
+                            onClick={() => void removeFromWallet(t, ownedInstanceId)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            {removing === t.id ? "Removing…" : "Remove"}
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button
+                          className="mt-3 h-11 w-full"
+                          disabled={claiming === t.id}
+                          onClick={handleCardClick}
+                        >
+                          {claiming === t.id ? "Adding…" : "Add to my wallet"}
+                        </Button>
+                      )}
                       {googleWalletReady && !ownedInstanceId ? (
                         <>
                           <GoogleWalletButton

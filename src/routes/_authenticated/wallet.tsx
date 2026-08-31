@@ -1,11 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { StampCard } from "@/components/StampCard";
 import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence, Reorder } from "framer-motion";
-import { ArrowUpDown, Check, ChevronRight, CreditCard, Gift, GripVertical, RotateCcw, ScanLine, Snowflake, Sparkles, Store, Trash2, UserRoundPen, X } from "lucide-react";
+import { ArrowUpDown, Check, ChevronRight, CreditCard, Gift, GripVertical, ScanLine, Snowflake, Sparkles, Store, UserRoundPen, X } from "lucide-react";
 import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { getPaddleEnvironment } from "@/lib/paddle";
@@ -14,12 +14,10 @@ import { getWalletCards, saveWalletCardOrder, type WalletInstance } from "@/util
 import { invalidateUnusedVoucherCount } from "@/hooks/useUnusedVoucherCount";
 import { useProfile } from "@/hooks/useProfile";
 import { initialsFrom } from "@/lib/avatar";
-import { BusinessInfoPanel } from "@/components/BusinessInfoPanel";
 import { DiscoverStrip } from "@/components/DiscoverStrip";
 import { TabTransition } from "@/components/TabTransition";
 import { ScreenLoader } from "@/components/Spinner";
 import { getTabCache, setTabCache } from "@/lib/tabCache";
-import { CardTermsSection } from "@/components/CardTermsSection";
 import { CustomerQrCard } from "@/components/CustomerQrCard";
 import { NotificationButton } from "@/components/NotificationButton";
 
@@ -53,6 +51,7 @@ type WalletCache = { instances: Instance[]; frozenBusinessIds: string[] };
 const WALLET_CACHE_KEY = "wallet";
 
 function Wallet() {
+  const navigate = useNavigate();
   const [instances, setInstances] = useState<Instance[]>(() => getTabCache<WalletCache>(WALLET_CACHE_KEY)?.instances ?? []);
   const [frozenBusinessIds, setFrozenBusinessIds] = useState<Set<string>>(
     () => new Set(getTabCache<WalletCache>(WALLET_CACHE_KEY)?.frozenBusinessIds ?? []),
@@ -60,7 +59,6 @@ function Wallet() {
   const [loading, setLoading] = useState(() => getTabCache<WalletCache>(WALLET_CACHE_KEY) === null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [frontId, setFrontId] = useState<string | null>(null);
-  const [flippedId, setFlippedId] = useState<string | null>(null);
   const [faceFlipped, setFaceFlipped] = useState<Set<string>>(new Set());
   const [celebration, setCelebration] = useState<Celebration | null>(null);
   const [businessCtaHidden, setBusinessCtaHidden] = useState(true);
@@ -164,7 +162,6 @@ function Wallet() {
   const openArrangeCards = () => {
     setFrontId(null);
     setExpandedId(null);
-    setFlippedId(null);
     setArrangeOriginalIds(instances.map((instance) => instance.id));
     arrangingRef.current = true;
     setArranging(true);
@@ -207,7 +204,8 @@ function Wallet() {
 
   useEffect(() => { load(); }, [load]);
 
-  // If arriving from a business page with a card to open, expand + flip it
+  // If arriving from a business page with a card to open, bring it to the
+  // front of the stack and show its stamps side without opening a dialog.
   useEffect(() => {
     if (loading || instances.length === 0) return;
     let target: string | null = null;
@@ -219,8 +217,9 @@ function Wallet() {
       // The card can still be opened normally if cleanup is unavailable.
     }
     if (instances.find((i) => i.id === target)) {
+      setFrontId(target);
       setExpandedId(target);
-      setFlippedId(target);
+      setFaceFlipped((previous) => new Set(previous).add(target));
     }
   }, [loading, instances]);
 
@@ -480,26 +479,22 @@ function Wallet() {
                           tabIndex={0}
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (isExpanded) {
-                              setFlippedId(inst.id);
-                            } else {
-                              setFrontId(inst.id);
-                              setExpandedId(inst.id);
-                            }
+                            navigate({
+                              to: "/b/$businessId",
+                              params: { businessId: inst.template.business.id },
+                            });
                           }}
                           onKeyDown={(event) => {
                             if (event.key !== "Enter" && event.key !== " ") return;
                             event.preventDefault();
                             event.stopPropagation();
-                            if (isExpanded) {
-                              setFlippedId(inst.id);
-                            } else {
-                              setFrontId(inst.id);
-                              setExpandedId(inst.id);
-                            }
+                            navigate({
+                              to: "/b/$businessId",
+                              params: { businessId: inst.template.business.id },
+                            });
                           }}
                           className="relative block w-full text-left focus:outline-none"
-                          aria-label={isExpanded ? `Open details for ${inst.template.title}` : `Open ${inst.template.title}`}
+                          aria-label={`Open ${inst.template.business.name}`}
                         >
                           <div className="relative">
                             <div className={isFrozen ? "opacity-75" : undefined}>
@@ -619,128 +614,12 @@ function Wallet() {
       </AnimatePresence>
 
       <AnimatePresence>
-        {flippedId && (() => {
-          const inst = instances.find((x) => x.id === flippedId);
-          const isCompleted = !!inst?.completed_at || (inst ? inst.stamps_count >= inst.template.total_steps : false);
-          const isFrozen = !!inst && frozenBusinessIds.has(inst.template.business.id);
-          const renew = async () => {
-            if (!inst) return;
-            const { error } = await supabase.rpc("renew_card", {
-              _card_instance_id: inst.id,
-            });
-            if (error) {
-              toast.error("Couldn't renew card", { description: error.message });
-              return;
-            }
-            toast.success("Card renewed — start collecting again!");
-            setFlippedId(null);
-            load();
-          };
-          const remove = async () => {
-            if (!inst) return;
-            if (!window.confirm(`Remove "${inst.template.title}" from your wallet? This cannot be undone.`)) return;
-            
-            // Verify user is authenticated before attempting delete
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) {
-              toast.error("Not authenticated", { description: "Please sign in again to remove cards." });
-              return;
-            }
-            
-            // First attempt the delete
-            const { error: deleteError } = await supabase.from("card_instances").delete().eq("id", inst.id).eq("customer_id", user.id);
-            if (deleteError) {
-              console.error("Delete error:", deleteError);
-              toast.error("Couldn't remove card", { description: deleteError.message });
-              return;
-            }
-            
-            // Delete was successful, now reload
-            toast.success("Card removed from your wallet");
-            setFlippedId(null);
-            setExpandedId(null);
-            
-            try {
-              await load();
-            } catch (loadError) {
-              console.error("Load error after delete:", loadError);
-              toast.error("Card removed but couldn't refresh wallet", { description: loadError instanceof Error ? loadError.message : "Please refresh the page." });
-            }
-          };
-          return (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-ink/85 backdrop-blur-md flex items-center justify-center p-6"
-            onClick={() => setFlippedId(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.85, rotateY: 90 }} animate={{ scale: 1, rotateY: 0 }} exit={{ scale: 0.85, rotateY: -90 }}
-              transition={{ type: "spring", damping: 22, stiffness: 200 }}
-              onClick={(e) => e.stopPropagation()}
-              className="relative max-h-[90dvh] w-full max-w-sm overflow-y-auto rounded-3xl bg-paper paper-grain card-shadow px-6 pb-6 pt-12 text-center"
-            >
-              <button onClick={() => setFlippedId(null)} className="absolute top-3 right-3 p-2 opacity-60 hover:opacity-100">
-                <X className="h-4 w-4" />
-              </button>
-              {isCompleted && (
-                <div className="mb-4 rounded-2xl bg-secondary px-4 py-3">
-                  <div className="inline-flex items-center gap-2 text-gold">
-                    <Sparkles className="h-4 w-4" />
-                    <span className="text-xs uppercase tracking-widest">Card complete</span>
-                    <Sparkles className="h-4 w-4" />
-                  </div>
-                  <p className="mt-1 text-sm font-semibold">Reward unlocked</p>
-                </div>
-              )}
-              {isFrozen && (
-                <div className="mb-4 rounded-xl border border-sky-300 bg-sky-50 px-3 py-2 text-left text-xs text-sky-900">
-                  <div className="flex items-center gap-1.5 font-semibold">
-                    <Snowflake className="h-3.5 w-3.5" /> Card frozen
-                  </div>
-                  <p className="mt-1 text-sky-800">
-                    {isCompleted
-                      ? "This business's subscription is inactive, but you can still redeem your completed reward."
-                      : "This business's subscription is inactive, so new stamps are paused until they resume."}
-                  </p>
-                </div>
-              )}
-              {inst && <BusinessInfoPanel business={inst.template.business} businessId={inst.template.business.id} />}
-              {inst && (
-                <CardTermsSection
-                  terms={inst.terms_accepted_text ?? inst.template.terms_and_conditions}
-                  className="mt-4 border-ink/10 bg-secondary text-left"
-                />
-              )}
-
-              {isCompleted && (
-                <Button
-                  onClick={renew}
-                  className="mt-5 w-full h-12 gap-2 rounded-2xl bg-primary text-primary-foreground border-0 hover:bg-primary/90"
-                >
-                  <RotateCcw className="h-4 w-4" /> Renew card
-                </Button>
-              )}
-              <Button
-                onClick={remove}
-                variant="ghost"
-                className="mt-3 w-full h-11 gap-2 rounded-2xl text-destructive hover:text-destructive hover:bg-destructive/10"
-              >
-                <Trash2 className="h-4 w-4" /> Remove from wallet
-              </Button>
-            </motion.div>
-          </motion.div>
-          );
-        })()}
-      </AnimatePresence>
-
-
-      <AnimatePresence>
         {celebration && (
           <motion.div
             key={`celebrate-${celebration.instanceId}-${celebration.stampsCount}`}
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-[90] bg-ink/85 backdrop-blur-md flex items-center justify-center p-6"
-            onClick={() => { setCelebration(null); setFlippedId(null); }}
+            onClick={() => setCelebration(null)}
           >
             {Array.from({ length: 14 }).map((_, i) => (
               <motion.span
@@ -768,7 +647,7 @@ function Wallet() {
               className="relative w-full max-w-sm rounded-3xl bg-paper paper-grain card-shadow p-8 text-center"
             >
               <button
-                onClick={() => { setCelebration(null); setFlippedId(null); }}
+                onClick={() => setCelebration(null)}
                 className="absolute top-3 right-3 p-2 opacity-60 hover:opacity-100"
                 aria-label="Close"
               >
@@ -858,7 +737,7 @@ function Wallet() {
               <OrnamentDivider className="w-40 mx-auto opacity-70 mt-6" />
               <Button
                 className="mt-6 w-full h-11"
-                onClick={() => { setCelebration(null); setFlippedId(null); }}
+                onClick={() => setCelebration(null)}
               >
                 Nice!
               </Button>

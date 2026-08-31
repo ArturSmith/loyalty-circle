@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Bell, CheckCheck, CheckCircle2, Clock3, Gift, Stamp, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,7 +19,6 @@ export function NotificationsInbox({
   scope: NotificationScope;
   businessId?: string;
 }) {
-  const navigate = useNavigate();
   const loadNotifications = useServerFn(listNotifications);
   const markRead = useServerFn(markNotificationRead);
   const markAllRead = useServerFn(markAllNotificationsRead);
@@ -42,43 +40,17 @@ export function NotificationsInbox({
 
   useEffect(load, [businessId, loadNotifications, scope]);
 
-  const openNotification = async (notification: AppNotification) => {
-    if (!notification.read_at) {
-      try {
-        const { readAt } = await markRead({ data: { notificationId: notification.id } });
-        setNotifications((current) =>
-          current.map((row) => (row.id === notification.id ? { ...row, read_at: readAt } : row)),
-        );
-        invalidateNotificationCount(scope, businessId);
-      } catch {
-        // Navigation remains available if recording read state fails.
-      }
+  const markOneRead = async (notification: AppNotification) => {
+    if (notification.read_at) return;
+    try {
+      const { readAt } = await markRead({ data: { notificationId: notification.id } });
+      setNotifications((current) =>
+        current.map((row) => (row.id === notification.id ? { ...row, read_at: readAt } : row)),
+      );
+      invalidateNotificationCount(scope, businessId);
+    } catch {
+      // Keep the unread marker so the user can retry.
     }
-
-    const metadata = isRecord(notification.metadata) ? notification.metadata : {};
-    if (scope === "business" && businessId) {
-      if (metadata.entity_type === "card" && typeof metadata.entity_id === "string") {
-        navigate({
-          to: "/business/cards/$id",
-          params: { id: metadata.entity_id },
-          search: { businessId },
-        });
-      } else if (metadata.entity_type === "business") {
-        navigate({ to: "/business/edit", search: { businessId } });
-      } else {
-        navigate({ to: "/business", search: { businessId } });
-      }
-      return;
-    }
-
-    if (typeof metadata.card_instance_id === "string") {
-      try {
-        sessionStorage.setItem("open_card_id", metadata.card_instance_id);
-      } catch {
-        // The wallet still opens even when storage is unavailable.
-      }
-    }
-    navigate({ to: "/wallet" });
   };
 
   const markEverythingRead = async () => {
@@ -141,7 +113,7 @@ export function NotificationsInbox({
               <button
                 key={notification.id}
                 type="button"
-                onClick={() => void openNotification(notification)}
+                onClick={() => void markOneRead(notification)}
                 className={`flex w-full items-start gap-3 rounded-2xl border p-4 text-left transition-colors hover:bg-muted/40 ${
                   notification.read_at
                     ? "border-border bg-card"
@@ -204,8 +176,4 @@ function formatNotificationTime(value: string) {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   }
   return date.toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" });
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }

@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, Copy, Maximize2, QrCode, X } from "lucide-react";
 import { QrDisplay } from "@/components/QrDisplay";
 import { Button } from "@/components/ui/button";
 import { customerQrValue, shortCustomerCode } from "@/lib/customer-code";
+import { setUserQrBrightness } from "@/lib/native";
 import { cn } from "@/lib/utils";
 
 type CustomerQrCardProps = {
@@ -18,6 +19,11 @@ export function CustomerQrCard({ qrToken, userId, displayName, className }: Cust
   const [copied, setCopied] = useState(false);
   const shortCode = shortCustomerCode(userId);
   const value = customerQrValue(qrToken || userId);
+
+  useEffect(() => {
+    setUserQrBrightness(expanded);
+    return () => setUserQrBrightness(false);
+  }, [expanded]);
 
   const copyCode = async () => {
     try {
