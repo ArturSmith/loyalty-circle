@@ -19,6 +19,9 @@ import { LanguageSwitcher } from "@/i18n";
 import { CustomerQrCard } from "@/components/CustomerQrCard";
 
 export const Route = createFileRoute("/_authenticated/profile")({
+  validateSearch: (search: Record<string, unknown>): { edit?: boolean } => ({
+    edit: search.edit === true || search.edit === "true" || search.edit === "1" ? true : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Your profile — ClubCarder" },
@@ -34,8 +37,10 @@ export const Route = createFileRoute("/_authenticated/profile")({
 
 function Profile() {
   const navigate = useNavigate();
+  const { edit: openEditor } = Route.useSearch();
   const { profile, loading, reload } = useProfile();
   const [displayName, setDisplayName] = useState("");
+  const [email, setEmail] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarPath, setAvatarPath] = useState<string | null>(null);
@@ -49,12 +54,17 @@ function Profile() {
   useEffect(() => {
     if (!profile) return;
     setDisplayName(profile.displayName ?? "");
+    setEmail(profile.email ?? "");
     // <input type="date"> needs a bare YYYY-MM-DD, but the stored value may be
     // a full timestamp.
     setDateOfBirth((profile.dateOfBirth ?? "").slice(0, 10));
     setAvatarUrl(profile.avatarUrl);
     setAvatarPath(profile.avatarPath);
   }, [profile]);
+
+  useEffect(() => {
+    if (openEditor) setEditing(true);
+  }, [openEditor]);
 
   useEffect(() => {
     checkStaffAdmin({}).then((result) => setIsStaffAdmin(result.admin)).catch(() => setIsStaffAdmin(false));
@@ -93,6 +103,11 @@ function Profile() {
 
   const save = async () => {
     if (!profile) return;
+    const normalizedEmail = email.trim();
+    if (!/^\S+@\S+\.\S+$/.test(normalizedEmail)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
     setSaving(true);
     const { error } = await supabase
       .from("profiles")
@@ -112,8 +127,15 @@ function Profile() {
       if (dobError) { setSaving(false); toast.error(dobError.message); return; }
     }
 
+    let emailConfirmationSent = false;
+    if (normalizedEmail.toLowerCase() !== profile.email.trim().toLowerCase()) {
+      const { error: emailError } = await supabase.auth.updateUser({ email: normalizedEmail });
+      if (emailError) { setSaving(false); toast.error(emailError.message); return; }
+      emailConfirmationSent = true;
+    }
+
     setSaving(false);
-    toast.success("Profile saved");
+    toast.success(emailConfirmationSent ? "Check your email to confirm the new address." : "Profile saved");
     setEditing(false);
     reload();
   };
@@ -121,6 +143,7 @@ function Profile() {
   const cancelEdit = () => {
     // Discard the draft, not just the form.
     setDisplayName(profile?.displayName ?? "");
+    setEmail(profile?.email ?? "");
     setDateOfBirth((profile?.dateOfBirth ?? "").slice(0, 10));
     setEditing(false);
   };
@@ -193,7 +216,21 @@ function Profile() {
                     profile.displayName || "—"
                   )}
                 </Row>
-                <Row label="Email">{profile.email}</Row>
+                <Row label="Email">
+                  {editing ? (
+                    <Input
+                      aria-label="Email"
+                      type="email"
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
+                      placeholder="Email"
+                      className="h-8 text-right"
+                      autoComplete="email"
+                    />
+                  ) : (
+                    profile.email || "—"
+                  )}
+                </Row>
                 <Row label="Date of birth">
                   {editing ? (
                     <Input

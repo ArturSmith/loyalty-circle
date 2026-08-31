@@ -5,7 +5,7 @@ import { StampCard } from "@/components/StampCard";
 import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, CreditCard, Gift, RotateCcw, ScanLine, Snowflake, Sparkles, Store, Trash2, X } from "lucide-react";
+import { Check, CreditCard, Gift, RotateCcw, ScanLine, Snowflake, Sparkles, Store, Trash2, UserRoundPen, X } from "lucide-react";
 import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { getPaddleEnvironment } from "@/lib/paddle";
@@ -66,6 +66,14 @@ function Wallet() {
 
   const fetchWallet = useServerFn(getWalletCards);
   const { profile, loading: profileLoading } = useProfile();
+  const missingProfileFields = useMemo(() => {
+    if (!profile) return [];
+    return [
+      !profile.displayName?.trim() ? "Full name" : null,
+      !profile.dateOfBirth?.trim() ? "Date of birth" : null,
+      !profile.email?.trim() ? "Email" : null,
+    ].filter((field): field is string => field !== null);
+  }, [profile]);
 
   const displayInstances = useMemo(() => {
     if (!frontId) return instances;
@@ -152,9 +160,13 @@ function Wallet() {
   useEffect(() => {
     if (loading || instances.length === 0) return;
     let target: string | null = null;
-    try { target = sessionStorage.getItem("open_card_id"); } catch {}
+    try { target = sessionStorage.getItem("open_card_id"); } catch {
+      // Session storage may be unavailable in a restricted browser context.
+    }
     if (!target) return;
-    try { sessionStorage.removeItem("open_card_id"); } catch {}
+    try { sessionStorage.removeItem("open_card_id"); } catch {
+      // The card can still be opened normally if cleanup is unavailable.
+    }
     if (instances.find((i) => i.id === target)) {
       setExpandedId(target);
       setFlippedId(target);
@@ -243,6 +255,45 @@ function Wallet() {
         </div>
 
       </header>
+
+      {!profileLoading && profile && missingProfileFields.length > 0 ? (
+        <section className="relative px-5 pb-4" aria-labelledby="complete-profile-title">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mx-auto max-w-md rounded-2xl border border-primary/25 bg-primary/10 p-4 shadow-sm"
+          >
+            <div className="flex items-start gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                <UserRoundPen className="h-5 w-5" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <h2 id="complete-profile-title" className="font-display text-base font-bold">
+                  Complete your profile
+                </h2>
+                <p className="mt-1 text-sm leading-snug text-muted-foreground">
+                  Add the missing details so businesses can recognize you and you can use all account features.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-1.5" aria-label="Missing information">
+                  {missingProfileFields.map((field) => (
+                    <span
+                      key={field}
+                      className="rounded-full border border-primary/20 bg-background/80 px-2.5 py-1 text-xs font-medium text-foreground"
+                    >
+                      {field}
+                    </span>
+                  ))}
+                </div>
+                <Button asChild size="sm" className="mt-4 w-full gap-2 rounded-xl sm:w-auto">
+                  <Link to="/profile" search={{ edit: true }}>
+                    <UserRoundPen className="h-4 w-4" /> Complete profile
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        </section>
+      ) : null}
 
       {profile ? (
         <div className="relative px-5 pb-4">
