@@ -15,7 +15,7 @@ function CustomerNotifications() {
       title="Notifications"
       subtitle="Updates about your loyalty cards and rewards."
       backAction={
-        <BackButton label="Back to profile" onClick={() => navigate({ to: "/profile" })} />
+        <BackButton label="Back to my wallet" onClick={() => navigate({ to: "/wallet" })} />
       }
       contentClassName="flex-1 px-5 py-6"
     >

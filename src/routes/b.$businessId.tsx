@@ -193,7 +193,9 @@ function BusinessPublic() {
         next.set(templateId, result.instanceId);
         return next;
       });
-      try { sessionStorage.setItem("open_card_id", result.instanceId); } catch {}
+      try { sessionStorage.removeItem("open_card_id"); } catch {
+        // Wallet still opens normally when session storage is unavailable.
+      }
       // Wallet is a persistent bottom tab and may still hold the list from
       // before this claim. Force its next mount to load the newly-added card
       // instead of briefly rendering that stale snapshot.

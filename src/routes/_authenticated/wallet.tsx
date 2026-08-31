@@ -558,30 +558,23 @@ function Wallet() {
               initial={{ scale: 0.85, rotateY: 90 }} animate={{ scale: 1, rotateY: 0 }} exit={{ scale: 0.85, rotateY: -90 }}
               transition={{ type: "spring", damping: 22, stiffness: 200 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative max-h-[90dvh] w-full max-w-sm overflow-y-auto rounded-3xl bg-paper paper-grain card-shadow p-8 text-center"
+              className="relative max-h-[90dvh] w-full max-w-sm overflow-y-auto rounded-3xl bg-paper paper-grain card-shadow px-6 pb-6 pt-12 text-center"
             >
               <button onClick={() => setFlippedId(null)} className="absolute top-3 right-3 p-2 opacity-60 hover:opacity-100">
                 <X className="h-4 w-4" />
               </button>
-              <OrnamentDivider className="w-40 mx-auto opacity-70" />
-              {isCompleted ? (
-                <>
-                  <div className="mt-3 inline-flex items-center gap-2 text-gold">
+              {isCompleted && (
+                <div className="mb-4 rounded-2xl bg-secondary px-4 py-3">
+                  <div className="inline-flex items-center gap-2 text-gold">
                     <Sparkles className="h-4 w-4" />
                     <span className="text-xs uppercase tracking-widest">Card complete</span>
                     <Sparkles className="h-4 w-4" />
                   </div>
-                  <h3 className="font-display text-2xl mt-2">Reward unlocked</h3>
-                  <p className="text-xs text-muted-foreground">Open Vouchers to redeem it, then renew to start again.</p>
-                </>
-              ) : (
-                <>
-                  <h3 className="font-display text-2xl mt-3">Use My QR to stamp</h3>
-                  <p className="text-xs text-muted-foreground">Show the customer QR at the top of Wallet.</p>
-                </>
+                  <p className="mt-1 text-sm font-semibold">Reward unlocked</p>
+                </div>
               )}
               {isFrozen && (
-                <div className="mt-4 rounded-xl border border-sky-300 bg-sky-50 px-3 py-2 text-left text-xs text-sky-900">
+                <div className="mb-4 rounded-xl border border-sky-300 bg-sky-50 px-3 py-2 text-left text-xs text-sky-900">
                   <div className="flex items-center gap-1.5 font-semibold">
                     <Snowflake className="h-3.5 w-3.5" /> Card frozen
                   </div>
@@ -592,19 +585,11 @@ function Wallet() {
                   </p>
                 </div>
               )}
-              <OrnamentDivider className="w-40 mx-auto mt-6 opacity-70" />
               {inst && <BusinessInfoPanel business={inst.template.business} businessId={inst.template.business.id} />}
               {inst && (
                 <CardTermsSection
                   terms={inst.terms_accepted_text ?? inst.template.terms_and_conditions}
                   className="mt-4 border-ink/10 bg-secondary text-left"
-                  meta={
-                    <span className="shrink-0 text-[10px] uppercase tracking-wider text-muted-foreground">
-                      {inst.terms_accepted_version
-                        ? `Accepted version ${inst.terms_accepted_version}`
-                        : `Version ${inst.template.terms_version}`}
-                    </span>
-                  }
                 />
               )}
 
