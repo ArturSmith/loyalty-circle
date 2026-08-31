@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { Logo } from "@/components/Logo";
 import { motion } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Phone } from "lucide-react";
 import { z } from "zod";
 import { LanguageSwitcher } from "@/i18n";
 
