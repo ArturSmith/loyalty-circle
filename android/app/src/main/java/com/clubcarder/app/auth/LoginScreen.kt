@@ -214,17 +214,12 @@ private fun AuthContent(state: LoginUiState, actions: LoginActions) {
             )
         }
 
-        if (state.showSocialButtons) {
-            VerticalSpace(18)
-            SocialRow(state = state, actions = actions)
-        }
-
         if (state.showBottomLinks) {
-            VerticalSpace(10)
+            VerticalSpace(5)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
+                    .padding(horizontal = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -242,6 +237,11 @@ private fun AuthContent(state: LoginUiState, actions: LoginActions) {
                     onClick = actions.onCreateAccount,
                 )
             }
+        }
+
+        if (state.showSocialButtons) {
+            VerticalSpace(18)
+            SocialRow(state = state, actions = actions)
         }
     }
 }
