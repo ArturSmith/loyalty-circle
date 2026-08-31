@@ -522,7 +522,7 @@ function Wallet() {
                                 lastStamp={inst.stamps_count}
                                 disableShadow
                                 face={faceFlipped.has(inst.id) ? "stamps" : "info"}
-                                showFlipButton
+                                showFlipButton={i === displayInstances.length - 1}
                                 onFlip={() => {
                                   setFaceFlipped((prev) => {
                                     const next = new Set(prev);
