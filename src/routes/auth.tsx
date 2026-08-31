@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { Logo } from "@/components/Logo";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Mail, Phone } from "lucide-react";
+import { AlertCircle, ArrowLeft, Mail, Phone } from "lucide-react";
 import {
   getCountries,
   getCountryCallingCode,
@@ -29,7 +29,12 @@ const searchSchema = z.object({ redirect: z.string().optional() }).catch({ redir
 
 export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
-  head: () => ({ meta: [{ title: "Sign in — ClubCarder" }, { name: "description", content: "Sign in to collect stamps and manage your loyalty cards." }] }),
+  head: () => ({
+    meta: [
+      { title: "Sign in — ClubCarder" },
+      { name: "description", content: "Sign in to collect stamps and manage your loyalty cards." },
+    ],
+  }),
   component: AuthPage,
 });
 
@@ -53,6 +58,7 @@ function AuthPage() {
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [sending, setSending] = useState(false);
+  const [phoneAuthError, setPhoneAuthError] = useState<string | null>(null);
   const [signupEmail, setSignupEmail] = useState<string | null>(null);
   const [mode, setMode] = useState<Mode>("phone");
 
@@ -77,7 +83,9 @@ function AuthPage() {
 
   const stashRedirect = () => {
     if (!explicitRedirect) return;
-    try { sessionStorage.setItem("post_auth_redirect", explicitRedirect); } catch {}
+    try {
+      sessionStorage.setItem("post_auth_redirect", explicitRedirect);
+    } catch {}
   };
 
   const handleGoogle = async () => {
@@ -89,15 +97,23 @@ function AuthPage() {
       // were last time. Always show the account chooser.
       extraParams: { prompt: "select_account" },
     });
-    if (result.error) { toast.error("Sign-in failed. Try again."); return; }
+    if (result.error) {
+      toast.error("Sign-in failed. Try again.");
+      return;
+    }
     if (result.redirected) return;
     goNext();
   };
 
   const handleApple = async () => {
     stashRedirect();
-    const result = await lovable.auth.signInWithOAuth("apple", { redirect_uri: window.location.origin });
-    if (result.error) { toast.error("Sign-in failed. Try again."); return; }
+    const result = await lovable.auth.signInWithOAuth("apple", {
+      redirect_uri: window.location.origin,
+    });
+    if (result.error) {
+      toast.error("Sign-in failed. Try again.");
+      return;
+    }
     if (result.redirected) return;
     goNext();
   };
@@ -108,7 +124,10 @@ function AuthPage() {
     setSending(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setSending(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     goNext();
   };
 
@@ -116,16 +135,37 @@ function AuthPage() {
     e.preventDefault();
     if (!email || !password) return;
     const name = fullName.trim();
-    if (name.length < 2 || name.length > 80) { toast.error("Please enter your name (2–80 characters)"); return; }
-    if (!dob) { toast.error("Please enter your date of birth"); return; }
+    if (name.length < 2 || name.length > 80) {
+      toast.error("Please enter your name (2–80 characters)");
+      return;
+    }
+    if (!dob) {
+      toast.error("Please enter your date of birth");
+      return;
+    }
     const dobDate = new Date(dob + "T00:00:00");
-    if (Number.isNaN(dobDate.getTime())) { toast.error("Invalid date of birth"); return; }
+    if (Number.isNaN(dobDate.getTime())) {
+      toast.error("Invalid date of birth");
+      return;
+    }
     const now = new Date();
     const age = (now.getTime() - dobDate.getTime()) / (365.25 * 24 * 3600 * 1000);
-    if (age < 13) { toast.error("You must be at least 13 years old"); return; }
-    if (age > 120) { toast.error("Please enter a valid date of birth"); return; }
-    if (password.length < 6) { toast.error("Password must be at least 6 characters"); return; }
-    if (password !== confirmPassword) { toast.error("Passwords don't match"); return; }
+    if (age < 13) {
+      toast.error("You must be at least 13 years old");
+      return;
+    }
+    if (age > 120) {
+      toast.error("Please enter a valid date of birth");
+      return;
+    }
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+    if (password !== confirmPassword) {
+      toast.error("Passwords don't match");
+      return;
+    }
     setSending(true);
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -136,10 +176,17 @@ function AuthPage() {
       },
     });
     setSending(false);
-    if (error) { toast.error(error.message); return; }
-    if (data.session) { goNext(); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    if (data.session) {
+      goNext();
+      return;
+    }
     setSignupEmail(email);
-    setPassword(""); setConfirmPassword("");
+    setPassword("");
+    setConfirmPassword("");
   };
 
   const handleResetPassword = async (e: React.FormEvent) => {
@@ -150,13 +197,17 @@ function AuthPage() {
       redirectTo: window.location.origin + "/auth/reset-password",
     });
     setSending(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Check your inbox for password reset link");
     setMode("email");
     setEmail("");
   };
 
   const updatePhone = (value: string) => {
+    setPhoneAuthError(null);
     if (value.trim().startsWith("+")) {
       const parsed = parsePhoneNumberFromString(value);
       if (parsed?.country) {
@@ -170,41 +221,73 @@ function AuthPage() {
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    setPhoneAuthError(null);
     const parsedPhone = parsePhoneNumberFromString(phone, phoneCountry);
     if (!parsedPhone?.isValid()) {
-      toast.error("Enter a valid phone number");
+      const message = "Enter a valid phone number";
+      setPhoneAuthError(message);
+      toast.error(message);
       return;
     }
     setSending(true);
     const { error } = await supabase.auth.signInWithOtp({ phone: parsedPhone.number });
     setSending(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      const message = error.message || "The SMS code could not be sent. Please try again.";
+      setPhoneAuthError(message);
+      toast.error("Phone sign-in failed", { description: message });
+      return;
+    }
+    setPhoneAuthError(null);
     setOtpSent(true);
     toast.success("We sent you a 6-digit code by SMS");
   };
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    setPhoneAuthError(null);
     const code = otp.trim();
-    if (code.length < 4) { toast.error("Enter the code from the SMS"); return; }
+    if (code.length < 4) {
+      const message = "Enter the code from the SMS";
+      setPhoneAuthError(message);
+      toast.error(message);
+      return;
+    }
     const parsedPhone = parsePhoneNumberFromString(phone, phoneCountry);
     if (!parsedPhone?.isValid()) {
-      toast.error("Enter a valid phone number");
+      const message = "Enter a valid phone number";
+      setPhoneAuthError(message);
+      toast.error(message);
       setOtpSent(false);
       return;
     }
     setSending(true);
-    const { error } = await supabase.auth.verifyOtp({ phone: parsedPhone.number, token: code, type: "sms" });
+    const { error } = await supabase.auth.verifyOtp({
+      phone: parsedPhone.number,
+      token: code,
+      type: "sms",
+    });
     setSending(false);
-    if (error) { toast.error(error.message); return; }
-    setOtp(""); setOtpSent(false);
+    if (error) {
+      const message =
+        error.message || "The verification code could not be confirmed. Please try again.";
+      setPhoneAuthError(message);
+      toast.error("Phone sign-in failed", { description: message });
+      return;
+    }
+    setPhoneAuthError(null);
+    setOtp("");
+    setOtpSent(false);
     goNext();
   };
 
   const switchMode = (next: Mode) => {
     setMode(next);
-    setPassword(""); setConfirmPassword("");
-    setOtp(""); setOtpSent(false);
+    setPassword("");
+    setConfirmPassword("");
+    setOtp("");
+    setOtpSent(false);
+    setPhoneAuthError(null);
   };
 
   return (
@@ -229,7 +312,11 @@ function AuthPage() {
             <Logo className="h-14 w-14 rotate-[-8deg] drop-shadow-md" />
             <OrnamentDivider className="my-3 w-28" />
             <h1 className="font-display text-3xl font-semibold leading-tight">
-              {mode === "signup" ? "Create your account" : mode === "reset" ? "Reset password" : "Welcome to ClubCarder"}
+              {mode === "signup"
+                ? "Create your account"
+                : mode === "reset"
+                  ? "Reset password"
+                  : "Welcome to ClubCarder"}
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
               {mode === "signup"
@@ -244,21 +331,38 @@ function AuthPage() {
             {signupEmail ? (
               <div className="rounded-xl border border-ink/10 bg-background/60 p-6 text-center space-y-4">
                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-mint/30 text-accent-foreground">
-                  <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25H4.5a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 21.75 4.5H4.5A2.25 2.25 0 0 0 2.25 6.75m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-6 w-6"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    aria-hidden
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25H4.5a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 21.75 4.5H4.5A2.25 2.25 0 0 0 2.25 6.75m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"
+                    />
                   </svg>
                 </div>
                 <div>
                   <h2 className="font-display text-lg font-semibold">Confirm your email</h2>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    We sent a confirmation link to <span className="font-medium text-foreground">{signupEmail}</span>. Tap the link in the email to finish signing up.
+                    We sent a confirmation link to{" "}
+                    <span className="font-medium text-foreground">{signupEmail}</span>. Tap the link
+                    in the email to finish signing up.
                   </p>
                 </div>
                 <Button
                   type="button"
                   variant="outline"
                   className="w-full"
-                  onClick={() => { setSignupEmail(null); switchMode("phone"); setEmail(""); }}
+                  onClick={() => {
+                    setSignupEmail(null);
+                    switchMode("phone");
+                    setEmail("");
+                  }}
                 >
                   Back to sign in
                 </Button>
@@ -273,11 +377,17 @@ function AuthPage() {
                   transition={{ duration: 0.15 }}
                 >
                   {mode === "phone" && (
-                    <form onSubmit={otpSent ? handleVerifyOtp : handleSendOtp} className="space-y-3">
+                    <form
+                      onSubmit={otpSent ? handleVerifyOtp : handleSendOtp}
+                      className="space-y-3"
+                    >
                       <div className="flex gap-2">
                         <Select
                           value={phoneCountry}
-                          onValueChange={(value) => setPhoneCountry(value as CountryCode)}
+                          onValueChange={(value) => {
+                            setPhoneCountry(value as CountryCode);
+                            setPhoneAuthError(null);
+                          }}
                           disabled={otpSent}
                         >
                           <SelectTrigger
@@ -295,7 +405,9 @@ function AuthPage() {
                             {countryOptions.map(({ country, name, callingCode }) => (
                               <SelectItem key={country} value={country}>
                                 <span className="flex items-center gap-2" data-i18n-ignore>
-                                  <span className="w-6 text-center" aria-hidden="true">{countryFlag(country)}</span>
+                                  <span className="w-6 text-center" aria-hidden="true">
+                                    {countryFlag(country)}
+                                  </span>
                                   <span className="min-w-0 flex-1 truncate">{name}</span>
                                   <span className="text-muted-foreground">+{callingCode}</span>
                                 </span>
@@ -329,7 +441,20 @@ function AuthPage() {
                           autoFocus
                         />
                       )}
-                      <Button type="submit" disabled={sending} className="h-12 w-full rounded-xl text-base font-semibold">
+                      {phoneAuthError && (
+                        <div
+                          role="alert"
+                          className="flex items-start gap-2 rounded-xl border border-destructive/25 bg-destructive/5 px-3 py-2.5 text-sm text-destructive"
+                        >
+                          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                          <span className="min-w-0 break-words">{phoneAuthError}</span>
+                        </div>
+                      )}
+                      <Button
+                        type="submit"
+                        disabled={sending}
+                        className="h-12 w-full rounded-xl text-base font-semibold"
+                      >
                         {sending ? "Please wait…" : otpSent ? "Verify code" : "Continue"}
                       </Button>
                       {otpSent && (
@@ -338,7 +463,11 @@ function AuthPage() {
                           variant="ghost"
                           size="sm"
                           className="w-full text-xs"
-                          onClick={() => { setOtpSent(false); setOtp(""); }}
+                          onClick={() => {
+                            setOtpSent(false);
+                            setOtp("");
+                            setPhoneAuthError(null);
+                          }}
                         >
                           Change number
                         </Button>
@@ -364,11 +493,21 @@ function AuthPage() {
                         onChange={(e) => setPassword(e.target.value)}
                         className="h-12 rounded-xl bg-muted/50"
                       />
-                      <Button type="submit" disabled={sending} className="h-12 w-full rounded-xl text-base font-semibold">
+                      <Button
+                        type="submit"
+                        disabled={sending}
+                        className="h-12 w-full rounded-xl text-base font-semibold"
+                      >
                         {sending ? "Signing in…" : "Sign in"}
                       </Button>
                       <div className="flex justify-center">
-                        <Button type="button" variant="ghost" size="sm" className="text-xs" onClick={() => switchMode("reset")}>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs"
+                          onClick={() => switchMode("reset")}
+                        >
                           Forgot password?
                         </Button>
                       </div>
@@ -388,7 +527,9 @@ function AuthPage() {
                         className="h-12 rounded-xl bg-muted/50"
                       />
                       <div className="space-y-1">
-                        <label htmlFor="dob" className="px-1 text-xs text-muted-foreground">Date of birth</label>
+                        <label htmlFor="dob" className="px-1 text-xs text-muted-foreground">
+                          Date of birth
+                        </label>
                         <Input
                           id="dob"
                           type="date"
@@ -430,10 +571,20 @@ function AuthPage() {
                       {confirmPassword.length > 0 && confirmPassword !== password && (
                         <p className="-mt-2 text-xs text-destructive">Passwords don't match</p>
                       )}
-                      <Button type="submit" disabled={sending} className="h-12 w-full rounded-xl text-base font-semibold">
+                      <Button
+                        type="submit"
+                        disabled={sending}
+                        className="h-12 w-full rounded-xl text-base font-semibold"
+                      >
                         {sending ? "Creating account…" : "Sign up"}
                       </Button>
-                      <Button type="button" variant="ghost" size="sm" className="w-full text-xs" onClick={() => switchMode("phone")}>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="w-full text-xs"
+                        onClick={() => switchMode("phone")}
+                      >
                         Already have an account? Sign in
                       </Button>
                     </form>
@@ -449,10 +600,20 @@ function AuthPage() {
                         onChange={(e) => setEmail(e.target.value)}
                         className="h-12 rounded-xl bg-muted/50"
                       />
-                      <Button type="submit" disabled={sending} className="h-12 w-full rounded-xl text-base font-semibold">
+                      <Button
+                        type="submit"
+                        disabled={sending}
+                        className="h-12 w-full rounded-xl text-base font-semibold"
+                      >
                         {sending ? "Sending reset link…" : "Send password reset link"}
                       </Button>
-                      <Button type="button" variant="ghost" size="sm" className="w-full text-xs" onClick={() => switchMode("phone")}>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="w-full text-xs"
+                        onClick={() => switchMode("phone")}
+                      >
                         Back to sign in
                       </Button>
                     </form>
@@ -485,11 +646,19 @@ function AuthPage() {
                 Need help?
               </Link>
               {mode !== "signup" ? (
-                <button type="button" onClick={() => switchMode("signup")} className="font-medium text-foreground/80 hover:text-foreground">
+                <button
+                  type="button"
+                  onClick={() => switchMode("signup")}
+                  className="font-medium text-foreground/80 hover:text-foreground"
+                >
                   Create account
                 </button>
               ) : (
-                <button type="button" onClick={() => switchMode("phone")} className="font-medium text-foreground/80 hover:text-foreground">
+                <button
+                  type="button"
+                  onClick={() => switchMode("phone")}
+                  className="font-medium text-foreground/80 hover:text-foreground"
+                >
                   Sign in
                 </button>
               )}
@@ -531,10 +700,22 @@ function SocialRoundButton({
 function GoogleIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden>
-      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.75h3.57c2.08-1.92 3.28-4.74 3.28-8.07z"/>
-      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.75c-.99.66-2.25 1.06-3.71 1.06-2.86 0-5.29-1.93-6.15-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-      <path fill="#FBBC05" d="M5.85 14.12c-.22-.66-.35-1.36-.35-2.12s.13-1.46.35-2.12V7.04H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.96l3.67-2.84z"/>
-      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.04l3.67 2.84C6.71 7.31 9.14 5.38 12 5.38z"/>
+      <path
+        fill="#4285F4"
+        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.75h3.57c2.08-1.92 3.28-4.74 3.28-8.07z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.75c-.99.66-2.25 1.06-3.71 1.06-2.86 0-5.29-1.93-6.15-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.85 14.12c-.22-.66-.35-1.36-.35-2.12s.13-1.46.35-2.12V7.04H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.96l3.67-2.84z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.04l3.67 2.84C6.71 7.31 9.14 5.38 12 5.38z"
+      />
     </svg>
   );
 }

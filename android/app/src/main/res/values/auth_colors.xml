@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="auth_background">#F5F6F8</color>
+    <color name="auth_card">#FFFFFFFF</color>
+    <color name="auth_text">#18202C</color>
+    <color name="auth_muted">#7C8797</color>
+    <color name="auth_border">#E3E7EC</color>
+    <color name="auth_input">#F7F8FA</color>
+    <color name="auth_primary">#3583F5</color>
+    <color name="auth_error">#C62828</color>
+    <color name="auth_error_background">#FFF1F1</color>
+</resources>
