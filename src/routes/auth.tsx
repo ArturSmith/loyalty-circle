@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { Logo } from "@/components/Logo";
 import { motion } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Phone } from "lucide-react";
 import { z } from "zod";
 import { LanguageSwitcher } from "@/i18n";
 
@@ -28,10 +28,13 @@ function AuthPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [dob, setDob] = useState("");
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [signupEmail, setSignupEmail] = useState<string | null>(null);
-  const [mode, setMode] = useState<"password" | "signup" | "reset">("password");
+  const [mode, setMode] = useState<"password" | "signup" | "reset" | "phone">("password");
 
   const explicitRedirect = redirect && redirect.startsWith("/") ? redirect : null;
 
@@ -138,6 +141,36 @@ function AuthPage() {
     setEmail("");
   };
 
+  const normalizedPhone = phone.trim().replace(/[\s()-]/g, "");
+
+  const handleSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!/^\+[1-9]\d{6,14}$/.test(normalizedPhone)) {
+      toast.error("Enter your phone number in international format, e.g. +4791234567");
+      return;
+    }
+    setSending(true);
+    const { error } = await supabase.auth.signInWithOtp({ phone: normalizedPhone });
+    setSending(false);
+    if (error) { toast.error(error.message); return; }
+    setOtpSent(true);
+    toast.success("We sent you a 6-digit code by SMS");
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const code = otp.trim();
+    if (code.length < 4) { toast.error("Enter the code from the SMS"); return; }
+    setSending(true);
+    const { error } = await supabase.auth.verifyOtp({ phone: normalizedPhone, token: code, type: "sms" });
+    setSending(false);
+    if (error) { toast.error(error.message); return; }
+    setOtp(""); setOtpSent(false);
+    goNext();
+  };
+
+
+
   return (
     <div className="min-h-screen px-4 py-10">
       <div className="mx-auto w-full max-w-sm">
@@ -193,12 +226,66 @@ function AuthPage() {
               <Button onClick={handleApple} className="w-full h-11" variant="outline">
                 <AppleIcon /> Continue with Apple
               </Button>
+              <Button
+                onClick={() => { setMode(mode === "phone" ? "password" : "phone"); setOtp(""); setOtpSent(false); }}
+                className="w-full h-11"
+                variant="outline"
+              >
+                <Phone className="mr-2 h-4 w-4" />
+                {mode === "phone" ? "Use email instead" : "Continue with phone"}
+              </Button>
 
               <div className="flex items-center gap-3 py-2 text-xs text-muted-foreground">
                 <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
               </div>
 
+              {mode === "phone" && (
+                <form onSubmit={otpSent ? handleVerifyOtp : handleSendOtp} className="space-y-3">
+                  <Input
+                    type="tel"
+                    required
+                    autoComplete="tel"
+                    placeholder="+4791234567"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    disabled={otpSent}
+                    className="h-11"
+                  />
+                  {otpSent && (
+                    <Input
+                      type="text"
+                      required
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      maxLength={8}
+                      placeholder="6-digit code"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      className="h-11 tracking-widest"
+                    />
+                  )}
+                  <Button type="submit" disabled={sending} className="w-full h-11">
+                    {sending ? "Please wait…" : otpSent ? "Verify code" : "Send code by SMS"}
+                  </Button>
+                  {otpSent && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-xs"
+                      onClick={() => { setOtpSent(false); setOtp(""); }}
+                    >
+                      Change number
+                    </Button>
+                  )}
+                  <p className="text-center text-xs text-muted-foreground">
+                    New here? Signing in with your phone number creates your account automatically.
+                  </p>
+                </form>
+              )}
+
               {mode === "password" && (
+
             <form onSubmit={handlePassword} className="space-y-3">
               <Input
                 type="email"

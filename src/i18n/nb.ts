@@ -841,7 +841,6 @@ export const nb = {
   "Loyalty cards": "Lojalitetskort",
   "Compare which programs are creating repeat activity.": "Sammenlign hvilke programmer som skaper gjenbesøk.",
   "Inactive": "Inaktiv",
-  "Stamps": "Stempler",
   "Return rate": "Gjenbesøksrate",
   "Trend": "Utvikling",
   "A stamp represents a recorded loyalty visit. Revenue and purchases are not estimated without POS data.": "Et stempel representerer et registrert lojalitetsbesøk. Omsetning og kjøp estimeres ikke uten kassasystemdata.",

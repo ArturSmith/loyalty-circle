@@ -104,23 +104,25 @@ function AnalyticsScreen() {
     }
     setError(null);
 
-    void supabase
-      .rpc("get_business_value_analytics", { _business_id: businessId, _range_days: range })
-      .then(({ data, error: rpcError }) => {
+    void (async () => {
+      try {
+        const { data, error: rpcError } = await supabase.rpc("get_business_value_analytics", {
+          _business_id: businessId,
+          _range_days: range,
+        });
         if (rpcError) throw rpcError;
         if (cancelled) return;
         const parsed = parseBusinessAnalytics(data, range);
         setAnalytics(parsed);
         setNavigationCache(cacheKey, parsed);
-      })
-      .catch((reason) => {
+      } catch (reason) {
         if (!cancelled && !snapshot) {
           setError(describeAnalyticsError(reason));
         }
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setLoading(false);
-      });
+      }
+    })();
 
     return () => {
       cancelled = true;
