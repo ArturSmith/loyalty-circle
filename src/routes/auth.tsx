@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { Logo } from "@/components/Logo";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertCircle, ArrowLeft, Loader2, Mail, Phone } from "lucide-react";
+import { AlertCircle, ArrowLeft, Mail, Phone } from "lucide-react";
 import {
   getCountries,
   getCountryCallingCode,
@@ -25,14 +25,7 @@ import {
 import { z } from "zod";
 import { LanguageSwitcher, useLanguage } from "@/i18n";
 
-const searchSchema = z
-  .object({
-    redirect: z.string().optional(),
-    // Set by the native sign-in screen when it hands a social login over to the
-    // WebView. See `handOffToWeb` in LoginActivity.kt.
-    provider: z.enum(["google", "apple"]).optional(),
-  })
-  .catch({ redirect: undefined, provider: undefined });
+const searchSchema = z.object({ redirect: z.string().optional() }).catch({ redirect: undefined });
 
 export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
@@ -54,7 +47,7 @@ function countryFlag(country: CountryCode) {
 function AuthPage() {
   const navigate = useNavigate();
   const { locale, t } = useLanguage();
-  const { redirect, provider } = useSearch({ from: "/auth" });
+  const { redirect } = useSearch({ from: "/auth" });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -92,7 +85,9 @@ function AuthPage() {
     if (!explicitRedirect) return;
     try {
       sessionStorage.setItem("post_auth_redirect", explicitRedirect);
-    } catch {}
+    } catch {
+      // Private browsing or locked-down WebViews can disable session storage.
+    }
   };
 
   const handleGoogle = async () => {
@@ -124,23 +119,6 @@ function AuthPage() {
     if (result.redirected) return;
     goNext();
   };
-
-  // Arriving with `?provider=` means the native sign-in screen handed a social
-  // login over to us: start it immediately rather than showing a form the user
-  // has already filled the intent for.
-  const [handingOff, setHandingOff] = useState(provider != null);
-  const handoffStarted = useRef(false);
-  useEffect(() => {
-    if (!provider || handoffStarted.current) return;
-    handoffStarted.current = true;
-    const run = provider === "google" ? handleGoogle : handleApple;
-    // The param deliberately stays in the URL. Stripping it would call
-    // history.replaceState, and the native shell patches that to detect visits
-    // to /auth — it would see a bare /auth and reopen the native screen,
-    // cancelling the redirect that is already in flight.
-    void run().finally(() => setHandingOff(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [provider]);
 
   const handlePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -313,17 +291,6 @@ function AuthPage() {
     setOtpSent(false);
     setPhoneAuthError(null);
   };
-
-  if (handingOff) {
-    // The native shell sent us straight here to start a social login. Showing
-    // the form for the split second before the redirect fires just looks like
-    // a glitch.
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-muted/40 px-4 py-10">
