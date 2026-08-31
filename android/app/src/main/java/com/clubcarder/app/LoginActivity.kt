@@ -363,7 +363,7 @@ class LoginActivity : AppCompatActivity() {
             .putString(PENDING_REDIRECT, redirectPath ?: "")
             .apply()
 
-        val url = Uri.parse("https://clubcarder.com/~oauth/initiate").buildUpon()
+        val url = Uri.parse("https://clubcarder.com/api/public/auth/oauth-initiate").buildUpon()
             .appendQueryParameter("provider", provider)
             .appendQueryParameter("redirect_uri", OAUTH_CALLBACK)
             .appendQueryParameter("state", state)
@@ -375,19 +375,27 @@ class LoginActivity : AppCompatActivity() {
         val uri = intent.data ?: return
         if (uri.scheme != "com.clubcarder.app" || uri.host != "oauth-callback") return
 
-        val values = if (!uri.fragment.isNullOrEmpty()) {
-            Uri.parse("com.clubcarder.app://oauth-callback?${uri.fragment}")
-        } else {
-            uri
+        // Supabase returns the session in the fragment but leaves the query
+        // string of the callback alone, so `state` arrives in the query and the
+        // tokens in the fragment. Read both: parsing only the fragment dropped
+        // the state and made every sign-in look like a forgery.
+        val values = mutableMapOf<String, String>()
+        for (name in uri.queryParameterNames.orEmpty()) {
+            uri.getQueryParameter(name)?.let { values[name] = it }
+        }
+        uri.fragment?.takeIf { it.isNotEmpty() }?.let { fragment ->
+            val parsed = Uri.parse("$OAUTH_CALLBACK?$fragment")
+            for (name in parsed.queryParameterNames.orEmpty()) {
+                parsed.getQueryParameter(name)?.let { values[name] = it }
+            }
         }
 
         val viewModel = model
         val pending = getSharedPreferences(NATIVE_AUTH_PREFS, MODE_PRIVATE)
         val expectedState = pending.getString(PENDING_STATE, null)
-        val state = values.getQueryParameter("state")
+        val state = values["state"]
 
-        val error = values.getQueryParameter("error_description")
-            ?: values.getQueryParameter("error")
+        val error = values["error_description"] ?: values["error"]
         if (error != null) {
             viewModel.showError(error)
             return
@@ -397,9 +405,9 @@ class LoginActivity : AppCompatActivity() {
             return
         }
 
-        var refreshToken = values.getQueryParameter("refresh_token")
+        var refreshToken = values["refresh_token"]
         if (refreshToken.isNullOrEmpty()) {
-            values.getQueryParameter("response")?.let { encoded ->
+            values["response"]?.let { encoded ->
                 refreshToken = runCatching {
                     JSONObject(encoded).optString("refresh_token")
                 }.getOrNull()?.takeIf { it.isNotEmpty() }
