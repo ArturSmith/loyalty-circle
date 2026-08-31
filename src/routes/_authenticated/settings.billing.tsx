@@ -187,7 +187,7 @@ function BillingSettings() {
               <ExternalLink className="h-3.5 w-3.5 opacity-70" />
             </Button>
           ) : (
-            <Link to="/subscribe" className="block">
+            <Link to="/subscribe" search={{ returnTo: "/settings/billing" }} className="block">
               <Button className="w-full h-12">
                 <Sparkles className="h-4 w-4" />
                 {access.reason === "trialing" ? "Subscribe now" : "Start subscription"}

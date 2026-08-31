@@ -5,11 +5,13 @@ import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getPaddleEnvironment } from "@/lib/paddle";
+import { planFromTier } from "@/lib/plans";
+import { invalidateNavigationCache } from "@/lib/navigationCache";
 
 export const Route = createFileRoute("/checkout/success")({
   head: () => ({
     meta: [
-      { title: "Welcome to Pro — ClubCarder" },
+      { title: "Subscription confirmed — ClubCarder" },
       { name: "description", content: "Your ClubCarder Business subscription is active." },
     ],
   }),
@@ -54,20 +56,28 @@ function CheckoutSuccessPage() {
 
       const { data: subs } = await supabase
         .from("subscriptions")
-        .select("id,status,current_period_end")
+        .select("id,status,current_period_end,plan_tier")
         .eq("user_id", data.user.id)
         .eq("environment", env)
         .in("status", ["active", "trialing", "past_due"])
+        .order("created_at", { ascending: false })
         .limit(1);
 
-      if ((subs?.length ?? 0) > 0) {
-        toast.success("Welcome to Pro! Your subscription is active.");
+      const sub = subs?.[0] as { plan_tier?: string | null } | undefined;
+      if (sub) {
+        // The access hook seeds itself from this cache, so without clearing it
+        // the dashboard would greet a paying customer with the paywall.
+        invalidateNavigationCache();
+        toast.success(`Welcome to ${planFromTier(sub.plan_tier).name}!`, {
+          description: "Your subscription is active.",
+        });
         navigate({ to: target, replace: true });
         return;
       }
 
       if (attempts > 30) {
         // ~12s. Payment succeeded but confirmation is slow — send them on anyway.
+        invalidateNavigationCache();
         toast.success("Payment received. Your plan will activate in a moment.");
         navigate({ to: target, replace: true });
         return;
@@ -89,7 +99,7 @@ function CheckoutSuccessPage() {
         <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
           <Sparkles className="h-6 w-6" />
         </div>
-        <h1 className="mt-4 font-display text-2xl font-semibold">You're on Pro</h1>
+        <h1 className="mt-4 font-display text-2xl font-semibold">Payment received</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Finalizing your subscription and taking you back…
         </p>

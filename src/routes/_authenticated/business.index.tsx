@@ -13,6 +13,7 @@ import { motion } from "framer-motion";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { Plus, QrCode, ScanLine, Users, Stamp as StampIco, Wallet as WalletIcon, Pencil, Menu, Settings, LogOut, Download, CreditCard, Sparkles, HelpCircle, Mail, ArrowLeft, MessageCircle, Building2, BarChart3, RefreshCcw, TicketCheck, UserPlus } from "lucide-react";
 import { useBusinessAccess } from "@/hooks/useBusinessAccess";
+import { useEntitlements } from "@/hooks/useEntitlements";
 import { useBusinessPermissions } from "@/hooks/useBusinessPermissions";
 import { StampCard } from "@/components/StampCard";
 import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
@@ -527,11 +528,14 @@ function BusinessDashboard() {
 
 function PlanBadge({ isOwner }: { isOwner: boolean }) {
   const access = useBusinessAccess();
+  const ent = useEntitlements();
   if (!isOwner || access.loading) return null;
   if (access.isSubscribed) {
+    // The name comes from the subscription's plan_tier rather than a literal:
+    // the badge used to read "Pro", which is not even one of the three plans.
     return (
       <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
-        <Sparkles className="h-3 w-3" /> Pro
+        <Sparkles className="h-3 w-3" /> {ent.loading ? "…" : ent.plan.name}
       </span>
     );
   }

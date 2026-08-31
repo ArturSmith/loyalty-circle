@@ -24,6 +24,14 @@ export const Route = createFileRoute("/_authenticated/subscribe")({
       { name: "description", content: "Pick the ClubCarder plan that fits your business." },
     ],
   }),
+  validateSearch: (search: Record<string, unknown>): { returnTo?: string } => {
+    const returnTo = typeof search.returnTo === "string" ? search.returnTo : undefined;
+    // Same-origin absolute paths only. `//evil.com` is a protocol-relative URL,
+    // so without the second test it would send the user off-site after paying.
+    return returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//")
+      ? { returnTo }
+      : {};
+  },
   component: SubscribePage,
 });
 
@@ -31,6 +39,7 @@ const TRIAL_PLAN = PLANS[TRIAL_TIER];
 
 function SubscribePage() {
   const navigate = useNavigate();
+  const { returnTo } = Route.useSearch();
   const access = useBusinessAccess();
   const [loadingTier, setLoadingTier] = useState<string | null>(null);
 
@@ -66,16 +75,16 @@ function SubscribePage() {
         navigate({ to: "/business/onboarding" });
         return;
       }
-      // Remember where to send the user after payment — default to business dashboard.
+      // Where to land after paying. The caller states this explicitly: reading
+      // it from `document.referrer` reported the last *full page load*, not the
+      // route the user actually came from. After client-side navigation that is
+      // stale — typically the sign-in landing page — so paying customers were
+      // dropped on /wallet instead of the dashboard they had just upgraded.
+      const destination = returnTo && returnTo !== "/subscribe" ? returnTo : "/business";
       try {
-        const prev =
-          document.referrer && new URL(document.referrer).origin === window.location.origin
-            ? new URL(document.referrer).pathname + new URL(document.referrer).search
-            : "/business";
-        const returnTo = prev && prev !== "/subscribe" && prev.startsWith("/") ? prev : "/business";
-        sessionStorage.setItem("post_checkout_return", returnTo);
+        sessionStorage.setItem("post_checkout_return", destination);
       } catch {
-        sessionStorage.setItem("post_checkout_return", "/business");
+        // Private-mode storage failure: /checkout/success falls back to /business.
       }
       await initializePaddle();
       const paddlePriceId = await getPaddlePriceId(plan.tier);
