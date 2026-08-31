@@ -79,13 +79,27 @@ fun LoginScreen(state: LoginUiState, actions: LoginActions) {
                 .statusBarsPadding()
                 .navigationBarsPadding()
                 .imePadding()
-                .verticalScroll(rememberScrollState())
-                .padding(AuthDimens.ScreenPadding),
+                .padding(horizontal = AuthDimens.ScreenPadding),
         ) {
             TopBar(state = state, actions = actions)
-            VerticalSpace(12)
-            AuthContent(state = state, actions = actions)
-            VerticalSpace(24)
+            // The form is centred in whatever space the top bar leaves. The
+            // scroll lives on this box rather than the outer column, because a
+            // scrolling column is measured with unbounded height and vertical
+            // arrangement silently has no effect there. `weight(1f)` gives it a
+            // real height to centre within, and the scroll still takes over once
+            // the sign-up fields or the keyboard make the form taller than the
+            // space available.
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                contentAlignment = Alignment.Center,
+            ) {
+                Column(Modifier.padding(vertical = 24.dp)) {
+                    AuthContent(state = state, actions = actions)
+                }
+            }
         }
 
         if (state.countryPickerOpen) {
@@ -108,7 +122,9 @@ private fun TopBar(state: LoginUiState, actions: LoginActions) {
     // nowhere to go back to. The hardware/gesture back still finishes the
     // activity via the platform default.
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 12.dp),
         horizontalArrangement = Arrangement.End,
         verticalAlignment = Alignment.CenterVertically,
     ) {
