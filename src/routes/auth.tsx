@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { Logo } from "@/components/Logo";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Mail } from "lucide-react";
+import { ArrowLeft, Mail, Phone } from "lucide-react";
 import { z } from "zod";
 import { LanguageSwitcher } from "@/i18n";
 
@@ -265,9 +265,6 @@ function AuthPage() {
                           Change number
                         </Button>
                       )}
-                      <p className="text-center text-xs text-muted-foreground">
-                        Use international format, e.g. +4791234567. New here? Your account is created automatically.
-                      </p>
                     </form>
                   )}
 
@@ -292,12 +289,9 @@ function AuthPage() {
                       <Button type="submit" disabled={sending} className="h-12 w-full rounded-xl text-base font-semibold">
                         {sending ? "Signing in…" : "Sign in"}
                       </Button>
-                      <div className="flex items-center justify-between gap-2">
+                      <div className="flex justify-center">
                         <Button type="button" variant="ghost" size="sm" className="text-xs" onClick={() => switchMode("reset")}>
                           Forgot password?
-                        </Button>
-                        <Button type="button" variant="ghost" size="sm" className="text-xs" onClick={() => switchMode("phone")}>
-                          Use phone instead
                         </Button>
                       </div>
                     </form>
@@ -390,24 +384,20 @@ function AuthPage() {
             )}
 
             {!signupEmail && (mode === "phone" || mode === "email") && (
-              <>
-                <div className="flex items-center gap-3 py-5 text-xs text-muted-foreground">
-                  <span className="h-px flex-1 bg-border" /> Other login options <span className="h-px flex-1 bg-border" />
-                </div>
-                <div className="flex items-center justify-center gap-5">
-                  <SocialRoundButton label="Continue with Google" onClick={handleGoogle}>
-                    <GoogleIcon />
-                  </SocialRoundButton>
-                  <SocialRoundButton label="Continue with Apple" onClick={handleApple}>
-                    <AppleIcon />
-                  </SocialRoundButton>
-                  {mode === "phone" && (
-                    <SocialRoundButton label="Continue with email" onClick={() => switchMode("email")}>
-                      <Mail className="h-5 w-5" />
-                    </SocialRoundButton>
-                  )}
-                </div>
-              </>
+              <div className="mt-4 flex items-center justify-center gap-5">
+                <SocialRoundButton label="Continue with Google" onClick={handleGoogle}>
+                  <GoogleIcon />
+                </SocialRoundButton>
+                <SocialRoundButton label="Continue with Apple" onClick={handleApple}>
+                  <AppleIcon />
+                </SocialRoundButton>
+                <SocialRoundButton
+                  label={mode === "phone" ? "Continue with email" : "Continue with phone"}
+                  onClick={() => switchMode(mode === "phone" ? "email" : "phone")}
+                >
+                  {mode === "phone" ? <Mail className="h-5 w-5" /> : <Phone className="h-5 w-5" />}
+                </SocialRoundButton>
+              </div>
             )}
           </div>
 
