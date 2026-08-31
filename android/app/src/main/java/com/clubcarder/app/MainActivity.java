@@ -8,6 +8,12 @@ import android.webkit.JavascriptInterface;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+
+import java.util.Locale;
+
 import com.getcapacitor.Bridge;
 import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.BridgeWebViewClient;
@@ -21,6 +27,7 @@ public class MainActivity extends BridgeActivity {
 
         Bridge bridge = getBridge();
         WebView webView = bridge.getWebView();
+        publishWindowInsets(webView);
         webView.addJavascriptInterface(new AuthNavigationBridge(), "ClubCarderNativeAuth");
         bridge.setWebViewClient(new BridgeWebViewClient(bridge) {
             @Override
@@ -52,6 +59,46 @@ public class MainActivity extends BridgeActivity {
         if (!isClubCarderAuthUri(uri)) return false;
         launchNativeAuth(uri.getQueryParameter("redirect"));
         return true;
+    }
+
+    /**
+     * Mirrors the window insets into CSS custom properties.
+     *
+     * `env(safe-area-inset-top)` is not a substitute on Android: the WebView
+     * only reports display *cutouts* there, not the status bar. From Android 15
+     * every app is laid out edge to edge whether it asks to be or not, so the
+     * page sits underneath the status bar while the inset it would consult
+     * reads zero -- on any phone without a notch, content collides with the
+     * clock. Reading the real insets and publishing them is the only reliable
+     * source.
+     *
+     * The listener returns the insets unconsumed so Capacitor and any plugin
+     * that also observes them still sees them.
+     */
+    private void publishWindowInsets(WebView webView) {
+        ViewCompat.setOnApplyWindowInsetsListener(webView, (view, windowInsets) -> {
+            Insets insets = windowInsets.getInsets(
+                WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
+            float density = view.getResources().getDisplayMetrics().density;
+            if (density <= 0) density = 1f;
+
+            // CSS pixels, matching the units the stylesheet works in.
+            String script = String.format(
+                Locale.US,
+                "(function(s){"
+                    + "s.setProperty('--android-inset-top','%.2fpx');"
+                    + "s.setProperty('--android-inset-right','%.2fpx');"
+                    + "s.setProperty('--android-inset-bottom','%.2fpx');"
+                    + "s.setProperty('--android-inset-left','%.2fpx');"
+                    + "})(document.documentElement.style);",
+                insets.top / density,
+                insets.right / density,
+                insets.bottom / density,
+                insets.left / density);
+            webView.evaluateJavascript(script, null);
+            return windowInsets;
+        });
+        ViewCompat.requestApplyInsets(webView);
     }
 
     @Override

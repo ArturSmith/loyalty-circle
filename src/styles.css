@@ -170,6 +170,21 @@
    untouched; only the native shell gets safe-area padding and native-feeling
    touch behaviour. */
 
+/* Safe-area insets, resolved per platform.
+
+   iOS reports the notch and home indicator through `env(safe-area-inset-*)`.
+   Android does not: there the WebView only reports display *cutouts*, so on a
+   phone without a notch every inset is 0 even though Android 15 lays every app
+   out edge to edge. MainActivity therefore measures the real window insets and
+   publishes them as `--android-inset-*`; those win when present and `env()`
+   covers iOS. */
+html.capacitor-native {
+  --safe-top: var(--android-inset-top, env(safe-area-inset-top, 0px));
+  --safe-right: var(--android-inset-right, env(safe-area-inset-right, 0px));
+  --safe-bottom: var(--android-inset-bottom, env(safe-area-inset-bottom, 0px));
+  --safe-left: var(--android-inset-left, env(safe-area-inset-left, 0px));
+}
+
 /* iOS moves `position: fixed` and `sticky` elements while the *document* is
    the thing being scrolled — most visibly during rubber-band overscroll, where
    the top and bottom bars drift with the content. The fix is to stop the
@@ -201,9 +216,9 @@ html.capacitor-native #app-scroll .min-h-screen {
 }
 
 html.capacitor-native body {
-  padding-top: env(safe-area-inset-top);
-  padding-left: env(safe-area-inset-left);
-  padding-right: env(safe-area-inset-right);
+  padding-top: var(--safe-top);
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
   overscroll-behavior-y: none;
 }
 
