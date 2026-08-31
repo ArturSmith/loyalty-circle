@@ -1110,11 +1110,6 @@ export type Database = {
         Args: { _business_id: string }
         Returns: Json
       }
-      get_business_value_analytics: {
-        Args: { _business_id: string; _range_days?: number }
-        Returns: Json
-      }
-      get_my_customer_qr_token: { Args: never; Returns: string }
       get_business_detail_public: { Args: { _id: string }; Returns: Json }
       get_business_public: {
         Args: { _id: string }
@@ -1140,6 +1135,10 @@ export type Database = {
           welcome_message: string
         }[]
       }
+      get_business_value_analytics: {
+        Args: { _business_id: string; _range_days?: number }
+        Returns: Json
+      }
       get_frozen_business_ids:
         | {
             Args: { _ids: string[] }
@@ -1153,6 +1152,7 @@ export type Database = {
               business_id: string
             }[]
           }
+      get_my_customer_qr_token: { Args: never; Returns: string }
       get_pending_moderation: {
         Args: { _entity_id: string; _entity_type: string }
         Returns: Json
@@ -1196,10 +1196,6 @@ export type Database = {
         Args: { _business_id: string; _voucher_id: string }
         Returns: Json
       }
-      resolve_customer_cards_for_business: {
-        Args: { _business_id: string; _customer_qr_token: string }
-        Returns: Json
-      }
       redeem_voucher: { Args: { _voucher_id: string }; Returns: Json }
       refresh_business_moderation: {
         Args: {
@@ -1218,6 +1214,10 @@ export type Database = {
         Returns: string
       }
       renew_card: { Args: { _card_instance_id: string }; Returns: undefined }
+      resolve_customer_cards_for_business: {
+        Args: { _business_id: string; _customer_qr_token: string }
+        Returns: Json
+      }
       review_moderation_submission: {
         Args: {
           _decision: string
