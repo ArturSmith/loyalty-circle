@@ -161,7 +161,6 @@ class LoginActivity : AppCompatActivity() {
                 if (viewModel.state.mode == AuthMode.SIGN_UP) AuthMode.PHONE else AuthMode.SIGN_UP,
             )
         },
-        onLegal = { openExternal("https://clubcarder.com/terms") },
     )
 
     /* -------------------------------------------------------- submission */

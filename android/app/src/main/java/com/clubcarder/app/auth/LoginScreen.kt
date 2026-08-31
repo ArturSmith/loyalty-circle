@@ -1,8 +1,6 @@
 package com.clubcarder.app.auth
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,7 +28,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -67,7 +64,6 @@ data class LoginActions(
     val onApple: () -> Unit = {},
     val onHelp: () -> Unit = {},
     val onCreateAccount: () -> Unit = {},
-    val onLegal: () -> Unit = {},
 )
 
 @Composable
@@ -130,15 +126,6 @@ private fun AuthContent(state: LoginUiState, actions: LoginActions) {
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Image(
-            painter = painterResource(R.drawable.ic_clubcarder_native),
-            contentDescription = stringResource(R.string.auth_logo_description),
-            modifier = Modifier.size(64.dp),
-        )
-        VerticalSpace(16)
-        OrnamentDivider()
-        VerticalSpace(20)
-
         Text(
             text = stringResource(state.titleRes),
             style = MaterialTheme.typography.headlineLarge,
@@ -196,8 +183,7 @@ private fun AuthContent(state: LoginUiState, actions: LoginActions) {
         if (state.showBottomLinks) {
             VerticalSpace(10)
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.spacedBy(24.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 TextLink(
@@ -215,17 +201,6 @@ private fun AuthContent(state: LoginUiState, actions: LoginActions) {
                 )
             }
         }
-
-        VerticalSpace(6)
-        OrnamentDivider()
-        VerticalSpace(16)
-        Text(
-            text = stringResource(R.string.auth_legal),
-            color = AuthColors.Muted,
-            style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.clickable(onClick = actions.onLegal),
-        )
     }
 }
 

@@ -2,7 +2,6 @@
 <resources>
     <string name="app_name">ClubCarder</string>
     <string name="title_activity_main">ClubCarder</string>
-    <string name="auth_logo_description">ClubCarder-logo</string>
     <string name="auth_welcome_title">Velkommen til ClubCarder</string>
     <string name="auth_welcome_subtitle">Logg inn for å samle stempler og få belønninger.</string>
     <string name="auth_signup_title">Opprett kontoen din</string>
@@ -35,7 +34,6 @@
     <string name="auth_apple">Fortsett med Apple</string>
     <string name="auth_back_to_sign_in">Tilbake til innlogging</string>
     <string name="auth_sign_in_link">Logg inn</string>
-    <string name="auth_legal">Ved å fortsette godtar du vilkårene og personvernerklæringen.</string>
     <string name="auth_invalid_phone">Skriv inn et gyldig telefonnummer</string>
     <string name="auth_invalid_email">Skriv inn en gyldig e-postadresse</string>
     <string name="auth_missing_password">Skriv inn passordet ditt</string>

@@ -4,7 +4,6 @@
     <string name="title_activity_main">ClubCarder</string>
     <string name="package_name" translatable="false">com.clubcarder.app</string>
     <string name="custom_url_scheme" translatable="false">com.clubcarder.app</string>
-    <string name="auth_logo_description">ClubCarder logo</string>
     <string name="auth_welcome_title">Welcome to ClubCarder</string>
     <string name="auth_welcome_subtitle">Sign in to collect stamps and unlock rewards.</string>
     <string name="auth_signup_title">Create your account</string>
@@ -37,7 +36,6 @@
     <string name="auth_apple">Continue with Apple</string>
     <string name="auth_back_to_sign_in">Back to sign in</string>
     <string name="auth_sign_in_link">Sign in</string>
-    <string name="auth_legal">By continuing, you agree to our Terms and Privacy Notice.</string>
     <string name="auth_invalid_phone">Enter a valid phone number</string>
     <string name="auth_invalid_email">Enter a valid email address</string>
     <string name="auth_missing_password">Enter your password</string>

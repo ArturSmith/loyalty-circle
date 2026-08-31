@@ -30,28 +30,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /**
- * The infinity flourish used across the web app, so the native screen and the
- * WebView it hands off to look like the same product.
- */
-@Composable
-fun OrnamentDivider(modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier.fillMaxWidth().clearAndSetSemantics { },
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
-    ) {
-        HorizontalDivider(modifier = Modifier.weight(1f), color = AuthColors.Border)
-        Text(
-            text = "\u221E",
-            color = AuthColors.Muted,
-            fontSize = 16.sp,
-            modifier = Modifier.padding(horizontal = 10.dp).alpha(0.7f),
-        )
-        HorizontalDivider(modifier = Modifier.weight(1f), color = AuthColors.Border)
-    }
-}
-
-/**
  * A two-option language switch.
  *
  * Written as a single control with two halves rather than two buttons, so
