@@ -129,6 +129,7 @@ function BusinessPublic() {
   const [removing, setRemoving] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [ownedTemplateIds, setOwnedTemplateIds] = useState<Map<string, string>>(new Map());
+  const [frontTemplateId, setFrontTemplateId] = useState<string | null>(null);
   const [flippedTemplateId, setFlippedTemplateId] = useState<string | null>(null);
   const [locations, setLocations] = useState<BusinessLocation[]>([]);
   const [socials, setSocials] = useState<BusinessSocial[]>([]);
@@ -307,11 +308,40 @@ function BusinessPublic() {
 
   // Validated once here so the raw column value never reaches a style prop.
   const brand = normalizeBrandColor(business?.brand_color);
+  const brandForeground = brand && isDarkBrandColor(brand) ? "#ffffff" : "#17202c";
+  const brandMutedForeground = brand && isDarkBrandColor(brand)
+    ? "rgba(255, 255, 255, 0.76)"
+    : "rgba(23, 32, 44, 0.68)";
+  const displayedTemplates = frontTemplateId
+    ? [
+        ...templates.filter((template) => template.id !== frontTemplateId),
+        ...templates.filter((template) => template.id === frontTemplateId),
+      ]
+    : templates;
+  const activeTemplate = displayedTemplates[displayedTemplates.length - 1] ?? null;
+  const brandedActionStyle = brand
+    ? { backgroundColor: brand, color: brandForeground }
+    : undefined;
 
   return (
-    <div className="min-h-screen px-4 py-10">
+    <div
+      className="min-h-screen px-4 py-10"
+      style={
+        brand
+          ? {
+              backgroundColor: "var(--background)",
+              backgroundImage: `linear-gradient(180deg, ${brandTint(brand, 0.24)} 0%, ${brandTint(brand, 0.12)} 45%, ${brandTint(brand, 0.08)} 100%)`,
+            }
+          : undefined
+      }
+    >
       <div className="mx-auto max-w-md">
-        <Button variant="ghost" className="mb-3 -ml-2 gap-2 text-muted-foreground" asChild>
+        <Button
+          variant="ghost"
+          className="mb-3 -ml-2 gap-2"
+          style={brand ? { color: brand } : undefined}
+          asChild
+        >
           <Link to="/">
             <ArrowLeft className="h-4 w-4" />
             Back
@@ -323,11 +353,13 @@ function BusinessPublic() {
             Only the top corners are rounded and there is no bottom edge, so
             the brand tint fades out into the page instead of ending in a line. */}
         <div
-          className="rounded-t-3xl px-5 pb-10 pt-6 text-center"
+          className="rounded-3xl px-5 pb-8 pt-6 text-center shadow-sm"
           style={
             brand
               ? {
-                  background: `linear-gradient(180deg, ${brandTint(brand, 0.18)} 0%, ${brandTint(brand, 0.06)} 45%, transparent 100%)`,
+                  backgroundColor: brand,
+                  color: brandForeground,
+                  boxShadow: `0 18px 50px ${brandTint(brand, 0.22)}`,
                 }
               : undefined
           }
@@ -336,8 +368,11 @@ function BusinessPublic() {
             <img
               src={business.logo_url}
               alt={`${business.name} logo`}
-              className="mx-auto h-16 w-16 rounded-full object-cover ring-2 ring-offset-2 ring-offset-background"
-              style={{ ["--tw-ring-color" as string]: brand ?? "transparent" }}
+              className="mx-auto h-16 w-16 rounded-full object-cover ring-2 ring-offset-2"
+              style={{
+                ["--tw-ring-color" as string]: brandForeground,
+                ["--tw-ring-offset-color" as string]: brand ?? "hsl(var(--background))",
+              }}
             />
           ) : null}
           <h1 className="mt-4 font-display text-3xl font-semibold">{business?.name ?? "Loyalty cards"}</h1>
@@ -346,7 +381,10 @@ function BusinessPublic() {
               className="mt-2 inline-block rounded-full px-3 py-1 text-xs font-medium uppercase tracking-widest"
               style={
                 brand
-                  ? { backgroundColor: brand, color: isDarkBrandColor(brand) ? "#fff" : "#111" }
+                  ? {
+                      backgroundColor: brandForeground,
+                      color: brand,
+                    }
                   : undefined
               }
             >
@@ -354,168 +392,210 @@ function BusinessPublic() {
             </p>
           )}
           {business?.description && (
-            <p className="mx-auto mt-3 max-w-prose text-sm text-muted-foreground">
+            <p
+              className="mx-auto mt-3 max-w-prose text-sm"
+              style={brand ? { color: brandMutedForeground } : undefined}
+            >
               {business.description}
             </p>
           )}
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p
+            className="mt-2 text-sm"
+            style={brand ? { color: brandMutedForeground } : undefined}
+          >
             {cardsLoadError
               ? "Loyalty cards could not be loaded. Please try again shortly."
               : templates.length === 0
               ? "No loyalty cards available right now."
               : "Choose a loyalty card to add to your wallet."}
           </p>
-          <OrnamentDivider className="w-40 mx-auto my-6 opacity-60" />
+          <OrnamentDivider className="mx-auto my-6 w-40 opacity-60" />
         </div>
 
-        {templates.length > 0 && (
-          <div className="space-y-6">
-              {templates.map((t, i) => {
-                const ownedInstanceId = ownedTemplateIds.get(t.id);
-                const termsKey = `${t.id}:${t.terms_version}`;
-                const hasAcceptedTerms = acceptedTerms.has(termsKey);
-                const requestTermsAcceptance = () => {
-                  setExpandedTermsId(t.id);
-                  toast.info("Review and accept the card terms to continue");
-                };
-                const handleCardClick = () => {
-                  // Signed-out visitors pick a wallet from the options below the
-                  // card, so tapping the card itself must not hijack them into
-                  // the sign-in flow.
-                  if (!userId) return;
-                  if (ownedInstanceId) {
-                    openInWallet(ownedInstanceId);
-                    return;
-                  }
-                  if (!hasAcceptedTerms) {
-                    requestTermsAcceptance();
-                    return;
-                  }
-                  claim(t.id, t.terms_version);
-                };
-                return (
-                <motion.div key={t.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}>
-                  <div
-                    role={userId ? "button" : undefined}
-                    tabIndex={userId ? 0 : undefined}
-                    onClick={handleCardClick}
-                    onKeyDown={(event) => {
-                      if (!userId) return;
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        handleCardClick();
-                      }
-                    }}
-                    className="block w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-2xl"
-                    aria-label={userId ? (ownedInstanceId ? `Open ${t.title} in your wallet` : `Add ${t.title} to your wallet`) : undefined}
-                  >
-                    <StampCard
-                      title={t.title}
-                      subtitle={t.subtitle}
-                      cornerTitle={t.corner_title}
-                      totalSteps={t.total_steps}
-                      stampsCount={0}
-                      shape={t.shape}
-                      gridCols={t.grid_cols}
-                      bgColor={t.bg_color}
-                      accentColor={t.accent_color}
-                      textColor={t.text_color}
-                      stampIcon={t.stamp_icon}
-                      logoUrl={t.logo_url}
-                      rewards={t.rewards}
-                      face={flippedTemplateId === t.id ? "stamps" : "info"}
-                      showFlipButton
-                      onFlip={() => setFlippedTemplateId((prev) => prev === t.id ? null : t.id)}
-                    />
-                  </div>
-                  <CardTermsSection
-                    terms={t.terms_and_conditions}
-                    className="mt-3"
-                    termsClassName="max-h-40 overflow-y-auto"
-                    open={expandedTermsId === t.id}
-                    onOpenChange={(open) => setExpandedTermsId(open ? t.id : null)}
-                  >
-                    {!ownedInstanceId && (
-                      <label className="mt-3 flex cursor-pointer items-start gap-3 border-t border-border pt-3 text-sm">
-                        <Checkbox
-                          checked={hasAcceptedTerms}
-                          onCheckedChange={(checked) => {
-                            setAcceptedTerms((previous) => {
-                              const next = new Set(previous);
-                              if (checked === true) next.add(termsKey);
-                              else next.delete(termsKey);
-                              return next;
-                            });
-                          }}
-                          aria-label={`Accept terms for ${t.title}`}
+        {activeTemplate ? (() => {
+          const t = activeTemplate;
+          const ownedInstanceId = ownedTemplateIds.get(t.id);
+          const termsKey = `${t.id}:${t.terms_version}`;
+          const hasAcceptedTerms = acceptedTerms.has(termsKey);
+          const requestTermsAcceptance = () => {
+            setExpandedTermsId(t.id);
+            toast.info("Review and accept the card terms to continue");
+          };
+          const handleActiveCardAction = () => {
+            if (!userId) return;
+            if (ownedInstanceId) {
+              openInWallet(ownedInstanceId);
+              return;
+            }
+            if (!hasAcceptedTerms) {
+              requestTermsAcceptance();
+              return;
+            }
+            claim(t.id, t.terms_version);
+          };
+          const stackHeight = 220 + Math.max(0, displayedTemplates.length - 1) * 56;
+
+          return (
+            <section className="mt-6" aria-label="Loyalty cards">
+              <div className="relative" style={{ height: stackHeight }}>
+                {displayedTemplates.map((template, index) => {
+                  const isFront = index === displayedTemplates.length - 1;
+                  return (
+                    <motion.div
+                      key={template.id}
+                      className="absolute inset-x-0"
+                      initial={false}
+                      animate={{ y: index * 56, scale: isFront ? 1 : 0.98 }}
+                      transition={{ type: "spring", stiffness: 260, damping: 30 }}
+                      style={{ zIndex: index + 1 }}
+                    >
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        className="block w-full rounded-2xl text-left focus:outline-none focus-visible:ring-2"
+                        style={{
+                          ["--tw-ring-color" as string]: brand ?? "var(--ring)",
+                        }}
+                        aria-label={isFront ? `${template.title}, selected` : `Bring ${template.title} forward`}
+                        onClick={() => {
+                          if (!isFront) {
+                            setFrontTemplateId(template.id);
+                            setExpandedTermsId(null);
+                          }
+                        }}
+                        onKeyDown={(event) => {
+                          if (event.key !== "Enter" && event.key !== " ") return;
+                          event.preventDefault();
+                          setFrontTemplateId(template.id);
+                          setExpandedTermsId(null);
+                        }}
+                      >
+                        <StampCard
+                          title={template.title}
+                          subtitle={template.subtitle}
+                          cornerTitle={template.corner_title}
+                          totalSteps={template.total_steps}
+                          stampsCount={0}
+                          shape={template.shape}
+                          gridCols={template.grid_cols}
+                          bgColor={template.bg_color}
+                          accentColor={template.accent_color}
+                          textColor={template.text_color}
+                          stampIcon={template.stamp_icon}
+                          logoUrl={template.logo_url}
+                          rewards={template.rewards}
+                          face={flippedTemplateId === template.id ? "stamps" : "info"}
+                          disableShadow
+                          showFlipButton={isFront}
+                          onFlip={() =>
+                            setFlippedTemplateId((previous) =>
+                              previous === template.id ? null : template.id,
+                            )
+                          }
                         />
-                        <span>I have read and accept these terms and conditions.</span>
-                      </label>
-                    )}
-                  </CardTermsSection>
-                  {userId ? (
-                    <>
-                      {ownedInstanceId ? (
-                        <div className="mt-3 flex gap-2">
-                          <Button
-                            className="h-11 min-w-0 flex-1"
-                            onClick={() => openInWallet(ownedInstanceId)}
-                          >
-                            Open in my wallet
-                          </Button>
-                          <Button
-                            variant="outline"
-                            className="h-11 gap-1.5 border-destructive/30 px-3 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                            disabled={removing === t.id}
-                            onClick={() => void removeFromWallet(t, ownedInstanceId)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            {removing === t.id ? "Removing…" : "Remove"}
-                          </Button>
-                        </div>
-                      ) : (
-                        <Button
-                          className="mt-3 h-11 w-full"
-                          disabled={claiming === t.id}
-                          onClick={handleCardClick}
-                        >
-                          {claiming === t.id ? "Adding…" : "Add to my wallet"}
-                        </Button>
-                      )}
-                      {googleWalletReady && !ownedInstanceId ? (
-                        <>
-                          <GoogleWalletButton
-                            templateId={t.id}
-                            acceptedTermsVersion={hasAcceptedTerms ? t.terms_version : null}
-                            onTermsRequired={requestTermsAcceptance}
-                            className="mt-2"
-                          />
-                          <p className="mt-1.5 text-center text-[11px] text-muted-foreground">
-                            No account needed — the pass goes straight to your phone.
-                          </p>
-                        </>
-                      ) : null}
-                    </>
-                  ) : (
-                    <WalletChooser
-                      templateId={t.id}
-                      cardTitle={t.title}
-                      googleReady={googleWalletReady}
-                      appleReady={appleWalletReady}
-                      acceptedTermsVersion={hasAcceptedTerms ? t.terms_version : null}
-                      onTermsRequired={requestTermsAcceptance}
-                      onUseInAppWallet={() => {
-                        try { sessionStorage.setItem(`pending_claim:${businessId}`, t.id); } catch {}
-                        try { sessionStorage.setItem(`pending_claim_terms:${businessId}`, String(t.terms_version)); } catch {}
-                        navigate({ to: "/auth", search: { redirect: `/b/${businessId}` } });
-                      }}
-                    />
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+
+              <motion.div
+                key={t.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <CardTermsSection
+                  terms={t.terms_and_conditions}
+                  className="mt-4 border-white/60 bg-card/90 shadow-sm backdrop-blur"
+                  termsClassName="max-h-40 overflow-y-auto"
+                  open={expandedTermsId === t.id}
+                  onOpenChange={(open) => setExpandedTermsId(open ? t.id : null)}
+                >
+                  {!ownedInstanceId && (
+                    <label className="mt-3 flex cursor-pointer items-start gap-3 border-t border-border pt-3 text-sm">
+                      <Checkbox
+                        checked={hasAcceptedTerms}
+                        onCheckedChange={(checked) => {
+                          setAcceptedTerms((previous) => {
+                            const next = new Set(previous);
+                            if (checked === true) next.add(termsKey);
+                            else next.delete(termsKey);
+                            return next;
+                          });
+                        }}
+                        aria-label={`Accept terms for ${t.title}`}
+                      />
+                      <span>I have read and accept these terms and conditions.</span>
+                    </label>
                   )}
-                </motion.div>
-                );
-              })}
-            </div>
-        )}
+                </CardTermsSection>
+
+                {userId ? (
+                  <>
+                    {ownedInstanceId ? (
+                      <div className="mt-3 flex gap-2">
+                        <Button
+                          className="h-11 min-w-0 flex-1 border-0"
+                          style={brandedActionStyle}
+                          onClick={() => openInWallet(ownedInstanceId)}
+                        >
+                          Open in my wallet
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="h-11 gap-1.5 border-destructive/30 bg-card/90 px-3 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          disabled={removing === t.id}
+                          onClick={() => void removeFromWallet(t, ownedInstanceId)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          {removing === t.id ? "Removing…" : "Remove"}
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        className="mt-3 h-11 w-full border-0"
+                        style={brandedActionStyle}
+                        disabled={claiming === t.id}
+                        onClick={handleActiveCardAction}
+                      >
+                        {claiming === t.id ? "Adding…" : "Add to my wallet"}
+                      </Button>
+                    )}
+                    {googleWalletReady && !ownedInstanceId ? (
+                      <>
+                        <GoogleWalletButton
+                          templateId={t.id}
+                          acceptedTermsVersion={hasAcceptedTerms ? t.terms_version : null}
+                          onTermsRequired={requestTermsAcceptance}
+                          className="mt-2"
+                        />
+                        <p className="mt-1.5 text-center text-[11px] text-muted-foreground">
+                          No account needed — the pass goes straight to your phone.
+                        </p>
+                      </>
+                    ) : null}
+                  </>
+                ) : (
+                  <WalletChooser
+                    templateId={t.id}
+                    cardTitle={t.title}
+                    googleReady={googleWalletReady}
+                    appleReady={appleWalletReady}
+                    acceptedTermsVersion={hasAcceptedTerms ? t.terms_version : null}
+                    onTermsRequired={requestTermsAcceptance}
+                    onUseInAppWallet={() => {
+                      try { sessionStorage.setItem(`pending_claim:${businessId}`, t.id); } catch {}
+                      try { sessionStorage.setItem(`pending_claim_terms:${businessId}`, String(t.terms_version)); } catch {}
+                      navigate({ to: "/auth", search: { redirect: `/b/${businessId}` } });
+                    }}
+                    accentColor={brand}
+                    accentForeground={brandForeground}
+                  />
+                )}
+              </motion.div>
+            </section>
+          );
+        })() : null}
 
         {locations.length > 0 && (
           <section className="mt-10">
