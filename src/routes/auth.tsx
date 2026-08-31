@@ -1,16 +1,29 @@
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { Logo } from "@/components/Logo";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Mail, Phone } from "lucide-react";
+import {
+  getCountries,
+  getCountryCallingCode,
+  parsePhoneNumberFromString,
+  type CountryCode,
+} from "libphonenumber-js/min";
 import { z } from "zod";
-import { LanguageSwitcher } from "@/i18n";
+import { LanguageSwitcher, useLanguage } from "@/i18n";
 
 const searchSchema = z.object({ redirect: z.string().optional() }).catch({ redirect: undefined });
 
@@ -22,20 +35,37 @@ export const Route = createFileRoute("/auth")({
 
 type Mode = "phone" | "email" | "signup" | "reset";
 
+function countryFlag(country: CountryCode) {
+  return String.fromCodePoint(...country.split("").map((letter) => 127397 + letter.charCodeAt(0)));
+}
+
 function AuthPage() {
   const navigate = useNavigate();
+  const { locale, t } = useLanguage();
   const { redirect } = useSearch({ from: "/auth" });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [dob, setDob] = useState("");
+  const [phoneCountry, setPhoneCountry] = useState<CountryCode>("NO");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [sending, setSending] = useState(false);
   const [signupEmail, setSignupEmail] = useState<string | null>(null);
   const [mode, setMode] = useState<Mode>("phone");
+
+  const countryOptions = useMemo(() => {
+    const names = new Intl.DisplayNames([locale], { type: "region" });
+    return getCountries()
+      .map((country) => ({
+        country,
+        name: names.of(country) ?? country,
+        callingCode: getCountryCallingCode(country),
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name, locale));
+  }, [locale]);
 
   const explicitRedirect = redirect && redirect.startsWith("/") ? redirect : null;
 
@@ -126,16 +156,27 @@ function AuthPage() {
     setEmail("");
   };
 
-  const normalizedPhone = phone.trim().replace(/[\s()-]/g, "");
+  const updatePhone = (value: string) => {
+    if (value.trim().startsWith("+")) {
+      const parsed = parsePhoneNumberFromString(value);
+      if (parsed?.country) {
+        setPhoneCountry(parsed.country);
+        setPhone(parsed.nationalNumber);
+        return;
+      }
+    }
+    setPhone(value);
+  };
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!/^\+[1-9]\d{6,14}$/.test(normalizedPhone)) {
-      toast.error("Enter your phone number in international format, e.g. +4791234567");
+    const parsedPhone = parsePhoneNumberFromString(phone, phoneCountry);
+    if (!parsedPhone?.isValid()) {
+      toast.error("Enter a valid phone number");
       return;
     }
     setSending(true);
-    const { error } = await supabase.auth.signInWithOtp({ phone: normalizedPhone });
+    const { error } = await supabase.auth.signInWithOtp({ phone: parsedPhone.number });
     setSending(false);
     if (error) { toast.error(error.message); return; }
     setOtpSent(true);
@@ -146,8 +187,14 @@ function AuthPage() {
     e.preventDefault();
     const code = otp.trim();
     if (code.length < 4) { toast.error("Enter the code from the SMS"); return; }
+    const parsedPhone = parsePhoneNumberFromString(phone, phoneCountry);
+    if (!parsedPhone?.isValid()) {
+      toast.error("Enter a valid phone number");
+      setOtpSent(false);
+      return;
+    }
     setSending(true);
-    const { error } = await supabase.auth.verifyOtp({ phone: normalizedPhone, token: code, type: "sms" });
+    const { error } = await supabase.auth.verifyOtp({ phone: parsedPhone.number, token: code, type: "sms" });
     setSending(false);
     if (error) { toast.error(error.message); return; }
     setOtp(""); setOtpSent(false);
@@ -227,16 +274,47 @@ function AuthPage() {
                 >
                   {mode === "phone" && (
                     <form onSubmit={otpSent ? handleVerifyOtp : handleSendOtp} className="space-y-3">
-                      <Input
-                        type="tel"
-                        required
-                        autoComplete="tel"
-                        placeholder="Phone number"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        disabled={otpSent}
-                        className="h-12 rounded-xl bg-muted/50 text-base"
-                      />
+                      <div className="flex gap-2">
+                        <Select
+                          value={phoneCountry}
+                          onValueChange={(value) => setPhoneCountry(value as CountryCode)}
+                          disabled={otpSent}
+                        >
+                          <SelectTrigger
+                            className="h-12 w-[7.75rem] shrink-0 rounded-xl bg-muted/50 px-3 text-base"
+                            aria-label={t("Country code")}
+                          >
+                            <SelectValue>
+                              <span className="flex items-center gap-2" data-i18n-ignore>
+                                <span aria-hidden="true">{countryFlag(phoneCountry)}</span>
+                                <span>+{getCountryCallingCode(phoneCountry)}</span>
+                              </span>
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent className="max-h-72 w-72">
+                            {countryOptions.map(({ country, name, callingCode }) => (
+                              <SelectItem key={country} value={country}>
+                                <span className="flex items-center gap-2" data-i18n-ignore>
+                                  <span className="w-6 text-center" aria-hidden="true">{countryFlag(country)}</span>
+                                  <span className="min-w-0 flex-1 truncate">{name}</span>
+                                  <span className="text-muted-foreground">+{callingCode}</span>
+                                </span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Input
+                          type="tel"
+                          required
+                          inputMode="tel"
+                          autoComplete="tel-national"
+                          placeholder="Phone number"
+                          value={phone}
+                          onChange={(e) => updatePhone(e.target.value)}
+                          disabled={otpSent}
+                          className="h-12 min-w-0 flex-1 rounded-xl bg-muted/50 text-base"
+                        />
+                      </div>
                       {otpSent && (
                         <Input
                           type="text"

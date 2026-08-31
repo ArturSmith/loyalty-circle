@@ -201,6 +201,8 @@ export const nb = {
   "Country *": "Land *",
   "Country": "Land",
   "Phone": "Telefon",
+  "Country code": "Landskode",
+  "Enter a valid phone number": "Skriv inn et gyldig telefonnummer",
   "Website": "Nettsted",
   "Description": "Beskrivelse",
   "Description (optional)": "Beskrivelse (valgfritt)",
