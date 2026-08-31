@@ -9,6 +9,7 @@ import { useBusinessAccess } from "@/hooks/useBusinessAccess";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { getBillingPortalUrl, listTransactions, getInvoicePdfUrl } from "@/utils/payments.functions";
 import { getPaddleEnvironment } from "@/lib/paddle";
+import { reserveTab } from "@/lib/externalTab";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { formatPlanPrice } from "@/lib/plans";
 
@@ -69,38 +70,34 @@ function BillingSettings() {
   }, [access.isSubscribed, loadTransactions]);
 
   const openPortal = () => {
-    // Open the tab synchronously in the click handler so it isn't popup-blocked.
-    const win = window.open("about:blank", "_blank", "noopener,noreferrer");
+    // Reserve the tab inside the click handler so it isn't popup-blocked.
+    const tab = reserveTab();
     setOpening(true);
     portalFn({ data: { environment: getPaddleEnvironment() } })
       .then((res) => {
         if (res.overviewUrl) {
-          if (win) win.location.href = res.overviewUrl;
-          else window.location.href = res.overviewUrl;
+          tab.navigate(res.overviewUrl);
         } else {
-          win?.close();
+          tab.cancel();
           toast.error("Could not open the billing portal.");
         }
       })
       .catch((e: any) => {
         console.error(e);
-        win?.close();
+        tab.cancel();
         toast.error(e?.message ?? "Could not open the billing portal.");
       })
       .finally(() => setOpening(false));
   };
 
   const openInvoice = (transactionId: string) => {
-    const win = window.open("about:blank", "_blank", "noopener,noreferrer");
+    const tab = reserveTab();
     setInvoiceLoadingId(transactionId);
     invoiceFn({ data: { transactionId, environment: getPaddleEnvironment() } })
-      .then((url) => {
-        if (win) win.location.href = url;
-        else window.location.href = url;
-      })
+      .then((url) => tab.navigate(url))
       .catch((e: any) => {
         console.error(e);
-        win?.close();
+        tab.cancel();
         toast.error(e?.message ?? "Could not open invoice.");
       })
       .finally(() => setInvoiceLoadingId(null));
