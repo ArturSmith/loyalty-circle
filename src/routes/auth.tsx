@@ -28,10 +28,13 @@ function AuthPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [dob, setDob] = useState("");
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [signupEmail, setSignupEmail] = useState<string | null>(null);
-  const [mode, setMode] = useState<"password" | "signup" | "reset">("password");
+  const [mode, setMode] = useState<"password" | "signup" | "reset" | "phone">("password");
 
   const explicitRedirect = redirect && redirect.startsWith("/") ? redirect : null;
 
