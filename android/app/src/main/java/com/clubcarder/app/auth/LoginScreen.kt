@@ -199,7 +199,10 @@ private fun AuthContent(state: LoginUiState, actions: LoginActions) {
         if (state.showBottomLinks) {
             VerticalSpace(10)
             Row(
-                horizontalArrangement = Arrangement.spacedBy(24.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 TextLink(
