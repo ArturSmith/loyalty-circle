@@ -38,18 +38,9 @@
 
         <activity
             android:name=".LoginActivity"
-            android:exported="true"
+            android:exported="false"
             android:launchMode="singleTop"
-            android:theme="@style/AppTheme.NativeAuth">
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data
-                    android:host="oauth-callback"
-                    android:scheme="com.clubcarder.app" />
-            </intent-filter>
-        </activity>
+            android:theme="@style/AppTheme.NativeAuth" />
 
         <provider
             android:name="androidx.core.content.FileProvider"            android:authorities="${applicationId}.fileprovider"

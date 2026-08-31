@@ -24,7 +24,6 @@ import com.clubcarder.app.auth.LoginViewModel
 import com.google.i18n.phonenumbers.PhoneNumberUtil
 import org.json.JSONException
 import org.json.JSONObject
-import java.security.SecureRandom
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -46,15 +45,12 @@ class LoginActivity : AppCompatActivity() {
 
         private const val NATIVE_AUTH_PREFS = "ClubCarderNativeAuth"
         private const val CAPACITOR_PREFS = "CapacitorStorage"
-        private const val PENDING_STATE = "pending_oauth_state"
         private const val PENDING_REDIRECT = "pending_redirect"
-        private const val OAUTH_CALLBACK = "com.clubcarder.app://oauth-callback"
 
         private const val MIN_AGE = 13
         private const val MAX_AGE = 120
     }
 
-    private val secureRandom = SecureRandom()
     private val phoneUtil: PhoneNumberUtil by lazy { PhoneNumberUtil.getInstance() }
 
     private lateinit var authClient: SupabaseAuthClient
@@ -116,14 +112,6 @@ class LoginActivity : AppCompatActivity() {
                 }
             }
         }
-
-        handleOAuthCallback(intent)
-    }
-
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        setIntent(intent)
-        handleOAuthCallback(intent)
     }
 
     /* ------------------------------------------------------------ wiring */
@@ -328,7 +316,7 @@ class LoginActivity : AppCompatActivity() {
 
             val pending = getSharedPreferences(NATIVE_AUTH_PREFS, MODE_PRIVATE)
             val savedRedirect = safeRedirect(pending.getString(PENDING_REDIRECT, null))
-            pending.edit().remove(PENDING_STATE).remove(PENDING_REDIRECT).apply()
+            pending.edit().remove(PENDING_REDIRECT).apply()
             restartApp(savedRedirect ?: redirectPath)
         } catch (error: JSONException) {
             viewModel.showError(getString(R.string.auth_network_error))
@@ -351,76 +339,28 @@ class LoginActivity : AppCompatActivity() {
 
     /* -------------------------------------------------------------- oauth */
 
+    /**
+     * Hands a social sign-in over to the WebView.
+     *
+     * Google and Apple do not go through Supabase's own providers here -- the
+     * app authenticates against Lovable's OAuth broker, and Supabase's provider
+     * slots are consequently empty. Driving `/auth/v1/authorize` from native
+     * code therefore fails with "unsupported provider, missing OAuth secret",
+     * whatever the redirect URI looks like.
+     *
+     * Rather than reimplement the broker handshake, load the web sign-in page
+     * with `?provider=`, which starts the same flow the browser build uses. The
+     * resulting session lands in Capacitor Preferences, the very store this
+     * activity writes to, so nothing downstream can tell the difference.
+     */
     private fun startOAuth(provider: String) {
         if (model.state.loading) return
+        model.setLoading(true)
 
-        val stateBytes = ByteArray(24)
-        secureRandom.nextBytes(stateBytes)
-        val state = stateBytes.joinToString("") { String.format(Locale.ROOT, "%02x", it.toInt() and 0xff) }
-
-        getSharedPreferences(NATIVE_AUTH_PREFS, MODE_PRIVATE).edit()
-            .putString(PENDING_STATE, state)
-            .putString(PENDING_REDIRECT, redirectPath ?: "")
-            .apply()
-
-        val url = Uri.parse("https://clubcarder.com/api/public/auth/oauth-initiate").buildUpon()
+        val target = Uri.parse("/auth").buildUpon()
             .appendQueryParameter("provider", provider)
-            .appendQueryParameter("redirect_uri", OAUTH_CALLBACK)
-            .appendQueryParameter("state", state)
-        if (provider == "google") url.appendQueryParameter("prompt", "select_account")
-        openExternal(url.build().toString())
-    }
-
-    private fun handleOAuthCallback(intent: Intent) {
-        val uri = intent.data ?: return
-        if (uri.scheme != "com.clubcarder.app" || uri.host != "oauth-callback") return
-
-        // Supabase returns the session in the fragment but leaves the query
-        // string of the callback alone, so `state` arrives in the query and the
-        // tokens in the fragment. Read both: parsing only the fragment dropped
-        // the state and made every sign-in look like a forgery.
-        val values = mutableMapOf<String, String>()
-        for (name in uri.queryParameterNames.orEmpty()) {
-            uri.getQueryParameter(name)?.let { values[name] = it }
-        }
-        uri.fragment?.takeIf { it.isNotEmpty() }?.let { fragment ->
-            val parsed = Uri.parse("$OAUTH_CALLBACK?$fragment")
-            for (name in parsed.queryParameterNames.orEmpty()) {
-                parsed.getQueryParameter(name)?.let { values[name] = it }
-            }
-        }
-
-        val viewModel = model
-        val pending = getSharedPreferences(NATIVE_AUTH_PREFS, MODE_PRIVATE)
-        val expectedState = pending.getString(PENDING_STATE, null)
-        val state = values["state"]
-
-        val error = values["error_description"] ?: values["error"]
-        if (error != null) {
-            viewModel.showError(error)
-            return
-        }
-        if (expectedState == null || expectedState != state) {
-            viewModel.showError(getString(R.string.auth_oauth_cancelled))
-            return
-        }
-
-        var refreshToken = values["refresh_token"]
-        if (refreshToken.isNullOrEmpty()) {
-            values["response"]?.let { encoded ->
-                refreshToken = runCatching {
-                    JSONObject(encoded).optString("refresh_token")
-                }.getOrNull()?.takeIf { it.isNotEmpty() }
-            }
-        }
-        val token = refreshToken
-        if (token.isNullOrEmpty()) {
-            viewModel.showError(getString(R.string.auth_oauth_cancelled))
-            return
-        }
-
-        viewModel.setLoading(true)
-        authClient.exchangeRefreshToken(token, sessionCallback(viewModel))
+        redirectPath?.let { target.appendQueryParameter("redirect", it) }
+        restartApp(target.build().toString())
     }
 
     private fun openExternal(url: String) {

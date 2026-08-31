@@ -51,7 +51,6 @@ import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/em
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicWalletGoogleCallbackRouteImport } from './routes/api/public/wallet/google-callback'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
-import { Route as ApiPublicAuthOauthInitiateRouteImport } from './routes/api/public/auth/oauth-initiate'
 import { Route as AuthenticatedBusinessCardsNewRouteImport } from './routes/_authenticated/business.cards.new'
 import { Route as AuthenticatedBusinessCardsIdIndexRouteImport } from './routes/_authenticated/business.cards.$id.index'
 import { Route as AuthenticatedBusinessCardsIdEditRouteImport } from './routes/_authenticated/business.cards.$id.edit'
@@ -282,12 +281,6 @@ const ApiPublicPaymentsWebhookRoute =
     path: '/api/public/payments/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicAuthOauthInitiateRoute =
-  ApiPublicAuthOauthInitiateRouteImport.update({
-    id: '/api/public/auth/oauth-initiate',
-    path: '/api/public/auth/oauth-initiate',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const AuthenticatedBusinessCardsNewRoute =
   AuthenticatedBusinessCardsNewRouteImport.update({
     id: '/cards/new',
@@ -351,7 +344,6 @@ export interface FileRoutesByFullPath {
   '/business/': typeof AuthenticatedBusinessIndexRoute
   '/chats/': typeof AuthenticatedChatsIndexRoute
   '/business/cards/new': typeof AuthenticatedBusinessCardsNewRoute
-  '/api/public/auth/oauth-initiate': typeof ApiPublicAuthOauthInitiateRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/wallet/google-callback': typeof ApiPublicWalletGoogleCallbackRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -398,7 +390,6 @@ export interface FileRoutesByTo {
   '/business': typeof AuthenticatedBusinessIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
   '/business/cards/new': typeof AuthenticatedBusinessCardsNewRoute
-  '/api/public/auth/oauth-initiate': typeof ApiPublicAuthOauthInitiateRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/wallet/google-callback': typeof ApiPublicWalletGoogleCallbackRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -448,7 +439,6 @@ export interface FileRoutesById {
   '/_authenticated/business/': typeof AuthenticatedBusinessIndexRoute
   '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
   '/_authenticated/business/cards/new': typeof AuthenticatedBusinessCardsNewRoute
-  '/api/public/auth/oauth-initiate': typeof ApiPublicAuthOauthInitiateRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/wallet/google-callback': typeof ApiPublicWalletGoogleCallbackRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -498,7 +488,6 @@ export interface FileRouteTypes {
     | '/business/'
     | '/chats/'
     | '/business/cards/new'
-    | '/api/public/auth/oauth-initiate'
     | '/api/public/payments/webhook'
     | '/api/public/wallet/google-callback'
     | '/lovable/email/auth/preview'
@@ -545,7 +534,6 @@ export interface FileRouteTypes {
     | '/business'
     | '/chats'
     | '/business/cards/new'
-    | '/api/public/auth/oauth-initiate'
     | '/api/public/payments/webhook'
     | '/api/public/wallet/google-callback'
     | '/lovable/email/auth/preview'
@@ -594,7 +582,6 @@ export interface FileRouteTypes {
     | '/_authenticated/business/'
     | '/_authenticated/chats/'
     | '/_authenticated/business/cards/new'
-    | '/api/public/auth/oauth-initiate'
     | '/api/public/payments/webhook'
     | '/api/public/wallet/google-callback'
     | '/lovable/email/auth/preview'
@@ -621,7 +608,6 @@ export interface RootRouteChildren {
   CheckoutSuccessRoute: typeof CheckoutSuccessRoute
   ClaimInstanceIdRoute: typeof ClaimInstanceIdRoute
   InviteTokenRoute: typeof InviteTokenRoute
-  ApiPublicAuthOauthInitiateRoute: typeof ApiPublicAuthOauthInitiateRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicWalletGoogleCallbackRoute: typeof ApiPublicWalletGoogleCallbackRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -925,13 +911,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/auth/oauth-initiate': {
-      id: '/api/public/auth/oauth-initiate'
-      path: '/api/public/auth/oauth-initiate'
-      fullPath: '/api/public/auth/oauth-initiate'
-      preLoaderRoute: typeof ApiPublicAuthOauthInitiateRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_authenticated/business/cards/new': {
       id: '/_authenticated/business/cards/new'
       path: '/cards/new'
@@ -1054,7 +1033,6 @@ const rootRouteChildren: RootRouteChildren = {
   CheckoutSuccessRoute: CheckoutSuccessRoute,
   ClaimInstanceIdRoute: ClaimInstanceIdRoute,
   InviteTokenRoute: InviteTokenRoute,
-  ApiPublicAuthOauthInitiateRoute: ApiPublicAuthOauthInitiateRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicWalletGoogleCallbackRoute: ApiPublicWalletGoogleCallbackRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,

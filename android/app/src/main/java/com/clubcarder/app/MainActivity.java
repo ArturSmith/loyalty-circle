@@ -119,10 +119,18 @@ public class MainActivity extends BridgeActivity {
     }
 
     private boolean isClubCarderAuthUri(Uri uri) {
-        return uri != null
-            && "https".equalsIgnoreCase(uri.getScheme())
-            && "clubcarder.com".equalsIgnoreCase(uri.getHost())
-            && "/auth".equals(uri.getPath());
+        if (uri == null
+            || !"https".equalsIgnoreCase(uri.getScheme())
+            || !"clubcarder.com".equalsIgnoreCase(uri.getHost())
+            || !"/auth".equals(uri.getPath())) {
+            return false;
+        }
+        // `?provider=` means the native screen deliberately handed a social
+        // login to the WebView, because Google/Apple go through Lovable's OAuth
+        // broker and there is no native path to it. Claiming that URL back
+        // would bounce straight to LoginActivity, which would hand off again --
+        // an endless loop instead of a sign-in.
+        return uri.getQueryParameter("provider") == null;
     }
 
     private void launchNativeAuth(String redirect) {
