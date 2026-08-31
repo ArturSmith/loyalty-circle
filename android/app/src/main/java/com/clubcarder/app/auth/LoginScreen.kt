@@ -1,5 +1,13 @@
 package com.clubcarder.app.auth
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -127,26 +135,56 @@ private fun AuthContent(state: LoginUiState, actions: LoginActions) {
             modifier = Modifier.size(96.dp),
         )
         VerticalSpace(20)
-        Text(
-            text = stringResource(state.titleRes),
-            style = MaterialTheme.typography.headlineLarge,
-            textAlign = TextAlign.Center,
-        )
-        VerticalSpace(10)
-        Text(
-            text = stringResource(state.subtitleRes),
-            color = AuthColors.Muted,
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center,
-        )
 
-        if (state.error != null) {
-            VerticalSpace(18)
-            ErrorBanner(state.error)
+        // Title, subtitle and fields all belong to the mode, so they cross-fade
+        // and slide as one block. The direction follows the enum order, so
+        // going phone -> email travels left and coming back travels right.
+        AnimatedContent(
+            targetState = state.mode,
+            transitionSpec = {
+                val forward = targetState.ordinal > initialState.ordinal
+                val offset = { width: Int -> if (forward) width else -width }
+                (
+                    slideInHorizontally(tween(280)) { offset(it) / 6 } +
+                        fadeIn(tween(200, delayMillis = 80))
+                    ) togetherWith (
+                    slideOutHorizontally(tween(280)) { -offset(it) / 6 } +
+                        fadeOut(tween(140))
+                    ) using SizeTransform(clip = false) { _, _ -> tween(280) }
+            },
+            label = "auth-mode",
+        ) { mode ->
+            // Derive from the animating mode, not `state.mode`: during the
+            // transition the state has already flipped, so the outgoing half
+            // would otherwise render the incoming mode's fields.
+            val modeState = if (mode == state.mode) state else state.copy(mode = mode)
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = stringResource(modeState.titleRes),
+                    style = MaterialTheme.typography.headlineLarge,
+                    textAlign = TextAlign.Center,
+                )
+                VerticalSpace(10)
+                Text(
+                    text = stringResource(modeState.subtitleRes),
+                    color = AuthColors.Muted,
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center,
+                )
+
+                if (modeState.error != null) {
+                    VerticalSpace(18)
+                    ErrorBanner(modeState.error)
+                }
+
+                VerticalSpace(22)
+                Fields(state = modeState, actions = actions)
+            }
         }
-
-        VerticalSpace(22)
-        Fields(state = state, actions = actions)
 
         VerticalSpace(14)
         PrimaryButton(state = state, onClick = actions.onSubmit)
