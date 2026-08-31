@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The Apple logo, for the "Sign in with Apple" button.
+
+  Trademark note: this mark belongs to Apple and may only be used on a button
+  that performs Sign in with Apple. Apple's guidelines allow solid black or
+  solid white only, so the colour is applied by the caller via tint rather than
+  baked in here.
+  See https://developer.apple.com/design/human-interface-guidelines/sign-in-with-apple
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="#000000">
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M16.36,12.72c-0.02,-2.47 2.02,-3.66 2.11,-3.72 -1.15,-1.68 -2.94,-1.91 -3.58,-1.94 -1.52,-0.15 -2.97,0.9 -3.75,0.9 -0.77,0 -1.96,-0.88 -3.23,-0.85 -1.66,0.02 -3.19,0.97 -4.05,2.46 -1.73,3 -0.44,7.44 1.24,9.87 0.82,1.19 1.8,2.52 3.08,2.47 1.24,-0.05 1.71,-0.8 3.2,-0.8 1.49,0 1.91,0.8 3.21,0.77 1.33,-0.02 2.17,-1.21 2.98,-2.4 0.94,-1.38 1.33,-2.71 1.35,-2.78 -0.03,-0.01 -2.59,-0.99 -2.61,-3.94z" />
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M14.02,5.42c0.68,-0.83 1.14,-1.98 1.02,-3.12 -0.98,0.04 -2.17,0.65 -2.87,1.47 -0.63,0.73 -1.18,1.9 -1.03,3.02 1.09,0.08 2.21,-0.55 2.88,-1.37z" />
+</vector>

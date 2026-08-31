@@ -340,22 +340,31 @@ private fun PrimaryButton(state: LoginUiState, onClick: () -> Unit) {
 @Composable
 private fun SocialRow(state: LoginUiState, actions: LoginActions) {
     Row(horizontalArrangement = Arrangement.spacedBy(18.dp)) {
-        // Letterforms rather than the official Google and Apple marks: those
-        // are brand assets with their own usage rules, and the XML screen used
-        // the same glyphs. Swap in the licensed vectors before store release.
         CircleActionButton(
             contentDescription = stringResource(R.string.auth_google),
             enabled = !state.loading,
             onClick = actions.onGoogle,
         ) {
-            Text("G", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = AuthColors.Text)
+            // Google requires its mark at full colour and unmodified, so this
+            // is an Image rather than a tinted Icon.
+            Image(
+                painter = painterResource(R.drawable.ic_google),
+                contentDescription = null,
+                modifier = Modifier.size(22.dp),
+            )
         }
         CircleActionButton(
             contentDescription = stringResource(R.string.auth_apple),
             enabled = !state.loading,
             onClick = actions.onApple,
         ) {
-            Text("A", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = AuthColors.Text)
+            // Apple permits solid black or solid white only.
+            Icon(
+                painter = painterResource(R.drawable.ic_apple),
+                contentDescription = null,
+                tint = AuthColors.Text,
+                modifier = Modifier.size(22.dp),
+            )
         }
         CircleActionButton(
             contentDescription = stringResource(
@@ -371,6 +380,7 @@ private fun SocialRow(state: LoginUiState, actions: LoginActions) {
                 else Icons.Filled.Phone,
                 contentDescription = null,
                 tint = AuthColors.Text,
+                modifier = Modifier.size(22.dp),
             )
         }
     }
