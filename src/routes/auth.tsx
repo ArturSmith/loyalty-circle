@@ -226,12 +226,66 @@ function AuthPage() {
               <Button onClick={handleApple} className="w-full h-11" variant="outline">
                 <AppleIcon /> Continue with Apple
               </Button>
+              <Button
+                onClick={() => { setMode(mode === "phone" ? "password" : "phone"); setOtp(""); setOtpSent(false); }}
+                className="w-full h-11"
+                variant="outline"
+              >
+                <Phone className="mr-2 h-4 w-4" />
+                {mode === "phone" ? "Use email instead" : "Continue with phone"}
+              </Button>
 
               <div className="flex items-center gap-3 py-2 text-xs text-muted-foreground">
                 <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
               </div>
 
+              {mode === "phone" && (
+                <form onSubmit={otpSent ? handleVerifyOtp : handleSendOtp} className="space-y-3">
+                  <Input
+                    type="tel"
+                    required
+                    autoComplete="tel"
+                    placeholder="+4791234567"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    disabled={otpSent}
+                    className="h-11"
+                  />
+                  {otpSent && (
+                    <Input
+                      type="text"
+                      required
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      maxLength={8}
+                      placeholder="6-digit code"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      className="h-11 tracking-widest"
+                    />
+                  )}
+                  <Button type="submit" disabled={sending} className="w-full h-11">
+                    {sending ? "Please wait…" : otpSent ? "Verify code" : "Send code by SMS"}
+                  </Button>
+                  {otpSent && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-xs"
+                      onClick={() => { setOtpSent(false); setOtp(""); }}
+                    >
+                      Change number
+                    </Button>
+                  )}
+                  <p className="text-center text-xs text-muted-foreground">
+                    New here? Signing in with your phone number creates your account automatically.
+                  </p>
+                </form>
+              )}
+
               {mode === "password" && (
+
             <form onSubmit={handlePassword} className="space-y-3">
               <Input
                 type="email"
