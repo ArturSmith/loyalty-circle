@@ -167,8 +167,8 @@ function ConversationPage() {
   }, [messages.length]);
 
   useEffect(() => {
-    if (!loading) inputRef.current?.focus();
-  }, [loading, conversationId]);
+    if (!loading && scope === "business") inputRef.current?.focus();
+  }, [loading, conversationId, scope]);
 
   const submit = async () => {
     const text = body.trim();
@@ -240,7 +240,9 @@ function ConversationPage() {
         {loading ? (
           <PageLoader />
         ) : messages.length === 0 ? (
-          <p className="py-10 text-center text-sm text-muted-foreground">No messages yet — say hello.</p>
+          <p className="py-10 text-center text-sm text-muted-foreground">
+            {scope === "business" ? "No messages yet — send the first update." : "No messages from this business yet."}
+          </p>
         ) : (
           messages.map((message) => {
             const mine = message.sender_role === viewerRole;
@@ -271,31 +273,33 @@ function ConversationPage() {
         <div ref={bottomRef} />
       </main>
 
-      <div
-        className="sticky bottom-0 border-t border-border bg-card/95 backdrop-blur"
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-      >
-        <div className="mx-auto flex w-full max-w-3xl items-end gap-2 px-4 py-3">
-          <Textarea
-            ref={inputRef}
-            rows={1}
-            value={body}
-            maxLength={2000}
-            onChange={(event) => setBody(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" && !event.shiftKey) {
-                event.preventDefault();
-                submit();
-              }
-            }}
-            placeholder="Write a message…"
-            className="max-h-32 min-h-[44px] resize-none"
-          />
-          <Button onClick={submit} disabled={sending || body.trim().length === 0} size="icon" aria-label="Send message">
-            <Send className="h-4 w-4" />
-          </Button>
+      {scope === "business" && (
+        <div
+          className="sticky bottom-0 border-t border-border bg-card/95 backdrop-blur"
+          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        >
+          <div className="mx-auto flex w-full max-w-3xl items-end gap-2 px-4 py-3">
+            <Textarea
+              ref={inputRef}
+              rows={1}
+              value={body}
+              maxLength={2000}
+              onChange={(event) => setBody(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  submit();
+                }
+              }}
+              placeholder="Write a message…"
+              className="max-h-32 min-h-[44px] resize-none"
+            />
+            <Button onClick={submit} disabled={sending || body.trim().length === 0} size="icon" aria-label="Send message">
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

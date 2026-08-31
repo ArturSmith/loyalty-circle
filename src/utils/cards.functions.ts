@@ -4,6 +4,7 @@ import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
 
 export type WalletInstance = {
   id: string;
+  order_index: number | null;
   stamps_count: number;
   completed_at: string | null;
   created_at: string;
@@ -107,9 +108,10 @@ export const getWalletCards = createServerFn({ method: "GET" })
       const { data: instanceData, error: instanceError } = await context.supabase
         .from("card_instances")
         .select(
-          `id, stamps_count, completed_at, created_at, template_id, terms_accepted_at, terms_accepted_text, terms_accepted_version`,
+          `id, order_index, stamps_count, completed_at, created_at, template_id, terms_accepted_at, terms_accepted_text, terms_accepted_version`,
         )
         .eq("customer_id", context.userId)
+        .order("order_index", { ascending: true, nullsFirst: false })
         .order("created_at", { ascending: false });
 
       if (instanceError) {
@@ -146,6 +148,7 @@ export const getWalletCards = createServerFn({ method: "GET" })
           if (!template || !template.business?.id) return null;
           return {
             id: inst.id,
+            order_index: inst.order_index,
             stamps_count: inst.stamps_count,
             completed_at: inst.completed_at,
             created_at: inst.created_at,
@@ -199,4 +202,44 @@ export const getWalletCards = createServerFn({ method: "GET" })
       console.error("getWalletCards error:", error);
       throw new Error(`Failed to load wallet cards: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
+  });
+
+export const saveWalletCardOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { instanceIds: string[] }) => {
+    const instanceIds = Array.isArray(data?.instanceIds) ? data.instanceIds : [];
+    const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (instanceIds.length > 200 || instanceIds.some((id) => !uuid.test(id))) {
+      throw new Error("Invalid wallet card order");
+    }
+    if (new Set(instanceIds).size !== instanceIds.length) {
+      throw new Error("A wallet card cannot appear more than once");
+    }
+    return { instanceIds };
+  })
+  .handler(async ({ data, context }): Promise<{ ok: true }> => {
+    if (data.instanceIds.length === 0) return { ok: true };
+
+    const { data: owned, error: ownershipError } = await context.supabase
+      .from("card_instances")
+      .select("id")
+      .eq("customer_id", context.userId)
+      .in("id", data.instanceIds);
+    if (ownershipError) throw ownershipError;
+    if ((owned ?? []).length !== data.instanceIds.length) {
+      throw new Error("One or more wallet cards are unavailable");
+    }
+
+    const results = await Promise.all(
+      data.instanceIds.map((id, orderIndex) =>
+        context.supabase
+          .from("card_instances")
+          .update({ order_index: orderIndex })
+          .eq("id", id)
+          .eq("customer_id", context.userId),
+      ),
+    );
+    const failed = results.find((result) => result.error);
+    if (failed?.error) throw failed.error;
+    return { ok: true };
   });

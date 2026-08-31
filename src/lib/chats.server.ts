@@ -347,6 +347,7 @@ export async function postMessage(
   supabase?: AuthenticatedClient,
 ): Promise<ChatMessage> {
   if (!supabase) throw new Error("Authenticated database client is required");
+  if (scope !== "business") throw new Error("Only the business can send messages in this conversation");
 
   const { data: row, error } = await supabase
     .from("conversations")
@@ -358,23 +359,20 @@ export async function postMessage(
   const conversation = row as any;
   if (!conversation) throw new Error("Conversation not found");
 
-  // The scope decides who you're speaking as, so a reply from the business
-  // inbox is always stamped 'business' and one from the Chats tab 'customer'.
-  const isCustomer = scope === "customer" && conversation.customer_id === userId;
-  const isBusinessMember = scope === "business" && await canUseBusinessMessages(
+  const isBusinessMember = await canUseBusinessMessages(
     supabase,
     userId,
     conversation.business_id,
     conversation.business?.owner_id,
   );
-  if (!isCustomer && !isBusinessMember) throw new Error("Conversation not found");
+  if (!isBusinessMember) throw new Error("Conversation not found");
 
   const { data: created, error: insertError } = await supabase
     .from("chat_messages")
     .insert({
       conversation_id: conversationId,
       sender_id: userId,
-      sender_role: isCustomer ? "customer" : "business",
+      sender_role: "business",
       body,
     })
     .select("id, body, sender_role, created_at")

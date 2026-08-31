@@ -1,16 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { StampCard } from "@/components/StampCard";
 import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
 import { Button } from "@/components/ui/button";
-import { motion, AnimatePresence } from "framer-motion";
-import { Check, ChevronRight, CreditCard, Gift, RotateCcw, ScanLine, Snowflake, Sparkles, Store, Trash2, UserRoundPen, X } from "lucide-react";
+import { motion, AnimatePresence, Reorder } from "framer-motion";
+import { ArrowUpDown, Check, ChevronRight, CreditCard, Gift, GripVertical, RotateCcw, ScanLine, Snowflake, Sparkles, Store, Trash2, UserRoundPen, X } from "lucide-react";
 import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { getPaddleEnvironment } from "@/lib/paddle";
 import { useServerFn } from "@tanstack/react-start";
-import { getWalletCards, type WalletInstance } from "@/utils/cards.functions";
+import { getWalletCards, saveWalletCardOrder, type WalletInstance } from "@/utils/cards.functions";
 import { invalidateUnusedVoucherCount } from "@/hooks/useUnusedVoucherCount";
 import { useProfile } from "@/hooks/useProfile";
 import { initialsFrom } from "@/lib/avatar";
@@ -64,8 +64,13 @@ function Wallet() {
   const [faceFlipped, setFaceFlipped] = useState<Set<string>>(new Set());
   const [celebration, setCelebration] = useState<Celebration | null>(null);
   const [businessCtaHidden, setBusinessCtaHidden] = useState(true);
+  const [arranging, setArranging] = useState(false);
+  const [arrangeOriginalIds, setArrangeOriginalIds] = useState<string[]>([]);
+  const [savingOrder, setSavingOrder] = useState(false);
+  const arrangingRef = useRef(false);
 
   const fetchWallet = useServerFn(getWalletCards);
+  const saveCardOrder = useServerFn(saveWalletCardOrder);
   const { profile, loading: profileLoading } = useProfile();
   const missingProfileFields = useMemo(() => {
     if (!profile) return [];
@@ -102,6 +107,7 @@ function Wallet() {
   }, []);
 
   const load = useCallback(async () => {
+    if (arrangingRef.current) return;
     try {
       const { instances: next, frozenBusinessIds: nextFrozenBusinessIds } = await fetchWallet({ data: { environment: getPaddleEnvironment() } });
       setTabCache<WalletCache>(WALLET_CACHE_KEY, { instances: next, frozenBusinessIds: nextFrozenBusinessIds });
@@ -154,6 +160,50 @@ function Wallet() {
       setLoading(false);
     }
   }, [fetchWallet]);
+
+  const openArrangeCards = () => {
+    setFrontId(null);
+    setExpandedId(null);
+    setFlippedId(null);
+    setArrangeOriginalIds(instances.map((instance) => instance.id));
+    arrangingRef.current = true;
+    setArranging(true);
+  };
+
+  const cancelArrangeCards = () => {
+    const originalPosition = new Map(arrangeOriginalIds.map((id, index) => [id, index]));
+    setInstances((current) =>
+      [...current].sort((a, b) => {
+        const aPosition = originalPosition.get(a.id) ?? Number.MAX_SAFE_INTEGER;
+        const bPosition = originalPosition.get(b.id) ?? Number.MAX_SAFE_INTEGER;
+        return aPosition - bPosition;
+      }),
+    );
+    arrangingRef.current = false;
+    setArranging(false);
+  };
+
+  const finishArrangeCards = async () => {
+    setSavingOrder(true);
+    try {
+      await saveCardOrder({ data: { instanceIds: instances.map((instance) => instance.id) } });
+      const orderedInstances = instances.map((instance, index) => ({ ...instance, order_index: index }));
+      setInstances(orderedInstances);
+      setTabCache<WalletCache>(WALLET_CACHE_KEY, {
+        instances: orderedInstances,
+        frozenBusinessIds: [...frozenBusinessIds],
+      });
+      arrangingRef.current = false;
+      setArranging(false);
+      toast.success("Card order saved");
+    } catch (error) {
+      toast.error("Couldn't save card order", {
+        description: error instanceof Error ? error.message : "Please try again.",
+      });
+    } finally {
+      setSavingOrder(false);
+    }
+  };
 
   useEffect(() => { load(); }, [load]);
 
@@ -336,10 +386,15 @@ function Wallet() {
 
       {instances.length > 0 && (
         <section className="relative px-5 pt-6" aria-label="My cards">
-          <div className="mx-auto max-w-md">
+          <div className="mx-auto flex max-w-md items-center justify-between gap-3">
             <h1 className="flex items-center gap-2 font-display text-lg font-bold">
               <CreditCard className="h-4 w-4" /> My cards
             </h1>
+            {instances.length > 1 && (
+              <Button variant="ghost" size="sm" className="gap-1.5" onClick={openArrangeCards}>
+                <ArrowUpDown className="h-4 w-4" /> Arrange
+              </Button>
+            )}
           </div>
         </section>
       )}
@@ -501,6 +556,69 @@ function Wallet() {
 
 
       <AnimatePresence>
+        {arranging && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[80] flex items-center justify-center bg-ink/80 p-5 backdrop-blur-md"
+            data-pull-refresh="off"
+          >
+            <motion.section
+              initial={{ scale: 0.94, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.96, y: 12 }}
+              className="flex max-h-[min(80dvh,640px)] w-full max-w-sm flex-col overflow-hidden rounded-3xl bg-card p-5 shadow-xl"
+              aria-labelledby="arrange-cards-title"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h2 id="arrange-cards-title" className="font-display text-xl font-bold">Arrange cards</h2>
+                  <p className="mt-1 text-xs text-muted-foreground">Drag cards into your preferred order.</p>
+                </div>
+                <Button variant="ghost" size="icon" className="-mr-2 -mt-2" onClick={cancelArrangeCards} aria-label="Cancel">
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <Reorder.Group
+                axis="y"
+                values={instances}
+                onReorder={setInstances}
+                className="mt-4 min-h-0 flex-1 space-y-2 overflow-y-auto py-1"
+                layoutScroll
+              >
+                {instances.map((instance) => (
+                  <Reorder.Item
+                    key={instance.id}
+                    value={instance}
+                    className="flex cursor-grab touch-none items-center gap-3 rounded-2xl border border-border bg-background px-3 py-3 active:cursor-grabbing"
+                    whileDrag={{ scale: 1.02, boxShadow: "0 12px 30px rgba(0,0,0,0.16)" }}
+                  >
+                    <span className="h-9 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: instance.template.accent_color }} />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold">{instance.template.title}</p>
+                      <p className="truncate text-xs text-muted-foreground">{instance.template.business.name}</p>
+                    </div>
+                    <GripVertical className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                  </Reorder.Item>
+                ))}
+              </Reorder.Group>
+
+              <div className="mt-4 flex gap-2">
+                <Button variant="outline" className="flex-1" onClick={cancelArrangeCards} disabled={savingOrder}>
+                  Cancel
+                </Button>
+                <Button className="flex-1" onClick={finishArrangeCards} disabled={savingOrder}>
+                  {savingOrder ? "Saving…" : "Done"}
+                </Button>
+              </div>
+            </motion.section>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
         {flippedId && (() => {
           const inst = instances.find((x) => x.id === flippedId);
           const isCompleted = !!inst?.completed_at || (inst ? inst.stamps_count >= inst.template.total_steps : false);
@@ -621,7 +739,7 @@ function Wallet() {
           <motion.div
             key={`celebrate-${celebration.instanceId}-${celebration.stampsCount}`}
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] bg-ink/85 backdrop-blur-md flex items-center justify-center p-6"
+            className="fixed inset-0 z-[90] bg-ink/85 backdrop-blur-md flex items-center justify-center p-6"
             onClick={() => { setCelebration(null); setFlippedId(null); }}
           >
             {Array.from({ length: 14 }).map((_, i) => (
