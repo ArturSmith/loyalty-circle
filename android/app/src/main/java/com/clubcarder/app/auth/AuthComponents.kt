@@ -3,6 +3,7 @@ package com.clubcarder.app.auth
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -19,6 +20,7 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -43,7 +45,16 @@ fun CircleActionButton(
             .size(56.dp)
             .background(AuthColors.Card, CircleShape)
             .border(1.dp, AuthColors.Border, CircleShape)
-            .clickable(enabled = enabled, onClickLabel = contentDescription, onClick = onClick)
+            .clickable(
+                enabled = enabled,
+                onClickLabel = contentDescription,
+                // No ripple: the default indication is a square-bounded ripple
+                // that ignores the CircleShape used for the background, so it
+                // spilled into the corners of the button.
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick,
+            )
             .alpha(if (enabled) 1f else 0.5f),
         contentAlignment = Alignment.Center,
     ) {
