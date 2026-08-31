@@ -66,6 +66,7 @@ function Wallet() {
   const [arrangeOriginalIds, setArrangeOriginalIds] = useState<string[]>([]);
   const [savingOrder, setSavingOrder] = useState(false);
   const arrangingRef = useRef(false);
+  const cardStackScrollRef = useRef<HTMLDivElement>(null);
 
   const fetchWallet = useServerFn(getWalletCards);
   const saveCardOrder = useServerFn(saveWalletCardOrder);
@@ -220,6 +221,15 @@ function Wallet() {
       setFrontId(target);
       setExpandedId(target);
       setFaceFlipped((previous) => new Set(previous).add(target));
+      // Wait for React to reorder/expand the stack before measuring its new
+      // height, then reveal the selected card at the bottom of Wallet.
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          const scroller = cardStackScrollRef.current;
+          if (!scroller) return;
+          scroller.scrollTo({ top: scroller.scrollHeight, behavior: "smooth" });
+        });
+      });
     }
   }, [loading, instances]);
 
@@ -420,6 +430,7 @@ function Wallet() {
       ) : (
         <>
         <div
+          ref={cardStackScrollRef}
           className="relative mt-4 flex-1 overflow-y-auto px-4 pb-6"
           onClick={() => setExpandedId(null)}
         >
