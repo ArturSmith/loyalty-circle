@@ -443,7 +443,7 @@ function Wallet() {
                               setExpandedId(inst.id);
                             }
                           }}
-                          className="relative block w-full text-left focus:outline-none drop-shadow-2xl"
+                          className="relative block w-full text-left focus:outline-none"
                           aria-label={isExpanded ? `Open details for ${inst.template.title}` : `Open ${inst.template.title}`}
                         >
                           <div className="relative">
@@ -465,6 +465,7 @@ function Wallet() {
                                 rewards={inst.template.rewards}
                                 businessName={inst.template.business.name}
                                 lastStamp={inst.stamps_count}
+                                disableShadow
                                 face={faceFlipped.has(inst.id) ? "stamps" : "info"}
                                 showFlipButton
                                 onFlip={() => {
