@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="auth_logo_description">ClubCarder</string>
     <string name="app_name">ClubCarder</string>
     <string name="title_activity_main">ClubCarder</string>
     <string name="auth_welcome_title">Velkommen til ClubCarder</string>
@@ -53,9 +54,6 @@
     <string name="auth_select_birth_date">Velg fødselsdato</string>
     <string name="auth_search_country">Søk etter land eller kode</string>
     <string name="auth_no_countries">Ingen land samsvarer</string>
-    <string name="auth_language">Språk</string>
-    <string name="auth_language_english">Engelsk</string>
-    <string name="auth_language_norwegian">Norsk</string>
     <string name="auth_cancel">Avbryt</string>
     <string name="auth_confirm">OK</string>
 </resources>

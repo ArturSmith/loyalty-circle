@@ -9,12 +9,10 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.core.os.LocaleListCompat
 import androidx.core.view.WindowCompat
 import com.clubcarder.app.auth.AuthMode
 import com.clubcarder.app.auth.AuthTheme
@@ -101,7 +99,6 @@ class LoginActivity : AppCompatActivity() {
                     // default. Every supported country stays available.
                     model.setCountries(loadCountries(), defaultRegion = "NO")
                 }
-                model.setLanguage(currentLanguageIsNorwegian())
             }
 
             AuthTheme {
@@ -132,7 +129,6 @@ class LoginActivity : AppCompatActivity() {
     /* ------------------------------------------------------------ wiring */
 
     private fun actionsFor(viewModel: LoginViewModel) = LoginActions(
-        onLanguageChange = ::applyLanguage,
         onPhoneChange = viewModel::setPhone,
         onOtpChange = viewModel::setOtp,
         onFullNameChange = viewModel::setFullName,
@@ -422,27 +418,6 @@ class LoginActivity : AppCompatActivity() {
     private fun openExternal(url: String) {
         runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }
             .onFailure { model.showError(getString(R.string.auth_open_link_failed)) }
-    }
-
-    /* ----------------------------------------------------------- language */
-
-    private fun currentLanguageIsNorwegian(): Boolean {
-        val applied = AppCompatDelegate.getApplicationLocales()
-        val tag = if (!applied.isEmpty) {
-            applied[0]?.language
-        } else {
-            resources.configuration.locales[0].language
-        }
-        // Norwegian has three codes in the wild: nb (Bokmål), nn (Nynorsk)
-        // and the deprecated `no`. Treat all of them as Norwegian.
-        return tag == "nb" || tag == "nn" || tag == "no"
-    }
-
-    private fun applyLanguage(norwegian: Boolean) {
-        // Recreates the activity; the ViewModel keeps the form intact.
-        AppCompatDelegate.setApplicationLocales(
-            LocaleListCompat.forLanguageTags(if (norwegian) "nb" else "en"),
-        )
     }
 
     /* ------------------------------------------------------------ helpers */

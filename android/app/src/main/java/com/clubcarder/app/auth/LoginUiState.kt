@@ -65,8 +65,6 @@ data class LoginUiState(
     val email: String = "",
     val password: String = "",
     val confirmPassword: String = "",
-
-    val isNorwegian: Boolean = false,
 ) {
     val showPhoneFields: Boolean get() = mode == AuthMode.PHONE
     val showOtpField: Boolean get() = mode == AuthMode.PHONE && otpSent

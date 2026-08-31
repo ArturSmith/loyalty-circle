@@ -26,10 +26,6 @@ class LoginViewModel : ViewModel() {
         )
     }
 
-    fun setLanguage(isNorwegian: Boolean) {
-        state = state.copy(isNorwegian = isNorwegian)
-    }
-
     /**
      * Switching mode clears the credentials but keeps the phone number and
      * email: someone bouncing to "forgot password" and back should not have to

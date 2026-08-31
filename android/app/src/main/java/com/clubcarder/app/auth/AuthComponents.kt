@@ -29,54 +29,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-/**
- * A two-option language switch.
- *
- * Written as a single control with two halves rather than two buttons, so
- * screen readers announce the selected state instead of two unrelated taps.
- */
-@Composable
-fun LanguageToggle(
-    isNorwegian: Boolean,
-    enabled: Boolean,
-    onSelect: (norwegian: Boolean) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .background(AuthColors.Card, CircleShape)
-            .border(1.dp, AuthColors.Border, CircleShape)
-            .padding(3.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        LanguageOption("EN", selected = !isNorwegian, enabled = enabled) { onSelect(false) }
-        LanguageOption("NO", selected = isNorwegian, enabled = enabled) { onSelect(true) }
-    }
-}
-
-@Composable
-private fun LanguageOption(
-    label: String,
-    selected: Boolean,
-    enabled: Boolean,
-    onClick: () -> Unit,
-) {
-    Box(
-        modifier = Modifier
-            .background(if (selected) AuthColors.Primary else Color.Transparent, CircleShape)
-            .clickable(enabled = enabled && !selected, onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = label,
-            color = if (selected) AuthColors.OnPrimary else AuthColors.Muted,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 14.sp,
-        )
-    }
-}
-
 /** A circular icon button, as used for the third-party sign-in options. */
 @Composable
 fun CircleActionButton(

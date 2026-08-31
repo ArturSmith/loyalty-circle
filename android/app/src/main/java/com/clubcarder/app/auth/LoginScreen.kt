@@ -1,5 +1,6 @@
 package com.clubcarder.app.auth
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -42,7 +44,6 @@ import com.clubcarder.app.R
  * does not mean threading another parameter through every preview and caller.
  */
 data class LoginActions(
-    val onLanguageChange: (norwegian: Boolean) -> Unit = {},
     val onPhoneChange: (String) -> Unit = {},
     val onOtpChange: (String) -> Unit = {},
     val onFullNameChange: (String) -> Unit = {},
@@ -81,14 +82,12 @@ fun LoginScreen(state: LoginUiState, actions: LoginActions) {
                 .imePadding()
                 .padding(horizontal = AuthDimens.ScreenPadding),
         ) {
-            TopBar(state = state, actions = actions)
-            // The form is centred in whatever space the top bar leaves. The
-            // scroll lives on this box rather than the outer column, because a
-            // scrolling column is measured with unbounded height and vertical
-            // arrangement silently has no effect there. `weight(1f)` gives it a
-            // real height to centre within, and the scroll still takes over once
-            // the sign-up fields or the keyboard make the form taller than the
-            // space available.
+            // The form is centred in the full screen. The scroll lives on this
+            // box rather than the outer column, because a scrolling column is
+            // measured with unbounded height and vertical arrangement silently
+            // has no effect there. `weight(1f)` gives it a real height to centre
+            // within, and the scroll still takes over once the sign-up fields or
+            // the keyboard make the form taller than the space available.
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -117,31 +116,17 @@ fun LoginScreen(state: LoginUiState, actions: LoginActions) {
 }
 
 @Composable
-private fun TopBar(state: LoginUiState, actions: LoginActions) {
-    // No back affordance: sign-in is the root of its own task, so there is
-    // nowhere to go back to. The hardware/gesture back still finishes the
-    // activity via the platform default.
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 12.dp),
-        horizontalArrangement = Arrangement.End,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        LanguageToggle(
-            isNorwegian = state.isNorwegian,
-            enabled = !state.loading,
-            onSelect = actions.onLanguageChange,
-        )
-    }
-}
-
-@Composable
 private fun AuthContent(state: LoginUiState, actions: LoginActions) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        Image(
+            painter = painterResource(R.drawable.ic_clubcarder_native),
+            contentDescription = stringResource(R.string.auth_logo_description),
+            modifier = Modifier.size(96.dp),
+        )
+        VerticalSpace(20)
         Text(
             text = stringResource(state.titleRes),
             style = MaterialTheme.typography.headlineLarge,
