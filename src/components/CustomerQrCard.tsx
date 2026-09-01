@@ -42,15 +42,28 @@ export function CustomerQrCard({ qrToken, userId, displayName, className }: Cust
         type="button"
         onClick={() => setExpanded(true)}
         className={cn(
-          "flex w-full items-center gap-4 rounded-3xl border border-border bg-card p-3 text-left shadow-sm transition-colors hover:bg-muted/30",
+          "relative isolate flex w-full items-center gap-4 overflow-hidden rounded-3xl border border-primary/45 bg-card p-3 text-left shadow-lg ring-1 ring-primary/15 transition-all hover:border-primary/65 hover:shadow-xl",
           className,
         )}
         aria-label="Open my customer QR"
       >
-        <span className="flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl bg-white p-2 shadow-sm">
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute -left-16 top-1/2 -z-10 h-60 w-60 -translate-y-1/2 rounded-full bg-primary/35 blur-3xl"
+        />
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-r from-white/75 via-primary/10 to-transparent dark:from-white/20 dark:via-primary/15"
+        />
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-90"
+        />
+
+        <span className="relative z-10 flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl bg-white p-2 shadow-[0_10px_30px_-10px_var(--primary)] ring-2 ring-white/90">
           <QrDisplay value={value} size={80} />
         </span>
-        <span className="min-w-0 flex-1">
+        <span className="relative z-10 min-w-0 flex-1">
           <span className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-primary">
             <QrCode className="h-4 w-4" aria-hidden="true" /> My QR
           </span>
@@ -64,7 +77,9 @@ export function CustomerQrCard({ qrToken, userId, displayName, className }: Cust
             {shortCode}
           </span>
         </span>
-        <Maximize2 className="mr-1 h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+        <span className="relative z-10 mr-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/80 text-primary shadow-sm ring-1 ring-primary/15 dark:bg-white/15">
+          <Maximize2 className="h-4 w-4" aria-hidden="true" />
+        </span>
       </button>
 
       <AnimatePresence>
