@@ -479,7 +479,7 @@ function BusinessPublic() {
                   return (
                     <motion.div
                       key={template.id}
-                      className="absolute inset-x-0"
+                      className="absolute inset-x-0 top-0"
                       initial={false}
                       animate={{ y: index * 56, scale: isFront ? 1 : 0.98 }}
                       transition={{ type: "spring", stiffness: 260, damping: 30 }}
