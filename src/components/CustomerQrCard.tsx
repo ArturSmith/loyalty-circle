@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Copy, Maximize2, QrCode, X } from "lucide-react";
+import { Check, Copy, Maximize2, QrCode, RefreshCw, X } from "lucide-react";
 import { QrDisplay } from "@/components/QrDisplay";
 import { Button } from "@/components/ui/button";
 import { customerQrValue, shortCustomerCode } from "@/lib/customer-code";
 import { setUserQrBrightness } from "@/lib/native";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 type CustomerQrCardProps = {
   qrToken?: string | null;
@@ -14,16 +15,67 @@ type CustomerQrCardProps = {
   className?: string;
 };
 
+const QR_REFRESH_INTERVAL_MS = 30_000;
+
 export function CustomerQrCard({ qrToken, userId, displayName, className }: CustomerQrCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
+  const baseQrToken = qrToken || userId;
+  const [activeQrToken, setActiveQrToken] = useState(baseQrToken);
+  const [secondsUntilRefresh, setSecondsUntilRefresh] = useState(0);
+  const [securingQr, setSecuringQr] = useState(false);
   const shortCode = shortCustomerCode(userId);
-  const value = customerQrValue(qrToken || userId);
+  const value = customerQrValue(activeQrToken);
 
   useEffect(() => {
     setUserQrBrightness(expanded);
     return () => setUserQrBrightness(false);
   }, [expanded]);
+
+  useEffect(() => {
+    if (!expanded) {
+      setActiveQrToken(baseQrToken);
+      setSecondsUntilRefresh(0);
+      setSecuringQr(false);
+      return;
+    }
+
+    let cancelled = false;
+    let refreshTimer: number | undefined;
+    let nextRefreshAt = Date.now();
+
+    const issueToken = async () => {
+      setSecuringQr(true);
+      const { data, error } = await supabase.rpc("issue_my_rotating_customer_qr_token");
+      if (cancelled) return;
+
+      if (error) {
+        // Keep the permanent fallback QR usable if an environment has not
+        // received the rotating-token migration yet or briefly loses network.
+        console.error("Couldn't refresh customer QR:", error);
+      } else if (data) {
+        setActiveQrToken(data);
+      }
+
+      setSecuringQr(false);
+      nextRefreshAt = Date.now() + QR_REFRESH_INTERVAL_MS;
+      setSecondsUntilRefresh(Math.ceil(QR_REFRESH_INTERVAL_MS / 1000));
+      refreshTimer = window.setTimeout(issueToken, QR_REFRESH_INTERVAL_MS);
+    };
+
+    void issueToken();
+    const countdownTimer = window.setInterval(() => {
+      setSecondsUntilRefresh(
+        Math.max(0, Math.ceil((nextRefreshAt - Date.now()) / 1000)),
+      );
+    }, 1_000);
+
+    return () => {
+      cancelled = true;
+      if (refreshTimer !== undefined) window.clearTimeout(refreshTimer);
+      window.clearInterval(countdownTimer);
+    };
+  }, [baseQrToken, expanded]);
 
   const copyCode = async () => {
     try {
@@ -120,6 +172,13 @@ export function CustomerQrCard({ qrToken, userId, displayName, className }: Cust
               <p className="mx-auto mt-2 max-w-xs text-sm text-muted-foreground">
                 Let the business scan this code. They will only see cards connected to their
                 business.
+              </p>
+
+              <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-[11px] font-semibold text-primary">
+                <RefreshCw className={`h-3 w-3 ${securingQr ? "animate-spin" : ""}`} aria-hidden="true" />
+                {securingQr && secondsUntilRefresh === 0
+                  ? "Securing QR code…"
+                  : `Refreshes in ${secondsUntilRefresh}s`}
               </p>
 
               <div className="mx-auto mt-4 flex w-full max-w-[292px] justify-center rounded-3xl bg-white p-3 shadow-sm sm:mt-5 sm:p-4">

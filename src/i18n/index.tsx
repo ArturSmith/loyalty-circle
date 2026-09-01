@@ -30,6 +30,7 @@ function translateDynamic(source: string): string {
     [/^(\d+) stamps? remaining$/, (count) => `${count} ${count === "1" ? "stempel" : "stempler"} igjen`],
     [/^(\d+) more stamps? to unlock \(step (\d+)\)$/, (count, step) => `${count} ${count === "1" ? "stempel" : "stempler"} til opplåsing (trinn ${step})`],
     [/^(\d+) unread$/, (count) => `${count} uleste`],
+    [/^Refreshes in (\d+)s$/, (seconds) => `Fornyes om ${seconds} s`],
     [/^(\d+) active cards?$/, (count) => `${count} aktive ${count === "1" ? "kort" : "kort"}`],
     [/^(\d+) of (\d+) stamps$/, (current, total) => `${current} av ${total} stempler`],
     [/^Step (\d+)$/, (step) => `Trinn ${step}`],

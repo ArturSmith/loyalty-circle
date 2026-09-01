@@ -1153,6 +1153,7 @@ export type Database = {
             }[]
           }
       get_my_customer_qr_token: { Args: never; Returns: string }
+      issue_my_rotating_customer_qr_token: { Args: never; Returns: string }
       get_pending_moderation: {
         Args: { _entity_id: string; _entity_type: string }
         Returns: Json

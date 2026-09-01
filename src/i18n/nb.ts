@@ -125,6 +125,7 @@ export const nb = {
   "Close customer QR": "Lukk kunde-QR-koden",
   "ClubCarder customer": "ClubCarder-kunde",
   "Let the business scan this code. They will only see cards connected to their business.": "La bedriften skanne denne koden. De ser bare kort som tilhører deres egen bedrift.",
+  "Securing QR code…": "Sikrer QR-koden …",
   "Copy short code": "Kopier kortkode",
   "Ask the customer to open Wallet and show My QR.": "Be kunden åpne Lommebok og vise Min QR.",
   "Customer not found": "Fant ikke kunden",
