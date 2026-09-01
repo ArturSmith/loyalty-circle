@@ -66,6 +66,7 @@ function Wallet() {
   const [arrangeOriginalIds, setArrangeOriginalIds] = useState<string[]>([]);
   const [savingOrder, setSavingOrder] = useState(false);
   const arrangingRef = useRef(false);
+  const autoRefreshingRef = useRef<Set<string>>(new Set());
   const cardStackScrollRef = useRef<HTMLDivElement>(null);
 
   const fetchWallet = useServerFn(getWalletCards);
@@ -147,6 +148,49 @@ function Wallet() {
         return next;
       });
       setFrozenBusinessIds(new Set(nextFrozenBusinessIds));
+
+      // Completing a card issues its reward as a separate voucher. Once that
+      // durable reward exists, reset the stamp card automatically so the
+      // customer can start collecting the next round without a manual action.
+      const completed = next.filter(
+        (instance) =>
+          (instance.completed_at !== null ||
+            instance.stamps_count >= instance.template.total_steps) &&
+          !autoRefreshingRef.current.has(instance.id),
+      );
+      if (completed.length > 0) {
+        completed.forEach((instance) => autoRefreshingRef.current.add(instance.id));
+        const results = await Promise.all(
+          completed.map(async (instance) => {
+            const { error } = await supabase.rpc("renew_card", {
+              _card_instance_id: instance.id,
+            });
+            return { id: instance.id, error };
+          }),
+        );
+        results.forEach(({ id }) => autoRefreshingRef.current.delete(id));
+
+        const refreshedIds = new Set(
+          results.filter((result) => !result.error).map((result) => result.id),
+        );
+        const failed = results.find((result) => result.error)?.error;
+        if (failed) console.error("Couldn't auto-refresh a completed card:", failed);
+
+        if (refreshedIds.size > 0) {
+          setInstances((current) => {
+            const refreshed = current.map((instance) =>
+              refreshedIds.has(instance.id)
+                ? { ...instance, stamps_count: 0, completed_at: null }
+                : instance,
+            );
+            setTabCache<WalletCache>(WALLET_CACHE_KEY, {
+              instances: refreshed,
+              frozenBusinessIds: nextFrozenBusinessIds,
+            });
+            return refreshed;
+          });
+        }
+      }
     } catch (error) {
       console.error("Error loading wallet cards:", error);
       if (getTabCache<WalletCache>(WALLET_CACHE_KEY) === null) {
@@ -698,6 +742,9 @@ function Wallet() {
                       ? `Reward unlocked: ${celebration.unlockedReward.label}`
                       : "Reward unlocked — enjoy!"}
                   </div>
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    Your card refreshed automatically for the next round.
+                  </p>
                 </>
               ) : (
                 <>

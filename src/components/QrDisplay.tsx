@@ -16,8 +16,14 @@ export function QrDisplay({ value, size = 240, className }: { value: string; siz
   }, [value, size]);
 
   return (
-    <div className={className} style={{ width: size, height: size }}>
-      <canvas ref={canvasRef} className={ready ? "opacity-100 transition-opacity" : "opacity-0"} />
+    <div
+      className={className}
+      style={{ width: size, maxWidth: "100%", aspectRatio: "1 / 1" }}
+    >
+      <canvas
+        ref={canvasRef}
+        className={`h-full w-full ${ready ? "opacity-100 transition-opacity" : "opacity-0"}`}
+      />
     </div>
   );
 }

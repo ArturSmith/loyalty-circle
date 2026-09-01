@@ -73,7 +73,7 @@ export function CustomerQrCard({ qrToken, userId, displayName, className }: Cust
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[70] flex items-center justify-center bg-ink/80 p-5 pt-[max(1.25rem,env(safe-area-inset-top))] pb-[max(1.25rem,env(safe-area-inset-bottom))] backdrop-blur-md"
+            className="fixed inset-0 z-[70] flex items-start justify-center overflow-y-auto bg-ink/80 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-md sm:items-center sm:p-5"
             onClick={() => setExpanded(false)}
           >
             <motion.section
@@ -84,7 +84,7 @@ export function CustomerQrCard({ qrToken, userId, displayName, className }: Cust
               role="dialog"
               aria-modal="true"
               aria-labelledby="customer-qr-title"
-              className="relative w-full max-w-sm rounded-3xl bg-paper p-6 text-center shadow-2xl"
+              className="relative my-auto max-h-[calc(100dvh-1.5rem)] w-full max-w-sm overflow-y-auto rounded-3xl bg-paper p-4 text-center shadow-2xl sm:max-h-[calc(100dvh-2.5rem)] sm:p-6"
               onClick={(event) => event.stopPropagation()}
             >
               <button
@@ -107,11 +107,11 @@ export function CustomerQrCard({ qrToken, userId, displayName, className }: Cust
                 business.
               </p>
 
-              <div className="mx-auto mt-5 flex w-fit justify-center rounded-3xl bg-white p-4 shadow-sm">
-                <QrDisplay value={value} size={260} />
+              <div className="mx-auto mt-4 flex w-full max-w-[292px] justify-center rounded-3xl bg-white p-3 shadow-sm sm:mt-5 sm:p-4">
+                <QrDisplay value={value} size={260} className="mx-auto" />
               </div>
 
-              <div className="mt-5 rounded-2xl bg-secondary/60 px-4 py-3">
+              <div className="mt-4 rounded-2xl bg-secondary/60 px-3 py-2.5 sm:mt-5 sm:px-4 sm:py-3">
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                   Short code
                 </p>

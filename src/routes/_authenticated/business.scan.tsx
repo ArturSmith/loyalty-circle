@@ -73,7 +73,7 @@ function describeError(raw: string): Rejection {
     return { title: "Card not found", message: "This QR doesn't match any active card. Ask the customer to reopen it." };
   }
   if (msg.includes("card is full")) {
-    return { title: "Card is full", message: "Every step is stamped. Give the reward, then the customer can renew the card." };
+    return { title: "Card is full", message: "Every step is stamped. The reward is ready and the card will refresh automatically in the customer's Wallet." };
   }
   if (msg.includes("please wait")) {
     return { title: "Just stamped", message: "This card was stamped a moment ago. Wait a few seconds before stamping again." };
@@ -169,7 +169,7 @@ function ScanPageContent() {
           if (card.completed_at || card.stamps_count >= card.total_steps) {
             setRejection({
               title: "Card is full",
-              message: "This customer's card is complete and must be renewed before another stamp can be added.",
+              message: "This customer's card has just completed. Ask them to keep Wallet open while it refreshes automatically.",
             });
             return;
           }
@@ -285,7 +285,7 @@ function ScanPageContent() {
                       <span className="min-w-0 flex-1">
                         <span className="block truncate font-semibold">{card.title}</span>
                         <span className="mt-0.5 block text-xs text-muted-foreground">
-                          {complete ? "Card complete — renew first" : `${card.stamps_count} of ${card.total_steps} stamps`}
+                          {complete ? "Card complete — refreshing" : `${card.stamps_count} of ${card.total_steps} stamps`}
                         </span>
                       </span>
                       {!complete ? <span className="text-xs font-semibold text-primary">Stamp</span> : null}
@@ -315,7 +315,7 @@ function ScanPageContent() {
                     <Sparkles className="h-8 w-8" />
                   </motion.div>
                   <h2 className="font-display text-3xl mt-4">Complete!</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">Card fully stamped — give the reward.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">The reward is ready and the card will refresh automatically.</p>
                 </>
               ) : (
                 <>

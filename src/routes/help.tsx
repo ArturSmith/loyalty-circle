@@ -30,7 +30,7 @@ const customerFaqs: Faq[] = [
   {
     icon: Gift,
     q: "How do I claim a reward?",
-    a: "Once you fill in all steps on a card, the reward becomes available. Show your completed card at the business to redeem it, then tap 'Renew card' to start over.",
+    a: "Once you fill in all steps, the reward becomes available and the card refreshes automatically for the next round. Redeem the earned reward from Vouchers.",
   },
   {
     icon: QrCode,
