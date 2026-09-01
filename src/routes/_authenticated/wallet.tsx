@@ -490,22 +490,36 @@ function Wallet() {
                           tabIndex={0}
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate({
-                              to: "/b/$businessId",
-                              params: { businessId: inst.template.business.id },
-                            });
+                            if (isExpanded) {
+                              navigate({
+                                to: "/b/$businessId",
+                                params: { businessId: inst.template.business.id },
+                              });
+                            } else {
+                              setFrontId(inst.id);
+                              setExpandedId(inst.id);
+                            }
                           }}
                           onKeyDown={(event) => {
                             if (event.key !== "Enter" && event.key !== " ") return;
                             event.preventDefault();
                             event.stopPropagation();
-                            navigate({
-                              to: "/b/$businessId",
-                              params: { businessId: inst.template.business.id },
-                            });
+                            if (isExpanded) {
+                              navigate({
+                                to: "/b/$businessId",
+                                params: { businessId: inst.template.business.id },
+                              });
+                            } else {
+                              setFrontId(inst.id);
+                              setExpandedId(inst.id);
+                            }
                           }}
                           className="relative block w-full text-left focus:outline-none"
-                          aria-label={`Open ${inst.template.business.name}`}
+                          aria-label={
+                            isExpanded
+                              ? `Open ${inst.template.business.name}`
+                              : `Bring ${inst.template.title} forward`
+                          }
                         >
                           <div className="relative">
                             <div className={isFrozen ? "opacity-75" : undefined}>

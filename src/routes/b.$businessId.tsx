@@ -20,6 +20,7 @@ import { WalletChooser } from "@/components/WalletChooser";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CardTermsSection } from "@/components/CardTermsSection";
 import { invalidateTabCache } from "@/lib/tabCache";
+import { resetAppStatusBarTheme, setAppStatusBarTheme } from "@/lib/native";
 
 type Template = {
   id: string; business_id: string; title: string; subtitle: string | null; description: string | null;
@@ -274,6 +275,25 @@ function BusinessPublic() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, loading, templates, businessId]);
 
+  const frontTemplate = frontTemplateId
+    ? templates.find((template) => template.id === frontTemplateId)
+    : templates[templates.length - 1];
+  const statusBarColor =
+    normalizeBrandColor(frontTemplate?.bg_color) ?? normalizeBrandColor(business?.brand_color);
+
+  useEffect(() => {
+    void setAppStatusBarTheme(
+      statusBarColor,
+      Boolean(statusBarColor && isDarkBrandColor(statusBarColor)),
+    );
+  }, [statusBarColor]);
+
+  useEffect(() => {
+    return () => {
+      void resetAppStatusBarTheme();
+    };
+  }, []);
+
 
   if (loading) return <ScreenLoader />;
 
@@ -306,12 +326,6 @@ function BusinessPublic() {
     .filter(Boolean)
     .join(", ");
 
-  // Validated once here so the raw column value never reaches a style prop.
-  const brand = normalizeBrandColor(business?.brand_color);
-  const brandForeground = brand && isDarkBrandColor(brand) ? "#ffffff" : "#17202c";
-  const brandMutedForeground = brand && isDarkBrandColor(brand)
-    ? "rgba(255, 255, 255, 0.76)"
-    : "rgba(23, 32, 44, 0.68)";
   const displayedTemplates = frontTemplateId
     ? [
         ...templates.filter((template) => template.id !== frontTemplateId),
@@ -319,18 +333,34 @@ function BusinessPublic() {
       ]
     : templates;
   const activeTemplate = displayedTemplates[displayedTemplates.length - 1] ?? null;
-  const brandedActionStyle = brand
-    ? { backgroundColor: brand, color: brandForeground }
+  // The front card is the source of truth for the public profile palette.
+  // Every value is normalized before it reaches an inline style; the business
+  // brand remains a fallback for businesses that do not have a published card.
+  const businessBrand = normalizeBrandColor(business?.brand_color);
+  const schemeBackground = normalizeBrandColor(activeTemplate?.bg_color) ?? businessBrand;
+  const schemeAccent = normalizeBrandColor(activeTemplate?.accent_color) ?? businessBrand;
+  const schemeText =
+    normalizeBrandColor(activeTemplate?.text_color) ??
+    (schemeBackground && isDarkBrandColor(schemeBackground) ? "#ffffff" : "#17202c");
+  const schemeMutedText = schemeText ? brandTint(schemeText, 0.72) : undefined;
+  const schemeAccentForeground = schemeAccent && isDarkBrandColor(schemeAccent)
+    ? "#ffffff"
+    : "#17202c";
+  const brandedActionStyle = schemeAccent
+    ? { backgroundColor: schemeAccent, color: schemeAccentForeground }
     : undefined;
 
   return (
     <div
       className="min-h-screen px-4 py-10"
       style={
-        brand
+        schemeBackground
           ? {
               backgroundColor: "var(--background)",
-              backgroundImage: `linear-gradient(180deg, ${brandTint(brand, 0.24)} 0%, ${brandTint(brand, 0.12)} 45%, ${brandTint(brand, 0.08)} 100%)`,
+              backgroundImage: `linear-gradient(180deg, ${brandTint(schemeBackground, 0.34)} 0%, ${brandTint(schemeBackground, 0.18)} 45%, ${brandTint(schemeBackground, 0.1)} 100%)`,
+              ["--primary" as string]: schemeAccent ?? schemeBackground,
+              ["--ring" as string]: schemeAccent ?? schemeBackground,
+              ["--primary-foreground" as string]: schemeAccentForeground,
             }
           : undefined
       }
@@ -339,27 +369,28 @@ function BusinessPublic() {
         <Button
           variant="ghost"
           className="mb-3 -ml-2 gap-2"
-          style={brand ? { color: brand } : undefined}
+          style={schemeAccent ? { color: schemeAccent } : undefined}
           asChild
         >
-          <Link to="/">
+          <Link to="/discover">
             <ArrowLeft className="h-4 w-4" />
             Back
           </Link>
         </Button>
 
-        {/* The header renders regardless of cards: a business with none is
-            still a real place someone may have scanned a QR code to reach.
-            Only the top corners are rounded and there is no bottom edge, so
-            the brand tint fades out into the page instead of ending in a line. */}
+        {/* The selected card colors the public profile. Without a published
+            card, the business brand provides the same treatment. */}
         <div
-          className="rounded-3xl px-5 pb-8 pt-6 text-center shadow-sm"
+          className="rounded-3xl px-5 pb-8 pt-6 text-center shadow-sm transition-colors duration-500"
           style={
-            brand
+            schemeBackground
               ? {
-                  backgroundColor: brand,
-                  color: brandForeground,
-                  boxShadow: `0 18px 50px ${brandTint(brand, 0.22)}`,
+                  backgroundColor: schemeBackground,
+                  backgroundImage: schemeAccent
+                    ? `linear-gradient(145deg, transparent 15%, ${brandTint(schemeAccent, 0.18)} 100%)`
+                    : undefined,
+                  color: schemeText,
+                  boxShadow: `0 18px 50px ${brandTint(schemeAccent ?? schemeBackground, 0.22)}`,
                 }
               : undefined
           }
@@ -370,8 +401,8 @@ function BusinessPublic() {
               alt={`${business.name} logo`}
               className="mx-auto h-16 w-16 rounded-full object-cover ring-2 ring-offset-2"
               style={{
-                ["--tw-ring-color" as string]: brandForeground,
-                ["--tw-ring-offset-color" as string]: brand ?? "hsl(var(--background))",
+                ["--tw-ring-color" as string]: schemeAccent ?? schemeText,
+                ["--tw-ring-offset-color" as string]: schemeBackground ?? "var(--background)",
               }}
             />
           ) : null}
@@ -380,10 +411,10 @@ function BusinessPublic() {
             <p
               className="mt-2 inline-block rounded-full px-3 py-1 text-xs font-medium uppercase tracking-widest"
               style={
-                brand
+                schemeAccent
                   ? {
-                      backgroundColor: brandForeground,
-                      color: brand,
+                      backgroundColor: schemeAccent,
+                      color: schemeAccentForeground,
                     }
                   : undefined
               }
@@ -394,14 +425,14 @@ function BusinessPublic() {
           {business?.description && (
             <p
               className="mx-auto mt-3 max-w-prose text-sm"
-              style={brand ? { color: brandMutedForeground } : undefined}
+              style={schemeMutedText ? { color: schemeMutedText } : undefined}
             >
               {business.description}
             </p>
           )}
           <p
             className="mt-2 text-sm"
-            style={brand ? { color: brandMutedForeground } : undefined}
+            style={schemeMutedText ? { color: schemeMutedText } : undefined}
           >
             {cardsLoadError
               ? "Loyalty cards could not be loaded. Please try again shortly."
@@ -433,11 +464,16 @@ function BusinessPublic() {
             }
             claim(t.id, t.terms_version);
           };
-          const stackHeight = 220 + Math.max(0, displayedTemplates.length - 1) * 56;
+          const stackOffset = Math.max(0, displayedTemplates.length - 1) * 56;
 
           return (
             <section className="mt-6" aria-label="Loyalty cards">
-              <div className="relative" style={{ height: stackHeight }}>
+              <div className="relative">
+                {/* StampCard is responsive, so reserve its real aspect-ratio
+                    height plus every visible stack offset. A fixed pixel
+                    height lets wide mobile cards cover the controls below. */}
+                <div className="aspect-[1.586/1]" aria-hidden="true" />
+                {stackOffset > 0 ? <div style={{ height: stackOffset }} aria-hidden="true" /> : null}
                 {displayedTemplates.map((template, index) => {
                   const isFront = index === displayedTemplates.length - 1;
                   return (
@@ -454,7 +490,7 @@ function BusinessPublic() {
                         tabIndex={0}
                         className="block w-full rounded-2xl text-left focus:outline-none focus-visible:ring-2"
                         style={{
-                          ["--tw-ring-color" as string]: brand ?? "var(--ring)",
+                          ["--tw-ring-color" as string]: schemeAccent ?? "var(--ring)",
                         }}
                         aria-label={isFront ? `${template.title}, selected` : `Bring ${template.title} forward`}
                         onClick={() => {
@@ -506,7 +542,7 @@ function BusinessPublic() {
               >
                 <CardTermsSection
                   terms={t.terms_and_conditions}
-                  className="mt-4 border-white/60 bg-card/90 shadow-sm backdrop-blur"
+                  className="mt-6 border-primary/20 bg-card/90 shadow-sm backdrop-blur"
                   termsClassName="max-h-40 overflow-y-auto"
                   open={expandedTermsId === t.id}
                   onOpenChange={(open) => setExpandedTermsId(open ? t.id : null)}
@@ -588,8 +624,8 @@ function BusinessPublic() {
                       try { sessionStorage.setItem(`pending_claim_terms:${businessId}`, String(t.terms_version)); } catch {}
                       navigate({ to: "/auth", search: { redirect: `/b/${businessId}` } });
                     }}
-                    accentColor={brand}
-                    accentForeground={brandForeground}
+                    accentColor={schemeAccent}
+                    accentForeground={schemeAccentForeground}
                   />
                 )}
               </motion.div>
@@ -616,7 +652,7 @@ function BusinessPublic() {
                 return (
                   <li
                     key={loc.id}
-                    className="rounded-2xl border border-border bg-card p-4"
+                    className="rounded-2xl border border-primary/20 bg-card/90 p-4 shadow-sm backdrop-blur"
                   >
                     <div className="flex items-start gap-3">
                       <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
@@ -661,7 +697,7 @@ function BusinessPublic() {
         {locations.length === 0 && fallbackAddress && (
           <section className="mt-10">
             <h2 className="font-display text-xl font-bold">Where to find us</h2>
-            <div className="mt-3 flex items-start gap-3 rounded-2xl border border-border bg-card p-4">
+            <div className="mt-3 flex items-start gap-3 rounded-2xl border border-primary/20 bg-card/90 p-4 shadow-sm backdrop-blur">
               <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
               <div className="min-w-0 flex-1">
                 <p className="text-sm">{fallbackAddress}</p>
@@ -717,7 +753,7 @@ function BusinessPublic() {
                     href={s.url}
                     target="_blank"
                     rel="noopener noreferrer nofollow"
-                    className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-medium capitalize hover:bg-muted/40"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-card/70 px-3 py-1.5 text-xs font-medium capitalize text-primary backdrop-blur hover:bg-card"
                   >
                     <LinkIcon className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
                     {s.platform}

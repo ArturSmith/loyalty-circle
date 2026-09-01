@@ -18,6 +18,8 @@ type Props = {
   /** Sends the visitor to sign-in so the card lands in the in-app wallet. */
   onUseInAppWallet: () => void;
   className?: string;
+  accentColor?: string | null;
+  accentForeground?: string;
 };
 
 /**
@@ -37,6 +39,8 @@ export function WalletChooser({
   onTermsRequired,
   onUseInAppWallet,
   className,
+  accentColor,
+  accentForeground,
 }: Props) {
   const create = useServerFn(createWalletPass);
   const [busy, setBusy] = useState(false);
@@ -110,6 +114,11 @@ export function WalletChooser({
             ? "border border-border bg-transparent text-foreground"
             : "bg-primary text-primary-foreground"
         }`}
+        style={
+          !anyNativeWallet && accentColor
+            ? { backgroundColor: accentColor, color: accentForeground }
+            : undefined
+        }
       >
         <Smartphone className="h-4 w-4" />
         Add to ClubCarder wallet

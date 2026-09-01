@@ -60,6 +60,50 @@ export async function hapticTap() {
   } catch {}
 }
 
+const DEFAULT_STATUS_BAR_COLOR = "#fafbfc";
+
+/**
+ * Keeps the browser/PWA theme and the native system status bar aligned with a
+ * screen-specific palette. Android 15+ takes its bar background from the page
+ * behind the transparent system bar, but still honors the icon style; older
+ * Android versions also honor setBackgroundColor.
+ */
+export async function setAppStatusBarTheme(
+  backgroundColor: string | null,
+  darkBackground: boolean,
+) {
+  const color = backgroundColor ?? DEFAULT_STATUS_BAR_COLOR;
+
+  if (typeof document !== "undefined") {
+    let themeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+    if (!themeColor) {
+      themeColor = document.createElement("meta");
+      themeColor.name = "theme-color";
+      document.head.appendChild(themeColor);
+    }
+    themeColor.content = color;
+  }
+
+  if (!Capacitor.isNativePlatform()) return;
+  try {
+    const { StatusBar, Style } = await import("@capacitor/status-bar");
+    // Capacitor's enum names describe the theme, while its documentation
+    // defines DARK as light content and LIGHT as dark content.
+    await StatusBar.setStyle({ style: darkBackground ? Style.Dark : Style.Light });
+    try {
+      await StatusBar.setBackgroundColor({ color });
+    } catch {
+      // Expected on Android 15+, where the WebView background supplies it.
+    }
+  } catch {
+    // Status-bar customization is optional outside the native shell.
+  }
+}
+
+export function resetAppStatusBarTheme() {
+  return setAppStatusBarTheme(DEFAULT_STATUS_BAR_COLOR, false);
+}
+
 type NativeDisplayBridge = {
   setQrBrightness: (enabled: boolean) => void;
 };
