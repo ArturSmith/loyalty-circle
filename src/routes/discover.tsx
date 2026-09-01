@@ -2,7 +2,7 @@ import { getTabCache, setTabCache } from "@/lib/tabCache";
 import { PageLoader } from "@/components/Spinner";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { MapPin, ScanLine, Search } from "lucide-react";
+import { ChevronRight, MapPin, ScanLine, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { TabScreen } from "@/components/TabScreen";
@@ -153,14 +153,21 @@ function Discover() {
         <div className="mx-auto mt-6 max-w-3xl space-y-8">
           {groups.map((group) => (
             <section key={group.category} aria-label={group.category}>
-              <div className="flex items-end justify-between gap-3 px-5">
+              <div className="flex items-center justify-between gap-3 px-5">
                 <h2 className="font-display text-xl font-bold">{group.category}</h2>
-                <span className="text-xs text-muted-foreground">
-                  {group.businesses.length} {group.businesses.length === 1 ? "business" : "businesses"}
-                </span>
+                {group.businesses.length > 2 ? (
+                  <Button asChild variant="ghost" size="sm" className="-mr-2 gap-1 px-2 text-primary">
+                    <Link
+                      to="/discover/category/$category"
+                      params={{ category: group.category }}
+                    >
+                      See all <ChevronRight className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                ) : null}
               </div>
               <div className="mt-3 grid gap-4 px-5 sm:grid-cols-2">
-                {group.businesses.map((business) => (
+                {group.businesses.slice(0, 2).map((business) => (
                   <DiscoverBusinessTile key={business.business_id} business={business} />
                 ))}
               </div>

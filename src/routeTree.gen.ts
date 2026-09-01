@@ -35,6 +35,7 @@ import { Route as AuthenticatedBusinessRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authenticated/chats.index'
 import { Route as AuthenticatedBusinessIndexRouteImport } from './routes/_authenticated/business.index'
+import { Route as DiscoverCategoryCategoryRouteImport } from './routes/discover_.category.$category'
 import { Route as AuthenticatedSettingsBillingRouteImport } from './routes/_authenticated/settings.billing'
 import { Route as AuthenticatedChatsConversationIdRouteImport } from './routes/_authenticated/chats.$conversationId'
 import { Route as AuthenticatedBusinessWorkspaceRouteImport } from './routes/_authenticated/business.workspace'
@@ -186,6 +187,12 @@ const AuthenticatedBusinessIndexRoute =
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedBusinessRoute,
+  } as any)
+const DiscoverCategoryCategoryRoute =
+  DiscoverCategoryCategoryRouteImport.update({
+    id: '/discover_/category/$category',
+    path: '/discover/category/$category',
+    getParentRoute: () => rootRouteImport,
   } as any)
 const AuthenticatedSettingsBillingRoute =
   AuthenticatedSettingsBillingRouteImport.update({
@@ -341,6 +348,7 @@ export interface FileRoutesByFullPath {
   '/business/workspace': typeof AuthenticatedBusinessWorkspaceRoute
   '/chats/$conversationId': typeof AuthenticatedChatsConversationIdRoute
   '/settings/billing': typeof AuthenticatedSettingsBillingRoute
+  '/discover/category/$category': typeof DiscoverCategoryCategoryRoute
   '/business/': typeof AuthenticatedBusinessIndexRoute
   '/chats/': typeof AuthenticatedChatsIndexRoute
   '/business/cards/new': typeof AuthenticatedBusinessCardsNewRoute
@@ -387,6 +395,7 @@ export interface FileRoutesByTo {
   '/business/workspace': typeof AuthenticatedBusinessWorkspaceRoute
   '/chats/$conversationId': typeof AuthenticatedChatsConversationIdRoute
   '/settings/billing': typeof AuthenticatedSettingsBillingRoute
+  '/discover/category/$category': typeof DiscoverCategoryCategoryRoute
   '/business': typeof AuthenticatedBusinessIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
   '/business/cards/new': typeof AuthenticatedBusinessCardsNewRoute
@@ -436,6 +445,7 @@ export interface FileRoutesById {
   '/_authenticated/business/workspace': typeof AuthenticatedBusinessWorkspaceRoute
   '/_authenticated/chats/$conversationId': typeof AuthenticatedChatsConversationIdRoute
   '/_authenticated/settings/billing': typeof AuthenticatedSettingsBillingRoute
+  '/discover_/category/$category': typeof DiscoverCategoryCategoryRoute
   '/_authenticated/business/': typeof AuthenticatedBusinessIndexRoute
   '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
   '/_authenticated/business/cards/new': typeof AuthenticatedBusinessCardsNewRoute
@@ -485,6 +495,7 @@ export interface FileRouteTypes {
     | '/business/workspace'
     | '/chats/$conversationId'
     | '/settings/billing'
+    | '/discover/category/$category'
     | '/business/'
     | '/chats/'
     | '/business/cards/new'
@@ -531,6 +542,7 @@ export interface FileRouteTypes {
     | '/business/workspace'
     | '/chats/$conversationId'
     | '/settings/billing'
+    | '/discover/category/$category'
     | '/business'
     | '/chats'
     | '/business/cards/new'
@@ -579,6 +591,7 @@ export interface FileRouteTypes {
     | '/_authenticated/business/workspace'
     | '/_authenticated/chats/$conversationId'
     | '/_authenticated/settings/billing'
+    | '/discover_/category/$category'
     | '/_authenticated/business/'
     | '/_authenticated/chats/'
     | '/_authenticated/business/cards/new'
@@ -608,6 +621,7 @@ export interface RootRouteChildren {
   CheckoutSuccessRoute: typeof CheckoutSuccessRoute
   ClaimInstanceIdRoute: typeof ClaimInstanceIdRoute
   InviteTokenRoute: typeof InviteTokenRoute
+  DiscoverCategoryCategoryRoute: typeof DiscoverCategoryCategoryRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicWalletGoogleCallbackRoute: typeof ApiPublicWalletGoogleCallbackRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -798,6 +812,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/business/'
       preLoaderRoute: typeof AuthenticatedBusinessIndexRouteImport
       parentRoute: typeof AuthenticatedBusinessRoute
+    }
+    '/discover_/category/$category': {
+      id: '/discover_/category/$category'
+      path: '/discover/category/$category'
+      fullPath: '/discover/category/$category'
+      preLoaderRoute: typeof DiscoverCategoryCategoryRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/settings/billing': {
       id: '/_authenticated/settings/billing'
@@ -1033,6 +1054,7 @@ const rootRouteChildren: RootRouteChildren = {
   CheckoutSuccessRoute: CheckoutSuccessRoute,
   ClaimInstanceIdRoute: ClaimInstanceIdRoute,
   InviteTokenRoute: InviteTokenRoute,
+  DiscoverCategoryCategoryRoute: DiscoverCategoryCategoryRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicWalletGoogleCallbackRoute: ApiPublicWalletGoogleCallbackRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
