@@ -94,29 +94,29 @@ export function CustomerQrCard({ qrToken, userId, displayName, className }: Cust
         type="button"
         onClick={() => setExpanded(true)}
         className={cn(
-          "relative isolate flex w-full items-center gap-4 overflow-hidden rounded-3xl border border-primary/45 bg-card p-3 text-left shadow-lg ring-1 ring-primary/15 transition-all hover:border-primary/65 hover:shadow-xl",
+          "relative isolate flex w-full items-center gap-4 overflow-hidden rounded-3xl border border-border bg-card p-3 text-left shadow-lg ring-1 ring-black/5 transition-all hover:border-foreground/20 hover:shadow-xl dark:ring-white/10",
           className,
         )}
         aria-label="Open my customer QR"
       >
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute -left-16 top-1/2 -z-10 h-60 w-60 -translate-y-1/2 rounded-full bg-primary/35 blur-3xl"
+          className="pointer-events-none absolute -left-16 top-1/2 -z-10 h-60 w-60 -translate-y-1/2 rounded-full bg-white blur-3xl dark:bg-white/25"
         />
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-r from-white/75 via-primary/10 to-transparent dark:from-white/20 dark:via-primary/15"
+          className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-r from-white/90 via-white/45 to-transparent dark:from-white/20 dark:via-white/5"
         />
         <span
           aria-hidden="true"
           className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-90"
         />
 
-        <span className="relative z-10 flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl bg-white p-2 shadow-[0_10px_30px_-10px_var(--primary)] ring-2 ring-white/90">
+        <span className="relative z-10 flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl bg-white p-2 shadow-xl ring-2 ring-white/90">
           <QrDisplay value={value} size={80} />
         </span>
         <span className="relative z-10 min-w-0 flex-1">
-          <span className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-primary">
+          <span className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-foreground">
             <QrCode className="h-4 w-4" aria-hidden="true" /> My QR
           </span>
           <span className="mt-1 block font-display text-lg font-bold">
@@ -129,7 +129,7 @@ export function CustomerQrCard({ qrToken, userId, displayName, className }: Cust
             {shortCode}
           </span>
         </span>
-        <span className="relative z-10 mr-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/80 text-primary shadow-sm ring-1 ring-primary/15 dark:bg-white/15">
+        <span className="relative z-10 mr-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/80 text-foreground shadow-sm ring-1 ring-black/5 dark:bg-white/15 dark:ring-white/10">
           <Maximize2 className="h-4 w-4" aria-hidden="true" />
         </span>
       </button>
@@ -163,7 +163,7 @@ export function CustomerQrCard({ qrToken, userId, displayName, className }: Cust
                 <X className="h-5 w-5" />
               </button>
 
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-primary">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-foreground">
                 ClubCarder customer
               </p>
               <h2 id="customer-qr-title" className="mt-1 font-display text-2xl font-bold">
@@ -174,7 +174,7 @@ export function CustomerQrCard({ qrToken, userId, displayName, className }: Cust
                 business.
               </p>
 
-              <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-[11px] font-semibold text-primary">
+              <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-[11px] font-semibold text-foreground">
                 <RefreshCw className={`h-3 w-3 ${securingQr ? "animate-spin" : ""}`} aria-hidden="true" />
                 {securingQr && secondsUntilRefresh === 0
                   ? "Securing QR code…"

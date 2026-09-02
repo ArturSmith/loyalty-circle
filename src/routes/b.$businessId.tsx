@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { ArrowLeft, Globe, Link2 as LinkIcon, MapPin, Phone, Trash2 } from "lucide-react";
-import { brandTint, isDarkBrandColor, normalizeBrandColor } from "@/lib/brand";
+import { brandTint, normalizeBrandColor } from "@/lib/brand";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { useServerFn } from "@tanstack/react-start";
 import { claimCardToWallet } from "@/utils/cards.functions";
@@ -20,7 +20,7 @@ import { WalletChooser } from "@/components/WalletChooser";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CardTermsSection } from "@/components/CardTermsSection";
 import { invalidateTabCache } from "@/lib/tabCache";
-import { resetAppStatusBarTheme, setAppStatusBarTheme } from "@/lib/native";
+import { resetAppStatusBarTheme } from "@/lib/native";
 
 type Template = {
   id: string; business_id: string; title: string; subtitle: string | null; description: string | null;
@@ -275,20 +275,8 @@ function BusinessPublic() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, loading, templates, businessId]);
 
-  const frontTemplate = frontTemplateId
-    ? templates.find((template) => template.id === frontTemplateId)
-    : templates[templates.length - 1];
-  const statusBarColor =
-    normalizeBrandColor(frontTemplate?.bg_color) ?? normalizeBrandColor(business?.brand_color);
-
   useEffect(() => {
-    void setAppStatusBarTheme(
-      statusBarColor,
-      Boolean(statusBarColor && isDarkBrandColor(statusBarColor)),
-    );
-  }, [statusBarColor]);
-
-  useEffect(() => {
+    void resetAppStatusBarTheme();
     return () => {
       void resetAppStatusBarTheme();
     };
@@ -333,43 +321,20 @@ function BusinessPublic() {
       ]
     : templates;
   const activeTemplate = displayedTemplates[displayedTemplates.length - 1] ?? null;
-  // The front card is the source of truth for the public profile palette.
-  // Every value is normalized before it reaches an inline style; the business
-  // brand remains a fallback for businesses that do not have a published card.
   const businessBrand = normalizeBrandColor(business?.brand_color);
-  const schemeBackground = normalizeBrandColor(activeTemplate?.bg_color) ?? businessBrand;
-  const schemeAccent = normalizeBrandColor(activeTemplate?.accent_color) ?? businessBrand;
-  const schemeText =
-    normalizeBrandColor(activeTemplate?.text_color) ??
-    (schemeBackground && isDarkBrandColor(schemeBackground) ? "#ffffff" : "#17202c");
-  const schemeMutedText = schemeText ? brandTint(schemeText, 0.72) : undefined;
-  const schemeAccentForeground = schemeAccent && isDarkBrandColor(schemeAccent)
-    ? "#ffffff"
-    : "#17202c";
-  const brandedActionStyle = schemeAccent
-    ? { backgroundColor: schemeAccent, color: schemeAccentForeground }
+  const businessInfoStyle = businessBrand
+    ? {
+        backgroundColor: brandTint(businessBrand, 0.08) ?? undefined,
+        borderColor: brandTint(businessBrand, 0.22) ?? undefined,
+      }
     : undefined;
 
   return (
-    <div
-      className="min-h-screen px-4 py-10"
-      style={
-        schemeBackground
-          ? {
-              backgroundColor: "var(--background)",
-              backgroundImage: `linear-gradient(180deg, ${brandTint(schemeBackground, 0.34)} 0%, ${brandTint(schemeBackground, 0.18)} 45%, ${brandTint(schemeBackground, 0.1)} 100%)`,
-              ["--primary" as string]: schemeAccent ?? schemeBackground,
-              ["--ring" as string]: schemeAccent ?? schemeBackground,
-              ["--primary-foreground" as string]: schemeAccentForeground,
-            }
-          : undefined
-      }
-    >
+    <div className="min-h-screen bg-background px-4 py-10">
       <div className="mx-auto max-w-md">
         <Button
           variant="ghost"
           className="mb-3 -ml-2 gap-2"
-          style={schemeAccent ? { color: schemeAccent } : undefined}
           asChild
         >
           <Link to="/discover">
@@ -378,62 +343,29 @@ function BusinessPublic() {
           </Link>
         </Button>
 
-        {/* The selected card colors the public profile. Without a published
-            card, the business brand provides the same treatment. */}
         <div
-          className="rounded-3xl px-5 pb-8 pt-6 text-center shadow-sm transition-colors duration-500"
-          style={
-            schemeBackground
-              ? {
-                  backgroundColor: schemeBackground,
-                  backgroundImage: schemeAccent
-                    ? `linear-gradient(145deg, transparent 15%, ${brandTint(schemeAccent, 0.18)} 100%)`
-                    : undefined,
-                  color: schemeText,
-                  boxShadow: `0 18px 50px ${brandTint(schemeAccent ?? schemeBackground, 0.22)}`,
-                }
-              : undefined
-          }
+          className="rounded-3xl border border-border bg-card px-5 pb-8 pt-6 text-center shadow-sm"
+          style={businessInfoStyle}
         >
           {business?.logo_url ? (
             <img
               src={business.logo_url}
               alt={`${business.name} logo`}
-              className="mx-auto h-16 w-16 rounded-full object-cover ring-2 ring-offset-2"
-              style={{
-                ["--tw-ring-color" as string]: schemeAccent ?? schemeText,
-                ["--tw-ring-offset-color" as string]: schemeBackground ?? "var(--background)",
-              }}
+              className="mx-auto h-16 w-16 rounded-full object-cover ring-2 ring-border ring-offset-2 ring-offset-background"
             />
           ) : null}
           <h1 className="mt-4 font-display text-3xl font-semibold">{business?.name ?? "Loyalty cards"}</h1>
           {business?.category && (
-            <p
-              className="mt-2 inline-block rounded-full px-3 py-1 text-xs font-medium uppercase tracking-widest"
-              style={
-                schemeAccent
-                  ? {
-                      backgroundColor: schemeAccent,
-                      color: schemeAccentForeground,
-                    }
-                  : undefined
-              }
-            >
+            <p className="mt-2 inline-block rounded-full bg-secondary px-3 py-1 text-xs font-medium uppercase tracking-widest text-secondary-foreground">
               {business.category}
             </p>
           )}
           {business?.description && (
-            <p
-              className="mx-auto mt-3 max-w-prose text-sm"
-              style={schemeMutedText ? { color: schemeMutedText } : undefined}
-            >
+            <p className="mx-auto mt-3 max-w-prose text-sm text-muted-foreground">
               {business.description}
             </p>
           )}
-          <p
-            className="mt-2 text-sm"
-            style={schemeMutedText ? { color: schemeMutedText } : undefined}
-          >
+          <p className="mt-2 text-sm text-muted-foreground">
             {cardsLoadError
               ? "Loyalty cards could not be loaded. Please try again shortly."
               : templates.length === 0
@@ -489,9 +421,6 @@ function BusinessPublic() {
                         role="button"
                         tabIndex={0}
                         className="block w-full rounded-2xl text-left focus:outline-none focus-visible:ring-2"
-                        style={{
-                          ["--tw-ring-color" as string]: schemeAccent ?? "var(--ring)",
-                        }}
                         aria-label={isFront ? `${template.title}, selected` : `Bring ${template.title} forward`}
                         onClick={() => {
                           if (!isFront) {
@@ -542,7 +471,7 @@ function BusinessPublic() {
               >
                 <CardTermsSection
                   terms={t.terms_and_conditions}
-                  className="mt-6 border-primary/20 bg-card/90 shadow-sm backdrop-blur"
+                  className="mt-6 border-border bg-card shadow-sm"
                   termsClassName="max-h-40 overflow-y-auto"
                   open={expandedTermsId === t.id}
                   onOpenChange={(open) => setExpandedTermsId(open ? t.id : null)}
@@ -572,7 +501,6 @@ function BusinessPublic() {
                       <div className="mt-3 flex gap-2">
                         <Button
                           className="h-11 min-w-0 flex-1 border-0"
-                          style={brandedActionStyle}
                           onClick={() => openInWallet(ownedInstanceId)}
                         >
                           Open in my wallet
@@ -590,7 +518,6 @@ function BusinessPublic() {
                     ) : (
                       <Button
                         className="mt-3 h-11 w-full border-0"
-                        style={brandedActionStyle}
                         disabled={claiming === t.id}
                         onClick={handleActiveCardAction}
                       >
@@ -624,8 +551,6 @@ function BusinessPublic() {
                       try { sessionStorage.setItem(`pending_claim_terms:${businessId}`, String(t.terms_version)); } catch {}
                       navigate({ to: "/auth", search: { redirect: `/b/${businessId}` } });
                     }}
-                    accentColor={schemeAccent}
-                    accentForeground={schemeAccentForeground}
                   />
                 )}
               </motion.div>
