@@ -85,7 +85,7 @@ function PricingPage() {
           {PLAN_LIST.map((plan) => (
             <div
               key={plan.tier}
-              className={`glass-panel rounded-2xl p-7 ${
+              className={`glass-panel flex h-full flex-col rounded-2xl p-7 ${
                 plan.popular ? "border-primary/40 ring-1 ring-primary/30" : ""
               }`}
             >
@@ -103,10 +103,10 @@ function PricingPage() {
                 <span className="text-sm text-muted-foreground">/ month</span>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
-                Excl. VAT. Billed monthly in NOK.
+                Billed monthly in NOK.
               </p>
               <p className="mt-3 text-xs text-muted-foreground">{plan.bestFor}</p>
-              <ul className="mt-6 space-y-2.5 text-sm">
+              <ul className="mt-6 flex-1 space-y-2.5 text-sm">
                 {plan.highlights.map((f) => (
                   <li key={f} className="flex gap-2.5">
                     <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />

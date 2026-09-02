@@ -218,7 +218,7 @@ function SubscribePage() {
                   </span>
                   <span className="text-sm text-muted-foreground">/month</span>
                 </div>
-                <p className="mt-1 text-xs text-muted-foreground">Excl. VAT. Cancel anytime.</p>
+                <p className="mt-1 text-xs text-muted-foreground">Cancel anytime.</p>
 
                 <ul className="mt-6 flex-1 space-y-2.5">
                   {plan.highlights.map((f) => (
