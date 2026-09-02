@@ -9,7 +9,7 @@
 
 /* -------------------------------------------------------------- plan tiers */
 
-export const PLAN_TIERS = ["starter", "growth", "scale"] as const;
+export const PLAN_TIERS = ["basic", "pro", "unlimited"] as const;
 export type PlanTier = (typeof PLAN_TIERS)[number];
 
 /**
@@ -17,14 +17,14 @@ export type PlanTier = (typeof PLAN_TIERS)[number];
  * no `plan_tier`. These customers bought "unlimited everything", so downgrading
  * them silently would take away features they already paid for.
  */
-export const LEGACY_TIER: PlanTier = "growth";
+export const LEGACY_TIER: PlanTier = "pro";
 
 /**
  * What the 14-day free trial grants. The trial is a taste of the entry plan,
  * not of the whole product — otherwise the trial ending feels like a downgrade
  * and there is nothing left to sell.
  */
-export const TRIAL_TIER: PlanTier = "starter";
+export const TRIAL_TIER: PlanTier = "basic";
 
 /* ----------------------------------------------------------------- limits */
 
@@ -35,14 +35,9 @@ export type FeatureKey =
   | "analytics.basic"
   | "analytics.advanced"
   | "analytics.export"
-  | "integrations.pos"
-  | "integrations.payments"
-  | "integrations.api"
   | "marketplace.listing"
-  | "marketplace.featured"
-  | "marketplace.campaigns"
-  | "wallet.apple"
-  | "wallet.google"
+  | "messaging.customers"
+  | "team.chat"
   | "support.priority";
 
 export type PlanLimits = {
