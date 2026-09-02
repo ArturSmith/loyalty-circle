@@ -94,7 +94,7 @@ export function CustomerQrCard({ qrToken, userId, displayName, className }: Cust
         type="button"
         onClick={() => setExpanded(true)}
         className={cn(
-          "relative isolate flex w-full items-center gap-4 overflow-hidden rounded-3xl border border-border bg-card p-3 text-left shadow-lg ring-1 ring-black/5 transition-all hover:border-foreground/20 hover:shadow-xl dark:ring-white/10",
+          "relative isolate flex w-full items-center gap-4 overflow-hidden rounded-3xl border border-border bg-card p-3 text-left ring-1 ring-black/5 transition-colors hover:border-foreground/20 dark:ring-white/10",
           className,
         )}
         aria-label="Open my customer QR"
@@ -112,7 +112,7 @@ export function CustomerQrCard({ qrToken, userId, displayName, className }: Cust
           className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-90"
         />
 
-        <span className="relative z-10 flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl bg-white p-2 shadow-xl ring-2 ring-white/90">
+        <span className="relative z-10 flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl bg-white p-2 ring-2 ring-white/90">
           <QrDisplay value={value} size={80} />
         </span>
         <span className="relative z-10 min-w-0 flex-1">

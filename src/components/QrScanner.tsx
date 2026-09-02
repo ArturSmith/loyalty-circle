@@ -7,27 +7,34 @@ export function QrScanner({ onScan, paused }: { onScan: (text: string) => void; 
   const lastRef = useRef<{ text: string; ts: number } | null>(null);
 
   useEffect(() => {
-    if (paused) return;
+    if (paused) {
+      // A deliberate next scan can read the same QR immediately. The short
+      // debounce below only suppresses repeated frames within one scan.
+      lastRef.current = null;
+      return;
+    }
     const reader = new BrowserMultiFormatReader();
     let stopFn: (() => void) | null = null;
+    let cancelled = false;
 
     (async () => {
       try {
         const controls = await reader.decodeFromVideoDevice(undefined, videoRef.current!, (result) => {
-          if (!result) return;
+          if (cancelled || !result) return;
           const text = result.getText();
           const now = Date.now();
           if (lastRef.current && lastRef.current.text === text && now - lastRef.current.ts < 2000) return;
           lastRef.current = { text, ts: now };
           onScan(text);
         });
-        stopFn = () => controls.stop();
+        if (cancelled) controls.stop();
+        else stopFn = () => controls.stop();
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Camera unavailable");
+        if (!cancelled) setError(e instanceof Error ? e.message : "Camera unavailable");
       }
     })();
 
-    return () => { stopFn?.(); };
+    return () => { cancelled = true; stopFn?.(); };
   }, [onScan, paused]);
 
   if (error) {

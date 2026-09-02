@@ -75,9 +75,6 @@ function describeError(raw: string): Rejection {
   if (msg.includes("card is full")) {
     return { title: "Card is full", message: "Every step is stamped. The reward is ready and the card will refresh automatically in the customer's Wallet." };
   }
-  if (msg.includes("please wait")) {
-    return { title: "Just stamped", message: "This card was stamped a moment ago. Wait a few seconds before stamping again." };
-  }
   if (msg.includes("subscription required")) {
     return { title: "Stamping paused", message: "This business isn't covered by an active subscription. Renew to resume stamping." };
   }

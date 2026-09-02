@@ -42,7 +42,7 @@ const EMPTY_USAGE: Record<LimitKey, number> = {
   administrators: 0,
 };
 
-export function useEntitlements(): BusinessEntitlements {
+export function useEntitlements(selectedBusinessId?: string): BusinessEntitlements {
   const [tick, setTick] = useState(0);
   const [state, setState] = useState<{
     loading: boolean;
@@ -73,14 +73,18 @@ export function useEntitlements(): BusinessEntitlements {
         return;
       }
 
-      // The user may own a business, or merely be an admin of someone else's.
+      // Explicit business screens must never use another business's plan/usage.
+      let ownedQuery = supabase.from("businesses").select("id").eq("owner_id", u.user.id);
+      let membershipsQuery = supabase.from("business_members")
+        .select("business_id, role, permissions, status")
+        .eq("user_id", u.user.id).eq("status", "active");
+      if (selectedBusinessId) {
+        ownedQuery = ownedQuery.eq("id", selectedBusinessId);
+        membershipsQuery = membershipsQuery.eq("business_id", selectedBusinessId);
+      }
       const [{ data: owned }, { data: memberships }] = await Promise.all([
-        supabase.from("businesses").select("id").eq("owner_id", u.user.id).limit(1),
-        (supabase as any)
-          .from("business_members")
-          .select("business_id, role, permissions, status")
-          .eq("user_id", u.user.id)
-          .eq("status", "active"),
+        ownedQuery.limit(1),
+        membershipsQuery,
       ]);
 
       const ownedId = (owned as { id: string }[] | null)?.[0]?.id ?? null;
@@ -161,7 +165,7 @@ export function useEntitlements(): BusinessEntitlements {
     return () => {
       cancelled = true;
     };
-  }, [tick]);
+  }, [tick, selectedBusinessId]);
 
   const ent = entitlementsFor(
     state.subscribed ? { kind: "subscribed", tier: state.tier } : { kind: "trialing" },

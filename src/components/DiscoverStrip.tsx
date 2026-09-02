@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Spinner } from "@/components/Spinner";
 import { Link } from "@tanstack/react-router";
 import { ChevronRight, Compass } from "lucide-react";
@@ -9,7 +9,6 @@ export function DiscoverStrip() {
   const { coords, asked } = useUserLocation(true);
   const [cards, setCards] = useState<DiscoverCard[]>([]);
   const [loading, setLoading] = useState(true);
-  const scrollerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!asked) return;
@@ -29,40 +28,6 @@ export function DiscoverStrip() {
     };
   }, [asked, coords]);
 
-  // Gentle auto-scroll that pauses on interaction.
-  useEffect(() => {
-    const el = scrollerRef.current;
-    if (!el || cards.length < 2) return;
-    let paused = false;
-    let raf = 0;
-    let last = performance.now();
-    const pause = () => {
-      paused = true;
-      window.setTimeout(() => {
-        paused = false;
-      }, 4000);
-    };
-    const step = (now: number) => {
-      const dt = now - last;
-      last = now;
-      if (!paused && el.scrollWidth > el.clientWidth + 4) {
-        const next = el.scrollLeft + (dt / 1000) * 18;
-        el.scrollLeft = next >= el.scrollWidth - el.clientWidth - 1 ? 0 : next;
-      }
-      raf = requestAnimationFrame(step);
-    };
-    raf = requestAnimationFrame(step);
-    el.addEventListener("pointerdown", pause);
-    el.addEventListener("wheel", pause, { passive: true });
-    el.addEventListener("touchstart", pause, { passive: true });
-    return () => {
-      cancelAnimationFrame(raf);
-      el.removeEventListener("pointerdown", pause);
-      el.removeEventListener("wheel", pause);
-      el.removeEventListener("touchstart", pause);
-    };
-  }, [cards.length]);
-
   if (!loading && cards.length === 0) return null;
 
   return (
@@ -77,7 +42,6 @@ export function DiscoverStrip() {
       </Link>
 
       <div
-        ref={scrollerRef}
         className="mx-auto mt-2 flex max-w-md gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {loading ? (

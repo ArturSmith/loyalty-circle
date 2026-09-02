@@ -1,5 +1,13 @@
 # Onboarding regression test
 
+`stamp_without_cooldown.sql` uses the same disposable-database fixture to
+reproduce the old 30-second delay, then verify rapid owner/admin stamps, legacy
+RPCs, reward issuance, full-card rejection, business permissions and billing.
+Apply `20260902200000_remove_stamp_cooldown.sql` to deploy the change. It removes
+the cooldown trigger and obsolete single-argument `add_stamp` overload (the
+defaulted environment argument still supports those calls). Stamp history is
+preserved. The stamping RPC locks each card before reading/updating progress.
+
 `business_onboarding_review.sql` is a standalone PostgreSQL regression test,
 not a pgTAP test for `supabase test db`. Run it only in a fresh database in a
 disposable local PostgreSQL cluster. Do not run the test fixture in a real

@@ -324,8 +324,7 @@ function BusinessPublic() {
   const businessBrand = normalizeBrandColor(business?.brand_color);
   const businessInfoStyle = businessBrand
     ? {
-        backgroundColor: brandTint(businessBrand, 0.08) ?? undefined,
-        borderColor: brandTint(businessBrand, 0.22) ?? undefined,
+        background: `linear-gradient(180deg, ${brandTint(businessBrand, 0.18)} 0%, ${brandTint(businessBrand, 0.06)} 45%, transparent 100%)`,
       }
     : undefined;
 
@@ -344,7 +343,7 @@ function BusinessPublic() {
         </Button>
 
         <div
-          className="rounded-3xl border border-border bg-card px-5 pb-8 pt-6 text-center shadow-sm"
+          className="rounded-t-3xl px-5 pb-8 pt-6 text-center"
           style={businessInfoStyle}
         >
           {business?.logo_url ? (

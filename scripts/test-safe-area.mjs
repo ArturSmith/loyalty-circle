@@ -26,7 +26,7 @@ test("all normal pages receive shared scrollable bottom spacing", () => {
 test("bottom navigation and chat composers use the platform-aware inset", () => {
   for (const path of [
     "src/components/BottomNav.tsx",
-    "src/routes/_authenticated/business.workspace.tsx",
+    "src/components/business/TeamChat.tsx",
     "src/routes/_authenticated/chats.$conversationId.tsx",
   ]) {
     assert.match(read(path), /paddingBottom: "var\(--safe-bottom\)"/, path);
@@ -35,8 +35,8 @@ test("bottom navigation and chat composers use the platform-aware inset", () => 
 });
 
 test("Team keeps its fixed shell and reserves room for the composer plus bottom inset", () => {
-  const team = read("src/routes/_authenticated/business.workspace.tsx");
-  assert.match(team, /fixed inset-0 flex flex-col overflow-hidden/);
+  const team = read("src/components/business/TeamChat.tsx");
+  assert.match(read("src/routes/_authenticated/business.team.tsx"), /fixed inset-0 flex flex-col overflow-hidden/);
   assert.match(team, /min-h-0[^\n]+flex-1 overflow-y-auto/);
   assert.ok(team.includes("pb-[calc(6.5rem+var(--safe-bottom))]"));
 });

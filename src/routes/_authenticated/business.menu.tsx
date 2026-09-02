@@ -1,7 +1,6 @@
 import { createFileRoute, Link, Navigate, useNavigate } from "@tanstack/react-router";
 import {
   BarChart3,
-  Building2,
   ChevronRight,
   CreditCard,
   HelpCircle,
@@ -84,8 +83,8 @@ function BusinessMenu() {
     >
       <nav aria-label="Menu" className="mx-auto w-full max-w-2xl space-y-4">
         <div className="rounded-2xl border border-border bg-card p-2">
-          <Link to="/business/workspace" search={{ businessId }} className={menuItemClassName}>
-            <MenuItemContent icon={Building2} label="Team" />
+          <Link to="/business/team" search={{ businessId }} className={menuItemClassName}>
+            <MenuItemContent icon={Users} label="My team" />
           </Link>
           {permissions.has("customers.message") && (
             <Link to="/business/chats" search={{ businessId }} className={menuItemClassName}>
@@ -103,14 +102,9 @@ function BusinessMenu() {
             </Link>
           )}
           {permissions.isOwner && (
-            <>
-              <Link to="/business/team" search={{ businessId }} className={menuItemClassName}>
-                <MenuItemContent icon={Users} label="Team & permissions" />
-              </Link>
-              <Link to="/settings/billing" className={menuItemClassName}>
-                <MenuItemContent icon={CreditCard} label="Billing & plan" />
-              </Link>
-            </>
+            <Link to="/settings/billing" className={menuItemClassName}>
+              <MenuItemContent icon={CreditCard} label="Billing & plan" />
+            </Link>
           )}
         </div>
 

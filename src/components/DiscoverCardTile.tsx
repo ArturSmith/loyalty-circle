@@ -44,14 +44,14 @@ export function DiscoverCardTile({
           <span className="truncate text-xs font-semibold opacity-80">{card.business_name}</span>
         </div>
         <p className="relative mt-2 line-clamp-2 font-display text-base font-extrabold leading-tight">{card.title}</p>
-        <div className="relative mt-auto flex items-center gap-2 pt-2 text-[11px] opacity-75">
-          <span className="rounded-full bg-secondary px-2 py-0.5">{card.total_steps} steps</span>
+        <div className="relative mt-auto flex items-center gap-2 pt-2 text-[11px]">
+          <span className="rounded-full bg-[#e8ecf1] px-2 py-0.5 text-black">{card.total_steps} steps</span>
           {distance ? (
-            <span className="inline-flex items-center gap-1">
+            <span className="inline-flex items-center gap-1 opacity-75">
               <MapPin className="h-3 w-3" /> {distance}
             </span>
           ) : card.city ? (
-            <span className="truncate">{card.city}</span>
+            <span className="truncate opacity-75">{card.city}</span>
           ) : null}
         </div>
       </div>
