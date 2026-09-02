@@ -590,6 +590,35 @@ export type Database = {
           },
         ]
       }
+      customer_qr_sessions: {
+        Row: {
+          created_at: string
+          customer_id: string
+          expires_at: string
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          expires_at: string
+          token?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          expires_at?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_qr_sessions_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       moderation_submissions: {
         Row: {
           business_id: string
@@ -1180,6 +1209,7 @@ export type Database = {
         Args: { _conversation_id: string }
         Returns: boolean
       }
+      issue_my_rotating_customer_qr_token: { Args: never; Returns: string }
       mark_conversation_read: {
         Args: { _conversation_id: string; _scope: string }
         Returns: undefined
