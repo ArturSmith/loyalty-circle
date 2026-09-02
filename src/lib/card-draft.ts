@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+export const DEFAULT_CARD_TERMS =
+  "Stamps and rewards have no cash value and are not transferable. Rewards are subject to availability. The issuing business may change or end this loyalty program where permitted by law";
+
 /** The editable card data used by both onboarding and the card wizard. */
 export const cardDraftSchema = z.object({
   title: z.string().trim().min(1).max(200),

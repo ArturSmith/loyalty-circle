@@ -27,7 +27,14 @@ const load = (path, stubs = {}) => {
   return module.exports;
 };
 const stamp = load("src/components/StampCard.tsx");
-const { cardDraftSchema } = load("src/lib/card-draft.ts");
+const cardDraft = load("src/lib/card-draft.ts");
+const { cardDraftSchema, DEFAULT_CARD_TERMS } = cardDraft;
+const usage = load("src/lib/card-usage.ts");
+const { getCardUsageRewards } = usage;
+const usageSection = load("src/components/CardUsageSection.tsx", {
+  "@/lib/card-usage": usage,
+  "@/lib/utils": load("src/lib/utils.ts"),
+});
 const validDraft = {
   title: "Coffee card",
   subtitle: "Enjoy your coffee",
@@ -102,6 +109,8 @@ async function wizard({ draftMode = true, draft = validDraft, edit = false } = {
     "@tanstack/react-router": { useNavigate: () => () => {} },
     "@/integrations/supabase/client": { supabase },
     "@/components/StampCard": stamp,
+    "@/lib/card-draft": cardDraft,
+    "@/components/CardUsageSection": usageSection,
     "@/components/Spinner": { ScreenLoader: () => null },
     "@/components/ui/button": { Button: control("button") },
     "@/components/ui/input": { Input: control("input") },
@@ -193,6 +202,180 @@ test("draft schema no longer requires or retains descriptions", () => {
     "description" in cardDraftSchema.parse({ ...validDraft, description: "Legacy" }),
     false,
   );
+});
+
+test("new standalone and onboarding cards start at 10 steps in five columns with default terms", async () => {
+  for (const draftMode of [false, true]) {
+    const h = await wizard({ draftMode, draft: null });
+    assert.equal(h.preview().props.totalSteps, 10);
+    assert.equal(h.preview().props.gridCols, 5);
+    await h.click("Next");
+    await h.click("Next");
+    assert.equal(h.find((node) => node.props.id === "card-total-steps").props.value, 10);
+    const html = h.html();
+    assert.match(html, /grid-template-columns:repeat\(5,/);
+    assert.ok(html.indexOf("Tap on step to set rewards") < html.indexOf("perspective:1200px"));
+    await h.click("Next");
+    assert.equal(h.find((node) => node.props.id === "card-terms").props.value, DEFAULT_CARD_TERMS);
+    await h.click("Next");
+    await h.click(draftMode ? "Save card draft" : "Create card");
+    assert.equal(h.saved[0].total_steps, 10);
+    assert.equal(h.saved[0].grid_cols, 5);
+    assert.equal(h.saved[0].terms_and_conditions, DEFAULT_CARD_TERMS);
+  }
+});
+
+test("clearing the step count removes circles, leaves an empty input and saves zero", async () => {
+  const h = await wizard({ draftMode: false });
+  await h.click("Next");
+  await h.click("Next");
+  const count = () => h.find((node) => node.props.id === "card-total-steps");
+  for (const value of ["", "0"]) {
+    count().props.onChange({ target: { value } });
+    h.render();
+    assert.equal(count().props.value, "");
+    assert.equal(h.preview().props.totalSteps, 0);
+    assert.doesNotMatch(h.html(), /aria-label="Edit step/);
+  }
+  count().props.onChange({ target: { value: "8" } });
+  h.render();
+  assert.equal(count().props.value, 8);
+  count().props.onChange({ target: { value: "" } });
+  h.render();
+  await h.click("Next");
+  await h.click("Next");
+  await h.click("Create card");
+  assert.equal(h.saved[0].total_steps, 0);
+});
+
+test("existing card terms and grid choices are not replaced by new defaults", async () => {
+  const h = await wizard({ draftMode: false, edit: true, draft: { ...validDraft, grid_cols: 4 } });
+  assert.equal(h.preview().props.totalSteps, 8);
+  assert.equal(h.preview().props.gridCols, 4);
+  await h.click("Next");
+  await h.click("Next");
+  await h.click("Next");
+  assert.equal(
+    h.find((node) => node.props.id === "card-terms").props.value,
+    validDraft.terms_and_conditions,
+  );
+});
+
+test("usage instructions follow actual scan counts, including automatically filled reward circles", () => {
+  const examples = [
+    { steps: 10, rewards: [5, 10], scans: [4, 8] },
+    { steps: 8, rewards: [8], scans: [7] },
+    // Same two-reward configuration as the PostgreSQL stamp regression fixture.
+    { steps: 5, rewards: [3, 5], scans: [2, 3] },
+    { steps: 6, rewards: [2, 3, 4], scans: [1, 1, 1] },
+    { steps: 4, rewards: [1, 4], scans: [3] },
+  ];
+  for (const { steps, rewards, scans } of examples) {
+    assert.deepEqual(
+      getCardUsageRewards(
+        steps,
+        rewards.map((step) => ({ step, label: `Gift ${step}` })),
+      ).map((r) => r.stampsRequired),
+      scans,
+    );
+  }
+});
+
+test("usage is regenerated from valid steps, ignores duplicates and out-of-range rewards", () => {
+  const rewards = [
+    { step: 10, label: "Free haircut" },
+    { step: 5, label: " -50% " },
+    { step: 5, label: "Duplicate" },
+    { step: 2, label: " " },
+    { step: 2.5, label: "Invalid" },
+  ];
+  assert.deepEqual(getCardUsageRewards(10, rewards), [
+    { step: 5, label: "-50%", stampsRequired: 4 },
+    { step: 10, label: "Free haircut", stampsRequired: 8 },
+  ]);
+  assert.deepEqual(getCardUsageRewards(5, rewards), [
+    { step: 5, label: "-50%", stampsRequired: 4 },
+  ]);
+  assert.deepEqual(getCardUsageRewards(0, rewards), []);
+  assert.deepEqual(getCardUsageRewards(10, null), []);
+  assert.equal(rewards[0].step, 10); // Calculation does not mutate the draft.
+});
+
+test("step 5 review renders the same generated instructions used on the public page", async () => {
+  const rewards = [
+    { step: 5, label: "-50%" },
+    { step: 10, label: "Free haircut" },
+  ];
+  const h = await wizard({ draft: { ...validDraft, total_steps: 10, rewards } });
+  for (let i = 0; i < 4; i++) await h.click("Next");
+  const html = h.html();
+  assert.match(html, /How to use this card/);
+  assert.match(html, /Get 4 stamps to earn present:/);
+  assert.match(html, /Get 8 stamps to earn present:/);
+  assert.match(html, /Free haircut/);
+  const description = renderToStaticMarkup(
+    React.createElement(usageSection.CardUsageSection, { totalSteps: 10, rewards }),
+  );
+  assert.ok(html.includes(description));
+  const publicPage = readFileSync(
+    new URL("../src/routes/b.$businessId.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(
+    publicPage,
+    /<CardUsageSection totalSteps=\{t\.total_steps\} rewards=\{t\.rewards\}/,
+  );
+  assert.match(publicPage, /const t = activeTemplate/);
+});
+
+test("generated text updates with a different card and renders benefit names safely", () => {
+  const html = renderToStaticMarkup(
+    React.createElement(usageSection.CardUsageSection, {
+      totalSteps: 2,
+      rewards: [{ step: 2, label: '<img src=x onerror="alert(1)">' }],
+    }),
+  );
+  assert.match(html, /Get 1 stamp to earn present:/);
+  assert.doesNotMatch(html, /<img|Get 4 stamps|Get 8 stamps/);
+  assert.match(html, /data-i18n-ignore/);
+  const empty = renderToStaticMarkup(
+    React.createElement(usageSection.CardUsageSection, { totalSteps: 0, rewards: [] }),
+  );
+  assert.match(empty, /This card has no stamp steps/);
+  assert.doesNotMatch(empty, /earn present/);
+});
+
+test("benefits use the same circular border and a gift icon in preview and wallet", () => {
+  const visit = (node) =>
+    React.isValidElement(node)
+      ? [node, ...React.Children.toArray(node.props.children).flatMap(visit)]
+      : [];
+  for (const editing of [false, true]) {
+    for (const filled of [false, true]) {
+      const clicked = [];
+      const tree = stamp.StampCard({
+        title: "Test card",
+        totalSteps: 10,
+        gridCols: 5,
+        stampsCount: filled ? 5 : 0,
+        rewards: [{ step: 5, label: "-50%" }],
+        bgColor: "#ffffff",
+        accentColor: "#000000",
+        onStepClick: editing ? (step) => clicked.push(step) : undefined,
+      });
+      const reward = visit(tree).find((node) =>
+        (node.props["aria-label"] ?? "").includes(editing ? "Edit reward on step 5" : "Step 5:"),
+      );
+      assert.match(reward.props.className, /rounded-full border-2/);
+      assert.equal(reward.props.style.backgroundColor, filled ? "#000000" : "transparent");
+      assert.equal(reward.props.style.color, filled ? "#ffffff" : "#000000");
+      assert.match(renderToStaticMarkup(reward), /lucide-gift/);
+      if (editing) {
+        reward.props.onClick();
+        assert.deepEqual(clicked, [5]);
+      } else assert.equal(reward.props.title, filled ? "-50% — earned" : "-50%");
+    }
+  }
 });
 
 test("onboarding uses its company name, no description, and a hint above the preview", async () => {

@@ -19,6 +19,7 @@ import { GoogleWalletButton } from "@/components/GoogleWalletButton";
 import { WalletChooser } from "@/components/WalletChooser";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CardTermsSection } from "@/components/CardTermsSection";
+import { CardUsageSection } from "@/components/CardUsageSection";
 import { invalidateTabCache } from "@/lib/tabCache";
 import { resetAppStatusBarTheme } from "@/lib/native";
 
@@ -469,9 +470,10 @@ function BusinessPublic() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
               >
+                <CardUsageSection totalSteps={t.total_steps} rewards={t.rewards} className="mt-6" />
                 <CardTermsSection
                   terms={t.terms_and_conditions}
-                  className="mt-6 border-border bg-card shadow-sm"
+                  className="mt-3 border-border bg-card shadow-sm"
                   termsClassName="max-h-40 overflow-y-auto"
                   open={expandedTermsId === t.id}
                   onOpenChange={(open) => setExpandedTermsId(open ? t.id : null)}

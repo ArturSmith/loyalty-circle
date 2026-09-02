@@ -23,6 +23,7 @@ function translateDynamic(source: string): string {
   if (direct) return direct;
 
   const rules: Array<[RegExp, (...parts: string[]) => string]> = [
+    [/^Get (\d+) stamps? to earn present:$/, (count) => `Samle ${count} ${count === "1" ? "stempel" : "stempler"} for å få en gave:`],
     [/^(\d+) businesses?$/, (count) => `${count} ${count === "1" ? "bedrift" : "bedrifter"}`],
     [/^(\d+) loyalty programs?$/, (count) => `${count} ${count === "1" ? "lojalitetsprogram" : "lojalitetsprogrammer"}`],
     [/^(\d+) locations?$/, (count) => `${count} ${count === "1" ? "sted" : "steder"}`],

@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Scissors, Coffee, Sparkles, Star, Heart, Flame, Cookie, Wine, RefreshCw } from "lucide-react";
+import { Scissors, Coffee, Sparkles, Star, Heart, Flame, Cookie, Wine, RefreshCw, Gift } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export type Reward = { step: number; label: string };
@@ -175,27 +175,12 @@ export function StampCard({
             } as const;
 
             const tileBase = "aspect-square w-full rounded-full border-2 flex items-center justify-center";
-            const rewardTile = "aspect-square w-full flex items-center justify-center";
 
             // A reward step counts as achieved once the stamp counter has moved
             // past it — that's the moment `add_stamp` issues the voucher.
             const rewardEarned = !!reward && !clickable && filled;
 
-            const rewardLabel = (
-              <span
-                className="font-bold uppercase text-center leading-none px-0.5"
-                style={{
-                  color: accentColor,
-                  fontSize: "clamp(7px, 3.2cqi, 13px)",
-                  lineHeight: 1,
-                  textDecoration: rewardEarned ? "line-through" : undefined,
-                  textDecorationThickness: rewardEarned ? "0.12em" : undefined,
-                  opacity: rewardEarned ? 0.55 : 1,
-                }}
-              >
-                {reward?.label}
-              </span>
-            );
+            const rewardIcon = <Gift className="h-[48%] w-[48%]" aria-hidden="true" />;
             const numberLabel = (
               <span className="font-bold" style={{ fontSize: "clamp(8px, 3.8cqi, 16px)" }}>
                 {step}
@@ -207,9 +192,11 @@ export function StampCard({
                 return (
                   <motion.button key={i} type="button" onClick={() => onStepClick!(step)}
                     whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.95 }}
-                    className={`${rewardTile} cursor-pointer bg-transparent border-0`}
+                    className={`${tileBase} cursor-pointer`}
+                    style={commonStyle}
+                    title={reward.label}
                     aria-label={`Edit reward on step ${step}`}>
-                    {rewardLabel}
+                    {rewardIcon}
                   </motion.button>
                 );
               }
@@ -218,14 +205,15 @@ export function StampCard({
                   initial={isLast ? { scale: 3, rotate: -18, opacity: 0 } : false}
                   animate={isLast ? { scale: 1, rotate: 0, opacity: 1 } : undefined}
                   transition={{ type: "spring", stiffness: 260, damping: 14 }}
-                  className={rewardTile}
+                  className={`${tileBase} ${filled ? "stamp-emboss" : ""}`}
+                  style={commonStyle}
                   title={rewardEarned ? `${reward.label} — earned` : reward.label}
                   aria-label={
                     rewardEarned
                       ? `Step ${step}: ${reward.label} — earned`
                       : `Step ${step}: ${reward.label} reward`
                   }>
-                  {rewardLabel}
+                  {rewardIcon}
                 </motion.div>
               );
             }

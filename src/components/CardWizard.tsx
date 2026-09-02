@@ -14,7 +14,8 @@ import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
 import { ArrowLeft, ArrowRight, Check, Trash2 } from "lucide-react";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { BackButton } from "@/components/BackButton";
-import type { CardDraft } from "@/lib/card-draft";
+import { CardUsageSection } from "@/components/CardUsageSection";
+import { DEFAULT_CARD_TERMS, type CardDraft } from "@/lib/card-draft";
 
 const PRESETS = [
   { bg: "#faf7ee", accent: "#1a1a2e", text: "#1a1a2e" },
@@ -68,7 +69,7 @@ export function CardWizard(props: Props) {
 
   const [title, setTitle] = useState("Loyalty Card");
   const [subtitle, setSubtitle] = useState("");
-  const [terms, setTerms] = useState("");
+  const [terms, setTerms] = useState(DEFAULT_CARD_TERMS);
   const [cornerTitle, setCornerTitle] = useState<string | null>(null);
   const [totalSteps, setTotalSteps] = useState(10);
   const [shape, setShape] = useState<CardShape>("rounded");
@@ -77,7 +78,7 @@ export function CardWizard(props: Props) {
   const [icon, setIcon] = useState<StampIconName | null>(null);
   const [logoUrl, setLogoUrl] = useState("");
   const [rewards, setRewards] = useState<Reward[]>([]);
-  const [gridCols, setGridCols] = useState<number | null>(null);
+  const [gridCols, setGridCols] = useState<number | null>(5);
   const [active, setActive] = useState(true);
   const [showErrors, setShowErrors] = useState(false);
 
@@ -88,7 +89,7 @@ export function CardWizard(props: Props) {
         if (draft) {
           setTitle(draft.title);
           setSubtitle(draft.subtitle ?? "");
-          setTerms(draft.terms_and_conditions);
+          setTerms(draft.terms_and_conditions || DEFAULT_CARD_TERMS);
           setCornerTitle(draft.corner_title);
           setTotalSteps(draft.total_steps);
           setShape(draft.shape);
@@ -137,7 +138,7 @@ export function CardWizard(props: Props) {
           };
           setTitle(tpl.title);
           setSubtitle(tpl.subtitle ?? "");
-          setTerms(tpl.terms_and_conditions ?? "");
+          setTerms(tpl.terms_and_conditions || DEFAULT_CARD_TERMS);
           setCornerTitle(tpl.corner_title);
           setTotalSteps(tpl.total_steps);
           setShape(tpl.shape);
@@ -261,6 +262,13 @@ export function CardWizard(props: Props) {
         {step < 2 && (
           <p className="mb-3 text-center text-xs text-muted-foreground">Tap the title, subtitle or icon on the card to edit</p>
         )}
+        {step === 2 && (
+          totalSteps > 0 ? (
+            <p className="mb-3 text-center text-sm font-medium text-ink">Tap on step to set rewards</p>
+          ) : (
+            <p className="mb-3 text-center text-xs text-muted-foreground">No steps configured. Increase total steps to add rewards.</p>
+          )
+        )}
         <StampCard title={title || "Card title"} subtitle={subtitle}
           businessName={businessName}
           cornerTitle={cornerTitle}
@@ -353,13 +361,6 @@ export function CardWizard(props: Props) {
               <Button variant="ghost" size="sm" onClick={() => setEditingStep(null)}>Cancel</Button>
             </div>
           </div>
-        )}
-        {step === 2 && editingStep == null && (
-          totalSteps > 0 ? (
-            <p className="mt-3 text-center text-sm font-medium text-ink animate-pulse">Tap on step to set rewards</p>
-          ) : (
-            <p className="mt-3 text-center text-xs text-muted-foreground">No steps configured. Increase total steps to add rewards.</p>
-          )
         )}
       </div>
 
@@ -462,16 +463,17 @@ export function CardWizard(props: Props) {
             {step === 2 && (
               <div className="space-y-4">
                 <div>
-                  <Label>Total steps (max 32)</Label>
+                  <Label htmlFor="card-total-steps">Total steps (max 32)</Label>
                   <Input
+                    id="card-total-steps"
                     type="number"
                     min={0}
                     max={32}
-                    value={totalSteps}
+                    value={totalSteps || ""}
                     onChange={(e) => {
                       const raw = Number(e.target.value);
-                      if (Number.isNaN(raw)) { setTotalSteps(0); return; }
-                      setTotalSteps(Math.min(32, Math.max(0, Math.trunc(raw))));
+                      setTotalSteps(Number.isFinite(raw) ? Math.min(32, Math.max(0, Math.trunc(raw))) : 0);
+                      setEditingStep(null);
                     }}
                     className="mt-2 w-32"
                   />
@@ -531,6 +533,7 @@ export function CardWizard(props: Props) {
                   <h3 className="font-display text-xl">Looks good?</h3>
                   <p className="text-sm text-muted-foreground">{draftMode ? "This card will be submitted for review with your business." : "You can edit anything later from the dashboard."}</p>
                 </div>
+                <CardUsageSection totalSteps={totalSteps} rewards={rewards} />
                 <div className="flex items-center justify-between rounded-lg border-2 border-border p-3">
                   <div>
                     <Label>Active</Label>
