@@ -4,13 +4,13 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { TRIAL_DAYS, useBusinessAccess } from "@/hooks/useBusinessAccess";
 import { Button } from "@/components/ui/button";
-import { Lock, Sparkles } from "lucide-react";
+import { Lock } from "lucide-react";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { motion } from "framer-motion";
-import { formatPlanPrice, PLAN_LIST } from "@/lib/plans";
 import { getPaddleEnvironment } from "@/lib/paddle";
 import { getNavigationCache, setNavigationCache } from "@/lib/navigationCache";
 import { BusinessApprovalGate } from "@/components/business/BusinessApprovalGate";
+import { SubscriptionPlans } from "@/components/business/SubscriptionPlans";
 
 export const Route = createFileRoute("/_authenticated/business")({
   component: BusinessEntry,
@@ -146,15 +146,15 @@ function BusinessLayout() {
     );
   }
 
-  if (!access.hasAccess) {
+  if (isBusinessOwner && !access.hasAccess) {
     const needsSeats = access.reason === "needs-more-seats";
     return (
       <div className="min-h-screen bg-background px-4 py-10">
-        <div className="mx-auto max-w-md">
+        <div className="mx-auto max-w-5xl">
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            className="rounded-2xl border-2 border-ink/10 bg-card paper-grain card-shadow p-8 text-center"
+            className="mx-auto max-w-xl text-center"
           >
             <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-primary/10 text-primary">
               <Lock className="h-5 w-5" />
@@ -168,32 +168,19 @@ function BusinessLayout() {
                 : "Subscribe to keep issuing stamps, adding customers, and running your loyalty program."}
             </p>
             <OrnamentDivider className="my-5 w-32 mx-auto opacity-60" />
-            {/* Quoting one price here misrepresented the offer as single-tier.
-                Show the entry price and let /subscribe present the full range. */}
-            <p className="text-xs uppercase tracking-widest text-muted-foreground">Plans from</p>
-            <div className="mt-1 flex items-baseline justify-center gap-1">
-              <span className="font-display text-4xl font-semibold">
-                {formatPlanPrice(PLAN_LIST[0].price)}
-              </span>
-              <span className="text-muted-foreground">/month</span>
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {PLAN_LIST.length} plans · cancel anytime
-            </p>
-            <Button
-              onClick={() => navigate({ to: "/subscribe" })}
-              className="mt-6 w-full h-12 text-base"
-            >
-              <Sparkles className="h-4 w-4" />
-              {needsSeats ? "Add subscription" : "See plans"}
-            </Button>
+          </motion.div>
+          <SubscriptionPlans
+            access={access}
+            returnTo={selectedBusinessId ? `/business?businessId=${encodeURIComponent(selectedBusinessId)}` : "/business"}
+          />
+          <div className="mt-6 text-center">
             <button
               onClick={() => navigate({ to: "/wallet" })}
-              className="mt-3 text-xs text-muted-foreground hover:text-foreground"
+              className="text-sm text-muted-foreground hover:text-foreground"
             >
               Back to my wallet
             </button>
-          </motion.div>
+          </div>
         </div>
       </div>
     );

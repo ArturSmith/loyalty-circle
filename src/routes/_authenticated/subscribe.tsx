@@ -1,21 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import { motion } from "framer-motion";
-import { Check, Sparkles, ArrowLeft } from "lucide-react";
+import { Sparkles, ArrowLeft } from "lucide-react";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
-import {
-  closePaddleCheckout,
-  describePaddleCheckoutError,
-  getPaddlePriceId,
-  initializePaddle,
-  isPaddleCheckoutError,
-  subscribeToPaddleEvents,
-} from "@/lib/paddle";
+import { SubscriptionPlans } from "@/components/business/SubscriptionPlans";
 import { useBusinessAccess } from "@/hooks/useBusinessAccess";
-import { PLAN_LIST, TRIAL_TIER, PLANS, formatPlanPrice, type Plan } from "@/lib/plans";
+import { TRIAL_TIER, PLANS } from "@/lib/plans";
 
 export const Route = createFileRoute("/_authenticated/subscribe")({
   head: () => ({
@@ -28,9 +17,7 @@ export const Route = createFileRoute("/_authenticated/subscribe")({
     const returnTo = typeof search.returnTo === "string" ? search.returnTo : undefined;
     // Same-origin absolute paths only. `//evil.com` is a protocol-relative URL,
     // so without the second test it would send the user off-site after paying.
-    return returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//")
-      ? { returnTo }
-      : {};
+    return returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//") ? { returnTo } : {};
   },
   component: SubscribePage,
 });
@@ -41,79 +28,6 @@ function SubscribePage() {
   const navigate = useNavigate();
   const { returnTo } = Route.useSearch();
   const access = useBusinessAccess();
-  const [loadingTier, setLoadingTier] = useState<string | null>(null);
-
-  useEffect(
-    () =>
-      subscribeToPaddleEvents((event) => {
-        if (!isPaddleCheckoutError(event)) return;
-        console.error("Paddle checkout error", event);
-        if (event.name === "checkout.error") closePaddleCheckout();
-        toast.error("Checkout could not be loaded", {
-          description: describePaddleCheckoutError(event),
-        });
-        setLoadingTier(null);
-      }),
-    [],
-  );
-
-  const startCheckout = async (plan: Plan) => {
-    setLoadingTier(plan.tier);
-    try {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) {
-        navigate({ to: "/auth", search: { redirect: "/subscribe" } });
-        return;
-      }
-      // A subscription covers a business. Without one there is nothing to
-      // cover: they would pay immediately, get nothing until they set a
-      // business up, and forfeit the 14 free days they were entitled to.
-      if (!access.loading && !access.hasBusiness) {
-        toast.error("Set up your business first", {
-          description: "Your plan covers a business, and the first 14 days are free.",
-        });
-        navigate({ to: "/business/onboarding" });
-        return;
-      }
-      // Where to land after paying. The caller states this explicitly: reading
-      // it from `document.referrer` reported the last *full page load*, not the
-      // route the user actually came from. After client-side navigation that is
-      // stale — typically the sign-in landing page — so paying customers were
-      // dropped on /wallet instead of the dashboard they had just upgraded.
-      const destination = returnTo && returnTo !== "/subscribe" ? returnTo : "/business";
-      try {
-        sessionStorage.setItem("post_checkout_return", destination);
-      } catch {
-        // Private-mode storage failure: /checkout/success falls back to /business.
-      }
-      await initializePaddle();
-      const paddlePriceId = await getPaddlePriceId(plan.tier);
-      window.Paddle.Checkout.open({
-        items: [{ priceId: paddlePriceId, quantity: 1 }],
-        customer: u.user.email ? { email: u.user.email } : undefined,
-        // The tier is echoed back by the Paddle webhook so the subscription row
-        // records which plan was bought.
-        customData: { userId: u.user.id, planTier: plan.tier },
-        settings: {
-          displayMode: "overlay",
-          successUrl: `${window.location.origin}/checkout/success`,
-          allowLogout: false,
-          variant: "one-page",
-        },
-      });
-    } catch (e) {
-      console.error(e);
-      toast.error(`Could not open checkout for ${plan.name}.`, {
-        description:
-          e instanceof Error && e.message
-            ? e.message
-            : "Please try again, or contact support if it keeps happening.",
-      });
-    } finally {
-      setLoadingTier(null);
-    }
-  };
-
   const trialing = access.reason === "trialing";
 
   // Going "back" to /business is only sensible if the dashboard will actually
@@ -185,66 +99,7 @@ function SubscribePage() {
           <OrnamentDivider className="my-6 w-32 mx-auto opacity-60" />
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3">
-          {PLAN_LIST.map((plan, i) => {
-            const isTrialPlan = trialing && plan.tier === TRIAL_PLAN.tier;
-            return (
-              <motion.div
-                key={plan.tier}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.06 }}
-                className={`flex flex-col rounded-2xl border-2 bg-card paper-grain card-shadow p-7 ${
-                  plan.popular ? "border-primary/40 ring-1 ring-primary/30" : "border-ink/10"
-                }`}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <h2 className="font-display text-xl font-semibold">{plan.name}</h2>
-                  {isTrialPlan ? (
-                    <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                      In your trial
-                    </span>
-                  ) : plan.popular ? (
-                    <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-primary">
-                      Popular
-                    </span>
-                  ) : null}
-                </div>
-                <p className="mt-1 text-sm text-muted-foreground">{plan.tagline}</p>
-
-                <div className="mt-5 flex items-baseline gap-1">
-                  <span className="font-display text-4xl font-semibold">
-                    {formatPlanPrice(plan.price)}
-                  </span>
-                  <span className="text-sm text-muted-foreground">/month</span>
-                </div>
-                <p className="mt-1 text-xs text-muted-foreground">Cancel anytime.</p>
-
-                <ul className="mt-6 flex-1 space-y-2.5">
-                  {plan.highlights.map((f) => (
-                    <li key={f} className="flex items-start gap-2.5 text-sm">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                      <span className="text-muted-foreground">{f}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <Button
-                  onClick={() => startCheckout(plan)}
-                  disabled={loadingTier !== null}
-                  variant={plan.popular ? "default" : "outline"}
-                  className="mt-7 h-12 w-full text-base"
-                >
-                  {loadingTier === plan.tier
-                    ? "Opening checkout…"
-                    : access.seatCount > 0
-                      ? `Add ${plan.name}`
-                      : `Choose ${plan.name}`}
-                </Button>
-              </motion.div>
-            );
-          })}
-        </div>
+        <SubscriptionPlans access={access} returnTo={returnTo} />
 
         {access.isSubscribed && access.uncoveredCount === 0 ? (
           <div className="mx-auto mt-8 max-w-md rounded-2xl bg-secondary p-4 text-center text-sm">

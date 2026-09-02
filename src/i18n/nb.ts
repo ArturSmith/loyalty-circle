@@ -580,6 +580,16 @@ export const nb = {
   "Could not download QR image": "Kunne ikke laste ned QR-bildet",
 
   // Billing and plan details
+  "Your free trial has ended": "Den gratis prøveperioden er avsluttet",
+  "Add a subscription for this business": "Legg til et abonnement for denne bedriften",
+  "Subscribe to keep issuing stamps, adding customers, and running your loyalty program.": "Abonner for å fortsette å gi stempler, legge til kunder og drive lojalitetsprogrammet ditt.",
+  "Choose Basic": "Velg Basic",
+  "Choose Pro": "Velg Pro",
+  "Choose Unlimited": "Velg Unlimited",
+  "Add Basic": "Legg til Basic",
+  "Add Pro": "Legg til Pro",
+  "Add Unlimited": "Legg til Unlimited",
+  "Opening checkout…": "Åpner betaling …",
   "Plans from": "Abonnementer fra",
   "See plans": "Se abonnementer",
   "Start free trial": "Start gratis prøveperiode",

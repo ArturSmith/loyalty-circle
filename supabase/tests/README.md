@@ -22,6 +22,11 @@ repair at the original approval time, expired/consumed/legacy trial protection,
 pending/rejected businesses, idempotence, unchanged moderation/notifications,
 and subsequent approvals (one trial per account).
 
+`onboarding_permissions.sql` also requires its own fresh disposable database.
+It reproduces a revoked onboarding EXECUTE grant, applies the permission repair
+twice, then verifies actual signed-in submission, anonymous denial, missing-uid
+denial, cross-owner denial, and continued moderation of both business and card.
+
 ## Deployment
 
 Apply `supabase/migrations/20260902150000_business_onboarding_review.sql` before
@@ -43,3 +48,7 @@ approval timestamp, not the migration date. It never deletes records, restarts
 existing trials, or clears the permanent consumed-trial ledger. It deliberately
 does not guess dates for businesses without creation-approval history; those
 require investigation before any manual correction.
+
+`20260902190000_fix_onboarding_execute_privilege.sql` restores EXECUTE on the
+onboarding RPC for `authenticated` only. Apply after the onboarding migration;
+it changes no data or table policies and leaves anonymous callers blocked.
