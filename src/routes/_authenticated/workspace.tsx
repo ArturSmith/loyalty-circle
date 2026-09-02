@@ -14,6 +14,8 @@ type WorkspaceBusiness = {
   city: string | null;
   logo_url: string | null;
   role: "owner" | "admin";
+  accepted_by_platform: boolean;
+  onboarding_completed_at: string | null;
 };
 
 export const Route = createFileRoute("/_authenticated/workspace")({
@@ -39,10 +41,10 @@ function Workspace() {
       const [{ data: owned }, { data: memberships }] = await Promise.all([
         supabase
           .from("businesses")
-          .select("id,name,city,logo_url")
+          .select("id,name,city,logo_url,accepted_by_platform,onboarding_completed_at")
           .eq("owner_id", auth.user.id)
           .order("created_at", { ascending: true }),
-        (supabase as any)
+        supabase
           .from("business_members")
           .select("business_id")
           .eq("user_id", auth.user.id)
@@ -54,7 +56,7 @@ function Workspace() {
         (membership) => membership.business_id,
       );
       const { data: administered } = adminIds.length
-        ? await supabase.from("businesses").select("id,name,city,logo_url").in("id", adminIds)
+        ? await supabase.from("businesses").select("id,name,city,logo_url,accepted_by_platform,onboarding_completed_at").in("id", adminIds)
         : { data: [] };
 
       const ownRows = ((owned as Omit<WorkspaceBusiness, "role">[] | null) ?? []).map((business) => ({
@@ -91,7 +93,7 @@ function Workspace() {
           <section className="rounded-2xl glass-panel p-5 text-center">
             <Building2 className="mx-auto h-6 w-6 text-muted-foreground" />
             <p className="mt-3 text-sm text-muted-foreground">You don’t have access to a business yet.</p>
-            <Link to="/business" className="mt-4 block">
+            <Link to="/business/onboarding" className="mt-4 block">
               <Button className="w-full gap-2"><Store className="h-4 w-4" /> Create a business</Button>
             </Link>
           </section>
@@ -100,7 +102,7 @@ function Workspace() {
             {businesses.map((business) => (
               <Link
                 key={business.id}
-                to="/business"
+                to={business.accepted_by_platform ? "/business" : "/business/review"}
                 search={{ businessId: business.id }}
                 className="flex min-h-24 items-center gap-3 rounded-2xl border-2 border-ink/10 bg-card p-4 shadow-sm transition-colors hover:bg-muted/40"
               >
@@ -119,6 +121,7 @@ function Workspace() {
                     </span>
                   </div>
                   {business.city ? <p className="mt-0.5 truncate text-xs text-muted-foreground">{business.city}</p> : null}
+                  {!business.accepted_by_platform && <p className="mt-1 text-xs font-medium text-amber-700 dark:text-amber-400">{business.onboarding_completed_at ? "Awaiting approval" : "Finish setup"}</p>}
                 </div>
                 <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
               </Link>

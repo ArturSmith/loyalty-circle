@@ -142,13 +142,19 @@ type Props = {
   onChange: (next: BusinessDetails) => void;
   /** Render only these sections. Defaults to the whole form. */
   sections?: BusinessFormSection[];
+  showErrors?: boolean;
 };
 
-export function BusinessForm({ value, onChange, sections = ALL_SECTIONS }: Props) {
+export function BusinessForm({ value, onChange, sections = ALL_SECTIONS, showErrors = false }: Props) {
   const set = <K extends keyof BusinessDetails>(key: K, v: BusinessDetails[K]) =>
     onChange({ ...value, [key]: v });
 
   const show = (s: BusinessFormSection) => sections.includes(s);
+  const invalid = (field: keyof BusinessDetails, min = 1) => showErrors && value[field].trim().length < min;
+  const fieldProps = (field: keyof BusinessDetails, min = 1) => ({
+    "aria-invalid": invalid(field, min),
+    className: `mt-1.5 ${invalid(field, min) ? "border-destructive ring-1 ring-destructive focus-visible:ring-destructive" : ""}`,
+  });
 
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -193,13 +199,13 @@ export function BusinessForm({ value, onChange, sections = ALL_SECTIONS }: Props
             value={value.name}
             onChange={(e) => set("name", e.target.value)}
             placeholder="The Cookie Jar"
-            className="mt-1.5"
+            {...fieldProps("name", 2)}
           />
         </div>
         <div>
           <Label htmlFor="biz-category">Category *</Label>
           <Select value={value.category} onValueChange={(v) => set("category", v)}>
-            <SelectTrigger id="biz-category" className="mt-1.5">
+            <SelectTrigger id="biz-category" {...fieldProps("category")}>
               <SelectValue placeholder="Choose a category" />
             </SelectTrigger>
             <SelectContent>
@@ -284,7 +290,7 @@ export function BusinessForm({ value, onChange, sections = ALL_SECTIONS }: Props
             value={value.address_line1}
             onChange={(e) => set("address_line1", e.target.value)}
             placeholder="Storgata 12"
-            className="mt-1.5"
+            {...fieldProps("address_line1", 3)}
           />
         </div>
         <div>
@@ -300,11 +306,11 @@ export function BusinessForm({ value, onChange, sections = ALL_SECTIONS }: Props
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label htmlFor="biz-city">City *</Label>
-            <Input id="biz-city" required maxLength={100} value={value.city} onChange={(e) => set("city", e.target.value)} className="mt-1.5" />
+            <Input id="biz-city" required maxLength={100} value={value.city} onChange={(e) => set("city", e.target.value)} {...fieldProps("city")} />
           </div>
           <div>
             <Label htmlFor="biz-postal">Postal code *</Label>
-            <Input id="biz-postal" required maxLength={20} value={value.postal_code} onChange={(e) => set("postal_code", e.target.value)} className="mt-1.5" />
+            <Input id="biz-postal" required maxLength={20} value={value.postal_code} onChange={(e) => set("postal_code", e.target.value)} {...fieldProps("postal_code")} />
           </div>
           <div>
             <Label htmlFor="biz-region">Region / state</Label>
@@ -312,7 +318,7 @@ export function BusinessForm({ value, onChange, sections = ALL_SECTIONS }: Props
           </div>
           <div>
             <Label htmlFor="biz-country">Country *</Label>
-            <Input id="biz-country" required maxLength={100} value={value.country} onChange={(e) => set("country", e.target.value)} placeholder="Norway" className="mt-1.5" />
+            <Input id="biz-country" required maxLength={100} value={value.country} onChange={(e) => set("country", e.target.value)} placeholder="Norway" {...fieldProps("country")} />
           </div>
         </div>
       </section>

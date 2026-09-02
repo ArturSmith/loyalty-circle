@@ -18,8 +18,9 @@ import { LanguageSwitcher } from "@/i18n";
 import { CustomerQrCard } from "@/components/CustomerQrCard";
 
 export const Route = createFileRoute("/_authenticated/profile")({
-  validateSearch: (search: Record<string, unknown>): { edit?: boolean } => ({
+  validateSearch: (search: Record<string, unknown>): { edit?: boolean; businessSubmitted?: boolean } => ({
     edit: search.edit === true || search.edit === "true" || search.edit === "1" ? true : undefined,
+    businessSubmitted: search.businessSubmitted === true || search.businessSubmitted === "true" ? true : undefined,
   }),
   head: () => ({
     meta: [
@@ -36,7 +37,7 @@ export const Route = createFileRoute("/_authenticated/profile")({
 
 function Profile() {
   const navigate = useNavigate();
-  const { edit: openEditor } = Route.useSearch();
+  const { edit: openEditor, businessSubmitted } = Route.useSearch();
   const { profile, loading, reload } = useProfile();
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
@@ -155,6 +156,13 @@ function Profile() {
   return (
     <TabScreen title="Profile">
       <div className="flex-1 px-6 py-4 max-w-md mx-auto w-full">
+        {businessSubmitted && (
+          <section role="status" className="mb-5 rounded-2xl border border-primary/20 bg-primary/5 p-4">
+            <h2 className="font-semibold">Sent for moderation</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Your business and first loyalty card have been sent to moderators.</p>
+            <Link to="/workspace" className="mt-3 inline-block text-sm font-medium text-primary">View in Workspace</Link>
+          </section>
+        )}
         {loading || !profile ? (
           <PageLoader />
         ) : (
@@ -307,7 +315,7 @@ function BusinessSection({ profile }: { profile: ProfileInfo }) {
           You don't run a business on ClubCarder yet. Create loyalty cards, stamp them by QR and see who keeps
           coming back.
         </p>
-        <Link to="/business" className="mt-4 block">
+        <Link to="/business/onboarding" className="mt-4 block">
           <Button className="w-full gap-2">
             <Building2 className="h-4 w-4" /> ClubCarder enterprise
           </Button>

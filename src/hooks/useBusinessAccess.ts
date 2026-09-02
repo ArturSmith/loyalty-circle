@@ -82,6 +82,7 @@ export function useBusinessAccess(): BusinessAccess {
           .from("businesses")
           .select("id, created_at, comped, trial_started_at")
           .eq("owner_id", u.user.id)
+          .eq("accepted_by_platform", true)
           .order("created_at", { ascending: true }),
         supabase
           .from("subscriptions")

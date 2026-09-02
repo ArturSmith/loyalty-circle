@@ -1,17 +1,14 @@
-import { createFileRoute, Link, Navigate, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ScreenLoader } from "@/components/Spinner";
-import { postSignOutDestination } from "@/lib/post-sign-out";
-import { useUnreadChatCount } from "@/hooks/useUnreadChatCount";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { QrDisplay } from "@/components/QrDisplay";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
-import { Plus, QrCode, ScanLine, Users, Stamp as StampIco, Wallet as WalletIcon, Pencil, Menu, Settings, LogOut, Download, CreditCard, Sparkles, HelpCircle, Mail, ArrowLeft, MessageCircle, Building2, BarChart3, RefreshCcw, TicketCheck, UserPlus } from "lucide-react";
+import { Plus, QrCode, ScanLine, Users, Stamp as StampIco, Wallet as WalletIcon, Pencil, Menu, Download, Sparkles, ArrowLeft, RefreshCcw, TicketCheck, UserPlus } from "lucide-react";
 import { useBusinessAccess } from "@/hooks/useBusinessAccess";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { useBusinessPermissions } from "@/hooks/useBusinessPermissions";
@@ -31,11 +28,10 @@ import { parseBusinessAnalytics, type BusinessAnalytics } from "@/lib/business-a
 type Business = {
   id: string;
   owner_id: string;
+  accepted_by_platform: boolean;
   name: string;
   logo_url: string | null;
   brand_color: string | null;
-  onboarding_step?: number | null;
-  onboarding_completed_at?: string | null;
 };
 type Tpl = {
   id: string; title: string; subtitle: string | null; description: string | null;
@@ -59,11 +55,9 @@ export const Route = createFileRoute("/_authenticated/business/")({
 });
 
 function BusinessDashboard() {
-  const navigate = useNavigate();
   const { businessId: selectedBusinessId } = Route.useSearch();
   const cacheKey = `business-dashboard:${selectedBusinessId ?? "default"}`;
   const cached = getNavigationCache<DashboardCache>(cacheKey);
-  const unreadChats = useUnreadChatCount("business");
   const [biz, setBiz] = useState<Business | null>(() => cached?.value.biz ?? null);
   const [tpls, setTpls] = useState<Tpl[]>(() => cached?.value.tpls ?? []);
   const [stats, setStats] = useState(() => cached?.value.stats ?? { stamps: 0, customers: 0, active: 0 });
@@ -143,7 +137,7 @@ function BusinessDashboard() {
       let nextTemplates: Tpl[] = [];
       let nextStats = { stamps: 0, customers: 0, active: 0 };
       let nextAnalytics: BusinessAnalytics | null = null;
-      if (b) {
+      if (b?.accepted_by_platform) {
         const [{ data: t }, { data: dashboardStats }, { data: canViewAnalytics }] = await Promise.all([
           supabase.from("card_templates").select("id,title,subtitle,description,corner_title,total_steps,active,shape,bg_color,accent_color,text_color,stamp_icon,logo_url,rewards,grid_cols").eq("business_id", b.id).order("created_at", { ascending: false }),
           supabase.rpc("get_business_dashboard_stats", { _business_id: b.id }),
@@ -184,11 +178,6 @@ function BusinessDashboard() {
     api.on("select", () => setCurrent(api.selectedScrollSnap()));
   }, [api]);
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    navigate({ to: postSignOutDestination(), replace: true });
-  };
-
   const downloadBusinessQr = async () => {
     try {
       const dataUrl = await QRCode.toDataURL(bizUrl, {
@@ -209,13 +198,17 @@ function BusinessDashboard() {
     }
   };
 
-  if (loading || (biz && permissions.loading)) return <ScreenLoader />;
+  if (loading) return <ScreenLoader />;
 
   // Business creation now lives in the onboarding wizard, so there is exactly
   // one path into the product and `onboarding_step` is always meaningful.
   if (!biz) {
     return <Navigate to={selectedBusinessId ? "/workspace" : "/business/onboarding"} replace />;
   }
+  if (!biz.accepted_by_platform) {
+    return <Navigate to="/business/review" search={{ businessId: biz.id }} replace />;
+  }
+  if (permissions.loading) return <ScreenLoader />;
 
 
   // Always point QR codes at the published site so scanners never hit the
@@ -223,7 +216,6 @@ function BusinessDashboard() {
   const PUBLIC_SITE_URL = "https://clubcarder.com";
   const bizUrl = `${PUBLIC_SITE_URL}/b/${biz.id}`;
   const isOwner = permissions.isOwner;
-  const canEditSettings = isOwner || permissions.hasAny(["locations.manage", "marketplace.manage"]);
 
   return (
     <div className="min-h-screen px-5 py-6 max-w-3xl mx-auto">
@@ -246,90 +238,11 @@ function BusinessDashboard() {
         </div>
         <div className="col-start-2 row-start-1 flex shrink-0 items-center gap-2">
           <NotificationButton scope="business" businessId={biz.id} />
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="Open menu" className="rounded-full glass-panel" title="Menu"><Menu className="h-5 w-5" /></Button>
-            </SheetTrigger>
-            <SheetContent
-              side="right"
-              className="overflow-y-auto overscroll-contain pb-[max(1.5rem,env(safe-area-inset-bottom))]"
-              style={{
-                top: "env(safe-area-inset-top)",
-                height: "calc(100% - env(safe-area-inset-top))",
-                width: "min(92vw, 26rem)",
-                maxWidth: "none",
-              }}
-            >
-            <SheetHeader className="text-left">
-              <SheetTitle className="font-display">Menu</SheetTitle>
-            </SheetHeader>
-            <nav className="mt-8 flex flex-col gap-2">
-              <Link to="/business/workspace" search={{ businessId: biz.id }} className="w-full">
-                <Button variant="ghost" className="w-full justify-start gap-3">
-                  <Building2 className="h-4 w-4" /> Team
-                </Button>
-              </Link>
-              {permissions.has("customers.message") && (
-                <Link to="/business/chats" search={{ businessId: biz.id }} className="w-full">
-                  <Button variant="ghost" className="w-full justify-start gap-3">
-                    <MessageCircle className="h-4 w-4" /> Messages
-                    {unreadChats > 0 && (
-                      <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold leading-none text-primary-foreground">
-                        {unreadChats > 9 ? "9+" : unreadChats}
-                      </span>
-                    )}
-                  </Button>
-                </Link>
-              )}
-              {permissions.has("analytics.view") && (
-                <Link to="/business/analytics" search={{ businessId: biz.id }} className="w-full">
-                  <Button variant="ghost" className="w-full justify-start gap-3">
-                    <BarChart3 className="h-4 w-4" /> Analytics
-                  </Button>
-                </Link>
-              )}
-              {canEditSettings && (
-                <Link to="/business/edit" search={{ businessId: biz.id }} className="w-full">
-                  <Button variant="ghost" className="w-full justify-start gap-3">
-                    <Settings className="h-4 w-4" /> Edit business info
-                  </Button>
-                </Link>
-              )}
-              {isOwner && (
-                <Link to="/business/team" search={{ businessId: biz.id }} className="w-full">
-                  <Button variant="ghost" className="w-full justify-start gap-3">
-                    <Users className="h-4 w-4" /> Team & permissions
-                  </Button>
-                </Link>
-              )}
-              {isOwner && (
-                <Link to="/settings/billing" className="w-full">
-                  <Button variant="ghost" className="w-full justify-start gap-3">
-                    <CreditCard className="h-4 w-4" /> Billing & plan
-                  </Button>
-                </Link>
-              )}
-              <Link to="/wallet" className="w-full">
-                <Button variant="ghost" className="w-full justify-start gap-3">
-                  <WalletIcon className="h-4 w-4" /> My wallet
-                </Button>
-              </Link>
-              <Link to="/help" className="w-full">
-                <Button variant="ghost" className="w-full justify-start gap-3">
-                  <HelpCircle className="h-4 w-4" /> Help
-                </Button>
-              </Link>
-              <Link to="/contact" className="w-full">
-                <Button variant="ghost" className="w-full justify-start gap-3">
-                  <Mail className="h-4 w-4" /> Contact us
-                </Button>
-              </Link>
-              <Button variant="ghost" className="w-full justify-start gap-3" onClick={signOut}>
-                <LogOut className="h-4 w-4" /> Sign out
-              </Button>
-            </nav>
-            </SheetContent>
-          </Sheet>
+          <Button asChild variant="ghost" size="icon" className="rounded-full glass-panel">
+            <Link to="/business/menu" search={{ businessId: biz.id }} aria-label="Open menu" title="Menu">
+              <Menu className="h-5 w-5" />
+            </Link>
+          </Button>
         </div>
       </header>
 
@@ -376,23 +289,6 @@ function BusinessDashboard() {
             <Download className="h-4 w-4" /> Download QR image
           </Button>
         </motion.div>
-      )}
-
-      {/* Someone who abandoned the wizard has no other way back into it. */}
-      {isOwner && !biz.onboarding_completed_at && (
-        <Link
-          to="/business/onboarding"
-          className="mt-6 flex items-center gap-3 rounded-2xl border-2 border-dashed border-ink/15 bg-card/60 p-4 transition-colors hover:bg-muted/40"
-        >
-          <Sparkles className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
-          <span className="min-w-0 flex-1">
-            <span className="block text-sm font-medium">Finish setting up your business</span>
-            <span className="block text-xs text-muted-foreground">
-              Step {Math.min(biz.onboarding_step ?? 1, 8)} of 8 — locations, team and your public listing.
-            </span>
-          </span>
-          <ArrowLeft className="h-4 w-4 rotate-180 text-muted-foreground" aria-hidden="true" />
-        </Link>
       )}
 
       {permissions.has("analytics.view") && analytics ? (

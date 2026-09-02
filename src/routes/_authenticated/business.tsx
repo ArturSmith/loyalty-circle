@@ -10,10 +10,19 @@ import { motion } from "framer-motion";
 import { formatPlanPrice, PLAN_LIST } from "@/lib/plans";
 import { getPaddleEnvironment } from "@/lib/paddle";
 import { getNavigationCache, setNavigationCache } from "@/lib/navigationCache";
+import { BusinessApprovalGate } from "@/components/business/BusinessApprovalGate";
 
 export const Route = createFileRoute("/_authenticated/business")({
-  component: BusinessLayout,
+  component: BusinessEntry,
 });
+
+function BusinessEntry() {
+  const { pathname, search } = useRouterState({ select: (state) => state.location });
+  // Setup and review must remain available without an active subscription.
+  if (["/business/onboarding", "/business/review"].includes(pathname.replace(/\/$/, ""))) return <Outlet />;
+  const businessId = (search as { businessId?: string }).businessId;
+  return <BusinessApprovalGate businessId={businessId}><BusinessLayout /></BusinessApprovalGate>;
+}
 
 function BusinessLayout() {
   const access = useBusinessAccess();

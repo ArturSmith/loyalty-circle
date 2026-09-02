@@ -41,8 +41,10 @@ import { Route as AuthenticatedChatsConversationIdRouteImport } from './routes/_
 import { Route as AuthenticatedBusinessWorkspaceRouteImport } from './routes/_authenticated/business.workspace'
 import { Route as AuthenticatedBusinessTeamRouteImport } from './routes/_authenticated/business.team'
 import { Route as AuthenticatedBusinessScanRouteImport } from './routes/_authenticated/business.scan'
+import { Route as AuthenticatedBusinessReviewRouteImport } from './routes/_authenticated/business.review'
 import { Route as AuthenticatedBusinessOnboardingRouteImport } from './routes/_authenticated/business.onboarding'
 import { Route as AuthenticatedBusinessNotificationsRouteImport } from './routes/_authenticated/business.notifications'
+import { Route as AuthenticatedBusinessMenuRouteImport } from './routes/_authenticated/business.menu'
 import { Route as AuthenticatedBusinessEditRouteImport } from './routes/_authenticated/business.edit'
 import { Route as AuthenticatedBusinessCustomersRouteImport } from './routes/_authenticated/business.customers'
 import { Route as AuthenticatedBusinessChatsRouteImport } from './routes/_authenticated/business.chats'
@@ -224,6 +226,12 @@ const AuthenticatedBusinessScanRoute =
     path: '/scan',
     getParentRoute: () => AuthenticatedBusinessRoute,
   } as any)
+const AuthenticatedBusinessReviewRoute =
+  AuthenticatedBusinessReviewRouteImport.update({
+    id: '/review',
+    path: '/review',
+    getParentRoute: () => AuthenticatedBusinessRoute,
+  } as any)
 const AuthenticatedBusinessOnboardingRoute =
   AuthenticatedBusinessOnboardingRouteImport.update({
     id: '/onboarding',
@@ -234,6 +242,12 @@ const AuthenticatedBusinessNotificationsRoute =
   AuthenticatedBusinessNotificationsRouteImport.update({
     id: '/notifications',
     path: '/notifications',
+    getParentRoute: () => AuthenticatedBusinessRoute,
+  } as any)
+const AuthenticatedBusinessMenuRoute =
+  AuthenticatedBusinessMenuRouteImport.update({
+    id: '/menu',
+    path: '/menu',
     getParentRoute: () => AuthenticatedBusinessRoute,
   } as any)
 const AuthenticatedBusinessEditRoute =
@@ -341,8 +355,10 @@ export interface FileRoutesByFullPath {
   '/business/chats': typeof AuthenticatedBusinessChatsRoute
   '/business/customers': typeof AuthenticatedBusinessCustomersRoute
   '/business/edit': typeof AuthenticatedBusinessEditRoute
+  '/business/menu': typeof AuthenticatedBusinessMenuRoute
   '/business/notifications': typeof AuthenticatedBusinessNotificationsRoute
   '/business/onboarding': typeof AuthenticatedBusinessOnboardingRoute
+  '/business/review': typeof AuthenticatedBusinessReviewRoute
   '/business/scan': typeof AuthenticatedBusinessScanRoute
   '/business/team': typeof AuthenticatedBusinessTeamRoute
   '/business/workspace': typeof AuthenticatedBusinessWorkspaceRoute
@@ -388,8 +404,10 @@ export interface FileRoutesByTo {
   '/business/chats': typeof AuthenticatedBusinessChatsRoute
   '/business/customers': typeof AuthenticatedBusinessCustomersRoute
   '/business/edit': typeof AuthenticatedBusinessEditRoute
+  '/business/menu': typeof AuthenticatedBusinessMenuRoute
   '/business/notifications': typeof AuthenticatedBusinessNotificationsRoute
   '/business/onboarding': typeof AuthenticatedBusinessOnboardingRoute
+  '/business/review': typeof AuthenticatedBusinessReviewRoute
   '/business/scan': typeof AuthenticatedBusinessScanRoute
   '/business/team': typeof AuthenticatedBusinessTeamRoute
   '/business/workspace': typeof AuthenticatedBusinessWorkspaceRoute
@@ -438,8 +456,10 @@ export interface FileRoutesById {
   '/_authenticated/business/chats': typeof AuthenticatedBusinessChatsRoute
   '/_authenticated/business/customers': typeof AuthenticatedBusinessCustomersRoute
   '/_authenticated/business/edit': typeof AuthenticatedBusinessEditRoute
+  '/_authenticated/business/menu': typeof AuthenticatedBusinessMenuRoute
   '/_authenticated/business/notifications': typeof AuthenticatedBusinessNotificationsRoute
   '/_authenticated/business/onboarding': typeof AuthenticatedBusinessOnboardingRoute
+  '/_authenticated/business/review': typeof AuthenticatedBusinessReviewRoute
   '/_authenticated/business/scan': typeof AuthenticatedBusinessScanRoute
   '/_authenticated/business/team': typeof AuthenticatedBusinessTeamRoute
   '/_authenticated/business/workspace': typeof AuthenticatedBusinessWorkspaceRoute
@@ -488,8 +508,10 @@ export interface FileRouteTypes {
     | '/business/chats'
     | '/business/customers'
     | '/business/edit'
+    | '/business/menu'
     | '/business/notifications'
     | '/business/onboarding'
+    | '/business/review'
     | '/business/scan'
     | '/business/team'
     | '/business/workspace'
@@ -535,8 +557,10 @@ export interface FileRouteTypes {
     | '/business/chats'
     | '/business/customers'
     | '/business/edit'
+    | '/business/menu'
     | '/business/notifications'
     | '/business/onboarding'
+    | '/business/review'
     | '/business/scan'
     | '/business/team'
     | '/business/workspace'
@@ -584,8 +608,10 @@ export interface FileRouteTypes {
     | '/_authenticated/business/chats'
     | '/_authenticated/business/customers'
     | '/_authenticated/business/edit'
+    | '/_authenticated/business/menu'
     | '/_authenticated/business/notifications'
     | '/_authenticated/business/onboarding'
+    | '/_authenticated/business/review'
     | '/_authenticated/business/scan'
     | '/_authenticated/business/team'
     | '/_authenticated/business/workspace'
@@ -855,6 +881,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBusinessScanRouteImport
       parentRoute: typeof AuthenticatedBusinessRoute
     }
+    '/_authenticated/business/review': {
+      id: '/_authenticated/business/review'
+      path: '/review'
+      fullPath: '/business/review'
+      preLoaderRoute: typeof AuthenticatedBusinessReviewRouteImport
+      parentRoute: typeof AuthenticatedBusinessRoute
+    }
     '/_authenticated/business/onboarding': {
       id: '/_authenticated/business/onboarding'
       path: '/onboarding'
@@ -867,6 +900,13 @@ declare module '@tanstack/react-router' {
       path: '/notifications'
       fullPath: '/business/notifications'
       preLoaderRoute: typeof AuthenticatedBusinessNotificationsRouteImport
+      parentRoute: typeof AuthenticatedBusinessRoute
+    }
+    '/_authenticated/business/menu': {
+      id: '/_authenticated/business/menu'
+      path: '/menu'
+      fullPath: '/business/menu'
+      preLoaderRoute: typeof AuthenticatedBusinessMenuRouteImport
       parentRoute: typeof AuthenticatedBusinessRoute
     }
     '/_authenticated/business/edit': {
@@ -968,8 +1008,10 @@ interface AuthenticatedBusinessRouteChildren {
   AuthenticatedBusinessChatsRoute: typeof AuthenticatedBusinessChatsRoute
   AuthenticatedBusinessCustomersRoute: typeof AuthenticatedBusinessCustomersRoute
   AuthenticatedBusinessEditRoute: typeof AuthenticatedBusinessEditRoute
+  AuthenticatedBusinessMenuRoute: typeof AuthenticatedBusinessMenuRoute
   AuthenticatedBusinessNotificationsRoute: typeof AuthenticatedBusinessNotificationsRoute
   AuthenticatedBusinessOnboardingRoute: typeof AuthenticatedBusinessOnboardingRoute
+  AuthenticatedBusinessReviewRoute: typeof AuthenticatedBusinessReviewRoute
   AuthenticatedBusinessScanRoute: typeof AuthenticatedBusinessScanRoute
   AuthenticatedBusinessTeamRoute: typeof AuthenticatedBusinessTeamRoute
   AuthenticatedBusinessWorkspaceRoute: typeof AuthenticatedBusinessWorkspaceRoute
@@ -985,9 +1027,11 @@ const AuthenticatedBusinessRouteChildren: AuthenticatedBusinessRouteChildren = {
   AuthenticatedBusinessChatsRoute: AuthenticatedBusinessChatsRoute,
   AuthenticatedBusinessCustomersRoute: AuthenticatedBusinessCustomersRoute,
   AuthenticatedBusinessEditRoute: AuthenticatedBusinessEditRoute,
+  AuthenticatedBusinessMenuRoute: AuthenticatedBusinessMenuRoute,
   AuthenticatedBusinessNotificationsRoute:
     AuthenticatedBusinessNotificationsRoute,
   AuthenticatedBusinessOnboardingRoute: AuthenticatedBusinessOnboardingRoute,
+  AuthenticatedBusinessReviewRoute: AuthenticatedBusinessReviewRoute,
   AuthenticatedBusinessScanRoute: AuthenticatedBusinessScanRoute,
   AuthenticatedBusinessTeamRoute: AuthenticatedBusinessTeamRoute,
   AuthenticatedBusinessWorkspaceRoute: AuthenticatedBusinessWorkspaceRoute,

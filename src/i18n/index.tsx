@@ -34,6 +34,7 @@ function translateDynamic(source: string): string {
     [/^(\d+) active cards?$/, (count) => `${count} aktive ${count === "1" ? "kort" : "kort"}`],
     [/^(\d+) of (\d+) stamps$/, (current, total) => `${current} av ${total} stempler`],
     [/^Step (\d+)$/, (step) => `Trinn ${step}`],
+    [/^Step (\d+) of (\d+)$/, (step, total) => `Trinn ${step} av ${total}`],
     [/^Stamp (\d+)$/, (step) => `Stempel ${step}`],
     [/^Created (.+)$/, (date) => `Opprettet ${date}`],
     [/^Submitted (.+)$/, (date) => `Sendt inn ${date}`],

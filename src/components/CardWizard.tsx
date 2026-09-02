@@ -13,6 +13,8 @@ import { StampCard, STAMP_ICONS } from "@/components/StampCard";
 import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
 import { ArrowLeft, ArrowRight, Check, Trash2 } from "lucide-react";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
+import { BackButton } from "@/components/BackButton";
+import type { CardDraft } from "@/lib/card-draft";
 
 const PRESETS = [
   { bg: "#faf7ee", accent: "#1a1a2e", text: "#1a1a2e" },
@@ -36,10 +38,23 @@ function matchPreset(bg: string, accent: string, text: string): number {
   return i === -1 ? -1 : i;
 }
 
-/** A card is always created or edited in an explicitly selected business. */
-type Props = { templateId?: string; businessId: string };
+/** Persisted cards require a selected business; onboarding only edits a draft. */
+type Props = {
+  templateId?: string;
+  businessId: string;
+  draft?: never;
+  onDraftComplete?: never;
+  onCancel?: never;
+} | {
+  templateId?: never;
+  businessId?: never;
+  draft?: CardDraft;
+  onDraftComplete: (draft: CardDraft) => void;
+  onCancel: () => void;
+};
 
-export function CardWizard({ templateId, businessId: selectedBusinessId }: Props) {
+export function CardWizard({ templateId, businessId: selectedBusinessId, draft, onDraftComplete, onCancel }: Props) {
+  const draftMode = !!onDraftComplete;
   const isEdit = !!templateId;
   const navigate = useNavigate();
   const [businessId, setBusinessId] = useState<string | null>(null);
@@ -61,9 +76,30 @@ export function CardWizard({ templateId, businessId: selectedBusinessId }: Props
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [gridCols, setGridCols] = useState<number | null>(null);
   const [active, setActive] = useState(true);
+  const [showErrors, setShowErrors] = useState(false);
 
   useEffect(() => {
     (async () => {
+      if (draftMode) {
+        if (draft) {
+          setTitle(draft.title);
+          setSubtitle(draft.subtitle ?? "");
+          setDescription(draft.description ?? "");
+          setTerms(draft.terms_and_conditions);
+          setCornerTitle(draft.corner_title);
+          setTotalSteps(draft.total_steps);
+          setShape(draft.shape);
+          setCustomColors({ bg: draft.bg_color, accent: draft.accent_color, text: draft.text_color });
+          setIcon(draft.stamp_icon);
+          setLogoUrl(draft.logo_url ?? "");
+          setRewards(draft.rewards);
+          setGridCols(draft.grid_cols);
+          setActive(draft.active);
+        }
+        setLoading(false);
+        return;
+      }
+      if (!selectedBusinessId) return;
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
       // Never resolve "the first business I own" here. The dashboard has
@@ -80,7 +116,7 @@ export function CardWizard({ templateId, businessId: selectedBusinessId }: Props
       if (isEdit && templateId) {
         const { data: t } = await supabase.from("card_templates").select("*").eq("id", templateId).maybeSingle();
         if (t) {
-          const { data: pending } = await (supabase.rpc as any)("get_pending_moderation", {
+          const { data: pending } = await supabase.rpc("get_pending_moderation", {
             _entity_type: "card",
             _entity_id: templateId,
           });
@@ -114,17 +150,18 @@ export function CardWizard({ templateId, businessId: selectedBusinessId }: Props
       }
       setLoading(false);
     })();
-  }, [navigate, isEdit, selectedBusinessId, templateId]);
+  }, [navigate, isEdit, selectedBusinessId, templateId, draftMode, draft]);
 
   const { bg, accent, text } = customColors ?? PRESETS[preset];
 
   const save = async () => {
-    if (!businessId) return;
-    if (title.trim().length === 0) { toast.error("Add a card title"); return; }
-    if (terms.trim().length < 10) { toast.error("Add terms and conditions for this card"); return; }
+    setShowErrors(true);
+    if (title.trim().length === 0) { setStep(0); toast.error("Add a card title"); return; }
+    if (terms.trim().length < 10) { setStep(3); toast.error("Add terms and conditions for this card"); return; }
+    if (!draftMode && !businessId) return;
     setSaving(true);
     const cleanRewards = rewards.filter((r) => r.step >= 1 && r.step <= totalSteps && r.label.trim().length > 0);
-    const payload = {
+    const payload: CardDraft = {
       title, subtitle: subtitle || null, description: description || null,
       corner_title: cornerTitle,
       total_steps: totalSteps, shape,
@@ -132,13 +169,20 @@ export function CardWizard({ templateId, businessId: selectedBusinessId }: Props
       stamp_icon: icon ?? "star", logo_url: logoUrl || null, rewards: cleanRewards, active,
       grid_cols: gridCols,
       terms_and_conditions: terms.trim(),
+      ...(draft?.stamp_shape ? { stamp_shape: draft.stamp_shape } : {}),
+      ...(draft?.step_size ? { step_size: draft.step_size } : {}),
     };
+    if (onDraftComplete) {
+      onDraftComplete(payload);
+      setSaving(false);
+      return;
+    }
     const { error } = isEdit && templateId
-      ? await (supabase.rpc as any)("submit_card_changes", {
+      ? await supabase.rpc("submit_card_changes", {
           _template_id: templateId,
           _changes: payload,
         })
-      : await supabase.from("card_templates").insert({ business_id: businessId, ...payload });
+      : await supabase.from("card_templates").insert({ business_id: businessId!, ...payload });
     setSaving(false);
     if (error) { toast.error(error.message); return; }
     toast.success(isEdit ? "Card changes submitted for review" : "Card submitted for review");
@@ -185,12 +229,16 @@ export function CardWizard({ templateId, businessId: selectedBusinessId }: Props
 
   if (loading) return <ScreenLoader />;
 
+  const goBack = () => {
+    if (step > 0) { setShowErrors(false); setStep(step - 1); return; }
+    if (onCancel) { onCancel(); return; }
+    navigate({ to: "/business", search: selectedBusinessId ? { businessId: selectedBusinessId } : {} });
+  };
+
   return (
-    <div className="min-h-screen px-4 py-6 max-w-2xl mx-auto">
+    <div className={draftMode ? "py-2" : "min-h-screen px-4 py-6 max-w-2xl mx-auto"}>
       <header className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" aria-label={step === 0 ? "Back to business dashboard" : "Previous step"} onClick={() => step === 0 ? navigate({ to: "/business", search: selectedBusinessId ? { businessId: selectedBusinessId } : {} }) : setStep(step - 1)}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
+        <BackButton label={step === 0 && !draftMode ? "Back to business dashboard" : "Previous step"} onClick={goBack} />
         <div className="flex-1">
           <p className="text-xs uppercase tracking-widest text-muted-foreground">Step {step + 1} / {stepsLabels.length}{isEdit ? " · Editing" : ""}</p>
           <h1 className="font-display text-2xl font-semibold">{stepsLabels[step]}</h1>
@@ -226,7 +274,7 @@ export function CardWizard({ templateId, businessId: selectedBusinessId }: Props
           <div className="mt-4 rounded-xl border-2 border-ink/10 bg-secondary/50 p-3">
             <Label className="text-xs">Title</Label>
             <div className="mt-2 flex gap-2">
-              <Input autoFocus value={title} onChange={(e) => setTitle(e.target.value)}
+              <Input autoFocus maxLength={200} aria-invalid={showErrors && !title.trim()} className={showErrors && !title.trim() ? "border-destructive ring-1 ring-destructive" : undefined} value={title} onChange={(e) => setTitle(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === "Escape") setEditingField(null); }} />
               <Button size="sm" onClick={() => setEditingField(null)}><Check className="h-4 w-4" /></Button>
             </div>
@@ -328,8 +376,9 @@ export function CardWizard({ templateId, businessId: selectedBusinessId }: Props
             {step === 0 && (
               <div className="space-y-4">
                 <div>
-                  <Label>Title</Label>
-                  <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="5 klipp -50%" />
+                  <Label htmlFor="card-title">Title *</Label>
+                  <Input id="card-title" required maxLength={200} aria-invalid={showErrors && !title.trim()} className={showErrors && !title.trim() ? "border-destructive ring-1 ring-destructive" : undefined} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="5 klipp -50%" />
+                  {showErrors && !title.trim() && <p className="mt-1 text-sm text-destructive" role="alert">Add a card title</p>}
                 </div>
                 <div>
                   <Label>Subtitle (optional)</Label>
@@ -434,7 +483,7 @@ export function CardWizard({ templateId, businessId: selectedBusinessId }: Props
                     onChange={(e) => {
                       const raw = Number(e.target.value);
                       if (Number.isNaN(raw)) { setTotalSteps(0); return; }
-                      setTotalSteps(Math.min(32, Math.max(0, raw)));
+                      setTotalSteps(Math.min(32, Math.max(0, Math.trunc(raw))));
                     }}
                     className="mt-2 w-32"
                   />
@@ -473,13 +522,16 @@ export function CardWizard({ templateId, businessId: selectedBusinessId }: Props
                   </p>
                   <Textarea
                     id="card-terms"
+                    required
+                    aria-invalid={showErrors && terms.trim().length < 10}
                     value={terms}
                     onChange={(event) => setTerms(event.target.value)}
                     placeholder="Explain how stamps are earned, when rewards can be used, expiry rules, exclusions, and any other conditions."
                     rows={10}
                     maxLength={20000}
-                    className="mt-3"
+                    className={`mt-3 ${showErrors && terms.trim().length < 10 ? "border-destructive ring-1 ring-destructive" : ""}`}
                   />
+                  {showErrors && terms.trim().length < 10 && <p className="text-sm text-destructive" role="alert">Add terms and conditions for this card</p>}
                   <p className="mt-1 text-right text-[11px] text-muted-foreground">{terms.length}/20,000</p>
                 </div>
               </div>
@@ -489,7 +541,7 @@ export function CardWizard({ templateId, businessId: selectedBusinessId }: Props
                 <div className="text-center space-y-3">
                   <OrnamentDivider className="w-32 mx-auto opacity-60" />
                   <h3 className="font-display text-xl">Looks good?</h3>
-                  <p className="text-sm text-muted-foreground">You can edit anything later from the dashboard.</p>
+                  <p className="text-sm text-muted-foreground">{draftMode ? "This card will be submitted for review with your business." : "You can edit anything later from the dashboard."}</p>
                 </div>
                 <div className="flex items-center justify-between rounded-lg border-2 border-border p-3">
                   <div>
@@ -504,18 +556,20 @@ export function CardWizard({ templateId, businessId: selectedBusinessId }: Props
         </AnimatePresence>
 
         <div className="mt-6 flex justify-between">
-          <Button variant="ghost" onClick={() => step === 0 ? navigate({ to: "/business", search: selectedBusinessId ? { businessId: selectedBusinessId } : {} }) : setStep(step - 1)}>
+          <Button variant="ghost" onClick={goBack}>
             <ArrowLeft className="h-4 w-4" /> Back
           </Button>
           {step < stepsLabels.length - 1 ? (
             <Button onClick={() => {
+              setShowErrors(true);
               if (step === 0 && title.trim().length === 0) { toast.error("Add a card title"); return; }
               if (step === 3 && terms.trim().length < 10) { toast.error("Add terms and conditions for this card"); return; }
+              setShowErrors(false);
               setStep(step + 1);
             }}>Next <ArrowRight className="h-4 w-4" /></Button>
           ) : (
             <Button onClick={save} disabled={saving}>
-              <Check className="h-4 w-4" /> {saving ? (isEdit ? "Saving…" : "Creating…") : (isEdit ? "Save changes" : "Create card")}
+              <Check className="h-4 w-4" /> {draftMode ? "Save card draft" : saving ? (isEdit ? "Saving…" : "Creating…") : (isEdit ? "Save changes" : "Create card")}
             </Button>
           )}
         </div>

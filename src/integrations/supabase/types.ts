@@ -1273,6 +1273,17 @@ export type Database = {
         Args: { _business_id: string; _changes: Json }
         Returns: string
       }
+      submit_business_onboarding: {
+        Args: {
+          _business_id: string
+          _business: Json
+          _card: Json
+          _socials?: Json
+          _marketplace?: string
+          _card_id?: string
+        }
+        Returns: string
+      }
       submit_business_for_moderation: {
         Args: { _business_id: string }
         Returns: string

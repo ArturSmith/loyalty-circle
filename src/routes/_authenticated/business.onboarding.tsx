@@ -1,27 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { z } from "zod";
 import { toast } from "sonner";
-import {
-  ArrowLeft,
-  ArrowRight,
-  Check,
-  Copy,
-  CreditCard,
-  Globe2,
-  MapPin,
-  Store,
-  UserPlus,
-  Users,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Pencil, CreditCard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { getPaddleEnvironment } from "@/lib/paddle";
 import { ScreenLoader, Spinner } from "@/components/Spinner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { OrnamentDivider } from "@/components/OrnamentDivider";
+import { CardWizard } from "@/components/CardWizard";
 import {
   BusinessForm,
   businessDetailsFromRow,
@@ -30,524 +17,488 @@ import {
   isSectionValid,
   type BusinessDetails,
 } from "@/components/BusinessForm";
-import { LocationsEditor } from "@/components/business/LocationsEditor";
-import { SocialsEditor } from "@/components/business/SocialsEditor";
-import { inviteMember, listMembers, type MemberRow } from "@/utils/members.functions";
-import { useEntitlements } from "@/hooks/useEntitlements";
+import { SOCIAL_PLATFORMS } from "@/components/business/SocialsEditor";
+import { cardDraftSchema, type CardDraft } from "@/lib/card-draft";
+import { invalidateNavigationCache } from "@/lib/navigationCache";
+import { invalidateTabCache } from "@/lib/tabCache";
 
 export const Route = createFileRoute("/_authenticated/business/onboarding")({
   head: () => ({ meta: [{ title: "Set up your business — ClubCarder" }] }),
+  validateSearch: z.object({ businessId: z.string().uuid().optional() }),
   component: OnboardingWizard,
 });
 
-/**
- * Eight-step business setup.
- *
- * Progress lives in `businesses.onboarding_step` rather than component state so
- * a half-finished setup survives a closed tab or a switch to another device.
- * Steps 3–6 are optional: they enrich the public page but nothing breaks if the
- * owner skips them, and forcing them is the fastest way to lose a signup.
- */
-
-const TOTAL_STEPS = 8;
-
-type StepDef = {
-  n: number;
-  title: string;
-  blurb: string;
-  icon: typeof Store;
-  optional: boolean;
-};
-
-const STEPS: StepDef[] = [
-  { n: 1, title: "Business basics", blurb: "Name, category and how your brand looks.", icon: Store, optional: false },
-  { n: 2, title: "Address & contact", blurb: "So customers nearby can find you.", icon: MapPin, optional: false },
-  { n: 3, title: "Locations", blurb: "Add every branch that hands out stamps.", icon: MapPin, optional: true },
-  { n: 4, title: "Administrators", blurb: "Invite the people who run your counter.", icon: Users, optional: true },
-  { n: 5, title: "My Networks", blurb: "Link your social profiles.", icon: Globe2, optional: true },
-  { n: 6, title: "Your story", blurb: "A short description and a welcome message.", icon: Store, optional: true },
-  { n: 7, title: "Marketplace", blurb: "Decide whether to be listed publicly.", icon: Store, optional: false },
-  { n: 8, title: "Review", blurb: "Everything looks right? You're done.", icon: Check, optional: false },
+const STEPS = [
+  { title: "Business basics", blurb: "Name, category and how your brand looks.", optional: false },
+  { title: "Address & contact", blurb: "So customers nearby can find you.", optional: false },
+  { title: "My Networks", blurb: "Link your social profiles.", optional: true },
+  { title: "Your story", blurb: "A short description and a welcome message.", optional: true },
+  {
+    title: "Marketplace",
+    blurb: "Decide whether to be listed publicly after approval.",
+    optional: false,
+  },
+  {
+    title: "Create your first loyalty card",
+    blurb: "A loyalty card is required to submit your business.",
+    optional: false,
+  },
+  {
+    title: "Review",
+    blurb: "Your business and first card will be reviewed before they go live.",
+    optional: false,
+  },
 ];
 
-type BizRow = {
+type WizardDraft = {
   id: string;
-  name: string;
-  accepted_by_platform: boolean;
-  onboarding_step: number | null;
-  onboarding_completed_at: string | null;
-  marketplace_status: string | null;
+  details: BusinessDetails;
+  socials: Record<string, string>;
+  marketplace: "unpublished" | "published";
+  card: CardDraft | null;
+  cardId: string | null;
+  step: number;
 };
+
+const storedDraftSchema = z.object({
+  id: z.string().uuid(),
+  details: z.record(z.string()),
+  socials: z.record(z.string()),
+  marketplace: z.enum(["unpublished", "published"]),
+  card: z.unknown(),
+  cardId: z.string().uuid().nullable(),
+  step: z
+    .number()
+    .int()
+    .min(0)
+    .max(STEPS.length - 1),
+});
 
 function OnboardingWizard() {
   const navigate = useNavigate();
-  const ent = useEntitlements();
-  const [biz, setBiz] = useState<BizRow | null>(null);
-  const [details, setDetails] = useState<BusinessDetails>(emptyBusinessDetails);
-  const [step, setStep] = useState(1);
-  const [loading, setLoading] = useState(true);
+  const { user } = Route.useRouteContext();
+  const { businessId } = Route.useSearch();
+  const storageKey = `business-onboarding-v2:${user.id}:${businessId ?? "new"}`;
+  const [draft, setDraft] = useState<WizardDraft | null>(null);
+  const [loadError, setLoadError] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [marketplace, setMarketplace] = useState<"unpublished" | "published">("unpublished");
+  const [attempted, setAttempted] = useState(false);
+  const [editingCard, setEditingCard] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) return;
-      const { data } = await supabase
-        .from("businesses")
-        .select("*")
-        .eq("owner_id", u.user.id)
-        .maybeSingle();
-      if (cancelled) return;
-      if (data) {
-        const row = data as unknown as BizRow;
-        setBiz(row);
-        setDetails(businessDetailsFromRow(data as Record<string, unknown>));
-        const saved = row.onboarding_step ?? 1;
-        setStep(Math.min(Math.max(saved, 1), TOTAL_STEPS));
-        if (row.marketplace_status === "published") {
-          setMarketplace("published");
+    setDraft(null);
+    setLoadError(false);
+    void (async () => {
+      try {
+        let next: WizardDraft = {
+          id: businessId ?? crypto.randomUUID(),
+          details: { ...emptyBusinessDetails },
+          socials: {},
+          marketplace: "unpublished",
+          card: null,
+          cardId: null,
+          step: 0,
+        };
+        if (businessId) {
+          const { data: business, error } = await supabase
+            .from("businesses")
+            .select("*")
+            .eq("id", businessId)
+            .eq("owner_id", user.id)
+            .single();
+          if (error) throw error;
+          if (business.accepted_by_platform) {
+            if (!cancelled)
+              void navigate({ to: "/business", search: { businessId }, replace: true });
+            return;
+          }
+          const [cards, socials] = await Promise.all([
+            supabase
+              .from("card_templates")
+              .select("*")
+              .eq("business_id", businessId)
+              .order("created_at", { ascending: true })
+              .limit(1),
+            supabase.from("business_socials").select("platform,url").eq("business_id", businessId),
+          ]);
+          if (cards.error) throw cards.error;
+          if (socials.error) throw socials.error;
+          const card = cards.data?.[0];
+          let cardData: unknown = card;
+          if (card) {
+            const { data: pending, error: pendingError } = await supabase.rpc(
+              "get_pending_moderation",
+              { _entity_type: "card", _entity_id: card.id },
+            );
+            if (pendingError) throw pendingError;
+            cardData =
+              (pending as { proposed_data?: { card?: unknown } } | null)?.proposed_data?.card ??
+              card;
+          }
+          const parsedCard = cardDraftSchema.safeParse(cardData);
+          next = {
+            ...next,
+            details: businessDetailsFromRow(business),
+            marketplace: business.marketplace_status === "published" ? "published" : "unpublished",
+            socials: Object.fromEntries(socials.data.map((row) => [row.platform, row.url])),
+            card: parsedCard.success ? parsedCard.data : null,
+            cardId: card?.id ?? null,
+          };
         }
+        // Moving between steps never creates database rows. Drafts survive
+        // reloads in this tab and are scoped to the account and selected business.
+        try {
+          const raw = sessionStorage.getItem(storageKey);
+          if (raw) {
+            const parsed = storedDraftSchema.safeParse(JSON.parse(raw));
+            if (parsed.success && (!businessId || parsed.data.id === businessId)) {
+              const saved = parsed.data;
+              const savedCard = cardDraftSchema.safeParse(saved.card);
+              next = {
+                ...saved,
+                details: businessDetailsFromRow(saved.details),
+                step: Math.max(0, Math.min(saved.step, STEPS.length - 1)),
+                card: savedCard.success ? savedCard.data : null,
+              };
+            }
+          }
+        } catch {
+          /* Storage is optional in private browsing. */
+        }
+        if (!cancelled) setDraft(next);
+      } catch {
+        if (!cancelled) setLoadError(true);
       }
-      setLoading(false);
     })();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [businessId, navigate, storageKey, user.id]);
 
-  /** Persist the furthest step reached — never move the marker backwards. */
-  const persistStep = useCallback(
-    async (next: number, extra: Record<string, unknown> = {}) => {
-      if (!biz) return false;
-      const furthest = Math.max(next, biz.onboarding_step ?? 1);
-      const { error } = await (supabase as any)
-        .from("businesses")
-        .update({ onboarding_step: furthest, ...extra })
-        .eq("id", biz.id);
-      if (error) {
-        toast.error(error.message);
-        return false;
-      }
-      setBiz((b) => (b ? { ...b, onboarding_step: furthest, ...(extra as object) } : b));
-      return true;
-    },
-    [biz],
-  );
-
-  const saveDetails = async (): Promise<boolean> => {
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) return false;
-    const payload = businessDetailsToPayload(details);
-
-    if (!biz) {
-      const { data, error } = await supabase
-        .from("businesses")
-        .insert({ owner_id: u.user.id, ...payload })
-        .select()
-        .maybeSingle();
-      if (error || !data) {
-        toast.error(error?.message ?? "Could not create your business");
-        return false;
-      }
-      setBiz(data as unknown as BizRow);
-      ent.refetch();
-      return true;
+  useEffect(() => {
+    if (!draft) return;
+    try {
+      sessionStorage.setItem(storageKey, JSON.stringify(draft));
+    } catch {
+      /* Quota/private mode. */
     }
+  }, [draft, storageKey]);
 
-    const { error } = await (supabase.rpc as any)("submit_business_changes", {
-      _business_id: biz.id,
-      _changes: payload,
-    });
-    if (error) {
-      toast.error(error.message);
+  if (loadError)
+    return (
+      <div className="mx-auto max-w-md space-y-4 p-6">
+        <p role="alert">Could not load your business draft.</p>
+        <Button asChild>
+          <Link to="/workspace">Back to workspace</Link>
+        </Button>
+      </div>
+    );
+  if (!draft) return <ScreenLoader />;
+
+  const { details, card, step, marketplace, socials } = draft;
+  const current = STEPS[step];
+  const update = (patch: Partial<WizardDraft>) =>
+    setDraft((value) => (value ? { ...value, ...patch } : value));
+  const moveTo = (next: number) => {
+    setAttempted(false);
+    setEditingCard(false);
+    update({ step: next });
+    document.getElementById("app-scroll")?.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  const invalidSocials = SOCIAL_PLATFORMS.filter(
+    ({ key }) => socials[key]?.trim() && !normalizeSocialUrl(socials[key]),
+  );
+  const validate = (all = false) => {
+    let invalidStep: number | null = null;
+    if ((all || step === 0) && !isSectionValid(details, "basics")) invalidStep = 0;
+    else if ((all || step === 1) && !isSectionValid(details, "address")) invalidStep = 1;
+    else if ((all || step === 2) && invalidSocials.length) invalidStep = 2;
+    else if ((all || step === 5) && !cardDraftSchema.safeParse(card).success) invalidStep = 5;
+    if (invalidStep !== null) {
+      update({ step: invalidStep });
+      setAttempted(true);
+      toast.error(
+        invalidStep === 5
+          ? "Create your first loyalty card before continuing."
+          : "Please complete the highlighted fields.",
+      );
       return false;
     }
     return true;
   };
-
-  const goNext = async () => {
+  const submit = async () => {
+    if (saving || !validate(true) || !card) return;
     setSaving(true);
     try {
-      // Steps that own business columns write them before advancing.
-      if (step === 1 || step === 2 || step === 6) {
-        const ok = await saveDetails();
-        if (!ok) return;
+      const links = SOCIAL_PLATFORMS.flatMap(({ key }) => {
+        const url = normalizeSocialUrl(socials[key] ?? "");
+        return url ? [{ platform: key, url }] : [];
+      });
+      const { error } = await supabase.rpc("submit_business_onboarding", {
+        _business_id: draft.id,
+        _business: businessDetailsToPayload(details),
+        _card: card,
+        _card_id: draft.cardId ?? undefined,
+        _socials: links,
+        _marketplace: marketplace,
+      });
+      if (error) throw error;
+      try {
+        sessionStorage.removeItem(storageKey);
+      } catch {
+        /* Optional storage. */
       }
-      if (step === 7 && biz) {
-        await (supabase as any)
-          .from("businesses")
-          .update({
-            marketplace_status: marketplace,
-            marketplace_submitted_at: marketplace === "published" ? new Date().toISOString() : null,
-          })
-          .eq("id", biz.id);
-      }
-      if (step === TOTAL_STEPS) {
-        const submitted = await persistStep(TOTAL_STEPS, {
-          onboarding_completed_at: new Date().toISOString(),
-        });
-        if (!submitted) return;
-        // Completing onboarding queues moderation through
-        // queue_unaccepted_business_trg. Calling the submission RPC here as
-        // well refreshed the same row and produced a duplicate notification.
-        toast.success("Your business was submitted for review");
-        navigate({ to: "/business" });
-        return;
-      }
-      await persistStep(step + 1);
-      setStep(step + 1);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      invalidateNavigationCache();
+      invalidateTabCache("profile");
+      toast.success("Your business and first loyalty card have been sent to moderators.");
+      await navigate({ to: "/profile", search: { businessSubmitted: true }, replace: true });
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : ((error as { message?: string })?.message ??
+              "Could not submit your business. Please try again."),
+      );
     } finally {
       setSaving(false);
     }
   };
 
-  const goBack = () => {
-    // On the first step there is no previous step, but a dead button is worse
-    // than none — leave the wizard rather than trapping the user in it.
-    if (step === 1) {
-      navigate({ to: "/wallet" });
-      return;
-    }
-    setStep(step - 1);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const current = STEPS[step - 1];
-
-  // Step 1 and 2 gate on their own fields; the business must exist past step 2.
-  const canAdvance = useMemo(() => {
-    if (step === 1) return isSectionValid(details, "basics");
-    if (step === 2) return isSectionValid(details, "address");
-    return true;
-  }, [step, details]);
-
-  if (loading) return <ScreenLoader />;
-
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 pb-28 pt-6">
+    <div className="mx-auto w-full max-w-2xl px-4 pb-32 pt-6">
       <header className="mb-6">
-        <div className="flex items-center justify-between gap-4">
-          <div>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              Step {step} of {TOTAL_STEPS}
+              Step {step + 1} of {STEPS.length}
             </p>
-            <h1 className="mt-1 text-2xl font-semibold tracking-tight">{current.title}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">{current.blurb}</p>
+            <h1 className="mt-1 font-display text-2xl font-semibold">{current.title}</h1>
+            <p className="mt-2 text-sm text-muted-foreground">{current.blurb}</p>
           </div>
-          {/* Always offer a way out. Someone part-way through goes to their
-              wallet, since /business would only send them back here. */}
-          <Button asChild variant="ghost" size="sm">
-            <Link to={biz?.onboarding_completed_at ? "/business" : "/wallet"}>Exit</Link>
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={saving}
+            onClick={() => navigate({ to: "/profile" })}
+          >
+            Exit
           </Button>
         </div>
-
-        <div className="mt-5 flex gap-1.5" role="progressbar" aria-valuenow={step} aria-valuemin={1} aria-valuemax={TOTAL_STEPS}>
-          {STEPS.map((s) => (
+        <div
+          className="mt-5 flex gap-1.5"
+          role="progressbar"
+          aria-label="Business setup"
+          aria-valuenow={step + 1}
+          aria-valuemin={1}
+          aria-valuemax={STEPS.length}
+        >
+          {STEPS.map((item, index) => (
             <span
-              key={s.n}
-              className={`h-1.5 flex-1 rounded-full transition-colors ${
-                s.n < step ? "bg-primary" : s.n === step ? "bg-primary/60" : "bg-border"
-              }`}
+              key={item.title}
+              className={`h-1.5 flex-1 rounded-full ${index <= step ? "bg-primary" : "bg-border"}`}
             />
           ))}
         </div>
       </header>
 
-      <OrnamentDivider className="mb-6" />
-
-      <motion.div
-        key={step}
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.18 }}
-      >
-        {step === 1 && <BusinessForm value={details} onChange={setDetails} sections={["basics"]} />}
-        {step === 2 && (
-          <BusinessForm value={details} onChange={setDetails} sections={["address", "contact"]} />
-        )}
-        {step === 3 &&
-          (biz ? (
-            <LocationsEditor businessId={biz.id} />
-          ) : (
-            <NotYet />
-          ))}
-        {step === 4 && <AdministratorsStep />}
-        {step === 5 && (biz ? <SocialsEditor businessId={biz.id} /> : <NotYet />)}
-        {step === 6 && <BusinessForm value={details} onChange={setDetails} sections={["about"]} />}
-        {step === 7 && <MarketplaceStep value={marketplace} onChange={setMarketplace} />}
-        {step === 8 && biz && <ReviewStep biz={biz} details={details} marketplace={marketplace} />}
-      </motion.div>
-
-      <div className="fixed inset-x-0 bottom-0 border-t border-border bg-background/95 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-2xl items-center gap-3 px-4 py-3">
-          <Button type="button" variant="ghost" onClick={goBack} disabled={saving}>
-            <ArrowLeft className="mr-2 h-4 w-4" /> {step === 1 ? "Cancel" : "Back"}
-          </Button>
-          <div className="flex-1" />
-          {current.optional && (
-            <Button
-              type="button"
-              variant="ghost"
-              disabled={saving}
-              onClick={() => {
-                void persistStep(step + 1);
-                setStep(step + 1);
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }}
-            >
-              Skip
-            </Button>
-          )}
-          <Button type="button" onClick={() => void goNext()} disabled={saving || !canAdvance}>
-            {saving ? <Spinner size={16} label={null} className="mr-2" /> : null}
-            {step === TOTAL_STEPS ? "Finish setup" : "Continue"}
-            {step !== TOTAL_STEPS && <ArrowRight className="ml-2 h-4 w-4" />}
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function NotYet() {
-  return (
-    <p className="rounded-xl border border-dashed border-border p-6 text-sm text-muted-foreground">
-      Finish the first two steps and we'll unlock this one.
-    </p>
-  );
-}
-
-/* --------------------------------------------------------- administrators */
-
-function AdministratorsStep() {
-  const invite = useServerFn(inviteMember);
-  const load = useServerFn(listMembers);
-  const ent = useEntitlements();
-  const [members, setMembers] = useState<MemberRow[]>([]);
-  const [email, setEmail] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  const refresh = useCallback(async () => {
-    try {
-      setMembers(await load({ data: {} }));
-    } catch {
-      // A missing team is not an error worth interrupting setup for.
-    } finally {
-      setLoading(false);
-    }
-  }, [load]);
-
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
-
-  const limit = ent.check("administrators");
-
-  const send = async () => {
-    if (!email.includes("@")) {
-      toast.error("Enter a valid email address");
-      return;
-    }
-    setBusy(true);
-    try {
-      const res = await invite({ data: { email: email.trim(), environment: getPaddleEnvironment() } });
-      if (res.status === "error") {
-        toast.error(res.message);
-        return;
-      }
-      setEmail("");
-      await refresh();
-      ent.refetch();
-      toast.success(
-        res.accessGranted
-          ? "Administrator added"
-          : res.emailSent
-            ? "Invitation sent"
-            : "Invitation created — copy the link below",
-      );
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not send the invitation");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  if (loading) return <Spinner label="Loading your team…" />;
-
-  return (
-    <div className="space-y-5">
-      {members.length > 0 && (
-        <ul className="space-y-2">
-          {members.map((m) => (
-            <li key={m.id} className="rounded-xl border border-border bg-card/50 p-3">
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{m.displayName || m.email}</p>
-                  <p className="text-xs capitalize text-muted-foreground">
-                    {m.role} · {m.status}
-                  </p>
-                </div>
-                {m.inviteUrl && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      void navigator.clipboard.writeText(m.inviteUrl!);
-                      toast.success("Invite link copied");
-                    }}
-                  >
-                    <Copy className="mr-2 h-3.5 w-3.5" /> Link
-                  </Button>
-                )}
-              </div>
-            </li>
-          ))}
-        </ul>
+      {attempted && (
+        <p role="alert" className="mb-4 text-sm text-destructive">
+          {step === 5
+            ? "Create your first loyalty card before continuing."
+            : "Please complete the highlighted fields."}
+        </p>
       )}
-
-      {limit.allowed ? (
-        <div className="space-y-3 rounded-xl border border-dashed border-border p-4">
-          <Label htmlFor="admin-email">Invite an administrator</Label>
-          <div className="flex gap-2">
-            <Input
-              id="admin-email"
-              type="email"
-              inputMode="email"
-              value={email}
-              placeholder="name@business.no"
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <Button type="button" onClick={() => void send()} disabled={busy}>
-              {busy ? <Spinner size={16} label={null} className="mr-2" /> : <UserPlus className="mr-2 h-4 w-4" />}
-              Invite
+      {step === 0 && (
+        <BusinessForm
+          value={details}
+          onChange={(value) => update({ details: value })}
+          sections={["basics"]}
+          showErrors={attempted}
+        />
+      )}
+      {step === 1 && (
+        <BusinessForm
+          value={details}
+          onChange={(value) => update({ details: value })}
+          sections={["address", "contact"]}
+          showErrors={attempted}
+        />
+      )}
+      {step === 2 && (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {SOCIAL_PLATFORMS.map(({ key, label, placeholder }) => (
+            <div key={key}>
+              <Label htmlFor={`network-${key}`}>{label}</Label>
+              <Input
+                id={`network-${key}`}
+                value={socials[key] ?? ""}
+                placeholder={placeholder}
+                maxLength={300}
+                onChange={(event) => update({ socials: { ...socials, [key]: event.target.value } })}
+                aria-invalid={attempted && invalidSocials.some((item) => item.key === key)}
+                className={`mt-1.5 ${attempted && invalidSocials.some((item) => item.key === key) ? "border-destructive ring-1 ring-destructive" : ""}`}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+      {step === 3 && (
+        <BusinessForm
+          value={details}
+          onChange={(value) => update({ details: value })}
+          sections={["about"]}
+        />
+      )}
+      {step === 4 && (
+        <div className="space-y-3">
+          {[
+            {
+              value: "published" as const,
+              label: "List us in the marketplace",
+              description: "Your business will appear in Discover after moderation approval.",
+            },
+            {
+              value: "unpublished" as const,
+              label: "Keep us private",
+              description:
+                "After approval, customers can use your cards through QR codes and links.",
+            },
+          ].map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              aria-pressed={marketplace === option.value}
+              onClick={() => update({ marketplace: option.value })}
+              className={`flex w-full gap-3 rounded-2xl border p-4 text-left ${marketplace === option.value ? "border-primary bg-primary/5" : "border-border"}`}
+            >
+              <Check
+                className={`mt-0.5 h-5 w-5 shrink-0 ${marketplace === option.value ? "text-primary" : "text-transparent"}`}
+              />
+              <span>
+                <span className="block font-medium">{option.label}</span>
+                <span className="mt-1 block text-sm text-muted-foreground">
+                  {option.description}
+                </span>
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+      {step === 5 &&
+        (editingCard ? (
+          <CardWizard
+            draft={card ?? undefined}
+            onDraftComplete={(value) => {
+              update({ card: value });
+              setEditingCard(false);
+              setAttempted(false);
+            }}
+            onCancel={() => setEditingCard(false)}
+          />
+        ) : (
+          <section
+            className={`space-y-4 rounded-2xl border bg-card p-5 ${attempted && !card ? "border-destructive ring-1 ring-destructive" : "border-border"}`}
+          >
+            <CreditCard className="h-6 w-6 text-primary" />
+            <h2 className="font-display text-xl font-semibold">
+              {card?.title ?? "Create your first loyalty card"}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {card
+                ? "Card draft saved. It will be reviewed with your business."
+                : "Choose the design, rewards and terms your customers will use."}
+            </p>
+            <Button onClick={() => setEditingCard(true)}>
+              <Pencil className="mr-2 h-4 w-4" />
+              {card ? "Edit loyalty card" : "Create a loyalty card"}
             </Button>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            They get the default administrator permissions. You can change them later under Team.
+          </section>
+        ))}
+      {step === 6 && (
+        <div className="space-y-4">
+          <dl className="divide-y divide-border rounded-2xl border border-border bg-card">
+            {[
+              ["Business", details.name],
+              ["Category", details.category],
+              [
+                "Address",
+                [details.address_line1, details.postal_code, details.city, details.country]
+                  .filter(Boolean)
+                  .join(", "),
+              ],
+              ["Marketplace", marketplace === "published" ? "Listed after approval" : "Private"],
+              ["Loyalty card", card?.title ?? "—"],
+            ].map(([label, value]) => (
+              <div key={label} className="grid grid-cols-[6rem_minmax(0,1fr)] gap-3 p-4 text-sm">
+                <dt className="text-muted-foreground">{label}</dt>
+                <dd className="break-words font-medium">{value}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="text-sm text-muted-foreground">
+            Your business will not be available to customers until moderators approve it. You can
+            edit your submission from Workspace.
           </p>
         </div>
-      ) : (
-        <div className="space-y-3 rounded-xl border border-dashed border-border p-4">
-          <p className="text-sm text-muted-foreground">{limit.reason}</p>
-          <Button asChild variant="outline" size="sm">
-            <Link to="/subscribe">
-              <CreditCard className="mr-2 h-4 w-4" /> See plans
-            </Link>
-          </Button>
+      )}
+
+      {!editingCard && (
+        <div
+          className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur"
+          style={{ paddingBottom: "var(--safe-bottom, env(safe-area-inset-bottom, 0px))" }}
+        >
+          <div className="mx-auto flex max-w-2xl items-center gap-2 px-4 py-3">
+            <Button
+              variant="ghost"
+              disabled={saving}
+              onClick={() => (step === 0 ? void navigate({ to: "/profile" }) : moveTo(step - 1))}
+            >
+              <ArrowLeft className="mr-1 h-4 w-4" />
+              {step === 0 ? "Cancel" : "Back"}
+            </Button>
+            <div className="flex-1" />
+            {current.optional && (
+              <Button
+                variant="ghost"
+                disabled={saving}
+                onClick={() => {
+                  moveTo(step + 1);
+                }}
+              >
+                Skip
+              </Button>
+            )}
+            <Button
+              disabled={saving}
+              onClick={() =>
+                step === STEPS.length - 1 ? void submit() : validate() && moveTo(step + 1)
+              }
+            >
+              {saving && <Spinner size={16} label={null} className="mr-2" />}
+              {step === STEPS.length - 1
+                ? businessId
+                  ? "Submit for review"
+                  : "Create business"
+                : "Continue"}
+              {step !== STEPS.length - 1 && <ArrowRight className="ml-1 h-4 w-4" />}
+            </Button>
+          </div>
         </div>
       )}
     </div>
   );
 }
 
-/* ------------------------------------------------------------ marketplace */
-
-function MarketplaceStep({
-  value,
-  onChange,
-}: {
-  value: "unpublished" | "published";
-  onChange: (v: "unpublished" | "published") => void;
-}) {
-  const options = [
-    {
-      key: "published" as const,
-      title: "List us in the marketplace",
-      blurb:
-        "Your business and its locations appear in Discover straight away. You can turn this off at any time.",
-    },
-    {
-      key: "unpublished" as const,
-      title: "Keep us private",
-      blurb:
-        "Your card still works over QR and links — you just won't show up in the public directory.",
-    },
-  ];
-
-  return (
-    <div className="space-y-3">
-      {options.map((o) => {
-        const selected = value === o.key;
-        return (
-          <button
-            key={o.key}
-            type="button"
-            onClick={() => onChange(o.key)}
-            aria-pressed={selected}
-            className={`w-full rounded-xl border p-4 text-left transition-colors ${
-              selected ? "border-primary bg-primary/5" : "border-border hover:bg-muted/40"
-            }`}
-          >
-            <div className="flex items-start gap-3">
-              <span
-                className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
-                  selected ? "border-primary bg-primary text-primary-foreground" : "border-border"
-                }`}
-              >
-                {selected && <Check className="h-3 w-3" />}
-              </span>
-              <span>
-                <span className="block text-sm font-medium">{o.title}</span>
-                <span className="mt-1 block text-xs text-muted-foreground">{o.blurb}</span>
-              </span>
-            </div>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-/* ----------------------------------------------------------------- review */
-
-function ReviewStep({
-  biz,
-  details,
-  marketplace,
-}: {
-  biz: BizRow;
-  details: BusinessDetails;
-  marketplace: string;
-}) {
-  const rows = [
-    { label: "Business", value: details.name || biz.name },
-    { label: "Category", value: details.category || "—" },
-    {
-      label: "Address",
-      value: [details.address_line1, details.postal_code, details.city, details.country]
-        .filter(Boolean)
-        .join(", ") || "—",
-    },
-    { label: "Contact", value: [details.phone, details.website].filter(Boolean).join(" · ") || "—" },
-    {
-      label: "Marketplace",
-      value: marketplace === "published" ? "Listed in Discover" : "Private",
-    },
-  ];
-
-  return (
-    <div className="space-y-5">
-      <dl className="divide-y divide-border rounded-xl border border-border">
-        {rows.map((r) => (
-          <div key={r.label} className="flex gap-4 px-4 py-3">
-            <dt className="w-28 shrink-0 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              {r.label}
-            </dt>
-            <dd className="min-w-0 flex-1 break-words text-sm">{r.value}</dd>
-          </div>
-        ))}
-      </dl>
-      <p className="text-sm text-muted-foreground">
-        Next up: create your first loyalty card so customers have something to collect.
-      </p>
-      <Button asChild variant="outline">
-        <Link to="/business/cards/new" search={{ businessId: biz.id }}>Create a loyalty card</Link>
-      </Button>
-    </div>
-  );
+function normalizeSocialUrl(raw: string): string | null {
+  if (!raw.trim()) return null;
+  try {
+    const url = new URL(/^https?:\/\//i.test(raw.trim()) ? raw.trim() : `https://${raw.trim()}`);
+    return ["http:", "https:"].includes(url.protocol) && url.hostname.includes(".")
+      ? url.toString()
+      : null;
+  } catch {
+    return null;
+  }
 }
