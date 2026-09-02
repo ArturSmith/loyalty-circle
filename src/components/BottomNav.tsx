@@ -27,34 +27,38 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Main navigation"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80"
-      style={{ paddingBottom: "var(--safe-bottom)" }}
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-40"
+      style={{
+        paddingBottom: "var(--safe-bottom)",
+        paddingLeft: "max(0.75rem, var(--safe-left))",
+        paddingRight: "max(0.75rem, var(--safe-right))",
+      }}
     >
-      <ul className="mx-auto flex max-w-md items-stretch justify-between px-2">
+      <ul className="glass-tab-bar pointer-events-auto mx-auto mb-3 grid max-w-md grid-cols-5 gap-0.5 p-1">
         {items.map(({ to, label, icon: Icon }) => {
           const badge = to === "/vouchers" ? unusedVouchers : to === "/chats" ? unreadChats : 0;
           const badgeLabel = to === "/chats" ? "unread" : "unused";
           return (
-            <li key={to} className="flex-1">
+            <li key={to} className="min-w-0">
               <Link
                 to={to}
                 aria-label={badge > 0 ? `${label}, ${badge} ${badgeLabel}` : label}
-                activeProps={{ className: "text-primary" }}
-                inactiveProps={{ className: "text-muted-foreground" }}
-                className="flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors hover:text-foreground"
+                activeOptions={{ exact: true }}
+                activeProps={{ className: "glass-tab-link-active", "aria-current": "page" }}
+                className="glass-tab-link flex min-h-14 flex-col items-center justify-center gap-1 py-2 text-[9px] font-semibold leading-tight min-[360px]:text-[10px] sm:text-[11px]"
               >
                 <span className="relative">
-                  <Icon className="h-5 w-5" />
+                  <Icon className="h-[22px] w-[22px]" strokeWidth={1.8} aria-hidden="true" />
                   {badge > 0 && (
                     <span
                       aria-hidden
-                      className="absolute -right-2 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold leading-none text-primary-foreground"
+                      className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold leading-none text-primary-foreground ring-2 ring-card/90"
                     >
                       {badge > 9 ? "9+" : badge}
                     </span>
                   )}
                 </span>
-                {label}
+                <span className="max-w-full truncate">{label}</span>
               </Link>
             </li>
           );

@@ -207,8 +207,22 @@ test("Discover strip only scrolls manually", () => {
 test("business info fades into the page with only top corners rounded", () => {
   const source = read("src/routes/b.$businessId.tsx");
   assert.match(source, /linear-gradient\(180deg,.*transparent 100%\)/);
-  assert.match(source, /rounded-t-3xl px-5 pb-8 pt-6 text-center/);
+  assert.match(source, /rounded-t-3xl px-5 pb-3 pt-6 text-center/);
   assert.doesNotMatch(source, /borderColor: brandTint/);
+});
+
+test("business profile removes the card prompt and keeps the stack close to the divider", () => {
+  const source = read("src/routes/b.$businessId.tsx");
+  assert.doesNotMatch(source, /Choose a loyalty card to add to your wallet/);
+  assert.match(source, /\(cardsLoadError \|\| templates\.length === 0\) &&/);
+  assert.match(source, /Loyalty cards could not be loaded/);
+  assert.match(source, /No loyalty cards available right now/);
+  assert.match(source, /OrnamentDivider className="mx-auto mt-4 w-40 opacity-60"/);
+  assert.match(source, /<section className="mt-3" aria-label="Loyalty cards">/);
+  // Keep the responsive stack's reserved space so it cannot overlap the
+  // usage and terms widgets below it while tightening the gap above it.
+  assert.match(source, /className="aspect-\[1\.586\/1\]"/);
+  assert.match(source, /style=\{\{ height: stackOffset \}\}/);
 });
 
 test("new team labels have Norwegian translations", () => {

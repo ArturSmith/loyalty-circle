@@ -1,4 +1,5 @@
 import type { Reward } from "@/components/StampCard";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { getCardUsageRewards } from "@/lib/card-usage";
 import { cn } from "@/lib/utils";
 
@@ -14,26 +15,32 @@ export function CardUsageSection({
 }) {
   const milestones = getCardUsageRewards(totalSteps, rewards);
   return (
-    <section className={cn("rounded-2xl border border-border bg-card p-4", className)}>
-      <h3 className="text-sm font-semibold">How to use this card</h3>
-      {milestones.length > 0 ? (
-        <ul className="mt-2 list-disc space-y-2 pl-5 text-sm leading-relaxed text-muted-foreground">
-          {milestones.map(({ step, label, stampsRequired }) => (
-            <li key={step} className="break-words">
-              <span>{`Get ${stampsRequired} ${stampsRequired === 1 ? "stamp" : "stamps"} to earn present:`}</span>{" "}
-              <span data-i18n-ignore className="font-medium text-foreground">
-                “{label}”
-              </span>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          {totalSteps > 0
-            ? "Collect stamps when the business scans your customer QR."
-            : "This card has no stamp steps."}
-        </p>
-      )}
-    </section>
+    <Accordion type="single" collapsible className={cn("rounded-2xl border border-border bg-card", className)}>
+      <AccordionItem value="usage" className="border-0">
+        <AccordionTrigger className="gap-3 px-4 py-4 text-sm font-semibold hover:no-underline">
+          How to use this card
+        </AccordionTrigger>
+        <AccordionContent className="px-4">
+          {milestones.length > 0 ? (
+            <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-muted-foreground">
+              {milestones.map(({ step, label, stampsRequired }) => (
+                <li key={step} className="break-words">
+                  <span>{`After step ${stampsRequired} you will get voucher for`}</span>{" "}
+                  <span data-i18n-ignore className="font-medium text-foreground">
+                    ‘{label}’
+                  </span>.
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              {totalSteps > 0
+                ? "Collect stamps when the business scans your customer QR."
+                : "This card has no stamp steps."}
+            </p>
+          )}
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
   );
 }

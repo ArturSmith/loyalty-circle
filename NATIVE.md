@@ -1,12 +1,46 @@
 # Native apps (Capacitor)
 
-The iOS and Android apps are thin native shells around the live site. They do
+Most app screens use a native shell around the live site. Android also has
+local Kotlin/Compose login, loading, and offline screens. The apps do
 **not** bundle the web build: `capacitor.config.ts` sets
 `server.url = "https://clubcarder.com"`, so the WebView loads production
 directly and every deploy ships to the apps instantly — no store review needed
-for UI changes.
+for web UI changes. Android native changes require rebuilding and installing
+the APK (or distributing a new store build); publishing the website is not enough.
 
-`capacitor-shell/` only contains an offline fallback page (`webDir`).
+`capacitor-shell/` contains the minimal local web assets (`webDir`). Android's
+offline experience is native, not that placeholder page.
+
+## Android startup and offline behavior
+
+- Without a saved session, `MainActivity.load()` opens native `LoginActivity`
+  before constructing the Capacitor bridge or requesting the website. The
+  login form can therefore render without internet.
+- A saved access/refresh-token pair opens the web app behind a native loading
+  screen. An expired access token still counts as a saved session: the web auth
+  client refreshes it when online.
+- No validated internet connection, a main-document network failure, or a
+  main-document HTTP error shows a native Retry screen instead of Android's
+  webpage error. Failed images/subresources do not replace a working page.
+- Retry reloads the last trusted app URL. Network failures never clear the
+  saved session. Signing in, sending OTPs, OAuth, and loading wallet data still
+  require internet; this is not an offline wallet cache.
+
+`NativeSessionStore` reads the same `CapacitorStorage` Preferences session as
+the web auth adapter and native login. `ACCESS_NETWORK_STATE` lets Android
+detect connectivity without prompting for a runtime permission.
+
+Build and run the JVM tests with `./gradlew :app:testDebugUnitTest` in `android/`.
+`OfflineStartupTest` also covers offline signed-out startup, expired-session
+preservation, and Retry recovery with an intercepted local HTML response (no
+real account). Run it **only on a disposable emulator**, since it toggles Wi-Fi
+and mobile data:
+
+```sh
+cd android
+./gradlew :app:connectedDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=com.clubcarder.app.OfflineStartupTest
+```
 
 ## Requirements
 
@@ -53,8 +87,8 @@ JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" \
 
 ## Native wiring
 
-`src/lib/native.ts` (`initNative`, called from `src/routes/__root.tsx`) is the
-single place native behaviour lives. It no-ops on the web and handles:
+`src/lib/native.ts` (`initNative`, called from `src/routes/__root.tsx`) provides
+the web-side native integration. It no-ops on the web and handles:
 
 - status bar style and hiding the splash screen
 - the Android hardware back button (mapped to history, exits at the root)

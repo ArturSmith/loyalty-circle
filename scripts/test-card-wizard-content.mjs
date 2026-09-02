@@ -31,10 +31,18 @@ const cardDraft = load("src/lib/card-draft.ts");
 const { cardDraftSchema, DEFAULT_CARD_TERMS } = cardDraft;
 const usage = load("src/lib/card-usage.ts");
 const { getCardUsageRewards } = usage;
+const accordion = load("src/components/ui/accordion.tsx", {
+  "@/lib/utils": load("src/lib/utils.ts"),
+});
 const usageSection = load("src/components/CardUsageSection.tsx", {
+  "@/components/ui/accordion": accordion,
   "@/lib/card-usage": usage,
   "@/lib/utils": load("src/lib/utils.ts"),
 });
+// Render the actual Radix accordion in its expanded state to inspect its copy.
+const expandedUsage = (props) => renderToStaticMarkup(
+  React.cloneElement(usageSection.CardUsageSection(props), { defaultValue: "usage" }),
+);
 const validDraft = {
   title: "Coffee card",
   subtitle: "Enjoy your coffee",
@@ -310,13 +318,14 @@ test("step 5 review renders the same generated instructions used on the public p
   for (let i = 0; i < 4; i++) await h.click("Next");
   const html = h.html();
   assert.match(html, /How to use this card/);
-  assert.match(html, /Get 4 stamps to earn present:/);
-  assert.match(html, /Get 8 stamps to earn present:/);
-  assert.match(html, /Free haircut/);
-  const description = renderToStaticMarkup(
-    React.createElement(usageSection.CardUsageSection, { totalSteps: 10, rewards }),
-  );
-  assert.ok(html.includes(description));
+  assert.match(html, /aria-expanded="false"/);
+  const section = h.find((node) => node.type === usageSection.CardUsageSection);
+  assert.equal(section.props.totalSteps, 10);
+  assert.deepEqual(section.props.rewards, rewards);
+  const description = expandedUsage(section.props);
+  assert.match(description, /After step 4 you will get voucher for/);
+  assert.match(description, /After step 8 you will get voucher for/);
+  assert.match(description, /Free haircut/);
   const publicPage = readFileSync(
     new URL("../src/routes/b.$businessId.tsx", import.meta.url),
     "utf8",
@@ -329,20 +338,35 @@ test("step 5 review renders the same generated instructions used on the public p
 });
 
 test("generated text updates with a different card and renders benefit names safely", () => {
-  const html = renderToStaticMarkup(
-    React.createElement(usageSection.CardUsageSection, {
-      totalSteps: 2,
-      rewards: [{ step: 2, label: '<img src=x onerror="alert(1)">' }],
-    }),
-  );
-  assert.match(html, /Get 1 stamp to earn present:/);
-  assert.doesNotMatch(html, /<img|Get 4 stamps|Get 8 stamps/);
+  const html = expandedUsage({
+    totalSteps: 2,
+    rewards: [{ step: 2, label: '<img src=x onerror="alert(1)">' }],
+  });
+  assert.match(html, /After step 1 you will get voucher for/);
+  assert.doesNotMatch(html, /<img|After step 4 |After step 8 /);
   assert.match(html, /data-i18n-ignore/);
-  const empty = renderToStaticMarkup(
-    React.createElement(usageSection.CardUsageSection, { totalSteps: 0, rewards: [] }),
-  );
+  const empty = expandedUsage({ totalSteps: 0, rewards: [] });
   assert.match(empty, /This card has no stamp steps/);
-  assert.doesNotMatch(empty, /earn present/);
+  assert.doesNotMatch(empty, /you will get voucher/);
+});
+
+test("usage is collapsed by default and expands to the requested voucher milestones", () => {
+  const props = {
+    totalSteps: 32,
+    rewards: [8, 16, 24, 32].map((step) => ({ step, label: "Free coffee" })),
+  };
+  const closed = renderToStaticMarkup(React.createElement(usageSection.CardUsageSection, props));
+  assert.match(closed, /<button[^>]+aria-expanded="false"/);
+  assert.match(closed, /hidden=""[^>]*role="region"/);
+  assert.doesNotMatch(closed, /After step/);
+  const opened = expandedUsage(props);
+  assert.match(opened, /aria-expanded="true"/);
+  assert.doesNotMatch(opened, /aria-disabled="true"/); // Remains collapsible.
+  for (const step of [7, 14, 21, 28]) {
+    assert.match(opened, new RegExp(`After step ${step} you will get voucher for`));
+  }
+  assert.equal((opened.match(/‘Free coffee’/g) ?? []).length, 4);
+  assert.doesNotMatch(opened, /earn present|Get \d+ stamps/);
 });
 
 test("benefits use the same circular border and a gift icon in preview and wallet", () => {

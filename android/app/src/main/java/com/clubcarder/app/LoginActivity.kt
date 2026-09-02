@@ -45,7 +45,6 @@ class LoginActivity : AppCompatActivity() {
         const val EXTRA_REDIRECT = "native_auth_redirect"
 
         private const val NATIVE_AUTH_PREFS = "ClubCarderNativeAuth"
-        private const val CAPACITOR_PREFS = "CapacitorStorage"
         private const val PENDING_STATE = "pending_oauth_state"
         private const val PENDING_REDIRECT = "pending_redirect"
         // Lovable's broker explicitly allow-lists this mobile callback. It
@@ -165,6 +164,10 @@ class LoginActivity : AppCompatActivity() {
 
     private fun submit(viewModel: LoginViewModel) {
         viewModel.clearError()
+        if (!NativeConnectivity.isOnline(this)) {
+            viewModel.showError(getString(R.string.auth_network_error))
+            return
+        }
         if (!authClient.isConfigured) {
             viewModel.showError(getString(R.string.auth_configuration_error))
             return
@@ -324,8 +327,8 @@ class LoginActivity : AppCompatActivity() {
                 session.put("expires_at", System.currentTimeMillis() / 1000L + expiresIn)
             }
 
-            getSharedPreferences(CAPACITOR_PREFS, MODE_PRIVATE).edit()
-                .putString(authStorageKey(), session.toString())
+            getSharedPreferences(NativeSessionStore.PREFERENCES, MODE_PRIVATE).edit()
+                .putString(NativeSessionStore.storageKey(BuildConfig.SUPABASE_URL), session.toString())
                 .apply()
 
             val pending = getSharedPreferences(NATIVE_AUTH_PREFS, MODE_PRIVATE)
@@ -345,16 +348,14 @@ class LoginActivity : AppCompatActivity() {
         finish()
     }
 
-    private fun authStorageKey(): String {
-        val host = Uri.parse(BuildConfig.SUPABASE_URL).host
-        val projectRef = host?.split(".")?.firstOrNull() ?: "clubcarder"
-        return "sb-$projectRef-auth-token"
-    }
-
     /* -------------------------------------------------------------- oauth */
 
     private fun startOAuth(provider: String) {
         if (model.state.loading) return
+        if (!NativeConnectivity.isOnline(this)) {
+            model.showError(getString(R.string.auth_network_error))
+            return
+        }
 
         val stateBytes = ByteArray(24)
         secureRandom.nextBytes(stateBytes)

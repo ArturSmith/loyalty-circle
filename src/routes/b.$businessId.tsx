@@ -344,7 +344,7 @@ function BusinessPublic() {
         </Button>
 
         <div
-          className="rounded-t-3xl px-5 pb-8 pt-6 text-center"
+          className="rounded-t-3xl px-5 pb-3 pt-6 text-center"
           style={businessInfoStyle}
         >
           {business?.logo_url ? (
@@ -365,14 +365,14 @@ function BusinessPublic() {
               {business.description}
             </p>
           )}
-          <p className="mt-2 text-sm text-muted-foreground">
-            {cardsLoadError
-              ? "Loyalty cards could not be loaded. Please try again shortly."
-              : templates.length === 0
-              ? "No loyalty cards available right now."
-              : "Choose a loyalty card to add to your wallet."}
-          </p>
-          <OrnamentDivider className="mx-auto my-6 w-40 opacity-60" />
+          {(cardsLoadError || templates.length === 0) && (
+            <p className="mt-2 text-sm text-muted-foreground">
+              {cardsLoadError
+                ? "Loyalty cards could not be loaded. Please try again shortly."
+                : "No loyalty cards available right now."}
+            </p>
+          )}
+          <OrnamentDivider className="mx-auto mt-4 w-40 opacity-60" />
         </div>
 
         {activeTemplate ? (() => {
@@ -399,7 +399,7 @@ function BusinessPublic() {
           const stackOffset = Math.max(0, displayedTemplates.length - 1) * 56;
 
           return (
-            <section className="mt-6" aria-label="Loyalty cards">
+            <section className="mt-3" aria-label="Loyalty cards">
               <div className="relative">
                 {/* StampCard is responsive, so reserve its real aspect-ratio
                     height plus every visible stack offset. A fixed pixel

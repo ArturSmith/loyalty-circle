@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_loading">Laster inn ClubCarder…</string>
+    <string name="app_offline_title">Du er frakoblet</string>
+    <string name="app_offline_message">Innloggingen din er lagret. Koble til internett og prøv igjen for å laste inn kortene dine.</string>
+    <string name="app_load_error_title">Kunne ikke laste inn ClubCarder</string>
+    <string name="app_load_error_message">Innloggingen din er lagret. Prøv igjen.</string>
+    <string name="app_retry">Prøv igjen</string>
     <string name="auth_logo_description">ClubCarder</string>
     <string name="app_name">ClubCarder</string>
     <string name="title_activity_main">ClubCarder</string>

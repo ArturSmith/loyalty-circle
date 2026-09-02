@@ -6,7 +6,11 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
+import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 
 import androidx.core.graphics.Insets;
@@ -21,16 +25,37 @@ import com.getcapacitor.BridgeWebViewClient;
 
 public class MainActivity extends BridgeActivity {
     private boolean nativeAuthOpen;
+    private NativeLoadOverlay loadOverlay;
+    private boolean mainFrameFailed;
+    private String lastRequestedUrl = "https://clubcarder.com";
     private boolean qrBrightnessEnabled;
     private float brightnessBeforeQr = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE;
     private boolean keptScreenOnBeforeQr;
+
+    @Override
+    protected void load() {
+        // BridgeActivity calls this before constructing the bridge or loading
+        // server.url. A signed-out launch must never depend on the website.
+        if (!NativeSessionStore.hasSavedSession(this)) {
+            launchNativeAuth(getIntent().getStringExtra(LoginActivity.EXTRA_REDIRECT));
+            finish();
+            return;
+        }
+        super.load();
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         Bridge bridge = getBridge();
+        if (bridge == null) return; // Signed-out startup handed off to native login.
         WebView webView = bridge.getWebView();
+        webView.setVisibility(View.INVISIBLE);
+        loadOverlay = new NativeLoadOverlay(this, this::retryPage);
+        ViewGroup content = findViewById(android.R.id.content);
+        content.addView(loadOverlay.getView(), new ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         publishWindowInsets(webView);
         webView.addJavascriptInterface(new AuthNavigationBridge(), "ClubCarderNativeAuth");
         webView.addJavascriptInterface(new DisplayBridge(), "ClubCarderNativeDisplay");
@@ -44,7 +69,14 @@ public class MainActivity extends BridgeActivity {
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 super.onPageStarted(view, url, favicon);
-                openNativeAuthIfNeeded(Uri.parse(url));
+                if (openNativeAuthIfNeeded(Uri.parse(url))) return;
+                if (isAppPage(url)) {
+                    lastRequestedUrl = url;
+                    mainFrameFailed = false;
+                    view.setVisibility(View.INVISIBLE);
+                    loadOverlay.showLoading();
+                    if (!NativeConnectivity.isOnline(MainActivity.this)) showLoadFailure(view);
+                }
             }
 
             @Override
@@ -53,18 +85,84 @@ public class MainActivity extends BridgeActivity {
                 // Full navigations replace the document and its CSS variables.
                 // Republish the system-bar insets for the newly loaded page.
                 ViewCompat.requestApplyInsets(view);
+                String currentUrl = view.getUrl();
+                if (mainFrameFailed || nativeAuthOpen || !isAppPage(url)
+                    || !isAppPage(currentUrl) || view.getProgress() != 100) return;
+                if (!NativeConnectivity.isOnline(MainActivity.this)) {
+                    showLoadFailure(view);
+                    return;
+                }
+                if (openNativeAuthIfNeeded(Uri.parse(currentUrl))) return;
+                // SPA routing may replace the path before onPageFinished. That
+                // is still a successful load, not a stale document to discard.
+                lastRequestedUrl = currentUrl;
                 installAuthNavigationWatcher(view);
+                loadOverlay.hide();
+                view.setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                super.onReceivedError(view, request, error);
+                // A missing image or third-party asset must not hide a working page.
+                if (request.isForMainFrame()) showLoadFailure(view);
+            }
+
+            @Override
+            public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse error) {
+                super.onReceivedHttpError(view, request, error);
+                if (request.isForMainFrame() && error.getStatusCode() >= 400) showLoadFailure(view);
             }
         });
 
         String redirect = getIntent().getStringExtra(LoginActivity.EXTRA_REDIRECT);
         if (redirect != null && redirect.startsWith("/") && !redirect.startsWith("//")) {
-            webView.loadUrl("https://clubcarder.com" + redirect);
+            lastRequestedUrl = "https://clubcarder.com" + redirect;
+            retryPage();
+        } else if (!NativeConnectivity.isOnline(this)) {
+            showLoadFailure(webView);
         }
+    }
+
+    private boolean isAppPage(String url) {
+        if (url == null) return false;
+        Uri uri = Uri.parse(url);
+        return "https".equalsIgnoreCase(uri.getScheme())
+            && "clubcarder.com".equalsIgnoreCase(uri.getHost())
+            && (uri.getPort() == -1 || uri.getPort() == 443);
+    }
+
+    private void showLoadFailure(WebView webView) {
+        mainFrameFailed = true;
+        String currentUrl = webView.getUrl();
+        if (isAppPage(currentUrl) && !isClubCarderAuthUri(Uri.parse(currentUrl))) {
+            lastRequestedUrl = currentUrl;
+        }
+        webView.setVisibility(View.INVISIBLE);
+        webView.stopLoading();
+        loadOverlay.showError(!NativeConnectivity.isOnline(this));
+        // Do not clear Preferences, cookies or WebView data on network failures.
+    }
+
+    private void retryPage() {
+        WebView webView = getBridge().getWebView();
+        if (!NativeConnectivity.isOnline(this)) {
+            showLoadFailure(webView);
+            return;
+        }
+        mainFrameFailed = false;
+        loadOverlay.showLoading();
+        webView.setVisibility(View.INVISIBLE);
+        webView.loadUrl(isAppPage(lastRequestedUrl) ? lastRequestedUrl : "https://clubcarder.com");
     }
 
     private boolean openNativeAuthIfNeeded(Uri uri) {
         if (!isClubCarderAuthUri(uri)) return false;
+        if (loadOverlay != null && NativeSessionStore.hasSavedSession(this)
+            && !NativeConnectivity.isOnline(this)) {
+            showLoadFailure(getBridge().getWebView());
+            return true;
+        }
         launchNativeAuth(uri.getQueryParameter("redirect"));
         return true;
     }
@@ -112,6 +210,7 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onResume() {
         super.onResume();
+        if (getBridge() == null) return;
         // `nativeAuthOpen` only guards against launching twice while the login
         // screen is already in front. Being resumed means it is not, so the
         // latch has to be cleared here -- otherwise it stays stuck true for the
@@ -123,7 +222,10 @@ public class MainActivity extends BridgeActivity {
         // re-trigger shouldOverrideUrlLoading or onPageStarted.
         nativeAuthOpen = false;
         String currentUrl = getBridge().getWebView().getUrl();
-        if (currentUrl != null) openNativeAuthIfNeeded(Uri.parse(currentUrl));
+        if (currentUrl != null && openNativeAuthIfNeeded(Uri.parse(currentUrl))) return;
+        if (loadOverlay != null && !NativeConnectivity.isOnline(this)) {
+            showLoadFailure(getBridge().getWebView());
+        }
     }
 
     private boolean isClubCarderAuthUri(Uri uri) {
@@ -167,7 +269,7 @@ public class MainActivity extends BridgeActivity {
                 String currentUrl = webView.getUrl();
                 if (currentUrl == null) return;
                 Uri current = Uri.parse(currentUrl);
-                if (isClubCarderAuthUri(current)) launchNativeAuth(redirect);
+                openNativeAuthIfNeeded(current);
             });
         }
     }
