@@ -570,7 +570,6 @@ function Wallet() {
                                 title={inst.template.title}
                                 subtitle={inst.template.subtitle}
                                 cornerTitle={inst.template.corner_title}
-                                description={inst.template.description}
                                 totalSteps={inst.template.total_steps}
                                 stampsCount={inst.stamps_count}
                                 shape={inst.template.shape}

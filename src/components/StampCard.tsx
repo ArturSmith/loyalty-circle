@@ -15,7 +15,6 @@ export const STAMP_ICONS: Record<StampIconName, LucideIcon> = {
 export interface StampCardProps {
   title: string;
   subtitle?: string | null;
-  description?: string | null;
   cornerTitle?: string | null;
   totalSteps: number;
   stampsCount?: number;
@@ -36,7 +35,6 @@ export interface StampCardProps {
   activeStep?: number;
   onTitleClick?: () => void;
   onSubtitleClick?: () => void;
-  onDescriptionClick?: () => void;
   onIconClick?: () => void;
   onCornerTitleClick?: () => void;
   disableShadow?: boolean;
@@ -45,13 +43,13 @@ export interface StampCardProps {
 }
 
 export function StampCard({
-  title, subtitle, description, cornerTitle, totalSteps, stampsCount = 0, shape = "rounded",
+  title, subtitle, cornerTitle, businessName, totalSteps, stampsCount = 0, shape = "rounded",
   bgColor = "#faf8f2", accentColor = "#4b3a35", textColor = "#4b3a35",
   stampIcon = null, logoUrl, rewards = [], lastStamp,
   hideSteps = false, face = "stamps",
   gridCols = null,
   onStepClick, activeStep,
-  onTitleClick, onSubtitleClick, onDescriptionClick, onIconClick, onCornerTitleClick,
+  onTitleClick, onSubtitleClick, onIconClick, onCornerTitleClick,
   disableShadow = false,
   showFlipButton = false,
   onFlip,
@@ -70,7 +68,7 @@ export function StampCard({
   // Credit-card aspect ratio (1.586:1)
   const heightCls = "aspect-[1.586/1]";
 
-  const displayedCornerTitle = (cornerTitle ?? title) || "";
+  const displayedCornerTitle = cornerTitle?.trim() || businessName?.trim() || title;
 
   const InfoFace = (
     <div
@@ -133,15 +131,6 @@ export function StampCard({
           </button>
         ) : subtitle ? (
           <div className="text-xs sm:text-sm font-medium opacity-80 break-words">{subtitle}</div>
-        ) : null
-      )}
-      {(description || onDescriptionClick) && (
-        onDescriptionClick ? (
-          <button type="button" onClick={onDescriptionClick} className={`${editable} text-[11px] sm:text-xs opacity-70 break-words max-w-full px-1 leading-snug`}>
-            {description || "Add description"}
-          </button>
-        ) : description ? (
-          <div className="text-[11px] sm:text-xs opacity-70 break-words leading-snug">{description}</div>
         ) : null
       )}
     </div>

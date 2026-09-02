@@ -437,6 +437,7 @@ function BusinessPublic() {
                         <StampCard
                           title={template.title}
                           subtitle={template.subtitle}
+                          businessName={business?.name}
                           cornerTitle={template.corner_title}
                           totalSteps={template.total_steps}
                           stampsCount={0}

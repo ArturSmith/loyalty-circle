@@ -269,7 +269,6 @@ function CardDetails() {
         <StampCard
           title={tpl.title}
           subtitle={tpl.subtitle}
-          description={tpl.description}
           cornerTitle={tpl.corner_title}
           totalSteps={tpl.total_steps}
           stampsCount={0}

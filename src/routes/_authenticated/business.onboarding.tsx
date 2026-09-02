@@ -389,6 +389,7 @@ function OnboardingWizard() {
       {step === 5 &&
         (editingCard ? (
           <CardWizard
+            businessName={details.name}
             draft={card ?? undefined}
             onDraftComplete={(value) => {
               update({ card: value });

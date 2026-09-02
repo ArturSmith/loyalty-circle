@@ -366,7 +366,6 @@ function BusinessDashboard() {
                     <StampCard
                       title={t.title}
                       subtitle={t.subtitle}
-                      description={t.description}
                       cornerTitle={t.corner_title}
                       totalSteps={t.total_steps}
                       stampsCount={0}

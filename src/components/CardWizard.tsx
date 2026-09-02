@@ -48,23 +48,26 @@ type Props = {
 } | {
   templateId?: never;
   businessId?: never;
+  businessName: string;
   draft?: CardDraft;
   onDraftComplete: (draft: CardDraft) => void;
   onCancel: () => void;
 };
 
-export function CardWizard({ templateId, businessId: selectedBusinessId, draft, onDraftComplete, onCancel }: Props) {
+export function CardWizard(props: Props) {
+  const { templateId, businessId: selectedBusinessId, draft, onDraftComplete, onCancel } = props;
+  const draftBusinessName = "businessName" in props ? props.businessName : "";
   const draftMode = !!onDraftComplete;
   const isEdit = !!templateId;
   const navigate = useNavigate();
   const [businessId, setBusinessId] = useState<string | null>(null);
+  const [businessName, setBusinessName] = useState(draftBusinessName);
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const [title, setTitle] = useState("Loyalty Card");
   const [subtitle, setSubtitle] = useState("");
-  const [description, setDescription] = useState("");
   const [terms, setTerms] = useState("");
   const [cornerTitle, setCornerTitle] = useState<string | null>(null);
   const [totalSteps, setTotalSteps] = useState(10);
@@ -81,10 +84,10 @@ export function CardWizard({ templateId, businessId: selectedBusinessId, draft, 
   useEffect(() => {
     (async () => {
       if (draftMode) {
+        setBusinessName(draftBusinessName);
         if (draft) {
           setTitle(draft.title);
           setSubtitle(draft.subtitle ?? "");
-          setDescription(draft.description ?? "");
           setTerms(draft.terms_and_conditions);
           setCornerTitle(draft.corner_title);
           setTotalSteps(draft.total_steps);
@@ -107,11 +110,12 @@ export function CardWizard({ templateId, businessId: selectedBusinessId, draft, 
       // for owners with multiple businesses as well as invited admins.
       const { data: b } = await supabase
         .from("businesses")
-        .select("id")
+        .select("id,name")
         .eq("id", selectedBusinessId)
         .maybeSingle();
       if (!b) { navigate({ to: "/workspace" }); return; }
       setBusinessId((b as { id: string }).id);
+      setBusinessName(b.name);
 
       if (isEdit && templateId) {
         const { data: t } = await supabase.from("card_templates").select("*").eq("id", templateId).maybeSingle();
@@ -123,7 +127,7 @@ export function CardWizard({ templateId, businessId: selectedBusinessId, draft, 
           const proposed = (pending as { proposed_data?: { card?: Record<string, unknown> } } | null)
             ?.proposed_data?.card;
           const tpl = (proposed ?? t) as unknown as {
-            title: string; subtitle: string | null; description: string | null;
+            title: string; subtitle: string | null;
             corner_title: string | null;
             total_steps: number; shape: CardShape;
             bg_color: string; accent_color: string; text_color: string; stamp_icon: StampIconName;
@@ -133,7 +137,6 @@ export function CardWizard({ templateId, businessId: selectedBusinessId, draft, 
           };
           setTitle(tpl.title);
           setSubtitle(tpl.subtitle ?? "");
-          setDescription(tpl.description ?? "");
           setTerms(tpl.terms_and_conditions ?? "");
           setCornerTitle(tpl.corner_title);
           setTotalSteps(tpl.total_steps);
@@ -150,7 +153,7 @@ export function CardWizard({ templateId, businessId: selectedBusinessId, draft, 
       }
       setLoading(false);
     })();
-  }, [navigate, isEdit, selectedBusinessId, templateId, draftMode, draft]);
+  }, [navigate, isEdit, selectedBusinessId, templateId, draftMode, draft, draftBusinessName]);
 
   const { bg, accent, text } = customColors ?? PRESETS[preset];
 
@@ -162,8 +165,8 @@ export function CardWizard({ templateId, businessId: selectedBusinessId, draft, 
     setSaving(true);
     const cleanRewards = rewards.filter((r) => r.step >= 1 && r.step <= totalSteps && r.label.trim().length > 0);
     const payload: CardDraft = {
-      title, subtitle: subtitle || null, description: description || null,
-      corner_title: cornerTitle,
+      title, subtitle: subtitle || null,
+      corner_title: cornerTitle?.trim() || null,
       total_steps: totalSteps, shape,
       bg_color: bg, accent_color: accent, text_color: text,
       stamp_icon: icon ?? "star", logo_url: logoUrl || null, rewards: cleanRewards, active,
@@ -203,7 +206,7 @@ export function CardWizard({ templateId, businessId: selectedBusinessId, draft, 
 
   const [editingStep, setEditingStep] = useState<number | null>(null);
   const [editingLabel, setEditingLabel] = useState("");
-  const [editingField, setEditingField] = useState<null | "title" | "subtitle" | "description" | "icon" | "cornerTitle">(null);
+  const [editingField, setEditingField] = useState<null | "title" | "subtitle" | "icon" | "cornerTitle">(null);
 
   const openStepEditor = (s: number) => {
     setEditingStep(s);
@@ -255,7 +258,11 @@ export function CardWizard({ templateId, businessId: selectedBusinessId, draft, 
       </div>
 
       <div className="mt-6 rounded-2xl border-2 border-ink/10 bg-card p-4">
-        <StampCard title={title || "Card title"} subtitle={subtitle} description={description}
+        {step < 2 && (
+          <p className="mb-3 text-center text-xs text-muted-foreground">Tap the title, subtitle or icon on the card to edit</p>
+        )}
+        <StampCard title={title || "Card title"} subtitle={subtitle}
+          businessName={businessName}
           cornerTitle={cornerTitle}
           totalSteps={totalSteps} stampsCount={0}
           shape={shape} face={face}
@@ -266,7 +273,6 @@ export function CardWizard({ templateId, businessId: selectedBusinessId, draft, 
           activeStep={editingStep ?? undefined}
           onTitleClick={step < 2 ? () => { setEditingStep(null); setEditingField("title"); } : undefined}
           onSubtitleClick={step < 2 ? () => { setEditingStep(null); setEditingField("subtitle"); } : undefined}
-          onDescriptionClick={step < 2 ? () => { setEditingStep(null); setEditingField("description"); } : undefined}
           onIconClick={step < 2 ? () => { setEditingStep(null); setEditingField("icon"); } : undefined}
           onCornerTitleClick={step < 2 ? () => { setEditingStep(null); setEditingField("cornerTitle"); } : undefined} />
 
@@ -285,12 +291,12 @@ export function CardWizard({ templateId, businessId: selectedBusinessId, draft, 
             <Label className="text-xs">Corner title (top-left)</Label>
             <div className="mt-2 flex gap-2">
               <Input autoFocus value={cornerTitle ?? ""} onChange={(e) => setCornerTitle(e.target.value)}
-                placeholder={title || "Defaults to main title"}
+                placeholder={businessName || "Business name"}
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === "Escape") setEditingField(null); }} />
-              <Button size="sm" variant="ghost" onClick={() => setCornerTitle(null)} title="Reset to title">Reset</Button>
+              <Button size="sm" variant="ghost" onClick={() => setCornerTitle(null)} title="Reset to business name">Reset</Button>
               <Button size="sm" onClick={() => setEditingField(null)}><Check className="h-4 w-4" /></Button>
             </div>
-            <p className="mt-1 text-[10px] text-muted-foreground">Leave empty or reset to use the main title.</p>
+            <p className="mt-1 text-[10px] text-muted-foreground">Leave empty or reset to use the business name.</p>
           </div>
         )}
         {editingField === "subtitle" && (
@@ -298,19 +304,9 @@ export function CardWizard({ templateId, businessId: selectedBusinessId, draft, 
             <Label className="text-xs">Subtitle</Label>
             <div className="mt-2 flex gap-2">
               <Input autoFocus value={subtitle} onChange={(e) => setSubtitle(e.target.value)}
-                placeholder="Optional"
+                placeholder="Each 8th cup of coffee is free"
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === "Escape") setEditingField(null); }} />
               <Button size="sm" onClick={() => setEditingField(null)}><Check className="h-4 w-4" /></Button>
-            </div>
-          </div>
-        )}
-        {editingField === "description" && (
-          <div className="mt-4 rounded-xl border-2 border-ink/10 bg-secondary/50 p-3">
-            <Label className="text-xs">Description</Label>
-            <div className="mt-2 flex flex-col gap-2">
-              <Textarea autoFocus value={description} onChange={(e) => setDescription(e.target.value)}
-                placeholder="Short description shown on the card front" rows={3} />
-              <Button size="sm" onClick={() => setEditingField(null)} className="self-end"><Check className="h-4 w-4" /></Button>
             </div>
           </div>
         )}
@@ -365,9 +361,6 @@ export function CardWizard({ templateId, businessId: selectedBusinessId, draft, 
             <p className="mt-3 text-center text-xs text-muted-foreground">No steps configured. Increase total steps to add rewards.</p>
           )
         )}
-        {step < 2 && editingField == null && (
-          <p className="mt-3 text-center text-xs text-muted-foreground">Tap the title, subtitle, description or icon on the card to edit</p>
-        )}
       </div>
 
       <div className="mt-6 rounded-2xl border-2 border-ink/10 bg-card paper-grain p-6">
@@ -382,12 +375,7 @@ export function CardWizard({ templateId, businessId: selectedBusinessId, draft, 
                 </div>
                 <div>
                   <Label>Subtitle (optional)</Label>
-                  <Input value={subtitle} onChange={(e) => setSubtitle(e.target.value)} placeholder="10 klipp gratis" />
-                </div>
-                <div>
-                  <Label>Description (optional)</Label>
-                  <Textarea value={description} onChange={(e) => setDescription(e.target.value)}
-                    placeholder="A little context shown on the card front" rows={3} />
+                  <Input value={subtitle} onChange={(e) => setSubtitle(e.target.value)} placeholder="Each 8th cup of coffee is free" />
                 </div>
                 <div>
                   <Label>Logo (SVG, optional)</Label>

@@ -4,7 +4,6 @@ import { z } from "zod";
 export const cardDraftSchema = z.object({
   title: z.string().trim().min(1).max(200),
   subtitle: z.string().nullable(),
-  description: z.string().nullable(),
   corner_title: z.string().nullable(),
   total_steps: z.number().int().min(0).max(32),
   shape: z.enum(["rounded", "square", "ticket"]),
