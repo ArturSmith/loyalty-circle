@@ -176,6 +176,28 @@ test("Wallet QR and its wrapper have no drop shadow", () => {
   assert.match(qrContainer, /bg-white/); // Keep QR contrast/brightness.
 });
 
+test("compact Wallet QR omits the title and name without shrinking the QR", () => {
+  const { CustomerQrCard } = load("src/components/CustomerQrCard.tsx", {
+    "@/components/QrDisplay": {
+      QrDisplay: ({ value, size }) => React.createElement("canvas", { "data-qr": value, width: size, height: size }),
+    },
+    "@/lib/customer-code": load("src/lib/customer-code.ts"),
+    "@/lib/native": { setUserQrBrightness: () => {} },
+  });
+  const html = renderToStaticMarkup(React.createElement(CustomerQrCard, {
+    userId: "123e7a22-0000-4000-8000-000000000000",
+    qrToken: "customer-token",
+    displayName: "Artur Smit",
+  }));
+  assert.doesNotMatch(html, /My QR|MY QR|Artur Smit|Customer code/);
+  assert.match(html, /Show this when a business adds a stamp/);
+  assert.match(html, /123E-7A22/);
+  assert.match(html, /aria-label="Open my customer QR"/);
+  assert.match(html, /data-qr="stempel:user:customer-token" width="80" height="80"/);
+  assert.match(html, /h-22 w-22/);
+  assert.match(html, /bg-card p-2/);
+});
+
 test("Discover strip only scrolls manually", () => {
   const source = read("src/components/DiscoverStrip.tsx");
   assert.match(source, /overflow-x-auto/);

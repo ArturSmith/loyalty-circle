@@ -279,7 +279,6 @@ function Profile() {
             <CustomerQrCard
               qrToken={profile.customerQrToken}
               userId={profile.id}
-              displayName={profile.displayName}
               className="mt-6"
             />
 

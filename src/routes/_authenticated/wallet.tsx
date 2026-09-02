@@ -395,7 +395,6 @@ function Wallet() {
           <CustomerQrCard
             qrToken={profile.customerQrToken}
             userId={profile.id}
-            displayName={profile.displayName}
           />
         </div>
       ) : null}

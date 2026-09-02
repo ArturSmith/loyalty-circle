@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Copy, Maximize2, QrCode, RefreshCw, X } from "lucide-react";
+import { Check, Copy, Maximize2, RefreshCw, X } from "lucide-react";
 import { QrDisplay } from "@/components/QrDisplay";
 import { Button } from "@/components/ui/button";
 import { customerQrValue, shortCustomerCode } from "@/lib/customer-code";
@@ -11,13 +11,12 @@ import { supabase } from "@/integrations/supabase/client";
 type CustomerQrCardProps = {
   qrToken?: string | null;
   userId: string;
-  displayName?: string | null;
   className?: string;
 };
 
 const QR_REFRESH_INTERVAL_MS = 30_000;
 
-export function CustomerQrCard({ qrToken, userId, displayName, className }: CustomerQrCardProps) {
+export function CustomerQrCard({ qrToken, userId, className }: CustomerQrCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
   const baseQrToken = qrToken || userId;
@@ -94,7 +93,7 @@ export function CustomerQrCard({ qrToken, userId, displayName, className }: Cust
         type="button"
         onClick={() => setExpanded(true)}
         className={cn(
-          "relative isolate flex w-full items-center gap-4 overflow-hidden rounded-3xl border border-border bg-card p-3 text-left ring-1 ring-black/5 transition-colors hover:border-foreground/20 dark:ring-white/10",
+          "relative isolate flex w-full items-center gap-3 overflow-hidden rounded-3xl border border-border bg-card p-2 text-left ring-1 ring-black/5 transition-colors hover:border-foreground/20 dark:ring-white/10",
           className,
         )}
         aria-label="Open my customer QR"
@@ -112,20 +111,14 @@ export function CustomerQrCard({ qrToken, userId, displayName, className }: Cust
           className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-90"
         />
 
-        <span className="relative z-10 flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl bg-white p-2 ring-2 ring-white/90">
+        <span className="relative z-10 flex h-22 w-22 shrink-0 items-center justify-center rounded-2xl bg-white p-1 ring-2 ring-white/90">
           <QrDisplay value={value} size={80} />
         </span>
         <span className="relative z-10 min-w-0 flex-1">
-          <span className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-foreground">
-            <QrCode className="h-4 w-4" aria-hidden="true" /> My QR
-          </span>
-          <span className="mt-1 block font-display text-lg font-bold">
-            {displayName?.trim() || "Customer code"}
-          </span>
-          <span className="mt-1 block text-xs leading-snug text-muted-foreground">
+          <span className="block text-xs leading-snug text-muted-foreground">
             Show this when a business adds a stamp.
           </span>
-          <span className="mt-2 block font-mono text-xs font-semibold tracking-wider">
+          <span className="mt-1 block font-mono text-xs font-semibold tracking-wider">
             {shortCode}
           </span>
         </span>
