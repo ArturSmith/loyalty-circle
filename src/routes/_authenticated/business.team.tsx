@@ -61,7 +61,7 @@ function MyTeam({ businessId, view }: { businessId: string; view?: "chat" | "mem
           </div>
           {permissions.isOwner && (
             <div className="mx-auto w-full max-w-3xl px-5 pb-3">
-              <TabsList className="grid h-auto w-full grid-cols-2">
+              <TabsList className="grid h-auto w-full grid-cols-2 items-stretch">
                 <TabsTrigger value="chat" className="whitespace-normal">
                   Chat
                 </TabsTrigger>

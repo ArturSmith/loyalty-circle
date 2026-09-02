@@ -43,7 +43,6 @@ const stubs = {
     Button: ({ children }) => React.createElement("button", null, children),
   },
   "@/components/ui/textarea": { Textarea: () => React.createElement("textarea") },
-  "@/lib/utils": { cn: (...classes) => classes.filter(Boolean).join(" ") },
   "@/integrations/supabase/client": { supabase: {} },
   "@/lib/post-sign-out": { postSignOutDestination: () => "/login" },
   "@tanstack/react-start": { useServerFn: (fn) => fn },
@@ -72,6 +71,7 @@ function load(path, extra = {}) {
   );
   return module.exports;
 }
+stubs["@/lib/utils"] = load("src/lib/utils.ts");
 const tabs = load("src/components/ui/tabs.tsx");
 stubs["@/components/ui/tabs"] = {
   ...tabs,
@@ -102,6 +102,18 @@ test("My team opens Group Chat by default and uses the shared back button", () =
   assert.deepEqual(managementRequests, []);
   back();
   assert.deepEqual(navigation, [{ to: "/business", search: { businessId: search.businessId } }]);
+});
+
+test("both team tabs stretch to the full row height when a label wraps", () => {
+  for (const view of ["chat", "members"]) {
+    search.view = view;
+    const html = render(team);
+    const tabList = html.match(/<div[^>]*role="tablist"[^>]*>/)?.[0];
+    assert.ok(tabList);
+    assert.match(tabList, /grid-cols-2 items-stretch/);
+    assert.match(tabList, /h-auto/);
+    assert.doesNotMatch(tabList, /items-center/);
+  }
 });
 
 test("owner switches to management on the same route and selected business", () => {
