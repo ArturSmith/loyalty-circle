@@ -78,29 +78,29 @@ export type Plan = {
 /* ------------------------------------------------------------------ plans */
 
 export const PLANS: Record<PlanTier, Plan> = {
-  starter: {
-    tier: "starter",
-    name: "Starter",
-    price: 499,
+  basic: {
+    tier: "basic",
+    name: "Basic",
+    price: 249,
     // Reuses the original single-tier price so existing checkout keeps working.
     paddlePriceKey: "business_monthly",
     tagline: "One shop, one card, no fuss.",
     bestFor: "A single location finding its regulars.",
     limits: { locations: 1, loyaltyCards: 1, administrators: 1 },
-    features: ["analytics.basic", "marketplace.listing", "wallet.google", "wallet.apple"],
+    features: ["analytics.basic", "marketplace.listing"],
     highlights: [
       "1 location",
       "1 loyalty card",
       "Owner access only",
-      "Apple & Google Wallet passes",
+      "Stamps & vouchers with QR scanning",
       "Basic analytics",
-      "Marketplace listing",
+      "Discover marketplace listing",
     ],
   },
-  growth: {
-    tier: "growth",
-    name: "Growth",
-    price: 899,
+  pro: {
+    tier: "pro",
+    name: "Pro",
+    price: 349,
     paddlePriceKey: "business_growth_monthly",
     tagline: "Several locations, a real team.",
     bestFor: "Businesses with more than one door and more than one manager.",
@@ -109,12 +109,9 @@ export const PLANS: Record<PlanTier, Plan> = {
       "analytics.basic",
       "analytics.advanced",
       "analytics.export",
-      "integrations.pos",
-      "integrations.payments",
       "marketplace.listing",
-      "marketplace.featured",
-      "wallet.google",
-      "wallet.apple",
+      "messaging.customers",
+      "team.chat",
       "support.priority",
     ],
     highlights: [
@@ -122,51 +119,52 @@ export const PLANS: Record<PlanTier, Plan> = {
       "Up to 5 loyalty cards",
       "Up to 5 administrators",
       "Advanced analytics + CSV export",
-      "POS & payment integrations",
-      "Featured marketplace placement",
+      "Customer messaging and team chat",
       "Priority support",
     ],
     popular: true,
   },
-  scale: {
-    tier: "scale",
-    name: "Scale",
-    price: 1499,
+  unlimited: {
+    tier: "unlimited",
+    name: "Unlimited",
+    price: 599,
     paddlePriceKey: "business_scale_monthly",
     tagline: "Chains, franchises, and everything after.",
-    bestFor: "Multi-site operators who need no ceiling and an API.",
+    bestFor: "Multi-site operators who need no ceiling.",
     limits: { locations: null, loyaltyCards: null, administrators: null },
     features: [
       "analytics.basic",
       "analytics.advanced",
       "analytics.export",
-      "integrations.pos",
-      "integrations.payments",
-      "integrations.api",
       "marketplace.listing",
-      "marketplace.featured",
-      "marketplace.campaigns",
-      "wallet.google",
-      "wallet.apple",
+      "messaging.customers",
+      "team.chat",
       "support.priority",
     ],
     highlights: [
       "Unlimited locations",
       "Unlimited loyalty cards",
       "Unlimited administrators",
-      "Full analytics suite",
-      "All integrations + REST API",
-      "Marketplace campaigns",
-      "Priority support",
+      "Everything in Pro",
     ],
   },
 };
 
 export const PLAN_LIST: readonly Plan[] = PLAN_TIERS.map((t) => PLANS[t]);
 
+/** Tiers that existed in the database before the current lineup. */
+const TIER_ALIASES: Record<string, PlanTier> = {
+  starter: "basic",
+  growth: "pro",
+  scale: "unlimited",
+};
+
 export function planFromTier(tier: string | null | undefined): Plan {
   if (tier && (PLAN_TIERS as readonly string[]).includes(tier)) {
     return PLANS[tier as PlanTier];
+  }
+  if (tier && TIER_ALIASES[tier]) {
+    return PLANS[TIER_ALIASES[tier]];
   }
   return PLANS[LEGACY_TIER];
 }
@@ -267,7 +265,7 @@ export function smallestPlanFor(usage: UsageCounts): Plan {
       const limit = p.limits[k];
       return limit === null || (usage[k] ?? 0) <= limit;
     });
-  return PLAN_LIST.find(fits) ?? PLANS.scale;
+  return PLAN_LIST.find(fits) ?? PLANS.unlimited;
 }
 
 /* ------------------------------------------------------------ permissions */
