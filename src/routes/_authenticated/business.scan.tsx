@@ -247,7 +247,7 @@ function ScanPageContent() {
       <AnimatePresence>
         {customerSelection && !result && !voucher && !rejection && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-ink/85 p-5 pt-[max(1.25rem,env(safe-area-inset-top))] pb-[max(1.25rem,env(safe-area-inset-bottom))] backdrop-blur-md">
+            className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-ink/85 p-5 pt-[max(1.25rem,var(--safe-top))] pb-[max(1.25rem,var(--safe-bottom))] backdrop-blur-md">
             <motion.div initial={{ scale: 0.9, y: 24 }} animate={{ scale: 1, y: 0 }}
               transition={{ type: "spring", damping: 22, stiffness: 230 }}
               className="my-auto w-full max-w-sm rounded-3xl bg-paper p-6 shadow-2xl">

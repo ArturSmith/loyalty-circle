@@ -50,6 +50,9 @@ public class MainActivity extends BridgeActivity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
+                // Full navigations replace the document and its CSS variables.
+                // Republish the system-bar insets for the newly loaded page.
+                ViewCompat.requestApplyInsets(view);
                 installAuthNavigationWatcher(view);
             }
         });

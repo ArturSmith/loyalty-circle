@@ -77,9 +77,9 @@ function TeamChat() {
       <div
         className="z-30 shrink-0 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80"
         style={{
-          paddingTop: "env(safe-area-inset-top)",
-          paddingLeft: "env(safe-area-inset-left)",
-          paddingRight: "env(safe-area-inset-right)",
+          paddingTop: "var(--safe-top)",
+          paddingLeft: "var(--safe-left)",
+          paddingRight: "var(--safe-right)",
         }}
       >
         <header className="mx-auto flex min-h-[56px] w-full max-w-3xl items-center gap-3 px-3 py-3">
@@ -98,10 +98,10 @@ function TeamChat() {
       </div>
 
       <main
-        className="mx-auto min-h-0 w-full max-w-3xl flex-1 overflow-y-auto overscroll-contain py-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))]"
+        className="mx-auto min-h-0 w-full max-w-3xl flex-1 overflow-y-auto overscroll-contain py-5 pb-[calc(6.5rem+var(--safe-bottom))]"
         style={{
-          paddingLeft: "max(1rem, env(safe-area-inset-left))",
-          paddingRight: "max(1rem, env(safe-area-inset-right))",
+          paddingLeft: "max(1rem, var(--safe-left))",
+          paddingRight: "max(1rem, var(--safe-right))",
         }}
       >
         <div className="space-y-3">
@@ -122,9 +122,9 @@ function TeamChat() {
       <div
         className="absolute inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 backdrop-blur"
         style={{
-          paddingBottom: "env(safe-area-inset-bottom)",
-          paddingLeft: "env(safe-area-inset-left)",
-          paddingRight: "env(safe-area-inset-right)",
+          paddingBottom: "var(--safe-bottom)",
+          paddingLeft: "var(--safe-left)",
+          paddingRight: "var(--safe-right)",
         }}
       >
         <form onSubmit={(event) => { event.preventDefault(); void submit(); }} className="mx-auto flex w-full max-w-3xl items-end gap-2 px-4 py-3">

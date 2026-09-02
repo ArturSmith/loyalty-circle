@@ -170,9 +170,8 @@ function RootComponent() {
     <LanguageProvider>
       <QueryClientProvider client={queryClient}>
         <PaymentTestModeBanner />
-        {/* Styled only in the native shell (see styles.css), where it becomes the
-            app's scroll container so the document itself never scrolls. On web
-            this is an inert wrapper and the page scrolls as usual. */}
+        {/* Shared bottom safe-area padding on mobile. In the native shell this
+            is also the scroll container; on web the document scrolls as usual. */}
         <div id="app-scroll">
           <Outlet key={refreshVersion} />
         </div>

@@ -140,7 +140,7 @@ export function CustomerQrCard({ qrToken, userId, displayName, className }: Cust
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[70] flex items-start justify-center overflow-y-auto bg-ink/80 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-md sm:items-center sm:p-5"
+            className="fixed inset-0 z-[70] flex items-start justify-center overflow-y-auto bg-ink/80 px-3 pb-[max(0.75rem,var(--safe-bottom))] pt-[max(0.75rem,var(--safe-top))] backdrop-blur-md sm:items-center sm:px-5"
             onClick={() => setExpanded(false)}
           >
             <motion.section

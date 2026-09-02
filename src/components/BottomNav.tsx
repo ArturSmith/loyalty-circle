@@ -28,7 +28,7 @@ export function BottomNav() {
     <nav
       aria-label="Main navigation"
       className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80"
-      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      style={{ paddingBottom: "var(--safe-bottom)" }}
     >
       <ul className="mx-auto flex max-w-md items-stretch justify-between px-2">
         {items.map(({ to, label, icon: Icon }) => {

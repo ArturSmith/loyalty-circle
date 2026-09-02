@@ -276,7 +276,7 @@ function ConversationPage() {
       {scope === "business" && (
         <div
           className="sticky bottom-0 border-t border-border bg-card/95 backdrop-blur"
-          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+          style={{ paddingBottom: "var(--safe-bottom)" }}
         >
           <div className="mx-auto flex w-full max-w-3xl items-end gap-2 px-4 py-3">
             <Textarea
