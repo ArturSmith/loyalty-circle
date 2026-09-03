@@ -28,6 +28,7 @@ function navigation({ active = "/profile", vouchers = 0, chats = 0 } = {}) {
     },
     "@/hooks/useUnusedVoucherCount": { useUnusedVoucherCount: () => vouchers },
     "@/hooks/useUnreadChatCount": { useUnreadChatCount: () => chats },
+    "@/components/DesktopAccountTools": { DesktopAccountTools: () => null },
   };
   const compiled = ts.transpileModule(read("src/components/BottomNav.tsx"), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true },
@@ -117,10 +118,10 @@ test("desktop app navigation includes details but not marketing or auth screens"
 test("website navigation and content spacing activate at the same tablet breakpoint", () => {
   const css = read("src/styles.css");
   assert.match(css, /@media \(min-width: 768px\)/);
-  assert.match(css, /#app-scroll\.responsive-app-shell \{ padding-top: var\(--app-desktop-header\)/);
-  assert.match(css, /\.responsive-app-shell \.tab-screen-header \{ top: var\(--app-desktop-header\)/);
-  assert.match(css, /\.app-navigation \{\s*top: 0;\s*bottom: auto;/);
-  assert.match(css, /html\.capacitor-native \.business-desktop-navigation \{ top: var\(--safe-top\)/);
+  assert.match(css, /#app-scroll\.responsive-app-shell \{ margin-left: var\(--app-sidebar-width\)/);
+  assert.match(css, /\.responsive-app-shell \.tab-screen-header \{ top: 0/);
+  assert.match(css, /\.app-navigation, \.business-desktop-navigation \{\s*top: 0;\s*bottom: 0;/);
+  assert.match(css, /html\.capacitor-native \.business-desktop-navigation \{\s*top: var\(--safe-top\)/);
   assert.match(read("src/routes/__root.tsx"), /desktopOnly=\{!isTabRoute\(pathname\)\}/);
 });
 
@@ -154,7 +155,7 @@ test("content adapts through layouts, not global font shrinking or oversized car
   assert.match(wallet, /element.clientWidth \/ 1.586/);
   assert.match(wallet, /const CARD_H = cardHeight/);
   assert.match(wallet, /observer.disconnect\(\)/);
-  assert.match(read("src/routes/_authenticated/vouchers.tsx"), /md:grid-cols-2.*lg:grid-cols-3/);
+  assert.match(read("src/components/CustomerVouchers.tsx"), /md:grid-cols-2.*lg:grid-cols-3/);
   assert.match(read("src/routes/_authenticated/profile.tsx"), /md:grid md:grid-cols-2/);
   assert.match(read("src/routes/_authenticated/business.index.tsx"), /md:basis-1\/2 lg:basis-1\/3/);
   assert.match(read("src/routes/_authenticated/business.index.tsx"), /setSnapCount\(api.scrollSnapList\(\).length\)/);

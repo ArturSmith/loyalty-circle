@@ -170,7 +170,8 @@ test("old chat URLs redirect without losing business selection", () => {
 
 test("Wallet QR and its wrapper have no drop shadow", () => {
   const source = read("src/components/CustomerQrCard.tsx");
-  const widget = source.slice(source.indexOf("<button"), source.indexOf("<Maximize2"));
+  const start = source.indexOf("<button");
+  const widget = source.slice(start, source.indexOf("<Maximize2", start));
   const qrContainer = widget.slice(0, widget.indexOf("<QrDisplay"));
   assert.doesNotMatch(qrContainer, /shadow-|drop-shadow|boxShadow/);
   assert.match(qrContainer, /bg-white/); // Keep QR contrast/brightness.

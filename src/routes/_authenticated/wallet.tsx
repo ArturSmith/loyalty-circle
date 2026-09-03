@@ -21,6 +21,9 @@ import { getTabCache, setTabCache } from "@/lib/tabCache";
 import { CustomerQrCard } from "@/components/CustomerQrCard";
 import { NotificationButton } from "@/components/NotificationButton";
 import { SpacesButton } from "@/components/business/SpacesButton";
+import { useDesktopLayout } from "@/hooks/useDesktopLayout";
+import { CustomerVouchers } from "@/components/CustomerVouchers";
+import { ShelfControls } from "@/components/ShelfControls";
 
 
 type Instance = WalletInstance;
@@ -53,6 +56,7 @@ const WALLET_CACHE_KEY = "wallet";
 
 function Wallet() {
   const navigate = useNavigate();
+  const isDesktop = useDesktopLayout();
   const [instances, setInstances] = useState<Instance[]>(() => getTabCache<WalletCache>(WALLET_CACHE_KEY)?.instances ?? []);
   const [frozenBusinessIds, setFrozenBusinessIds] = useState<Set<string>>(
     () => new Set(getTabCache<WalletCache>(WALLET_CACHE_KEY)?.frozenBusinessIds ?? []),
@@ -100,6 +104,17 @@ function Wallet() {
     if (idx === -1) return instances;
     return [...instances.slice(0, idx), ...instances.slice(idx + 1), instances[idx]];
   }, [instances, frontId]);
+  const visibleInstances = isDesktop ? instances : displayInstances;
+
+  useEffect(() => {
+    if (!isDesktop || !expandedId) return;
+    const frame = window.requestAnimationFrame(() => {
+      const cards = cardStackScrollRef.current?.querySelectorAll<HTMLElement>("[data-wallet-card-id]");
+      const card = Array.from(cards ?? []).find((element) => element.dataset.walletCardId === expandedId);
+      card?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [expandedId, isDesktop]);
 
   useEffect(() => {
     try {
@@ -349,7 +364,7 @@ function Wallet() {
     <div className="relative min-h-screen flex flex-col overflow-hidden pb-24 md:pb-0">
       <TabTransition className="wallet-layout flex flex-1 flex-col">
       <header className="relative flex items-center justify-between gap-3 px-5 py-4">
-        <div className="flex min-w-0 flex-1 items-center gap-3">
+        <div className="flex min-w-0 flex-1 items-center gap-3 md:hidden">
           <Link to="/profile" aria-label="Open your profile" className="shrink-0">
             <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full glass-panel border border-border text-xs font-bold">
               {profile?.avatarUrl ? (
@@ -405,8 +420,8 @@ function Wallet() {
         </section>
       ) : null}
 
-      {profile ? (
-        <div className="relative px-5 pb-4">
+      {!isDesktop && profile ? (
+        <div className="relative px-5 pb-4 md:hidden">
           <CustomerQrCard
             qrToken={profile.customerQrToken}
             userId={profile.id}
@@ -449,8 +464,8 @@ function Wallet() {
         </div>
       )}
 
-      <DiscoverStrip />
       </div>
+      {!isDesktop && <div className="wallet-discover"><DiscoverStrip /></div>}
 
       <div className="wallet-cards flex flex-1 flex-col">
       {instances.length > 0 && (
@@ -459,11 +474,14 @@ function Wallet() {
             <h1 className="flex items-center gap-2 font-display text-lg font-bold">
               <CreditCard className="h-4 w-4" /> My cards
             </h1>
+            <div className="flex items-center gap-3">
             {instances.length > 1 && (
               <Button variant="ghost" size="sm" className="gap-1.5" onClick={openArrangeCards}>
                 <ArrowUpDown className="h-4 w-4" /> Arrange
               </Button>
             )}
+            <ShelfControls target={cardStackScrollRef} itemCount={instances.length} />
+            </div>
           </div>
         </section>
       )}
@@ -491,7 +509,7 @@ function Wallet() {
         <>
         <div
           ref={cardStackScrollRef}
-          className="relative mt-4 flex-1 overflow-y-auto px-4 pb-6"
+          className="wallet-card-scroller relative mt-4 flex-1 overflow-y-auto px-4 pb-6"
           onClick={() => setExpandedId(null)}
         >
           {(() => {
@@ -506,8 +524,8 @@ function Wallet() {
                 : (displayInstances.length - 1) * PEEK + CARD_H + 40;
 
             return (
-              <div ref={stackMeasureRef} className="relative mx-auto max-w-md" style={{ height: totalHeight }}>
-                {displayInstances.map((inst, i) => {
+              <div ref={stackMeasureRef} className="wallet-card-track relative mx-auto max-w-md" style={{ height: isDesktop ? "auto" : totalHeight }}>
+                {visibleInstances.map((inst, i) => {
                   const isExpanded = i === expandedIndex;
                   let top: number;
                   if (expandedIndex < 0) {
@@ -523,14 +541,15 @@ function Wallet() {
                   return (
                     <motion.div
                       key={inst.id}
-                      className="absolute inset-x-0"
+                      className="wallet-card-item absolute inset-x-0"
+                      data-wallet-card-id={inst.id}
                       initial={false}
-                      animate={{ y: top, scale: isExpanded ? 1 : 0.98 }}
+                      animate={{ y: isDesktop ? 0 : top, scale: isDesktop || isExpanded ? 1 : 0.98 }}
                       transition={{ type: "spring", stiffness: 260, damping: 30 }}
-                      style={{ zIndex: i + 1 }}
+                      style={{ zIndex: isDesktop ? undefined : i + 1 }}
                     >
                       <motion.div
-                        drag="x"
+                        drag={isDesktop ? false : "x"}
                         dragConstraints={{ left: 0, right: 0 }}
                         dragElastic={0.35}
                         dragSnapToOrigin
@@ -550,7 +569,7 @@ function Wallet() {
                           tabIndex={0}
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (isExpanded) {
+                            if (isDesktop || isExpanded) {
                               navigate({
                                 to: "/b/$businessId",
                                 params: { businessId: inst.template.business.id },
@@ -564,7 +583,7 @@ function Wallet() {
                             if (event.key !== "Enter" && event.key !== " ") return;
                             event.preventDefault();
                             event.stopPropagation();
-                            if (isExpanded) {
+                            if (isDesktop || isExpanded) {
                               navigate({
                                 to: "/b/$businessId",
                                 params: { businessId: inst.template.business.id },
@@ -576,7 +595,7 @@ function Wallet() {
                           }}
                           className="relative block w-full text-left focus:outline-none"
                           aria-label={
-                            isExpanded
+                            isDesktop || isExpanded
                               ? `Open ${inst.template.business.name}`
                               : `Bring ${inst.template.title} forward`
                           }
@@ -601,7 +620,7 @@ function Wallet() {
                                 lastStamp={inst.stamps_count}
                                 disableShadow
                                 face={faceFlipped.has(inst.id) ? "stamps" : "info"}
-                                showFlipButton={i === displayInstances.length - 1}
+                                showFlipButton={isDesktop || i === displayInstances.length - 1}
                                 onFlip={() => {
                                   setFaceFlipped((prev) => {
                                     const next = new Set(prev);
@@ -632,6 +651,8 @@ function Wallet() {
         </>
       )}
       </div>
+      {isDesktop && <CustomerVouchers horizontal />}
+      {isDesktop && <div className="wallet-discover"><DiscoverStrip /></div>}
       <AnimatePresence>
         {arranging && (
           <motion.div

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Copy, Maximize2, RefreshCw, X } from "lucide-react";
+import { Check, Copy, Maximize2, QrCode, RefreshCw, X } from "lucide-react";
 import { QrDisplay } from "@/components/QrDisplay";
 import { Button } from "@/components/ui/button";
 import { customerQrValue, shortCustomerCode } from "@/lib/customer-code";
@@ -12,11 +12,12 @@ type CustomerQrCardProps = {
   qrToken?: string | null;
   userId: string;
   className?: string;
+  compact?: boolean;
 };
 
 const QR_REFRESH_INTERVAL_MS = 30_000;
 
-export function CustomerQrCard({ qrToken, userId, className }: CustomerQrCardProps) {
+export function CustomerQrCard({ qrToken, userId, className, compact = false }: CustomerQrCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
   const baseQrToken = qrToken || userId;
@@ -89,7 +90,12 @@ export function CustomerQrCard({ qrToken, userId, className }: CustomerQrCardPro
 
   return (
     <>
-      <button
+      {compact ? (
+        <Button variant="outline" onClick={() => setExpanded(true)} className="h-12 w-full justify-start gap-3 rounded-xl bg-white text-black" aria-label="Open my customer QR">
+          <QrCode className="h-5 w-5" /> My QR
+          <Maximize2 className="ml-auto h-4 w-4" />
+        </Button>
+      ) : <button
         type="button"
         onClick={() => setExpanded(true)}
         className={cn(
@@ -125,7 +131,7 @@ export function CustomerQrCard({ qrToken, userId, className }: CustomerQrCardPro
         <span className="relative z-10 mr-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/80 text-foreground shadow-sm ring-1 ring-black/5 dark:bg-white/15 dark:ring-white/10">
           <Maximize2 className="h-4 w-4" aria-hidden="true" />
         </span>
-      </button>
+      </button>}
 
       <AnimatePresence>
         {expanded ? (

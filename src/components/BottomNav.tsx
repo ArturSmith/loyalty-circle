@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { CreditCard, Compass, MessageCircle, Ticket, User } from "lucide-react";
 import { useUnusedVoucherCount } from "@/hooks/useUnusedVoucherCount";
 import { useUnreadChatCount } from "@/hooks/useUnreadChatCount";
+import { DesktopAccountTools } from "@/components/DesktopAccountTools";
 
 const items = [
   { to: "/wallet", label: "Wallet", icon: CreditCard },
@@ -43,7 +44,7 @@ export function BottomNav({ desktopOnly = false }: { desktopOnly?: boolean }) {
     >
       <div className="app-navigation-inner">
       <div className="app-navigation-brand hidden md:flex" data-i18n-ignore>
-        <CreditCard className="h-7 w-7 text-primary" aria-hidden="true" /> <span className="hidden lg:inline">ClubCarder</span>
+        <CreditCard className="h-7 w-7 text-primary" aria-hidden="true" /> <span>ClubCarder</span>
       </div>
       <ul className="glass-tab-bar pointer-events-auto mx-auto mb-3 grid max-w-md grid-cols-5 gap-0.5 p-1">
         {items.map(({ to, label, icon: Icon }) => {
@@ -75,6 +76,7 @@ export function BottomNav({ desktopOnly = false }: { desktopOnly?: boolean }) {
           );
         })}
       </ul>
+      <DesktopAccountTools />
       </div>
     </nav>
   );
