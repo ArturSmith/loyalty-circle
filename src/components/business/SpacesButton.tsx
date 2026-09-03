@@ -8,14 +8,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { loadWorkspaceBusinesses, type WorkspaceBusiness } from "@/lib/workspaces";
 
-export function SpacesButton({ businessId }: { businessId: string }) {
+// Omitting businessId selects the personal Wallet space. In that context the
+// trigger is hidden until at least one managed business has been confirmed.
+export function SpacesButton({ businessId }: { businessId?: string }) {
   const [open, setOpen] = useState(false);
   const [businesses, setBusinesses] = useState<WorkspaceBusiness[]>([]);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open && businessId) return;
     let cancelled = false;
     setLoading(true);
     setFailed(false);
@@ -32,6 +34,7 @@ export function SpacesButton({ businessId }: { businessId: string }) {
   }, [open, businessId]);
 
   const canSwitch = businesses.some((business) => business.id !== businessId);
+  if (!businessId && businesses.length === 0) return null;
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -41,10 +44,11 @@ export function SpacesButton({ businessId }: { businessId: string }) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" sideOffset={8} collisionPadding={12} className="w-72 max-w-[calc(100vw-1.5rem)] rounded-2xl p-2">
-        <DropdownMenuItem asChild className="min-h-11 cursor-pointer rounded-xl px-3">
-          <Link to="/wallet" search={{}}>
+        <DropdownMenuItem asChild disabled={!businessId} className="min-h-11 cursor-pointer rounded-xl px-3 data-[disabled]:opacity-100">
+          <Link to="/wallet" search={{}} aria-current={!businessId ? "page" : undefined}>
             <Wallet aria-hidden="true" />
-            <span className="font-semibold">My Wallet</span>
+            <span className="flex-1 font-semibold">My Wallet</span>
+            {!businessId && <Check className="text-primary" aria-hidden="true" />}
           </Link>
         </DropdownMenuItem>
         {loading ? (

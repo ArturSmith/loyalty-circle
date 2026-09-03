@@ -119,9 +119,9 @@ function menuHarness({ open = true, businesses = [], loading = false, failed = f
   });
   return {
     states,
-    render: () => {
+    render: (props = { businessId: "owned" }) => {
       cursor = 0;
-      return renderToStaticMarkup(React.createElement(SpacesButton, { businessId: "owned" }));
+      return renderToStaticMarkup(React.createElement(SpacesButton, props));
     },
     runEffect: () => effect(),
   };
@@ -156,6 +156,60 @@ test("switcher shows current workspace, role and safe destination for pending bu
 
 test("only one business does not add a redundant switcher section", () => {
   assert.doesNotMatch(menuHarness({ businesses: [{ id: "owned" }] }).render(), /Switch workspace/);
+});
+
+test("Wallet hides Spaces until a managed business is confirmed", async () => {
+  for (const result of [[], [{ id: "owned", name: "My café", role: "owner", accepted_by_platform: true }]]) {
+    let resolve;
+    const harness = menuHarness({ open: false, loading: true, fetcher: () => new Promise((done) => { resolve = done; }) });
+    assert.equal(harness.render({}), "");
+    harness.runEffect();
+    assert.equal(harness.render({}), "");
+    resolve(result);
+    await new Promise(setImmediate);
+    const html = harness.render({});
+    if (result.length === 0) assert.equal(html, "");
+    else {
+      assert.match(html, /Spaces/);
+      assert.match(html, /href="\/business\?businessId=owned"/);
+    }
+  }
+});
+
+test("Wallet keeps Spaces hidden when membership lookup fails", async () => {
+  const harness = menuHarness({ open: false, fetcher: async () => { throw new Error("Offline"); } });
+  assert.equal(harness.render({}), "");
+  harness.runEffect();
+  await new Promise(setImmediate);
+  assert.equal(harness.render({}), "");
+});
+
+test("Wallet offers even one workspace and marks My Wallet as current", () => {
+  for (const role of ["owner", "admin"]) {
+    const html = menuHarness({ businesses: [{ id: "business", name: "A café", role, accepted_by_platform: true }] }).render({});
+    assert.match(html, /aria-current="page" aria-disabled="true" href="\/wallet"/);
+    assert.match(html, /Switch workspace/);
+    assert.match(html, /href="\/business\?businessId=business"/);
+    assert.equal((html.match(/aria-disabled="true"/g) ?? []).length, 1);
+  }
+});
+
+test("customer-only accounts have no managed workspaces", async () => {
+  const { loadWorkspaceBusinesses } = load("src/lib/workspaces.ts", {
+    "@/integrations/supabase/client": { supabase: fakeClient({ user: "customer" }) },
+  });
+  assert.deepEqual(await loadWorkspaceBusinesses(), []);
+});
+
+test("Wallet includes Spaces beside notifications without replacing Profile workspace navigation", () => {
+  const wallet = read("src/routes/_authenticated/wallet.tsx");
+  assert.match(wallet, /<SpacesButton \/>/);
+  assert.ok(wallet.indexOf("<SpacesButton") < wallet.indexOf("<NotificationButton"));
+  assert.match(wallet, /flex min-w-0 flex-1 items-center gap-3/);
+  assert.match(wallet, /flex shrink-0 items-center gap-2/);
+  const profile = read("src/routes/_authenticated/profile.tsx");
+  assert.match(profile, /"\/workspace"/);
+  assert.doesNotMatch(profile, /SpacesButton/);
 });
 
 test("workspace fetch is lazy and ignores results after the menu closes", async () => {

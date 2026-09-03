@@ -20,6 +20,7 @@ import { ScreenLoader } from "@/components/Spinner";
 import { getTabCache, setTabCache } from "@/lib/tabCache";
 import { CustomerQrCard } from "@/components/CustomerQrCard";
 import { NotificationButton } from "@/components/NotificationButton";
+import { SpacesButton } from "@/components/business/SpacesButton";
 
 
 type Instance = WalletInstance;
@@ -335,9 +336,9 @@ function Wallet() {
   return (
     <div className="relative min-h-screen flex flex-col overflow-hidden pb-24">
       <TabTransition className="flex flex-1 flex-col">
-      <header className="relative flex items-center justify-between px-5 py-4">
-        <div className="flex items-center gap-3 min-w-0">
-          <Link to="/profile" aria-label="Open your profile">
+      <header className="relative flex items-center justify-between gap-3 px-5 py-4">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <Link to="/profile" aria-label="Open your profile" className="shrink-0">
             <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full glass-panel border border-border text-xs font-bold">
               {profile?.avatarUrl ? (
                 <img src={profile.avatarUrl} alt="Your profile picture" className="h-full w-full object-cover" />
@@ -350,7 +351,8 @@ function Wallet() {
             Hello{profile?.displayName ? `, ${profile.displayName.split(" ")[0]}` : ""} 👋
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
+          <SpacesButton />
           <NotificationButton scope="customer" />
         </div>
 
