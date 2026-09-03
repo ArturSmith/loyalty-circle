@@ -5,7 +5,7 @@ import { StampCard } from "@/components/StampCard";
 import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence, Reorder } from "framer-motion";
-import { ArrowUpDown, Check, ChevronRight, CreditCard, Gift, GripVertical, ScanLine, Snowflake, Sparkles, Store, UserRoundPen, X } from "lucide-react";
+import { ArrowUpDown, Check, ChevronRight, CreditCard, Gift, GripVertical, ScanLine, Snowflake, Sparkles, UserRoundPen, X } from "lucide-react";
 import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { getPaddleEnvironment } from "@/lib/paddle";
@@ -15,6 +15,7 @@ import { invalidateUnusedVoucherCount } from "@/hooks/useUnusedVoucherCount";
 import { useProfile } from "@/hooks/useProfile";
 import { initialsFrom } from "@/lib/avatar";
 import { DiscoverStrip } from "@/components/DiscoverStrip";
+import { BusinessCta } from "@/components/BusinessCta";
 import { TabTransition } from "@/components/TabTransition";
 import { ScreenLoader } from "@/components/Spinner";
 import { getTabCache, setTabCache } from "@/lib/tabCache";
@@ -46,9 +47,6 @@ type Celebration = {
   accentColor: string;
 };
 
-const BUSINESS_CTA_KEY = "cc_business_cta_hidden_until";
-const BUSINESS_CTA_SNOOZE_MS = 7 * 24 * 60 * 60 * 1000;
-
 // Survives tab switches so returning to Wallet renders the previous cards
 // immediately while a fresh fetch runs in the background.
 type WalletCache = { instances: Instance[]; frozenBusinessIds: string[] };
@@ -66,7 +64,6 @@ function Wallet() {
   const [frontId, setFrontId] = useState<string | null>(null);
   const [faceFlipped, setFaceFlipped] = useState<Set<string>>(new Set());
   const [celebration, setCelebration] = useState<Celebration | null>(null);
-  const [businessCtaHidden, setBusinessCtaHidden] = useState(true);
   const [arranging, setArranging] = useState(false);
   const [arrangeOriginalIds, setArrangeOriginalIds] = useState<string[]>([]);
   const [savingOrder, setSavingOrder] = useState(false);
@@ -115,24 +112,6 @@ function Wallet() {
     });
     return () => window.cancelAnimationFrame(frame);
   }, [expandedId, isDesktop]);
-
-  useEffect(() => {
-    try {
-      const until = Number(window.localStorage.getItem(BUSINESS_CTA_KEY) ?? 0);
-      setBusinessCtaHidden(Number.isFinite(until) && until > Date.now());
-    } catch {
-      setBusinessCtaHidden(false);
-    }
-  }, []);
-
-  const dismissBusinessCta = useCallback(() => {
-    setBusinessCtaHidden(true);
-    try {
-      window.localStorage.setItem(BUSINESS_CTA_KEY, String(Date.now() + BUSINESS_CTA_SNOOZE_MS));
-    } catch {
-      /* ignore */
-    }
-  }, []);
 
   const load = useCallback(async () => {
     if (arrangingRef.current) return;
@@ -429,40 +408,8 @@ function Wallet() {
         </div>
       ) : null}
 
-      {!profileLoading && !profile?.hasBusiness && !businessCtaHidden && (
-        <div className="relative px-5 pt-2 pb-4">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="relative mx-auto max-w-md rounded-2xl glass-panel border border-border p-4 text-left"
-          >
-            <button
-              type="button"
-              onClick={dismissBusinessCta}
-              aria-label="Hide this suggestion for a week"
-              className="absolute right-2 top-2 rounded-full p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
-            >
-              <X className="h-4 w-4" />
-            </button>
-            <div className="flex items-start gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                <Store className="h-5 w-5" />
-              </div>
-              <div className="flex-1 min-w-0 pr-6">
-                <h2 className="font-display text-lg font-bold">Own a business?</h2>
-                <p className="mt-0.5 text-sm text-muted-foreground leading-snug">
-                  Start your business profile and create your own customized loyalty card.
-                </p>
-                <Link to="/business" className="mt-3 block">
-                  <Button size="sm" className="gap-2">
-                    <Sparkles className="h-4 w-4" /> Start my business profile
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      )}
+      {/* On desktop this prompt lives in the menu drawer, under Profile. */}
+      {!isDesktop && <BusinessCta />}
 
       </div>
       {!isDesktop && <div className="wallet-discover"><DiscoverStrip /></div>}

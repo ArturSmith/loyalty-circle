@@ -3,6 +3,7 @@ import { useDesktopLayout } from "@/hooks/useDesktopLayout";
 import { useProfile } from "@/hooks/useProfile";
 import { initialsFrom } from "@/lib/avatar";
 import { CustomerQrCard } from "@/components/CustomerQrCard";
+import { BusinessCta } from "@/components/BusinessCta";
 
 export function DesktopAccountTools() {
   const desktop = useDesktopLayout();
@@ -21,6 +22,7 @@ function AccountTools() {
         </span>
         <span className="truncate text-sm font-semibold">{profile.displayName || "Profile"}</span>
       </Link>
+      <BusinessCta variant="drawer" />
     </div>
   );
 }
