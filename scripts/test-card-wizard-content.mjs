@@ -30,7 +30,7 @@ const stamp = load("src/components/StampCard.tsx");
 const cardDraft = load("src/lib/card-draft.ts");
 const { cardDraftSchema, DEFAULT_CARD_TERMS } = cardDraft;
 const usage = load("src/lib/card-usage.ts");
-const { getCardUsageRewards } = usage;
+const { getCardUsageRewards, normalizeCardUsageInstructions } = usage;
 const accordion = load("src/components/ui/accordion.tsx", {
   "@/lib/utils": load("src/lib/utils.ts"),
 });
@@ -443,23 +443,19 @@ test("existing card terms and grid choices are not replaced by new defaults", as
   );
 });
 
-test("usage instructions follow actual scan counts, including automatically filled reward circles", () => {
+test("usage references numbered card steps, keeping manual scan counts separate", () => {
   const examples = [
-    { steps: 10, rewards: [5, 10], scans: [4, 8] },
-    { steps: 8, rewards: [8], scans: [7] },
+    { steps: 10, rewards: [5, 10], scans: [4, 8], after: [4, 9] },
+    { steps: 8, rewards: [8], scans: [7], after: [7] },
     // Same two-reward configuration as the PostgreSQL stamp regression fixture.
-    { steps: 5, rewards: [3, 5], scans: [2, 3] },
-    { steps: 6, rewards: [2, 3, 4], scans: [1, 1, 1] },
-    { steps: 4, rewards: [1, 4], scans: [3] },
+    { steps: 5, rewards: [3, 5], scans: [2, 3], after: [2, 4] },
+    { steps: 6, rewards: [2, 3, 4], scans: [1, 1, 1], after: [1, 1, 1] },
+    { steps: 4, rewards: [1, 4], scans: [3], after: [3] },
   ];
-  for (const { steps, rewards, scans } of examples) {
-    assert.deepEqual(
-      getCardUsageRewards(
-        steps,
-        rewards.map((step) => ({ step, label: `Gift ${step}` })),
-      ).map((r) => r.stampsRequired),
-      scans,
-    );
+  for (const { steps, rewards, scans, after } of examples) {
+    const milestones = getCardUsageRewards(steps, rewards.map((step) => ({ step, label: `Gift ${step}` })));
+    assert.deepEqual(milestones.map((r) => r.stampsRequired), scans);
+    assert.deepEqual(milestones.map((r) => r.afterStep), after);
   }
 });
 
@@ -472,11 +468,11 @@ test("usage is regenerated from valid steps, ignores duplicates and out-of-range
     { step: 2.5, label: "Invalid" },
   ];
   assert.deepEqual(getCardUsageRewards(10, rewards), [
-    { step: 5, label: "-50%", stampsRequired: 4 },
-    { step: 10, label: "Free haircut", stampsRequired: 8 },
+    { step: 5, label: "-50%", stampsRequired: 4, afterStep: 4 },
+    { step: 10, label: "Free haircut", stampsRequired: 8, afterStep: 9 },
   ]);
   assert.deepEqual(getCardUsageRewards(5, rewards), [
-    { step: 5, label: "-50%", stampsRequired: 4 },
+    { step: 5, label: "-50%", stampsRequired: 4, afterStep: 4 },
   ]);
   assert.deepEqual(getCardUsageRewards(0, rewards), []);
   assert.deepEqual(getCardUsageRewards(10, null), []);
@@ -498,7 +494,8 @@ test("step 5 review renders the same generated instructions used on the public p
   assert.deepEqual(section.props.rewards, rewards);
   const description = expandedUsage(section.props);
   assert.match(description, /After step 4 you will get voucher for/);
-  assert.match(description, /After step 8 you will get voucher for/);
+  assert.match(description, /After step 9 you will get voucher for/);
+  assert.doesNotMatch(description, /After step 8 you will get voucher for/);
   assert.match(description, /Free haircut/);
   const publicPage = readFileSync(
     new URL("../src/routes/b.$businessId.tsx", import.meta.url),
@@ -536,11 +533,57 @@ test("usage is collapsed by default and expands to the requested voucher milesto
   const opened = expandedUsage(props);
   assert.match(opened, /aria-expanded="true"/);
   assert.doesNotMatch(opened, /aria-disabled="true"/); // Remains collapsible.
-  for (const step of [7, 14, 21, 28]) {
+  for (const step of [7, 15, 23, 31]) {
     assert.match(opened, new RegExp(`After step ${step} you will get voucher for`));
   }
   assert.equal((opened.match(/‘Free coffee’/g) ?? []).length, 4);
   assert.doesNotMatch(opened, /earn present|Get \d+ stamps/);
+});
+
+test("previously generated milestones show steps 4 and 9 and save through normal moderation", async () => {
+  const rewards = [{ step: 5, label: "-50%" }, { step: 10, label: "Free" }];
+  const oldText = [
+    "- Open My QR in Wallet and show it to staff. They will scan it to add a stamp.",
+    "- After step 4 you will get voucher for ‘-50%’.",
+    "- After step 8 you will get voucher for ‘Free’.",
+    "- To redeem a reward, open the earned voucher and show its QR to staff.",
+  ].join("\n");
+  const corrected = oldText.replace("After step 8", "After step 9");
+  assert.equal(normalizeCardUsageInstructions(10, rewards, oldText), corrected);
+  const html = expandedUsage({ totalSteps: 10, rewards, instructions: oldText });
+  assert.match(html, /After step 9/);
+  assert.doesNotMatch(html, /After step 8/);
+  assert.match(html, /To redeem a reward/);
+  for (const draftMode of [true, false]) {
+    const h = await wizard({ draftMode, edit: !draftMode, draft: {
+      ...validDraft, total_steps: 10, rewards, usage_instructions: oldText,
+    } });
+    await review(h);
+    assert.equal(usagePreview(h).props.instructions, corrected);
+    assert.equal(h.saved.length, 0); // Rendering never mutates published data.
+    await h.click(draftMode ? "Save card draft" : "Save changes");
+    assert.equal(h.saved[0].usage_instructions, corrected);
+    assert.equal(h.saved[0].terms_and_conditions, validDraft.terms_and_conditions);
+  }
+});
+
+test("normalizing repeated reward labels never compounds numbers on subsequent renders", () => {
+  const rewards = [3, 5, 7].map((step) => ({ step, label: "Free coffee" }));
+  const oldText = [2, 3, 4].map((n) => `- After step ${n} you will get voucher for ‘Free coffee’.`).join("\n");
+  const expected = [2, 4, 6].map((n) => `- After step ${n} you will get voucher for ‘Free coffee’.`).join("\n");
+  assert.equal(normalizeCardUsageInstructions(7, rewards, oldText), expected);
+  assert.equal(normalizeCardUsageInstructions(7, rewards, expected), expected);
+});
+
+test("normalization matches quoted labels literally and leaves unrelated or partial copy untouched", () => {
+  const rewards = [{ step: 5, label: "-50%" }, { step: 10, label: 'Free "coffee" (large)' }];
+  for (const [left, right] of [["‘", "’"], ["“", "”"], ['"', '"'], ["'", "'"]]) {
+    const text = `After step 4 you will get voucher for ${left}-50%${right}.\nAfter step 8 you will get voucher for ${left}${rewards[1].label}${right}.`;
+    assert.equal(normalizeCardUsageInstructions(10, rewards, text), text.replace("step 8", "step 9"));
+  }
+  const partial = "After step 8 you will get voucher for ‘Free coffee’.";
+  assert.equal(normalizeCardUsageInstructions(10, rewards, partial), partial);
+  assert.equal(normalizeCardUsageInstructions(10, rewards, "A purchase costs 8 kr."), "A purchase costs 8 kr.");
 });
 
 test("benefits use the same circular border and a gift icon in preview and wallet", () => {

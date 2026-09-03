@@ -18,7 +18,7 @@ import { BackButton } from "@/components/BackButton";
 import { CardUsageSection } from "@/components/CardUsageSection";
 import { DEFAULT_CARD_TERMS, type CardDraft } from "@/lib/card-draft";
 import { generateCardUsage } from "@/lib/card-usage.functions";
-import { getCardUsageSource } from "@/lib/card-usage";
+import { getCardUsageSource, normalizeCardUsageInstructions } from "@/lib/card-usage";
 
 const PRESETS = [
   { bg: "#faf7ee", accent: "#1a1a2e", text: "#1a1a2e" },
@@ -174,7 +174,9 @@ export function CardWizard(props: Props) {
   }, []);
 
   const usageSource = getCardUsageSource({ title, subtitle, total_steps: totalSteps, rewards });
-  const usageInstructions = generatedUsage.source === usageSource ? generatedUsage.text : "";
+  const usageInstructions = generatedUsage.source === usageSource
+    ? normalizeCardUsageInstructions(totalSteps, rewards, generatedUsage.text)
+    : "";
 
   const generateUsageWithAI = async () => {
     if (usageRequest.current.pending) return;

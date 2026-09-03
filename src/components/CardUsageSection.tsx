@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { Reward } from "@/components/StampCard";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { getCardUsageRewards } from "@/lib/card-usage";
+import { getCardUsageRewards, normalizeCardUsageInstructions } from "@/lib/card-usage";
 import { cn } from "@/lib/utils";
 
 /** Approved AI instructions, with calculated milestones for cards without an AI draft. */
@@ -23,6 +23,7 @@ export function CardUsageSection({
   className?: string;
 }) {
   const milestones = getCardUsageRewards(totalSteps, rewards);
+  const usageText = normalizeCardUsageInstructions(totalSteps, rewards, instructions);
   return (
     <Accordion type="single" collapsible
       {...(open === undefined ? {} : { value: open ? "usage" : "" })}
@@ -39,15 +40,15 @@ export function CardUsageSection({
           {headerAction}
         </div>
         <AccordionContent className="px-4">
-          {instructions?.trim() ? (
+          {usageText ? (
             <p data-i18n-ignore className="whitespace-pre-wrap break-words text-sm leading-relaxed text-muted-foreground">
-              {instructions.trim()}
+              {usageText}
             </p>
           ) : milestones.length > 0 ? (
             <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-muted-foreground">
-              {milestones.map(({ step, label, stampsRequired }) => (
+              {milestones.map(({ step, label, afterStep }) => (
                 <li key={step} className="break-words">
-                  <span>{`After step ${stampsRequired} you will get voucher for`}</span>{" "}
+                  <span>{`After step ${afterStep} you will get voucher for`}</span>{" "}
                   <span data-i18n-ignore className="font-medium text-foreground">
                     ‘{label}’
                   </span>.

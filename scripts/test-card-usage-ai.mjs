@@ -60,7 +60,7 @@ test("server assembles a chunked AI stream into the instructions returned to the
     assert.match(body.input, /Test Café/);
     assert.match(body.input, /Coffee card/);
     const facts = JSON.parse(body.input.split("\n").at(-1));
-    assert.deepEqual(facts.milestones, [{ step: 8, label: "Free coffee", stampsRequired: 7 }]);
+    assert.deepEqual(facts.milestones, [{ afterStep: 7, label: "Free coffee" }]);
     assert.match(body.input, /NOT terms and conditions/);
     assert.match(body.input, /Do not invent purchases/);
     const bytes = new TextEncoder().encode([
@@ -106,14 +106,33 @@ test("invalid card input never reaches the paid gateway", async () => {
   await assert.rejects(generate({ data: { ...input, totalSteps: 33 } }));
 });
 
-test("AI receives actual cumulative scan counts rather than reward-circle positions", async () => {
+test("AI receives printed step numbers without cumulative scan counts", async () => {
   const generate = server(async (_url, options) => {
     const facts = JSON.parse(JSON.parse(options.body).input.split("\n").at(-1));
-    assert.deepEqual(facts.milestones.map((reward) => reward.stampsRequired), [7, 14, 21, 28]);
+    assert.deepEqual(facts.milestones.map((reward) => reward.afterStep), [7, 15, 23, 31]);
+    assert.ok(facts.milestones.every((reward) => !('stampsRequired' in reward)));
     assert.deepEqual(facts.milestones.map((reward) => reward.label), ["Coffee 8", "Coffee 16", "Coffee 24", "Coffee 32"]);
     return new Response('data: {"type":"response.output_text.delta","delta":"Show My QR in Wallet to staff."}\n\n');
   });
   await generate({ data: { ...input, totalSteps: 32, rewards: [8, 16, 24, 32].map((step) => ({ step, label: `Coffee ${step}` })) } });
+});
+
+test("AI prompt and returned text use steps 4 and 9 for rewards at circles 5 and 10", async () => {
+  const generate = server(async (_url, options) => {
+    const prompt = JSON.parse(options.body).input;
+    const facts = JSON.parse(prompt.split("\n").at(-1));
+    assert.deepEqual(facts.milestones, [{ afterStep: 4, label: "-50%" }, { afterStep: 9, label: "Free" }]);
+    assert.match(prompt, /steps 4 and 9, not 4 and 8/);
+    const delta = "Show My QR in Wallet.\n- After step 4 you will get voucher for ‘-50%’.\n- After step 8 you will get voucher for ‘Free’.\nShow the voucher QR to redeem.";
+    // Even if the model repeats the previous mistake, numeric milestones are
+    // normalized from the card before any result reaches the wizard.
+    return new Response(`data: ${JSON.stringify({ type: "response.output_text.delta", delta })}\n\n`);
+  });
+  const result = await generate({ data: { ...input, totalSteps: 10, rewards: [{ step: 5, label: "-50%" }, { step: 10, label: "Free" }] } });
+  assert.match(result.instructions, /After step 4/);
+  assert.match(result.instructions, /After step 9/);
+  assert.doesNotMatch(result.instructions, /After step 8/);
+  assert.match(result.instructions, /Show the voucher QR to redeem/);
 });
 
 test("zero-step cards and removed rewards cannot introduce fictitious reward milestones", async () => {
