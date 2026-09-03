@@ -1,22 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Building2, ChevronRight, Store } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { PageLoader } from "@/components/Spinner";
 import { Button } from "@/components/ui/button";
 import { TabScreen } from "@/components/TabScreen";
 import { BackButton } from "@/components/BackButton";
 import { getNavigationCache, setNavigationCache } from "@/lib/navigationCache";
-
-type WorkspaceBusiness = {
-  id: string;
-  name: string;
-  city: string | null;
-  logo_url: string | null;
-  role: "owner" | "admin";
-  accepted_by_platform: boolean;
-  onboarding_completed_at: string | null;
-};
+import { loadWorkspaceBusinesses, type WorkspaceBusiness } from "@/lib/workspaces";
 
 export const Route = createFileRoute("/_authenticated/workspace")({
   head: () => ({ meta: [{ title: "Workspace — ClubCarder" }] }),
@@ -28,51 +18,19 @@ function Workspace() {
   const cached = getNavigationCache<WorkspaceBusiness[]>("workspace");
   const [businesses, setBusinesses] = useState<WorkspaceBusiness[]>(() => cached?.value ?? []);
   const [loading, setLoading] = useState(() => cached === null);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      const { data: auth } = await supabase.auth.getUser();
-      if (!auth.user) {
-        setLoading(false);
-        return;
-      }
-
-      const [{ data: owned }, { data: memberships }] = await Promise.all([
-        supabase
-          .from("businesses")
-          .select("id,name,city,logo_url,accepted_by_platform,onboarding_completed_at")
-          .eq("owner_id", auth.user.id)
-          .order("created_at", { ascending: true }),
-        supabase
-          .from("business_members")
-          .select("business_id")
-          .eq("user_id", auth.user.id)
-          .eq("role", "admin")
-          .eq("status", "active"),
-      ]);
-
-      const adminIds = ((memberships as { business_id: string }[] | null) ?? []).map(
-        (membership) => membership.business_id,
-      );
-      const { data: administered } = adminIds.length
-        ? await supabase.from("businesses").select("id,name,city,logo_url,accepted_by_platform,onboarding_completed_at").in("id", adminIds)
-        : { data: [] };
-
-      const ownRows = ((owned as Omit<WorkspaceBusiness, "role">[] | null) ?? []).map((business) => ({
-        ...business,
-        role: "owner" as const,
-      }));
-      const adminRows = ((administered as Omit<WorkspaceBusiness, "role">[] | null) ?? [])
-        .filter((business) => !ownRows.some((ownedBusiness) => ownedBusiness.id === business.id))
-        .map((business) => ({ ...business, role: "admin" as const }));
-
+    loadWorkspaceBusinesses().then((next) => {
       if (cancelled) return;
-      const next = [...ownRows, ...adminRows];
       setBusinesses(next);
       setNavigationCache("workspace", next);
-      setLoading(false);
-    })();
+    }).catch(() => {
+      if (!cancelled) setFailed(true);
+    }).finally(() => {
+      if (!cancelled) setLoading(false);
+    });
     return () => {
       cancelled = true;
     };
@@ -89,7 +47,8 @@ function Workspace() {
     >
       <div className="mx-auto w-full max-w-md">
 
-        {businesses.length === 0 ? (
+        {failed && <p role="alert" className="mb-4 text-sm text-destructive">Workspaces couldn’t be loaded.</p>}
+        {businesses.length === 0 && !failed ? (
           <section className="rounded-2xl glass-panel p-5 text-center">
             <Building2 className="mx-auto h-6 w-6 text-muted-foreground" />
             <p className="mt-3 text-sm text-muted-foreground">You don’t have access to a business yet.</p>

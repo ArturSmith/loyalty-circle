@@ -20,6 +20,7 @@ import { normalizeBrandColor } from "@/lib/brand";
 import { z } from "zod";
 import { BusinessSummaryStat } from "@/components/business/BusinessSummaryStat";
 import { NotificationButton } from "@/components/NotificationButton";
+import { SpacesButton } from "@/components/business/SpacesButton";
 import { getNavigationCache, setNavigationCache } from "@/lib/navigationCache";
 import { AnalyticsMetricCard } from "@/components/business/AnalyticsMetricCard";
 import { parseBusinessAnalytics, type BusinessAnalytics } from "@/lib/business-analytics";
@@ -219,9 +220,9 @@ function BusinessDashboard() {
 
   return (
     <div className="min-h-screen px-5 py-6 max-w-3xl mx-auto">
-      <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2">
+      <header className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <p className="min-w-0 text-xs uppercase tracking-widest text-muted-foreground">Dashboard</p>
-        <div className="col-span-2 flex min-w-0 flex-wrap items-center gap-2">
+        <div className="order-2 flex min-w-0 basis-full flex-wrap items-center gap-2">
             {/* A swatch of the brand colour, so the owner can see the value
                 they picked is actually in use rather than write-only. */}
             {normalizeBrandColor(biz.brand_color) && (
@@ -236,7 +237,8 @@ function BusinessDashboard() {
             </h1>
             <PlanBadge isOwner={isOwner} />
         </div>
-        <div className="col-start-2 row-start-1 flex shrink-0 items-center gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-2">
+          <SpacesButton businessId={biz.id} />
           <NotificationButton scope="business" businessId={biz.id} />
           <Button asChild variant="ghost" size="icon" className="rounded-full glass-panel">
             <Link to="/business/menu" search={{ businessId: biz.id }} aria-label="Open menu" title="Menu">
