@@ -154,8 +154,8 @@ function Profile() {
     d ? new Date(d).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }) : "—";
 
   return (
-    <TabScreen title="Profile">
-      <div className="flex-1 px-6 py-4 max-w-md mx-auto w-full md:max-w-5xl md:py-8">
+    <TabScreen title="Profile" className="profile-screen">
+      <div className="profile-content flex-1 px-6 py-4 max-w-md mx-auto w-full md:max-w-4xl md:py-6">
         {businessSubmitted && (
           <section role="status" className="mb-5 rounded-2xl border border-primary/20 bg-primary/5 p-4">
             <h2 className="font-semibold">Sent for moderation</h2>
@@ -166,9 +166,9 @@ function Profile() {
         {loading || !profile ? (
           <PageLoader />
         ) : (
-          <div className="md:grid md:grid-cols-2 md:items-start md:gap-8 lg:gap-12">
-            <div className="min-w-0">
-            <div className="flex flex-col items-center">
+          <div className="profile-layout">
+            <div className="profile-primary min-w-0">
+            <div className="profile-identity flex flex-col items-center">
               <button
                 type="button"
                 onClick={() => fileRef.current?.click()}
@@ -198,7 +198,7 @@ function Profile() {
 
             <OrnamentDivider className="w-32 mx-auto opacity-60 my-7" />
 
-            <section className="rounded-2xl glass-panel p-4">
+            <section className="profile-account rounded-2xl glass-panel p-4">
               <div className="flex items-center justify-between gap-3">
                 <h2 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Account details</h2>
                 {!editing && (
@@ -268,7 +268,7 @@ function Profile() {
             </section>
 
             </div>
-            <div className="min-w-0">
+            <div className="profile-settings min-w-0">
             <BusinessSection profile={profile} />
 
             <section className="mt-6 flex items-center justify-between gap-4 rounded-2xl glass-panel p-4">
@@ -282,7 +282,7 @@ function Profile() {
             <CustomerQrCard
               qrToken={profile.customerQrToken}
               userId={profile.id}
-              className="mt-6"
+              className="profile-page-qr mt-6"
             />
 
             <nav className="mt-8 overflow-hidden rounded-2xl border border-border divide-y divide-border" aria-label="Account menu">
@@ -312,7 +312,7 @@ function Profile() {
 function BusinessSection({ profile }: { profile: ProfileInfo }) {
   if (!profile.hasBusiness) {
     return (
-      <section className="mt-6 rounded-2xl glass-panel p-4">
+      <section className="profile-business-section profile-business-empty mt-6 rounded-2xl glass-panel p-4">
         <h2 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Business</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           You don't run a business on ClubCarder yet. Create loyalty cards, stamp them by QR and see who keeps
@@ -328,7 +328,7 @@ function BusinessSection({ profile }: { profile: ProfileInfo }) {
   }
 
   return (
-    <section className="mt-6 rounded-2xl glass-panel p-4">
+    <section className="profile-business-section profile-business-workspace mt-6 rounded-2xl glass-panel p-4">
       <Link to="/workspace" className="block">
         <Button className="h-11 w-full gap-2">
           <Building2 className="h-4 w-4" /> Workspace

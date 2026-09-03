@@ -148,6 +148,7 @@ test("business website navigation retains business selection without changing Wa
 
 test("content adapts through layouts, not global font shrinking or oversized cards", () => {
   const wallet = read("src/routes/_authenticated/wallet.tsx");
+  const css = read("src/styles.css");
   assert.match(wallet, /wallet-layout/);
   assert.match(wallet, /wallet-overview/);
   assert.match(wallet, /wallet-cards/);
@@ -156,7 +157,10 @@ test("content adapts through layouts, not global font shrinking or oversized car
   assert.match(wallet, /const CARD_H = cardHeight/);
   assert.match(wallet, /observer.disconnect\(\)/);
   assert.match(read("src/components/CustomerVouchers.tsx"), /md:grid-cols-2.*lg:grid-cols-3/);
-  assert.match(read("src/routes/_authenticated/profile.tsx"), /md:grid md:grid-cols-2/);
+  assert.match(read("src/routes/_authenticated/profile.tsx"), /profile-layout/);
+  assert.match(css, /\.profile-primary \{\s*display: grid;/);
+  assert.match(css, /\.profile-settings \{ display: grid;/);
+  assert.match(css, /\.profile-page-qr \{ display: none;/);
   assert.match(read("src/routes/_authenticated/business.index.tsx"), /md:basis-1\/2 lg:basis-1\/3/);
   assert.match(read("src/routes/_authenticated/business.index.tsx"), /setSnapCount\(api.scrollSnapList\(\).length\)/);
   assert.match(read("src/routes/_authenticated/business.index.tsx"), /api.on\("reInit", syncCarousel\)/);

@@ -12,6 +12,7 @@ export function TabScreen({
   action,
   children,
   contentClassName,
+  className,
 }: {
   title: string;
   subtitle?: string;
@@ -19,9 +20,10 @@ export function TabScreen({
   action?: ReactNode;
   children: ReactNode;
   contentClassName?: string;
+  className?: string;
 }) {
   return (
-    <div className="tab-screen flex min-h-screen flex-col pb-24 md:pb-10">
+    <div className={`tab-screen flex min-h-screen flex-col pb-24 md:pb-10 ${className ?? ""}`}>
       <header className="tab-screen-header sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
         <div className="mx-auto flex min-h-[56px] w-full max-w-6xl flex-wrap items-center gap-3 px-5 py-3 md:min-h-24 md:px-8 md:py-5">
           {backAction}
