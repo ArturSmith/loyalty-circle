@@ -5,7 +5,7 @@ import { StampCard } from "@/components/StampCard";
 import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence, Reorder } from "framer-motion";
-import { ArrowUpDown, Check, ChevronRight, CreditCard, Gift, GripVertical, ScanLine, Snowflake, Sparkles, UserRoundPen, X } from "lucide-react";
+import { ArrowUpDown, Check, ChevronRight, CreditCard, Gift, GripVertical, Snowflake, Sparkles, UserRoundPen, X } from "lucide-react";
 import { toast } from "sonner";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { getPaddleEnvironment } from "@/lib/paddle";
@@ -434,23 +434,10 @@ function Wallet() {
       )}
 
       {instances.length === 0 ? (
-        <div className="relative flex-1 flex flex-col items-center justify-center px-6 text-center">
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 220, damping: 20 }}
-            className="relative h-40 w-40 rounded-3xl border border-border bg-secondary flex items-center justify-center"
-          >
-            <div className="absolute inset-3 rounded-2xl bg-card border border-border flex items-center justify-center">
-              <ScanLine className="h-14 w-14 text-primary" />
-            </div>
-            <div className="absolute -top-3 -right-3 h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
-              <Sparkles className="h-4 w-4" />
-            </div>
-          </motion.div>
-
-          <h2 className="mt-8 font-display text-3xl font-extrabold">No cards yet</h2>
-          <p className="mt-2 text-sm text-muted-foreground max-w-xs">Scan a business's QR to add your first loyalty card.</p>
+        <div className="relative flex-1 px-5 pt-6">
+          <div className="mx-auto max-w-md rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
+            No cards yet — scan a business's QR to add your first loyalty card.
+          </div>
         </div>
       ) : (
         <>

@@ -110,6 +110,7 @@ export const nb = {
   "Couldn't save card order": "Kunne ikke lagre kortrekkefølgen",
   "Your cards": "Dine kort",
   "No cards yet": "Ingen kort ennå",
+  "No cards yet — scan a business's QR to add your first loyalty card.": "Ingen kort ennå — skann QR-koden til en bedrift for å legge til ditt første lojalitetskort.",
   "Scan a business's QR to add your first loyalty card.": "Skann QR-koden til en bedrift for å legge til ditt første lojalitetskort.",
   "Complete your profile": "Fullfør profilen din",
   "Complete profile": "Fullfør profilen",
