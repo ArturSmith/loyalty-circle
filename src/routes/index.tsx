@@ -20,6 +20,7 @@ import {
   Smartphone,
   ShieldCheck,
   Store,
+  UserPlus,
   ArrowRight,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -104,6 +105,39 @@ const customerBenefits = [
   { icon: ShieldCheck, title: "You’re in control", body: "Each card is yours. You decide which to keep, and businesses can only stamp with your permission." },
 ];
 
+const programLaunchSteps = [
+  {
+    step: 1,
+    icon: UserPlus,
+    title: "Sign up",
+    body: "Create your personal ClubCarder account and verify your contact details.",
+  },
+  {
+    step: 2,
+    icon: Store,
+    title: "Create your company",
+    body: "Add your company name, category, brand details and customer-facing information.",
+  },
+  {
+    step: 3,
+    icon: Palette,
+    title: "Build your loyalty card",
+    body: "Choose the design, number of stamp steps and the rewards customers can earn.",
+  },
+  {
+    step: 4,
+    icon: ShieldCheck,
+    title: "Submit for approval",
+    body: "Send your company and first card for moderation. You can update the details while they are being reviewed.",
+  },
+  {
+    step: 5,
+    icon: QrCode,
+    title: "Publish and share",
+    body: "Once approved, share your public page or business QR and start welcoming members.",
+  },
+];
+
 function Landing() {
   return (
     <div className="relative min-h-screen overflow-hidden">
@@ -148,7 +182,7 @@ function Landing() {
               <Link to="/auth">
                 <Button size="lg" className="h-12 px-8">Get started</Button>
               </Link>
-              <a href="#benefits">
+              <a href="#start-a-program">
                 <Button size="lg" variant="outline" className="h-12 px-8">
                   See how it works <ArrowRight className="ml-1 h-4 w-4" />
                 </Button>
@@ -212,6 +246,8 @@ function Landing() {
           </div>
         </section>
 
+        <ProgramLaunchSteps />
+
         {/* SWIPEABLE BENEFITS */}
         <SwipeableBenefits customerBenefits={customerBenefits} businessBenefits={businessBenefits} />
       </main>
@@ -229,6 +265,59 @@ function Landing() {
       </footer>
 
     </div>
+  );
+}
+
+function ProgramLaunchSteps() {
+  return (
+    <section id="start-a-program" className="mt-20 scroll-mt-24 rounded-[2rem] border border-border/70 bg-secondary/30 px-5 py-10 sm:px-8 lg:px-10 lg:py-12">
+      <div className="mx-auto max-w-2xl text-center">
+        <span className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">For businesses</span>
+        <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+          Launch your loyalty program in five steps
+        </h2>
+        <p className="mt-3 text-muted-foreground">
+          Go from a new account to a published, shareable loyalty card without complicated setup.
+        </p>
+      </div>
+
+      <div className="relative mx-auto mt-9 max-w-5xl">
+        <div aria-hidden="true" className="absolute left-[10%] right-[10%] top-7 hidden h-px bg-border lg:block" />
+        <ol className="relative grid gap-3 lg:grid-cols-5 lg:gap-4">
+          {programLaunchSteps.map(({ step, icon: Icon, title, body }, index) => (
+            <motion.li
+              key={step}
+              initial={{ opacity: 0, y: 14 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.4, delay: index * 0.06 }}
+              className="relative flex gap-4 rounded-2xl border border-border/60 bg-card/85 p-4 lg:block lg:border-0 lg:bg-transparent lg:px-2 lg:py-0 lg:text-center"
+            >
+              <div className="relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-primary/20 bg-card text-primary shadow-sm lg:mx-auto">
+                <Icon className="h-5 w-5" aria-hidden="true" />
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+                  {step}
+                </span>
+              </div>
+              <div className="min-w-0 lg:mt-4">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Step {step}</p>
+                <h3 className="mt-1 font-display text-base font-semibold">{title}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{body}</p>
+              </div>
+            </motion.li>
+          ))}
+        </ol>
+      </div>
+
+      <div className="mt-9 text-center">
+        <Link to="/auth">
+          <Button size="lg" className="h-12 px-8">
+            Start your loyalty program <ArrowRight className="ml-1 h-4 w-4" />
+          </Button>
+        </Link>
+        <p className="mt-3 text-xs text-muted-foreground">Your free trial starts when your company is approved.</p>
+      </div>
+    </section>
   );
 }
 
