@@ -6,3 +6,8 @@
 export async function getDefaultHome(_userId?: string | null): Promise<"/wallet"> {
   return "/wallet";
 }
+
+/** Post-auth redirects must never take over navigation inside the signed-in app. */
+export function isAuthEntryPath(pathname: string): boolean {
+  return pathname === "/" || pathname === "/auth";
+}

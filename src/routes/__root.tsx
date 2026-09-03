@@ -21,6 +21,7 @@ import { clearTabCaches } from "@/lib/tabCache";
 import { PullToRefresh } from "@/components/PullToRefresh";
 import { LanguageProvider } from "@/i18n";
 import { invalidateNavigationCache } from "@/lib/navigationCache";
+import { getDefaultHome, isAuthEntryPath } from "@/lib/defaultHome";
 
 function NotFoundComponent() {
   return (
@@ -125,6 +126,12 @@ function RootComponent() {
         (async () => {
           try {
             let dest: string | null = null;
+            const path = window.location.pathname;
+            // A delayed SIGNED_IN event (for example after refreshing a token)
+            // can arrive while the user is already navigating the app. Never
+            // let an old post-auth destination hijack Workspace or any other
+            // authenticated screen.
+            if (!isAuthEntryPath(path)) return;
             try {
               const stashed = sessionStorage.getItem("post_auth_redirect");
               if (stashed && stashed.startsWith("/")) {
@@ -132,9 +139,7 @@ function RootComponent() {
                 dest = stashed;
               }
             } catch {}
-            const path = window.location.pathname;
-            if (!dest && (path === "/" || path === "/auth")) {
-              const { getDefaultHome } = await import("@/lib/defaultHome");
+            if (!dest) {
               dest = await getDefaultHome();
             }
             if (dest && window.location.pathname !== dest) {

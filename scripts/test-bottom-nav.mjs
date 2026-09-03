@@ -11,6 +11,15 @@ import ts from "typescript";
 const require = createRequire(import.meta.url);
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 
+function navigationHelpers() {
+  const module = { exports: {} };
+  const compiled = ts.transpileModule(read("src/lib/defaultHome.ts"), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+  }).outputText;
+  new Function("require", "module", "exports", compiled)(require, module, module.exports);
+  return module.exports;
+}
+
 function navigation({ active = "/profile", vouchers = 0, chats = 0 } = {}) {
   const module = { exports: {} };
   const stubs = {
@@ -144,6 +153,18 @@ test("business website navigation retains business selection without changing Wa
     { to: "/workspace", search: {} },
     { to: "/wallet", search: {} },
   ]);
+});
+
+test("delayed auth events cannot redirect an open Workspace back to Wallet", () => {
+  const { isAuthEntryPath } = navigationHelpers();
+  assert.equal(isAuthEntryPath("/"), true);
+  assert.equal(isAuthEntryPath("/auth"), true);
+  for (const path of ["/workspace", "/business", "/wallet", "/profile"]) {
+    assert.equal(isAuthEntryPath(path), false, path);
+  }
+  const root = read("src/routes/__root.tsx");
+  assert.match(root, /if \(!isAuthEntryPath\(path\)\) return;/);
+  assert.ok(root.indexOf("if (!isAuthEntryPath(path)) return;") < root.indexOf("sessionStorage.getItem"));
 });
 
 test("content adapts through layouts, not global font shrinking or oversized cards", () => {
