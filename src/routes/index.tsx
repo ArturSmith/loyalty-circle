@@ -143,15 +143,15 @@ function Landing() {
     <div className="relative min-h-screen overflow-hidden">
       {/* Iridescent floating blobs */}
 
-      <header className="relative mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6">
-        <Link to="/" className="flex items-center gap-2">
-          <Logo className="h-9 w-9 rotate-[-8deg] drop-shadow-md" />
-          <span className="font-display text-xl font-extrabold tracking-tight">ClubCarder</span>
+      <header className="relative mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-4 py-4 sm:px-6 sm:py-6">
+        <Link to="/" className="flex min-w-0 shrink-0 items-center gap-2" aria-label="ClubCarder home">
+          <Logo className="h-8 w-8 rotate-[-8deg] drop-shadow-md sm:h-9 sm:w-9" />
+          <span className="hidden font-display text-xl font-extrabold tracking-tight min-[440px]:inline">ClubCarder</span>
         </Link>
-        <div className="flex items-center gap-2">
-          <LanguageSwitcher compact />
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+          <LanguageSwitcher compact className="shrink-0" />
           <Link to="/auth">
-            <Button variant="ghost" size="sm" className="rounded-full">Sign in</Button>
+            <Button variant="ghost" size="sm" className="rounded-full px-2.5 sm:px-3">Sign in</Button>
           </Link>
           <Link to="/auth" className="hidden sm:block">
             <Button size="sm" className="rounded-full">Get started</Button>
@@ -159,7 +159,7 @@ function Landing() {
         </div>
       </header>
 
-      <main className="relative mx-auto max-w-6xl px-6 pb-16">
+      <main className="relative mx-auto max-w-6xl px-4 pb-16 sm:px-6">
         {/* HERO — intro */}
         <section className="grid items-center gap-12 py-10 lg:grid-cols-2 lg:py-16">
           <motion.div
@@ -270,13 +270,13 @@ function Landing() {
 
 function ProgramLaunchSteps() {
   return (
-    <section id="start-a-program" className="mt-20 scroll-mt-24 rounded-[2rem] border border-border/70 bg-secondary/30 px-5 py-10 sm:px-8 lg:px-10 lg:py-12">
+    <section id="start-a-program" className="mt-20 scroll-mt-24 rounded-3xl border border-border/70 bg-secondary/30 px-4 py-8 sm:rounded-[2rem] sm:px-8 sm:py-10 lg:px-10 lg:py-12">
       <div className="mx-auto max-w-2xl text-center">
         <span className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">For businesses</span>
-        <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+        <h2 className="mt-3 break-words font-display text-[clamp(1.5rem,7vw,2.25rem)] font-semibold leading-[1.08] tracking-tight sm:text-4xl">
           Launch your loyalty program in five steps
         </h2>
-        <p className="mt-3 text-muted-foreground">
+        <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">
           Go from a new account to a published, shareable loyalty card without complicated setup.
         </p>
       </div>
@@ -310,8 +310,8 @@ function ProgramLaunchSteps() {
       </div>
 
       <div className="mt-9 text-center">
-        <Link to="/auth">
-          <Button size="lg" className="h-12 px-8">
+        <Link to="/auth" className="block sm:inline-block">
+          <Button size="lg" className="h-auto min-h-12 w-full whitespace-normal px-4 py-3 sm:w-auto sm:px-8">
             Start your loyalty program <ArrowRight className="ml-1 h-4 w-4" />
           </Button>
         </Link>

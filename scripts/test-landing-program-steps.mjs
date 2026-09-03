@@ -26,6 +26,9 @@ test("landing page explains the complete business launch path in order", () => {
   assert.match(source, /<section id="start-a-program"/);
   assert.match(source, /<ol className="relative grid gap-3 lg:grid-cols-5/);
   assert.match(source, /<a href="#start-a-program">/);
+  assert.match(source, /hidden font-display[^\n]*min-\[440px\]:inline/);
+  assert.match(source, /text-\[clamp\(1\.5rem,7vw,2\.25rem\)\]/);
+  assert.match(source, /min-h-12 w-full whitespace-normal[^\n]*sm:w-auto/);
   assert.match(source, /Start your loyalty program/);
   assert.match(source, /Your free trial starts when your company is approved\./);
   assert.match(source, /<Link to="\/auth">/);
