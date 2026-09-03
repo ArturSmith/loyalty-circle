@@ -143,10 +143,10 @@ function Landing() {
     <div className="relative min-h-screen overflow-hidden">
       {/* Iridescent floating blobs */}
 
-      <header className="relative mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-4 py-4 sm:px-6 sm:py-6">
-        <Link to="/" className="flex min-w-0 shrink-0 items-center gap-2" aria-label="ClubCarder home">
-          <Logo className="h-8 w-8 rotate-[-8deg] drop-shadow-md sm:h-9 sm:w-9" />
-          <span className="hidden font-display text-xl font-extrabold tracking-tight min-[440px]:inline">ClubCarder</span>
+      <header className="relative mx-auto flex w-full max-w-6xl items-center justify-between gap-1 px-3 py-4 sm:gap-2 sm:px-6 sm:py-6">
+        <Link to="/" className="flex min-w-0 shrink-0 items-center gap-1 sm:gap-2" aria-label="ClubCarder home">
+          <Logo className="h-7 w-7 rotate-[-8deg] drop-shadow-md sm:h-9 sm:w-9" />
+          <span className="whitespace-nowrap font-display text-sm font-extrabold tracking-tight min-[380px]:text-base sm:text-xl">ClubCarder</span>
         </Link>
         <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           <LanguageSwitcher compact className="shrink-0" />
