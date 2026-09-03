@@ -2,6 +2,19 @@ import type { Reward } from "@/components/StampCard";
 
 export type CardUsageReward = Reward & { stampsRequired: number };
 
+/** Identify the card facts a generated draft describes, so edits cannot reuse stale copy. */
+export function getCardUsageSource(card: {
+  title: string;
+  subtitle?: string | null;
+  total_steps: number;
+  rewards?: readonly Reward[] | null;
+}): string {
+  return JSON.stringify([
+    card.title.trim(), card.subtitle?.trim() || "", card.total_steps,
+    getCardUsageRewards(card.total_steps, card.rewards),
+  ]);
+}
+
 /** Calculate actual scans from the start of a card, matching stamp_business_card.
  * Each scan fills one step, then immediately collects consecutive reward steps.
  * A reward on step 1 is not auto-collected by that RPC, so never promise a

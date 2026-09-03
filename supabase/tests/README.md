@@ -1,5 +1,13 @@
 # Onboarding regression test
 
+`card_usage_instructions.sql` uses a fresh disposable database to check separate
+AI usage storage, onboarding, approval/rejection, public visibility, moderation
+comparisons, stale-copy removal, and preserved terms and permissions. Apply
+`20260903100000_card_usage_instructions.sql` before deploying the usage AI UI.
+The migration preserves existing terms/acceptances and adds nullable usage text;
+cards without it continue to show calculated instructions. It also extends the
+public card RPC, restoring the same grants and publication checks atomically.
+
 `stamp_without_cooldown.sql` uses the same disposable-database fixture to
 reproduce the old 30-second delay, then verify rapid owner/admin stamps, legacy
 RPCs, reward issuance, full-card rejection, business permissions and billing.

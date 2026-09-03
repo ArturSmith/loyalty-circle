@@ -103,7 +103,7 @@ export const listModerationForAdmin = createServerFn({ method: "POST" })
         ? supabaseAdmin
             .from("card_templates")
             .select(
-              "id,title,subtitle,description,corner_title,total_steps,shape,bg_color,accent_color,text_color,stamp_icon,stamp_shape,step_size,logo_url,rewards,grid_cols,active,terms_and_conditions",
+              "id,title,subtitle,description,corner_title,total_steps,shape,bg_color,accent_color,text_color,stamp_icon,stamp_shape,step_size,logo_url,rewards,grid_cols,active,terms_and_conditions,usage_instructions",
             )
             .in("id", cardIds)
         : Promise.resolve({ data: [] }),

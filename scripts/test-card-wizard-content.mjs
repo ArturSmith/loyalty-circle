@@ -41,7 +41,7 @@ const usageSection = load("src/components/CardUsageSection.tsx", {
 });
 // Render the actual Radix accordion in its expanded state to inspect its copy.
 const expandedUsage = (props) => renderToStaticMarkup(
-  React.cloneElement(usageSection.CardUsageSection(props), { defaultValue: "usage" }),
+  React.cloneElement(usageSection.CardUsageSection(props), { value: "usage" }),
 );
 const validDraft = {
   title: "Coffee card",
@@ -64,7 +64,7 @@ const control =
   ({ children, variant, size, ...props }) =>
     React.createElement(tag, props, children);
 
-async function wizard({ draftMode = true, draft = validDraft, edit = false, generate = async () => ({ terms: "Generated terms for this card." }) } = {}) {
+async function wizard({ draftMode = true, draft = validDraft, edit = false, generate = async () => ({ instructions: "Generated instructions for this card." }) } = {}) {
   const states = [],
     effects = [],
     saved = [],
@@ -123,13 +123,14 @@ async function wizard({ draftMode = true, draft = validDraft, edit = false, gene
     react: fakeReact,
     "@tanstack/react-router": { useNavigate: () => () => {} },
     "@tanstack/react-start": { useServerFn: (fn) => fn },
-    "@/lib/card-terms.functions": { generateCardTerms: async ({ data }) => {
+    "@/lib/card-usage.functions": { generateCardUsage: async ({ data }) => {
       generationRequests.push(data);
       return generate(data);
     } },
     "@/integrations/supabase/client": { supabase },
     "@/components/StampCard": stamp,
     "@/lib/card-draft": cardDraft,
+    "@/lib/card-usage": usage,
     "@/components/CardUsageSection": usageSection,
     "@/components/Spinner": load("src/components/Spinner.tsx", { "@/lib/utils": load("src/lib/utils.ts") }),
     "@/components/ui/button": { Button: control("button") },
@@ -220,108 +221,141 @@ test("cards ignore legacy descriptions and default the corner to the business na
   assert.doesNotMatch(html, /My Café/);
 });
 
-test("AI terms generation sends the selected business and current card and inserts an editable draft", async () => {
+const aiButton = (h) => h.find((node) => node.props["aria-label"] === "Generate card instructions with AI");
+const usagePreview = (h) => h.find((node) => node.type === usageSection.CardUsageSection);
+async function review(h) { for (let i = 0; i < 4; i++) await h.click("Next"); }
+
+test("AI is offered for usage on review, never for terms; saves instructions separately", async () => {
   for (const draftMode of [true, false]) {
-    const generated = "  Collect stamps and redeem your Free coffee voucher.  ";
+    const generated = "  Open My QR in Wallet. Collect stamps and redeem your Free coffee voucher.  ";
     const h = await wizard({
-      draftMode,
-      edit: !draftMode,
+      draftMode, edit: !draftMode,
       draft: { ...validDraft, rewards: [{ step: 8, label: "Free coffee" }, { step: 12, label: "Removed step" }] },
-      generate: async () => ({ terms: generated }),
+      generate: async () => ({ instructions: generated }),
     });
-    assert.equal(h.find((node) => node.props["aria-controls"] === "card-terms"), undefined);
     for (let i = 0; i < 3; i++) await h.click("Next");
-    await h.find((node) => node.props["aria-controls"] === "card-terms").props.onClick();
-    h.render();
+    assert.equal(aiButton(h), undefined);
+    assert.equal(h.find((node) => node.props.id === "card-terms").props.value, validDraft.terms_and_conditions);
+    await h.click("Next");
+    await aiButton(h).props.onClick(); h.render();
     assert.deepEqual(h.generationRequests, [{
       businessName: draftMode ? "Onboarding Café" : "Business B",
-      title: validDraft.title,
-      subtitle: validDraft.subtitle,
-      totalSteps: 8,
+      title: validDraft.title, subtitle: validDraft.subtitle, totalSteps: 8,
       rewards: [{ step: 8, label: "Free coffee" }],
     }]);
-    const terms = h.find((node) => node.props.id === "card-terms");
-    assert.equal(terms.props.value, generated.trim());
-    assert.equal(terms.props.readOnly, false);
-    assert.equal(h.saved.length, 0); // Generation alone never publishes/saves a card.
-    terms.props.onChange({ target: { value: "Reviewed and edited by the owner." } });
-    h.render();
-    await h.click("Next");
+    assert.equal(usagePreview(h).props.instructions, generated.trim());
+    assert.equal(usagePreview(h).props.open, true);
+    assert.match(h.html(), /Open My QR in Wallet/);
+    assert.equal(h.saved.length, 0);
     await h.click(draftMode ? "Save card draft" : "Save changes");
-    assert.equal(h.saved[0].terms_and_conditions, "Reviewed and edited by the owner.");
+    assert.equal(h.saved[0].usage_instructions, generated.trim());
+    assert.equal(h.saved[0].terms_and_conditions, validDraft.terms_and_conditions);
   }
 });
 
-test("generation shows a spinner, prevents duplicate requests and preserves terms until success", async () => {
+test("generation shows a spinner, prevents duplicate requests and blocks saving until resolved", async () => {
   let resolve;
   const h = await wizard({ generate: () => new Promise((done) => { resolve = done; }) });
-  for (let i = 0; i < 3; i++) await h.click("Next");
-  const button = h.find((node) => node.props["aria-controls"] === "card-terms");
+  await review(h);
+  const button = aiButton(h);
   const pending = button.props.onClick();
-  await button.props.onClick(); // Same-frame duplicate, before React has rerendered.
-  h.render();
+  await button.props.onClick(); h.render();
   assert.equal(h.generationRequests.length, 1);
-  assert.equal(h.find((node) => node.props["aria-controls"] === "card-terms").props.disabled, true);
-  assert.equal(h.find((node) => node.props.id === "card-terms").props.readOnly, true);
-  assert.equal(h.find((node) => node.props.id === "card-terms").props.value, validDraft.terms_and_conditions);
+  assert.equal(aiButton(h).props.disabled, true);
+  assert.equal(usagePreview(h).props.instructions, "");
   assert.match(h.html(), /Generating…/);
   assert.match(h.html(), /motion-safe:animate-spin/);
-  assert.match(h.html(), /<button disabled="">Next/);
-  resolve({ terms: "Generated terms after a streamed response." });
-  await pending;
-  h.render();
-  assert.equal(h.find((node) => node.props["aria-controls"] === "card-terms").props.disabled, false);
-  assert.equal(h.find((node) => node.props.id === "card-terms").props.readOnly, false);
+  const save = h.find((node) => React.Children.toArray(node.props.children).includes("Save card draft"));
+  assert.equal(save.props.disabled, true);
+  resolve({ instructions: "Generated instructions after a streamed response." });
+  await pending; h.render();
+  assert.equal(aiButton(h).props.disabled, false);
+});
+
+test("new standalone cards save generated usage alongside unchanged default terms", async () => {
+  const h = await wizard({ draftMode: false, draft: null });
+  await review(h);
+  await aiButton(h).props.onClick(); h.render();
+  await h.click("Create card");
+  assert.equal(h.saved[0].business_id, "business-b");
+  assert.equal(h.saved[0].usage_instructions, "Generated instructions for this card.");
+  assert.equal(h.saved[0].terms_and_conditions, DEFAULT_CARD_TERMS);
 });
 
 for (const message of [
-  "AI is busy right now. Please try again in a moment.", // 429
-  "AI credits are exhausted for this workspace.", // 402
+  "AI is busy right now. Please try again in a moment.",
+  "AI credits are exhausted for this workspace.",
   "AI is not configured for this project.",
   "Network request failed",
 ]) {
-  test(`AI error preserves existing terms and allows retry: ${message}`, async () => {
+  test(`AI error preserves previous usage and terms and allows retry: ${message}`, async () => {
     let fail = true;
-    const h = await wizard({ generate: async () => {
+    const original = "Previously reviewed card instructions.";
+    const h = await wizard({ draft: { ...validDraft, usage_instructions: original }, generate: async () => {
       if (fail) throw new Error(message);
-      return { terms: "New terms after a successful retry." };
+      return { instructions: "New instructions after a successful retry." };
     } });
-    for (let i = 0; i < 3; i++) await h.click("Next");
-    await h.find((node) => node.props["aria-controls"] === "card-terms").props.onClick();
-    h.render();
-    assert.equal(h.find((node) => node.props.id === "card-terms").props.value, validDraft.terms_and_conditions);
-    assert.equal(h.find((node) => node.props["aria-controls"] === "card-terms").props.disabled, false);
-    assert.deepEqual(h.errors, [["Could not generate terms", { description: message }]]);
+    await review(h);
+    await aiButton(h).props.onClick(); h.render();
+    assert.equal(usagePreview(h).props.instructions, original);
+    assert.equal(aiButton(h).props.disabled, false);
+    assert.deepEqual(h.errors, [["Could not generate card instructions", { description: message }]]);
     fail = false;
-    await h.find((node) => node.props["aria-controls"] === "card-terms").props.onClick();
-    h.render();
-    assert.equal(h.find((node) => node.props.id === "card-terms").props.value, "New terms after a successful retry.");
+    await aiButton(h).props.onClick(); h.render();
+    assert.equal(usagePreview(h).props.instructions, "New instructions after a successful retry.");
+    await h.click("Save card draft");
+    assert.equal(h.saved[0].terms_and_conditions, validDraft.terms_and_conditions);
   });
 }
 
-test("late AI responses cannot overwrite terms after going back or unmounting", async () => {
+test("late AI responses cannot insert instructions after going back or unmounting", async () => {
   for (const leave of ["back", "unmount"]) {
     let resolve;
     const h = await wizard({ generate: () => new Promise((done) => { resolve = done; }) });
-    for (let i = 0; i < 3; i++) await h.click("Next");
-    const pending = h.find((node) => node.props["aria-controls"] === "card-terms").props.onClick();
+    await review(h);
+    const pending = aiButton(h).props.onClick();
     if (leave === "back") { await h.click("Back"); await h.click("Next"); }
     else h.unmount();
-    resolve({ terms: "Stale generated terms must not be inserted." });
-    await pending;
-    h.render();
-    assert.equal(h.find((node) => node.props.id === "card-terms").props.value, validDraft.terms_and_conditions);
+    resolve({ instructions: "Stale instructions must not be inserted." });
+    await pending; h.render();
+    assert.equal(usagePreview(h).props.instructions, "");
     assert.equal(h.errors.length, 0);
   }
 });
 
-test("invalid AI output does not replace the current terms", async () => {
-  const h = await wizard({ generate: async () => ({ terms: " " }) });
-  for (let i = 0; i < 3; i++) await h.click("Next");
-  await h.find((node) => node.props["aria-controls"] === "card-terms").props.onClick();
-  h.render();
-  assert.equal(h.find((node) => node.props.id === "card-terms").props.value, validDraft.terms_and_conditions);
-  assert.equal(h.errors[0][1].description, "The AI returned invalid terms. Please try again.");
+test("invalid AI output does not replace saved instructions", async () => {
+  const h = await wizard({ draft: { ...validDraft, usage_instructions: "Existing approved instructions." }, generate: async () => ({ instructions: " " }) });
+  await review(h);
+  await aiButton(h).props.onClick(); h.render();
+  assert.equal(usagePreview(h).props.instructions, "Existing approved instructions.");
+  assert.equal(h.errors[0][1].description, "The AI returned invalid instructions. Please try again.");
+});
+
+test("editing steps invalidates AI copy; unchanged cards retain it across edit and onboarding", async () => {
+  for (const draftMode of [true, false]) {
+    const h = await wizard({ draftMode, edit: !draftMode, draft: { ...validDraft, usage_instructions: "Saved usage instructions." } });
+    await review(h);
+    assert.equal(usagePreview(h).props.instructions, "Saved usage instructions.");
+    await h.click("Back"); await h.click("Back");
+    h.find((node) => node.props.id === "card-total-steps").props.onChange({ target: { value: "10" } });
+    h.render();
+    await h.click("Next"); await h.click("Next");
+    assert.equal(usagePreview(h).props.instructions, "");
+    await h.click(draftMode ? "Save card draft" : "Save changes");
+    assert.equal(h.saved[0].usage_instructions, null);
+    assert.equal(h.saved[0].terms_and_conditions, validDraft.terms_and_conditions);
+  }
+});
+
+test("approved AI usage is safely rendered inside the same collapsed public section", () => {
+  const props = { totalSteps: 8, rewards: [], instructions: "Show My QR. <script>alert(1)</script>" };
+  const closed = renderToStaticMarkup(React.createElement(usageSection.CardUsageSection, props));
+  assert.match(closed, /aria-expanded="false"/);
+  assert.doesNotMatch(closed, /Show My QR/);
+  const opened = expandedUsage(props);
+  assert.match(opened, /Show My QR/);
+  assert.match(opened, /data-i18n-ignore/);
+  assert.doesNotMatch(opened, /<script>/);
 });
 
 test("draft schema no longer requires or retains descriptions", () => {

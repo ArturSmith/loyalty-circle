@@ -32,6 +32,7 @@ export const cardDraftSchema = z.object({
   active: z.boolean(),
   grid_cols: z.number().int().min(1).max(8).nullable(),
   terms_and_conditions: z.string().trim().min(10).max(20000),
+  usage_instructions: z.string().trim().min(10).max(20000).nullable().optional(),
 });
 
 export type CardDraft = z.infer<typeof cardDraftSchema>;

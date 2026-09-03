@@ -29,7 +29,7 @@ type Template = {
   total_steps: number; shape: CardShape;
   bg_color: string; accent_color: string; text_color: string;
   stamp_icon: StampIconName; logo_url: string | null; rewards: Reward[]; active: boolean; grid_cols: number | null;
-  terms_and_conditions: string; terms_version: number;
+  terms_and_conditions: string; terms_version: number; usage_instructions?: string | null;
 };
 
 type BusinessLocation = {
@@ -470,7 +470,7 @@ function BusinessPublic() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
               >
-                <CardUsageSection totalSteps={t.total_steps} rewards={t.rewards} className="mt-6" />
+                <CardUsageSection totalSteps={t.total_steps} rewards={t.rewards} instructions={t.usage_instructions} className="mt-6" />
                 <CardTermsSection
                   terms={t.terms_and_conditions}
                   className="mt-3 border-border bg-card shadow-sm"

@@ -449,6 +449,7 @@ export type Database = {
           step_size: string
           subtitle: string | null
           terms_and_conditions: string
+          usage_instructions: string | null
           terms_version: number
           text_color: string
           title: string
@@ -475,6 +476,7 @@ export type Database = {
           step_size?: string
           subtitle?: string | null
           terms_and_conditions: string
+          usage_instructions?: string | null
           terms_version?: number
           text_color?: string
           title: string
@@ -501,6 +503,7 @@ export type Database = {
           step_size?: string
           subtitle?: string | null
           terms_and_conditions?: string
+          usage_instructions?: string | null
           terms_version?: number
           text_color?: string
           title?: string
@@ -1129,6 +1132,7 @@ export type Database = {
           stamp_icon: string
           subtitle: string
           terms_and_conditions: string
+          usage_instructions: string | null
           terms_version: number
           text_color: string
           title: string
