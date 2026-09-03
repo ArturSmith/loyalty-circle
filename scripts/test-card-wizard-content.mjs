@@ -36,6 +36,9 @@ const accordion = load("src/components/ui/accordion.tsx", {
 });
 const usageSection = load("src/components/CardUsageSection.tsx", {
   "@/components/ui/accordion": accordion,
+  "@/components/ui/textarea": load("src/components/ui/textarea.tsx", {
+    "@/lib/utils": load("src/lib/utils.ts"),
+  }),
   "@/lib/card-usage": usage,
   "@/lib/utils": load("src/lib/utils.ts"),
 });
@@ -271,6 +274,53 @@ test("AI is offered for usage on review, never for terms; saves instructions sep
     assert.equal(h.saved[0].usage_instructions, generated.trim());
     assert.equal(h.saved[0].terms_and_conditions, validDraft.terms_and_conditions);
   }
+});
+
+test("owners can write usage instructions by hand and save them without AI", async () => {
+  const h = await wizard({ draftMode: false, edit: true });
+  await review(h);
+  const section = usagePreview(h);
+  // The field starts empty, offering the calculated milestones as a placeholder.
+  assert.equal(section.props.instructions, "");
+  assert.equal(typeof section.props.onInstructionsChange, "function");
+  const written = "Show your QR at the till. We stamp it, you drink free coffee sooner.";
+  section.props.onInstructionsChange(written); h.render();
+  assert.equal(usagePreview(h).props.instructions, written);
+  assert.equal(h.generationRequests.length, 0);
+  await h.click("Save changes");
+  assert.equal(h.saved[0].usage_instructions, written);
+  assert.equal(h.saved[0].terms_and_conditions, validDraft.terms_and_conditions);
+});
+
+test("the editable field shows the calculated milestones as its placeholder", () => {
+  const html = renderToStaticMarkup(
+    React.cloneElement(
+      usageSection.CardUsageSection({
+        totalSteps: 10,
+        rewards: [{ step: 10, label: "Free haircut" }],
+        instructions: "",
+        onInstructionsChange: () => {},
+      }),
+      { value: "usage" },
+    ),
+  );
+  assert.match(html, /<textarea/);
+  assert.match(html, /placeholder="[^"]*Collect stamps when the business scans your customer QR\./);
+  assert.match(html, /placeholder="[^"]*After step 9 you will get voucher for/);
+  // Editing replaces the read-only rendering rather than duplicating it.
+  assert.doesNotMatch(html, /<ul/);
+});
+
+test("hand-written usage is discarded when the steps it describes change", async () => {
+  const h = await wizard({ draftMode: false, edit: true });
+  await review(h);
+  usagePreview(h).props.onInstructionsChange("Collect eight stamps for a free coffee."); h.render();
+  assert.match(usagePreview(h).props.instructions, /eight stamps/);
+  await h.click("Back"); await h.click("Back");
+  h.find((node) => node.props.id === "card-total-steps").props.onChange({ target: { value: "12" } });
+  h.render();
+  await h.click("Next"); await h.click("Next");
+  assert.equal(usagePreview(h).props.instructions, "");
 });
 
 test("generation shows a spinner, prevents duplicate requests and blocks saving until resolved", async () => {

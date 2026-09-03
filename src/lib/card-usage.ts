@@ -63,6 +63,26 @@ export function getCardUsageRewards(
   return result;
 }
 
+/** The platform-calculated description shown when a card has no saved copy.
+ * Mirrors the milestone list rendered by CardUsageSection, so an owner who
+ * starts editing begins from exactly what customers already see.
+ */
+export function getDefaultCardUsageInstructions(
+  totalSteps: number,
+  rewards: readonly Reward[] | null | undefined,
+): string {
+  const milestones = getCardUsageRewards(totalSteps, rewards);
+  if (milestones.length === 0) {
+    return totalSteps > 0
+      ? "Collect stamps when the business scans your customer QR."
+      : "This card has no stamp steps.";
+  }
+  return [
+    "Collect stamps when the business scans your customer QR.",
+    ...milestones.map(({ afterStep, label }) => `After step ${afterStep} you will get voucher for ‘${label}’.`),
+  ].join("\n");
+}
+
 /** Keep the numeric milestones platform-calculated, including previously saved
  * AI copy. Only recognize the documented sentence format when the complete
  * reward list matches the card, in order; never guess at unrelated prose.

@@ -598,6 +598,7 @@ export function CardWizard(props: Props) {
                 <div className="space-y-2">
                   <CardUsageSection totalSteps={totalSteps} rewards={rewards}
                     instructions={usageInstructions} open={usageOpen} onOpenChange={setUsageOpen}
+                    onInstructionsChange={(value) => setGeneratedUsage({ text: value, source: usageSource })}
                     headerAction={
                       <Button type="button" variant="outline" size="sm"
                         className="h-7 shrink-0 gap-1 rounded-lg px-1.5 text-[10px] shadow-none min-[360px]:px-2 min-[360px]:text-[11px] [&_svg]:size-3"
@@ -608,7 +609,7 @@ export function CardWizard(props: Props) {
                       </Button>
                     } />
                   <p className="text-xs text-muted-foreground">
-                    AI generates usage instructions in English from this card’s steps and rewards. Review before saving. Terms stay unchanged.
+                    Write the usage instructions yourself, or generate an English draft with AI from this card’s steps and rewards. Review before saving. Terms stay unchanged.
                   </p>
                 </div>
                 <div className="flex items-center justify-between rounded-lg border-2 border-border p-3">
