@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { sendContactMessage } from "@/lib/contact.functions";
 import { z } from "zod";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
@@ -37,19 +39,38 @@ function ContactPage() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const pending = useRef(false);
+  const submission = useRef<{ payload: string; id: string } | null>(null);
+  const sendMessage = useServerFn(sendContactMessage);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (pending.current) return;
     const parsed = contactSchema.safeParse({ name, email, message });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0].message);
       return;
     }
+    pending.current = true;
     setSending(true);
-    const subject = encodeURIComponent(`ClubCarder — message from ${parsed.data.name}`);
-    const body = encodeURIComponent(`${parsed.data.message}\n\n—\nFrom: ${parsed.data.name} <${parsed.data.email}>`);
-    window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${body}`;
-    setTimeout(() => setSending(false), 800);
+    setSent(false);
+    try {
+      const payload = JSON.stringify(parsed.data);
+      if (submission.current?.payload !== payload) {
+        submission.current = { payload, id: crypto.randomUUID() };
+      }
+      const result = await sendMessage({ data: { ...parsed.data, submissionId: submission.current.id } });
+      if (!result.sent) throw new Error("Message was not sent");
+      setMessage("");
+      submission.current = null;
+      setSent(true);
+    } catch {
+      toast.error("Couldn't send your message. Please try again shortly.");
+    } finally {
+      pending.current = false;
+      setSending(false);
+    }
   };
 
   return (
@@ -90,8 +111,8 @@ function ContactPage() {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="rounded-2xl border border-border/70 bg-secondary/30 p-6">
-          <div className="space-y-4">
+        <form onSubmit={handleSubmit} aria-busy={sending} className="rounded-2xl border border-border/70 bg-secondary/30 p-6">
+          <fieldset disabled={sending} className="min-w-0 space-y-4">
             <div>
               <Label htmlFor="name">Name</Label>
               <Input id="name" value={name} onChange={(e) => setName(e.target.value)} maxLength={100} placeholder="Jane Doe" />
@@ -102,13 +123,17 @@ function ContactPage() {
             </div>
             <div>
               <Label htmlFor="message">Message</Label>
-              <Textarea id="message" value={message} onChange={(e) => setMessage(e.target.value)} maxLength={2000} rows={6} placeholder="How can we help?" />
+              <Textarea id="message" value={message} onChange={(e) => { setMessage(e.target.value); setSent(false); }} maxLength={2000} rows={6} placeholder="How can we help?" />
             </div>
             <Button type="submit" disabled={sending} className="w-full h-11">
-              {sending ? "Opening email…" : "Send message"}
+              {sending ? "Sending message…" : "Send message"}
             </Button>
-            <p className="text-xs text-muted-foreground text-center">This opens your email app pre-filled to {SUPPORT_EMAIL}.</p>
-          </div>
+            {sent ? (
+              <p role="status" className="text-sm text-primary text-center">Message sent. We'll reply to the email address you provided.</p>
+            ) : (
+              <p className="text-xs text-muted-foreground text-center">Your message is sent directly to our support team.</p>
+            )}
+          </fieldset>
         </form>
       </main>
     </div>

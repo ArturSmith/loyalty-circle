@@ -5,6 +5,7 @@ const contactSchema = z.object({
   name: z.string().trim().min(1).max(100),
   email: z.string().trim().email().max(255),
   message: z.string().trim().min(5).max(2000),
+  submissionId: z.string().uuid(),
 })
 
 export const sendContactMessage = createServerFn({ method: 'POST' })
@@ -14,7 +15,7 @@ export const sendContactMessage = createServerFn({ method: 'POST' })
     const result = await sendTemplateEmail('contact-message', 'support@clubcarder.com', {
       templateData: { name: data.name, email: data.email, message: data.message },
       replyTo: data.email,
-      idempotencyKey: `contact-${data.email}-${Math.floor(Date.now() / 60000)}`,
+      idempotencyKey: `contact-${data.submissionId}`,
     })
     return result
   })
