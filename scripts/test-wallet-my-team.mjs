@@ -218,7 +218,7 @@ test("business profile removes the card prompt and keeps the stack close to the 
   assert.match(source, /Loyalty cards could not be loaded/);
   assert.match(source, /No loyalty cards available right now/);
   assert.match(source, /OrnamentDivider className="mx-auto mt-4 w-40 opacity-60"/);
-  assert.match(source, /<section className="mt-3" aria-label="Loyalty cards">/);
+  assert.match(source, /<section className="business-public-cards mt-3" aria-label="Loyalty cards">/);
   // Keep the responsive stack's reserved space so it cannot overlap the
   // usage and terms widgets below it while tightening the gap above it.
   assert.match(source, /className="aspect-\[1\.586\/1\]"/);

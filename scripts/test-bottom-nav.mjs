@@ -98,3 +98,68 @@ test("detail pages still do not display the shared tab bar", () => {
     assert.equal(isTabRoute(path), false);
   }
 });
+
+test("desktop app navigation includes details but not marketing or auth screens", () => {
+  const { isCustomerAppRoute, isTabRoute } = navigation();
+  for (const path of ["/wallet", "/chats/", "/chats/thread", "/discover/category/Coffee", "/b/business", "/workspace", "/notifications"]) {
+    assert.equal(isCustomerAppRoute(path), true, path);
+  }
+  for (const path of ["/", "/auth", "/pricing", "/business", "/business/onboarding", "/help", "/contact"]) {
+    assert.equal(isCustomerAppRoute(path), false, path);
+  }
+  assert.equal(isTabRoute("/chats/"), true);
+  const html = renderToStaticMarkup(React.createElement(navigation().BottomNav, { desktopOnly: true }));
+  assert.match(html, /hidden md:block/);
+  assert.match(html, /app-navigation-brand/);
+  assert.match(html, /ClubCarder/);
+});
+
+test("website navigation and content spacing activate at the same tablet breakpoint", () => {
+  const css = read("src/styles.css");
+  assert.match(css, /@media \(min-width: 768px\)/);
+  assert.match(css, /#app-scroll\.responsive-app-shell \{ padding-top: var\(--app-desktop-header\)/);
+  assert.match(css, /\.responsive-app-shell \.tab-screen-header \{ top: var\(--app-desktop-header\)/);
+  assert.match(css, /\.app-navigation \{\s*top: 0;\s*bottom: auto;/);
+  assert.match(css, /html\.capacitor-native \.business-desktop-navigation \{ top: var\(--safe-top\)/);
+  assert.match(read("src/routes/__root.tsx"), /desktopOnly=\{!isTabRoute\(pathname\)\}/);
+});
+
+test("business website navigation retains business selection without changing Wallet and Workspace destinations", () => {
+  const destinations = [];
+  const module = { exports: {} };
+  const compiled = ts.transpileModule(read("src/components/business/BusinessDesktopNavigation.tsx"), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true },
+  }).outputText;
+  new Function("require", "module", "exports", compiled)((name) => name === "@tanstack/react-router" ? {
+    Link: ({ to, search, children }) => {
+      destinations.push({ to, search });
+      return React.createElement("a", { href: to }, children);
+    },
+  } : require(name), module, module.exports);
+  renderToStaticMarkup(React.createElement(module.exports.BusinessDesktopNavigation, { businessId: "selected" }));
+  assert.deepEqual(destinations, [
+    { to: "/business", search: { businessId: "selected" } },
+    { to: "/business/menu", search: { businessId: "selected" } },
+    { to: "/workspace", search: {} },
+    { to: "/wallet", search: {} },
+  ]);
+});
+
+test("content adapts through layouts, not global font shrinking or oversized cards", () => {
+  const wallet = read("src/routes/_authenticated/wallet.tsx");
+  assert.match(wallet, /wallet-layout/);
+  assert.match(wallet, /wallet-overview/);
+  assert.match(wallet, /wallet-cards/);
+  assert.match(wallet, /new ResizeObserver\(measure\)/);
+  assert.match(wallet, /element.clientWidth \/ 1.586/);
+  assert.match(wallet, /const CARD_H = cardHeight/);
+  assert.match(wallet, /observer.disconnect\(\)/);
+  assert.match(read("src/routes/_authenticated/vouchers.tsx"), /md:grid-cols-2.*lg:grid-cols-3/);
+  assert.match(read("src/routes/_authenticated/profile.tsx"), /md:grid md:grid-cols-2/);
+  assert.match(read("src/routes/_authenticated/business.index.tsx"), /md:basis-1\/2 lg:basis-1\/3/);
+  assert.match(read("src/routes/_authenticated/business.index.tsx"), /setSnapCount\(api.scrollSnapList\(\).length\)/);
+  assert.match(read("src/routes/_authenticated/business.index.tsx"), /api.on\("reInit", syncCarousel\)/);
+  assert.match(read("src/routes/_authenticated/business.index.tsx"), /snapCount > 1/);
+  assert.match(read("src/routes/discover.tsx"), /group.businesses.slice\(0, 2\)/);
+  assert.match(read("src/components/QrDisplay.tsx"), /h-full! w-full!/);
+});

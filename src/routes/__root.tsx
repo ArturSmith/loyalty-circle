@@ -15,7 +15,8 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "sonner";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
-import { BottomNav, isTabRoute } from "@/components/BottomNav";
+import { BottomNav, isTabRoute, isCustomerAppRoute } from "@/components/BottomNav";
+import { BusinessDesktopNavigation } from "@/components/business/BusinessDesktopNavigation";
 import { clearTabCaches } from "@/lib/tabCache";
 import { PullToRefresh } from "@/components/PullToRefresh";
 import { LanguageProvider } from "@/i18n";
@@ -94,6 +95,10 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 function RootComponent() {
+  const appLocation = useRouterState({ select: (state) => state.location });
+  const isBusinessScreen = appLocation.pathname === "/business" || appLocation.pathname.startsWith("/business/") ||
+    (appLocation.pathname.startsWith("/chats/") && (appLocation.search as { scope?: string }).scope === "business");
+  const hasDesktopNavigation = isBusinessScreen || isCustomerAppRoute(appLocation.pathname);
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
   const [refreshVersion, setRefreshVersion] = useState(0);
@@ -169,14 +174,15 @@ function RootComponent() {
   return (
     <LanguageProvider>
       <QueryClientProvider client={queryClient}>
-        <PaymentTestModeBanner />
         {/* Shared bottom safe-area padding on mobile. In the native shell this
             is also the scroll container; on web the document scrolls as usual. */}
-        <div id="app-scroll">
+        <div id="app-scroll" className={hasDesktopNavigation ? "responsive-app-shell" : undefined}>
+          <PaymentTestModeBanner />
           <Outlet key={refreshVersion} />
         </div>
         <PullToRefresh onRefresh={refreshApp} />
         <PersistentBottomNav />
+        {isBusinessScreen && <BusinessDesktopNavigation businessId={(appLocation.search as { businessId?: string }).businessId} />}
         <Toaster position="top-center" richColors />
       </QueryClientProvider>
     </LanguageProvider>
@@ -190,7 +196,8 @@ function RootComponent() {
  * repaint mid-navigation — the visible "jump" when moving between tabs.
  */
 function PersistentBottomNav() {
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-  if (!isTabRoute(pathname)) return null;
-  return <BottomNav />;
+  const { pathname, search } = useRouterState({ select: (s) => s.location });
+  if (pathname.startsWith("/chats/") && (search as { scope?: string }).scope === "business") return null;
+  if (!isCustomerAppRoute(pathname)) return null;
+  return <BottomNav desktopOnly={!isTabRoute(pathname)} />;
 }

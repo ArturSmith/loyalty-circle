@@ -93,8 +93,8 @@ function DiscoverCategory() {
       }
     >
       {!coords && asked ? (
-        <div className="mx-auto mt-4 max-w-3xl px-5">
-          <div className="flex items-center justify-between gap-3 rounded-2xl border border-border glass-panel px-4 py-3">
+        <div className="mx-auto mt-4 max-w-6xl px-5 md:px-8">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border glass-panel px-4 py-3">
             <p className="text-sm text-muted-foreground">{locationMessage}</p>
             {status !== "denied" ? (
               <Button
@@ -115,7 +115,7 @@ function DiscoverCategory() {
       {loading ? (
         <PageLoader />
       ) : businesses.length > 0 ? (
-        <div className="mx-auto mt-6 grid max-w-3xl gap-4 px-5 sm:grid-cols-2">
+        <div className="mx-auto mt-6 grid max-w-6xl gap-4 px-5 sm:grid-cols-2 lg:grid-cols-3 md:px-8">
           {businesses.map((business) => (
             <DiscoverBusinessTile key={business.business_id} business={business} />
           ))}

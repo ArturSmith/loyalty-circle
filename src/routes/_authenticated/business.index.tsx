@@ -67,6 +67,7 @@ function BusinessDashboard() {
   const [showQr, setShowQr] = useState(false);
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
+  const [snapCount, setSnapCount] = useState(0);
   const [flipped, setFlipped] = useState<Set<string>>(new Set());
   const permissions = useBusinessPermissions(biz?.id);
 
@@ -175,8 +176,17 @@ function BusinessDashboard() {
 
   useEffect(() => {
     if (!api) return;
-    setCurrent(api.selectedScrollSnap());
-    api.on("select", () => setCurrent(api.selectedScrollSnap()));
+    const syncCarousel = () => {
+      setCurrent(api.selectedScrollSnap());
+      setSnapCount(api.scrollSnapList().length);
+    };
+    syncCarousel();
+    api.on("select", syncCarousel);
+    api.on("reInit", syncCarousel);
+    return () => {
+      api.off("select", syncCarousel);
+      api.off("reInit", syncCarousel);
+    };
   }, [api]);
 
   const downloadBusinessQr = async () => {
@@ -219,7 +229,7 @@ function BusinessDashboard() {
   const isOwner = permissions.isOwner;
 
   return (
-    <div className="min-h-screen px-5 py-6 max-w-3xl mx-auto">
+    <div className="min-h-screen px-5 py-6 max-w-6xl mx-auto md:px-8 md:py-8">
       <header className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <p className="min-w-0 text-xs uppercase tracking-widest text-muted-foreground">Dashboard</p>
         <div className="order-2 flex min-w-0 basis-full flex-wrap items-center gap-2">
@@ -358,7 +368,7 @@ function BusinessDashboard() {
           >
             <CarouselContent className="-ml-3">
               {tpls.map((t) => (
-                <CarouselItem key={t.id} className="basis-full pl-3">
+                <CarouselItem key={t.id} className="basis-full pl-3 md:basis-1/2 lg:basis-1/3">
                   <Link
                     to="/business/cards/$id"
                     params={{ id: t.id }}
@@ -402,9 +412,9 @@ function BusinessDashboard() {
               ))}
             </CarouselContent>
 
-            {tpls.length > 1 && (
+            {snapCount > 1 && (
               <div className="mt-4 flex justify-center gap-2">
-                {tpls.map((_, i) => (
+                {Array.from({ length: snapCount }, (_, i) => (
                   <button
                     key={i}
                     onClick={() => api?.scrollTo(i)}

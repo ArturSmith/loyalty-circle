@@ -100,8 +100,8 @@ function Discover() {
         </Button>
       }
     >
-      <div className="mx-auto mt-4 max-w-3xl px-5">
-        <div className="relative">
+      <div className="mx-auto mt-4 max-w-6xl px-5 md:px-8">
+        <div className="relative md:max-w-xl">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={query}
@@ -115,8 +115,8 @@ function Discover() {
 
 
       {!coords && asked && (
-        <div className="mx-auto mt-4 max-w-3xl px-5">
-          <div className="flex items-center justify-between gap-3 rounded-2xl glass-panel border border-border px-4 py-3">
+        <div className="mx-auto mt-4 max-w-6xl px-5 md:px-8">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl glass-panel border border-border px-4 py-3">
             <p className="text-sm text-muted-foreground">
               {status === "denied"
                 ? "Location is blocked. Allow it in your browser or device settings to sort by what's closest."
@@ -150,7 +150,7 @@ function Discover() {
           </p>
         </div>
       ) : (
-        <div className="mx-auto mt-6 max-w-3xl space-y-8">
+        <div className="mx-auto mt-6 max-w-6xl space-y-8 xl:grid xl:grid-cols-2 xl:gap-8 xl:space-y-0">
           {groups.map((group) => (
             <section key={group.category} aria-label={group.category}>
               <div className="flex items-center justify-between gap-3 px-5">
@@ -166,7 +166,7 @@ function Discover() {
                   </Button>
                 ) : null}
               </div>
-              <div className="mt-3 grid gap-4 px-5 sm:grid-cols-2">
+              <div className="mt-3 grid gap-4 px-5 sm:grid-cols-2 xl:grid-cols-1">
                 {group.businesses.slice(0, 2).map((business) => (
                   <DiscoverBusinessTile key={business.business_id} business={business} />
                 ))}

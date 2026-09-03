@@ -32,11 +32,11 @@ export function DiscoverStrip() {
 
   return (
     <section className="relative pt-2 pb-4" aria-label="Discover loyalty cards">
-      <Link to="/discover" className="mx-auto flex max-w-md items-center justify-between gap-2 px-5">
-        <h2 className="flex items-center gap-2 font-display text-lg font-bold">
-          <Compass className="h-4 w-4" /> {coords ? "Nearby loyalty programs" : "Discover loyalty programs"}
+      <Link to="/discover" className="mx-auto flex max-w-md items-center justify-between gap-2 px-5 md:px-0">
+        <h2 className="flex min-w-0 items-center gap-2 font-display text-lg font-bold md:text-base lg:text-lg">
+          <Compass className="h-4 w-4 shrink-0" /> {coords ? "Nearby loyalty programs" : "Discover loyalty programs"}
         </h2>
-        <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-muted-foreground">
+        <span className="inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap text-xs font-semibold text-muted-foreground">
           See all <ChevronRight className="h-3.5 w-3.5" />
         </span>
       </Link>
@@ -50,7 +50,7 @@ export function DiscoverStrip() {
           </div>
         ) : (
           cards.map((card) => (
-            <DiscoverCardTile key={card.template_id} card={card} compact className="first:ml-5 last:mr-5" />
+            <DiscoverCardTile key={card.template_id} card={card} compact className="first:ml-5 last:mr-5 md:first:ml-0 md:last:mr-0" />
           ))
         )}
       </div>

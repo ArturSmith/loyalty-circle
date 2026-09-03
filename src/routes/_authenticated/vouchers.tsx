@@ -132,8 +132,8 @@ function VouchersPage() {
       title="Vouchers"
       subtitle={unusedCount > 0 ? `${unusedCount} ready to use` : "Rewards you unlock appear here"}
     >
-      <div className="mx-auto w-full max-w-md px-5 pt-5">
-        <div className="flex rounded-full border border-border p-1 text-sm">
+      <div className="mx-auto w-full max-w-md px-5 pt-5 md:max-w-6xl md:px-8">
+        <div className="flex rounded-full border border-border p-1 text-sm md:max-w-sm">
           {(["unused", "used"] as const).map((t) => (
             <button
               key={t}
@@ -148,11 +148,11 @@ function VouchersPage() {
           ))}
         </div>
 
-        <div className="mt-5 space-y-3">
+        <div className="mt-5 space-y-3 md:grid md:grid-cols-2 md:items-start md:gap-4 md:space-y-0 lg:grid-cols-3">
           {loading && <PageLoader />}
 
           {!loading && list.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
+            <div className="col-span-full rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
               {tab === "unused" ? "No vouchers yet — keep collecting stamps." : "No used vouchers yet."}
             </div>
           )}

@@ -73,7 +73,7 @@ function BusinessChatsContent() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+      <header className="tab-screen-header sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
         <div className="mx-auto flex min-h-[56px] w-full max-w-3xl items-center gap-3 px-3 py-3">
           <Button variant="ghost" size="icon" asChild aria-label="Back to dashboard">
             <Link to="/business" search={{ businessId }}>

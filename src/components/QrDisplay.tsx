@@ -22,7 +22,9 @@ export function QrDisplay({ value, size = 240, className }: { value: string; siz
     >
       <canvas
         ref={canvasRef}
-        className={`h-full w-full ${ready ? "opacity-100 transition-opacity" : "opacity-0"}`}
+        // The QR library writes fixed inline dimensions. Override those display
+        // dimensions so narrow dialogs can shrink the canvas with its wrapper.
+        className={`h-full! w-full! ${ready ? "opacity-100 transition-opacity" : "opacity-0"}`}
       />
     </div>
   );

@@ -17,23 +17,34 @@ const items = [
  * nav, so this matches exact paths rather than prefixes.
  */
 export function isTabRoute(pathname: string) {
-  return items.some((item) => item.to === pathname);
+  return items.some((item) => item.to === pathname.replace(/\/$/, ""));
 }
 
-export function BottomNav() {
+/** Desktop keeps app navigation available on customer detail screens too. */
+export function isCustomerAppRoute(pathname: string) {
+  const path = pathname.replace(/\/$/, "");
+  return isTabRoute(path) || path.startsWith("/chats/") || path.startsWith("/discover/") ||
+    path.startsWith("/b/") || ["/notifications", "/workspace", "/scan", "/settings/billing", "/subscribe"].includes(path);
+}
+
+export function BottomNav({ desktopOnly = false }: { desktopOnly?: boolean }) {
   const unusedVouchers = useUnusedVoucherCount();
   const unreadChats = useUnreadChatCount();
 
   return (
     <nav
       aria-label="Main navigation"
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-40"
+      className={`app-navigation pointer-events-none fixed inset-x-0 bottom-0 z-40 ${desktopOnly ? "hidden md:block" : ""}`}
       style={{
         paddingBottom: "var(--safe-bottom)",
         paddingLeft: "max(0.75rem, var(--safe-left))",
         paddingRight: "max(0.75rem, var(--safe-right))",
       }}
     >
+      <div className="app-navigation-inner">
+      <div className="app-navigation-brand hidden md:flex" data-i18n-ignore>
+        <CreditCard className="h-7 w-7 text-primary" aria-hidden="true" /> <span className="hidden lg:inline">ClubCarder</span>
+      </div>
       <ul className="glass-tab-bar pointer-events-auto mx-auto mb-3 grid max-w-md grid-cols-5 gap-0.5 p-1">
         {items.map(({ to, label, icon: Icon }) => {
           const badge = to === "/vouchers" ? unusedVouchers : to === "/chats" ? unreadChats : 0;
@@ -64,6 +75,7 @@ export function BottomNav() {
           );
         })}
       </ul>
+      </div>
     </nav>
   );
 }

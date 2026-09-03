@@ -140,7 +140,7 @@ function CustomersContent() {
       ) : undefined}
       contentClassName="flex-1 px-5 py-6"
     >
-      <div className="mx-auto w-full max-w-3xl">
+      <div className="mx-auto w-full max-w-6xl">
         {loading ? (
           <PageLoader />
         ) : error ? (

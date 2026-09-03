@@ -45,7 +45,7 @@ function Workspace() {
       backAction={<BackButton label="Back to profile" onClick={() => navigate({ to: "/profile" })} />}
       contentClassName="flex-1 px-5 py-6"
     >
-      <div className="mx-auto w-full max-w-md">
+      <div className="mx-auto w-full max-w-md md:max-w-6xl">
 
         {failed && <p role="alert" className="mb-4 text-sm text-destructive">Workspaces couldn’t be loaded.</p>}
         {businesses.length === 0 && !failed ? (
@@ -57,7 +57,7 @@ function Workspace() {
             </Link>
           </section>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-3 md:grid md:grid-cols-2 md:gap-4 md:space-y-0 lg:grid-cols-3">
             {businesses.map((business) => (
               <Link
                 key={business.id}

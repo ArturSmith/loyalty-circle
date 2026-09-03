@@ -155,7 +155,7 @@ function Profile() {
 
   return (
     <TabScreen title="Profile">
-      <div className="flex-1 px-6 py-4 max-w-md mx-auto w-full">
+      <div className="flex-1 px-6 py-4 max-w-md mx-auto w-full md:max-w-5xl md:py-8">
         {businessSubmitted && (
           <section role="status" className="mb-5 rounded-2xl border border-primary/20 bg-primary/5 p-4">
             <h2 className="font-semibold">Sent for moderation</h2>
@@ -166,7 +166,8 @@ function Profile() {
         {loading || !profile ? (
           <PageLoader />
         ) : (
-          <>
+          <div className="md:grid md:grid-cols-2 md:items-start md:gap-8 lg:gap-12">
+            <div className="min-w-0">
             <div className="flex flex-col items-center">
               <button
                 type="button"
@@ -266,6 +267,8 @@ function Profile() {
               )}
             </section>
 
+            </div>
+            <div className="min-w-0">
             <BusinessSection profile={profile} />
 
             <section className="mt-6 flex items-center justify-between gap-4 rounded-2xl glass-panel p-4">
@@ -291,7 +294,8 @@ function Profile() {
             <Button variant="ghost" onClick={signOut} className="mt-6 w-full gap-2 text-muted-foreground">
               <LogOut className="h-4 w-4" /> Sign out
             </Button>
-          </>
+            </div>
+          </div>
         )}
       </div>
     </TabScreen>

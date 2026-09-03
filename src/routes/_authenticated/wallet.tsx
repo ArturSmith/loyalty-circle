@@ -69,6 +69,18 @@ function Wallet() {
   const arrangingRef = useRef(false);
   const autoRefreshingRef = useRef<Set<string>>(new Set());
   const cardStackScrollRef = useRef<HTMLDivElement>(null);
+  const stackMeasureRef = useRef<HTMLDivElement>(null);
+  const [cardHeight, setCardHeight] = useState(220);
+
+  useEffect(() => {
+    const element = stackMeasureRef.current;
+    if (!element) return;
+    const measure = () => setCardHeight(element.clientWidth / 1.586);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [loading, instances.length > 0]);
 
   const fetchWallet = useServerFn(getWalletCards);
   const saveCardOrder = useServerFn(saveWalletCardOrder);
@@ -334,8 +346,8 @@ function Wallet() {
   if (loading) return <ScreenLoader />;
 
   return (
-    <div className="relative min-h-screen flex flex-col overflow-hidden pb-24">
-      <TabTransition className="flex flex-1 flex-col">
+    <div className="relative min-h-screen flex flex-col overflow-hidden pb-24 md:pb-0">
+      <TabTransition className="wallet-layout flex flex-1 flex-col">
       <header className="relative flex items-center justify-between gap-3 px-5 py-4">
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <Link to="/profile" aria-label="Open your profile" className="shrink-0">
@@ -358,6 +370,7 @@ function Wallet() {
 
       </header>
 
+      <div className="wallet-overview">
       {!profileLoading && profile && missingProfileFields.length > 0 ? (
         <section className="relative px-5 pb-3" aria-labelledby="complete-profile-title">
           <motion.div
@@ -437,7 +450,9 @@ function Wallet() {
       )}
 
       <DiscoverStrip />
+      </div>
 
+      <div className="wallet-cards flex flex-1 flex-col">
       {instances.length > 0 && (
         <section className="relative px-5 pt-6" aria-label="My cards">
           <div className="mx-auto flex max-w-md items-center justify-between gap-3">
@@ -480,7 +495,7 @@ function Wallet() {
           onClick={() => setExpandedId(null)}
         >
           {(() => {
-            const CARD_H = 220;
+            const CARD_H = cardHeight;
             const PEEK = 56;
             const TIGHT = 34;
             const GAP = 14;
@@ -491,7 +506,7 @@ function Wallet() {
                 : (displayInstances.length - 1) * PEEK + CARD_H + 40;
 
             return (
-              <div className="relative mx-auto max-w-md" style={{ height: totalHeight }}>
+              <div ref={stackMeasureRef} className="relative mx-auto max-w-md" style={{ height: totalHeight }}>
                 {displayInstances.map((inst, i) => {
                   const isExpanded = i === expandedIndex;
                   let top: number;
@@ -616,9 +631,7 @@ function Wallet() {
 
         </>
       )}
-
-
-
+      </div>
       <AnimatePresence>
         {arranging && (
           <motion.div

@@ -331,7 +331,7 @@ function BusinessPublic() {
 
   return (
     <div className="min-h-screen bg-background px-4 py-10">
-      <div className="mx-auto max-w-md">
+      <div className={`mx-auto max-w-md ${activeTemplate ? "business-public-layout" : ""}`}>
         <Button
           variant="ghost"
           className="mb-3 -ml-2 gap-2"
@@ -344,7 +344,7 @@ function BusinessPublic() {
         </Button>
 
         <div
-          className="rounded-t-3xl px-5 pb-3 pt-6 text-center"
+          className="business-public-hero rounded-t-3xl px-5 pb-3 pt-6 text-center"
           style={businessInfoStyle}
         >
           {business?.logo_url ? (
@@ -399,7 +399,7 @@ function BusinessPublic() {
           const stackOffset = Math.max(0, displayedTemplates.length - 1) * 56;
 
           return (
-            <section className="mt-3" aria-label="Loyalty cards">
+            <section className="business-public-cards mt-3" aria-label="Loyalty cards">
               <div className="relative">
                 {/* StampCard is responsive, so reserve its real aspect-ratio
                     height plus every visible stack offset. A fixed pixel
@@ -560,6 +560,7 @@ function BusinessPublic() {
           );
         })() : null}
 
+        <div className="business-public-details min-w-0">
         {locations.length > 0 && (
           <section className="mt-10">
             <h2 className="font-display text-xl font-bold">
@@ -690,6 +691,7 @@ function BusinessPublic() {
             </ul>
           </section>
         )}
+        </div>
       </div>
     </div>
   );
