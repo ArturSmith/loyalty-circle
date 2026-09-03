@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { Reward } from "@/components/StampCard";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { getCardUsageRewards } from "@/lib/card-usage";
@@ -10,6 +11,7 @@ export function CardUsageSection({
   instructions,
   open,
   onOpenChange,
+  headerAction,
   className,
 }: {
   totalSteps: number;
@@ -17,6 +19,7 @@ export function CardUsageSection({
   instructions?: string | null;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  headerAction?: ReactNode;
   className?: string;
 }) {
   const milestones = getCardUsageRewards(totalSteps, rewards);
@@ -26,9 +29,15 @@ export function CardUsageSection({
       onValueChange={onOpenChange ? (value) => onOpenChange(value === "usage") : undefined}
       className={cn("rounded-2xl border border-border bg-card", className)}>
       <AccordionItem value="usage" className="border-0">
-        <AccordionTrigger className="gap-3 px-4 py-4 text-sm font-semibold hover:no-underline">
-          How to use this card
-        </AccordionTrigger>
+        <div className={cn(headerAction && "relative flex items-center gap-2 pl-3 pr-9 sm:pl-4 [&>h3]:min-w-0")}>
+          <AccordionTrigger className={cn(
+            "gap-3 px-4 py-4 text-sm font-semibold hover:no-underline",
+            headerAction && "min-w-0 gap-0 px-0 [&>svg]:absolute [&>svg]:right-3",
+          )}>
+            How to use this card
+          </AccordionTrigger>
+          {headerAction}
+        </div>
         <AccordionContent className="px-4">
           {instructions?.trim() ? (
             <p data-i18n-ignore className="whitespace-pre-wrap break-words text-sm leading-relaxed text-muted-foreground">

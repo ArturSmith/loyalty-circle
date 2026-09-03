@@ -595,13 +595,16 @@ export function CardWizard(props: Props) {
                 </div>
                 <div className="space-y-2">
                   <CardUsageSection totalSteps={totalSteps} rewards={rewards}
-                    instructions={usageInstructions} open={usageOpen} onOpenChange={setUsageOpen} />
-                  <Button type="button" variant="outline" className="w-full gap-2 sm:w-auto"
-                    onClick={generateUsageWithAI} disabled={generatingUsage}
-                    aria-busy={generatingUsage} aria-label="Generate card instructions with AI">
-                    {generatingUsage ? <Spinner size={16} label={null} /> : <Sparkles className="h-4 w-4" aria-hidden="true" />}
-                    <span aria-live="polite">{generatingUsage ? "Generating…" : "Generate with AI"}</span>
-                  </Button>
+                    instructions={usageInstructions} open={usageOpen} onOpenChange={setUsageOpen}
+                    headerAction={
+                      <Button type="button" variant="outline" size="sm"
+                        className="h-7 shrink-0 gap-1 rounded-lg px-1.5 text-[10px] shadow-none min-[360px]:px-2 min-[360px]:text-[11px] [&_svg]:size-3"
+                        onClick={generateUsageWithAI} disabled={generatingUsage}
+                        aria-busy={generatingUsage} aria-label="Generate card instructions with AI">
+                        {generatingUsage ? <Spinner size={12} label={null} /> : <Sparkles aria-hidden="true" />}
+                        <span aria-live="polite">{generatingUsage ? "Generating…" : "Generate with AI"}</span>
+                      </Button>
+                    } />
                   <p className="text-xs text-muted-foreground">
                     AI generates usage instructions in English from this card’s steps and rewards. Review before saving. Terms stay unchanged.
                   </p>

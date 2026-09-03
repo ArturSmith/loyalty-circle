@@ -157,7 +157,7 @@ async function wizard({ draftMode = true, draft = validDraft, edit = false, gene
   };
   const nodes = (node = tree) =>
     React.isValidElement(node)
-      ? [node, ...React.Children.toArray(node.props.children).flatMap((child) => nodes(child))]
+      ? [node, ...React.Children.toArray(node.props.children).flatMap((child) => nodes(child)), ...nodes(node.props.headerAction ?? null)]
       : [];
   const find = (predicate) => nodes().find(predicate);
   const click = async (label) => {
@@ -224,6 +224,26 @@ test("cards ignore legacy descriptions and default the corner to the business na
 const aiButton = (h) => h.find((node) => node.props["aria-label"] === "Generate card instructions with AI");
 const usagePreview = (h) => h.find((node) => node.type === usageSection.CardUsageSection);
 async function review(h) { for (let i = 0; i < 4; i++) await h.click("Next"); }
+
+test("compact AI button is beside the usage heading, outside the accordion toggle", async () => {
+  const h = await wizard();
+  await review(h);
+  const button = aiButton(h);
+  assert.equal(usagePreview(h).props.headerAction, button);
+  assert.equal(button.props.size, "sm");
+  assert.match(button.props.className, /h-7/);
+  assert.match(button.props.className, /shrink-0/);
+  assert.doesNotMatch(button.props.className, /w-full/);
+  const html = h.html();
+  // The independent AI action is after the heading and before the collapsed
+  // content, never a nested button or a child of the heading's toggle.
+  assert.match(html, /How to use this card[\s\S]*?<\/button><\/h3><button[^>]*aria-label="Generate card instructions with AI"/);
+  assert.ok(html.indexOf('aria-label="Generate card instructions with AI"') < html.indexOf('role="region"'));
+  assert.match(html, /aria-expanded="false"/);
+  await button.props.onClick(); h.render();
+  assert.equal(h.generationRequests.length, 1);
+  assert.equal(usagePreview(h).props.open, true);
+});
 
 test("AI is offered for usage on review, never for terms; saves instructions separately", async () => {
   for (const draftMode of [true, false]) {
