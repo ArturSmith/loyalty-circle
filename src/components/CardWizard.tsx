@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { ScreenLoader } from "@/components/Spinner";
+import { ScreenLoader, Spinner } from "@/components/Spinner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,11 +12,12 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { StampCard, STAMP_ICONS } from "@/components/StampCard";
 import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
-import { ArrowLeft, ArrowRight, Check, Trash2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Sparkles, Trash2 } from "lucide-react";
 import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { BackButton } from "@/components/BackButton";
 import { CardUsageSection } from "@/components/CardUsageSection";
 import { DEFAULT_CARD_TERMS, type CardDraft } from "@/lib/card-draft";
+import { generateCardTerms } from "@/lib/card-terms.functions";
 
 const PRESETS = [
   { bg: "#faf7ee", accent: "#1a1a2e", text: "#1a1a2e" },
@@ -61,6 +63,9 @@ export function CardWizard(props: Props) {
   const draftMode = !!onDraftComplete;
   const isEdit = !!templateId;
   const navigate = useNavigate();
+  const generateTerms = useServerFn(generateCardTerms);
+  const termsRequest = useRef({ id: 0, pending: false });
+  const [generatingTerms, setGeneratingTerms] = useState(false);
   const [businessId, setBusinessId] = useState<string | null>(null);
   const [businessName, setBusinessName] = useState(draftBusinessName);
   const [step, setStep] = useState(0);
@@ -156,6 +161,46 @@ export function CardWizard(props: Props) {
     })();
   }, [navigate, isEdit, selectedBusinessId, templateId, draftMode, draft, draftBusinessName]);
 
+  useEffect(() => () => {
+    // Ignore an in-flight answer after leaving the wizard.
+    termsRequest.current.id += 1;
+    termsRequest.current.pending = false;
+  }, []);
+
+  const generateTermsWithAI = async () => {
+    if (termsRequest.current.pending) return;
+    termsRequest.current.pending = true;
+    const requestId = ++termsRequest.current.id;
+    setGeneratingTerms(true);
+    try {
+      const result = await generateTerms({
+        data: {
+          businessName,
+          title,
+          subtitle: subtitle || null,
+          totalSteps,
+          rewards: rewards.filter((reward) => reward.step >= 1 && reward.step <= totalSteps && reward.label.trim()),
+        },
+      });
+      if (termsRequest.current.id !== requestId) return;
+      const generated = result.terms.trim();
+      if (generated.length < 10 || generated.length > 20000) {
+        throw new Error("The AI returned invalid terms. Please try again.");
+      }
+      setTerms(generated);
+    } catch (error) {
+      if (termsRequest.current.id !== requestId) return;
+      toast.error("Could not generate terms", {
+        description: error instanceof Error ? error.message : "Please try again.",
+      });
+    } finally {
+      if (termsRequest.current.id === requestId) {
+        termsRequest.current.pending = false;
+        setGeneratingTerms(false);
+      }
+    }
+  };
+
   const { bg, accent, text } = customColors ?? PRESETS[preset];
 
   const save = async () => {
@@ -234,6 +279,10 @@ export function CardWizard(props: Props) {
   if (loading) return <ScreenLoader />;
 
   const goBack = () => {
+    // A late answer must not overwrite terms for a subsequently edited card.
+    termsRequest.current.id += 1;
+    termsRequest.current.pending = false;
+    setGeneratingTerms(false);
     if (step > 0) { setShowErrors(false); setStep(step - 1); return; }
     if (onCancel) { onCancel(); return; }
     navigate({ to: "/business", search: selectedBusinessId ? { businessId: selectedBusinessId } : {} });
@@ -248,7 +297,7 @@ export function CardWizard(props: Props) {
           <h1 className="font-display text-2xl font-semibold">{stepsLabels[step]}</h1>
         </div>
         {isEdit && (
-          <Button variant="ghost" size="icon" aria-label="Delete card" className="text-destructive" onClick={remove} title="Delete card">
+          <Button variant="ghost" size="icon" aria-label="Delete card" className="text-destructive" onClick={remove} title="Delete card" disabled={generatingTerms}>
             <Trash2 className="h-4 w-4" />
           </Button>
         )}
@@ -510,9 +559,26 @@ export function CardWizard(props: Props) {
                   <p className="mt-1 text-xs text-muted-foreground">
                     Customers must read and accept these terms before adding the card to any wallet.
                   </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="mt-3 w-full gap-2 sm:w-auto"
+                    onClick={generateTermsWithAI}
+                    disabled={generatingTerms}
+                    aria-busy={generatingTerms}
+                    aria-controls="card-terms"
+                  >
+                    {generatingTerms ? <Spinner size={16} label={null} /> : <Sparkles className="h-4 w-4" aria-hidden="true" />}
+                    <span aria-live="polite">{generatingTerms ? "Generating…" : "Generate with AI"}</span>
+                  </Button>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    AI generates an English draft and replaces the text below. Review it before saving.
+                  </p>
                   <Textarea
                     id="card-terms"
                     required
+                    readOnly={generatingTerms}
+                    aria-busy={generatingTerms}
                     aria-invalid={showErrors && terms.trim().length < 10}
                     value={terms}
                     onChange={(event) => setTerms(event.target.value)}
@@ -551,7 +617,7 @@ export function CardWizard(props: Props) {
             <ArrowLeft className="h-4 w-4" /> Back
           </Button>
           {step < stepsLabels.length - 1 ? (
-            <Button onClick={() => {
+            <Button disabled={generatingTerms} onClick={() => {
               setShowErrors(true);
               if (step === 0 && title.trim().length === 0) { toast.error("Add a card title"); return; }
               if (step === 3 && terms.trim().length < 10) { toast.error("Add terms and conditions for this card"); return; }

@@ -64,11 +64,13 @@ const control =
   ({ children, variant, size, ...props }) =>
     React.createElement(tag, props, children);
 
-async function wizard({ draftMode = true, draft = validDraft, edit = false } = {}) {
+async function wizard({ draftMode = true, draft = validDraft, edit = false, generate = async () => ({ terms: "Generated terms for this card." }) } = {}) {
   const states = [],
     effects = [],
     saved = [],
-    queries = [];
+    queries = [],
+    generationRequests = [],
+    errors = [];
   let cursor = 0,
     tree;
   const fakeReact = {
@@ -82,6 +84,11 @@ async function wizard({ draftMode = true, draft = validDraft, edit = false } = {
           states[index] = typeof value === "function" ? value(states[index]) : value;
         },
       ];
+    },
+    useRef(initial) {
+      const index = cursor++;
+      if (!(index in states)) states[index] = { current: initial };
+      return states[index];
     },
     useEffect(fn) {
       effects.push(fn);
@@ -115,11 +122,16 @@ async function wizard({ draftMode = true, draft = validDraft, edit = false } = {
   const { CardWizard } = load("src/components/CardWizard.tsx", {
     react: fakeReact,
     "@tanstack/react-router": { useNavigate: () => () => {} },
+    "@tanstack/react-start": { useServerFn: (fn) => fn },
+    "@/lib/card-terms.functions": { generateCardTerms: async ({ data }) => {
+      generationRequests.push(data);
+      return generate(data);
+    } },
     "@/integrations/supabase/client": { supabase },
     "@/components/StampCard": stamp,
     "@/lib/card-draft": cardDraft,
     "@/components/CardUsageSection": usageSection,
-    "@/components/Spinner": { ScreenLoader: () => null },
+    "@/components/Spinner": load("src/components/Spinner.tsx", { "@/lib/utils": load("src/lib/utils.ts") }),
     "@/components/ui/button": { Button: control("button") },
     "@/components/ui/input": { Input: control("input") },
     "@/components/ui/textarea": { Textarea: control("textarea") },
@@ -127,7 +139,7 @@ async function wizard({ draftMode = true, draft = validDraft, edit = false } = {
     "@/components/ui/switch": { Switch: () => null },
     "@/components/OrnamentDivider": { OrnamentDivider: () => null },
     "@/components/BackButton": { BackButton: () => null },
-    sonner: { toast: { error: () => {}, success: () => {} } },
+    sonner: { toast: { error: (...args) => errors.push(args), success: () => {} } },
   });
   const props = draftMode
     ? {
@@ -159,11 +171,15 @@ async function wizard({ draftMode = true, draft = validDraft, edit = false } = {
   };
   render();
   effects[0]();
+  const cleanup = effects[1]?.();
   await new Promise(setImmediate);
   render();
   return {
     saved,
     queries,
+    generationRequests,
+    errors,
+    unmount: () => cleanup?.(),
     render,
     find,
     click,
@@ -202,6 +218,110 @@ test("cards ignore legacy descriptions and default the corner to the business na
   );
   assert.match(html, /Custom corner/);
   assert.doesNotMatch(html, /My Café/);
+});
+
+test("AI terms generation sends the selected business and current card and inserts an editable draft", async () => {
+  for (const draftMode of [true, false]) {
+    const generated = "  Collect stamps and redeem your Free coffee voucher.  ";
+    const h = await wizard({
+      draftMode,
+      edit: !draftMode,
+      draft: { ...validDraft, rewards: [{ step: 8, label: "Free coffee" }, { step: 12, label: "Removed step" }] },
+      generate: async () => ({ terms: generated }),
+    });
+    assert.equal(h.find((node) => node.props["aria-controls"] === "card-terms"), undefined);
+    for (let i = 0; i < 3; i++) await h.click("Next");
+    await h.find((node) => node.props["aria-controls"] === "card-terms").props.onClick();
+    h.render();
+    assert.deepEqual(h.generationRequests, [{
+      businessName: draftMode ? "Onboarding Café" : "Business B",
+      title: validDraft.title,
+      subtitle: validDraft.subtitle,
+      totalSteps: 8,
+      rewards: [{ step: 8, label: "Free coffee" }],
+    }]);
+    const terms = h.find((node) => node.props.id === "card-terms");
+    assert.equal(terms.props.value, generated.trim());
+    assert.equal(terms.props.readOnly, false);
+    assert.equal(h.saved.length, 0); // Generation alone never publishes/saves a card.
+    terms.props.onChange({ target: { value: "Reviewed and edited by the owner." } });
+    h.render();
+    await h.click("Next");
+    await h.click(draftMode ? "Save card draft" : "Save changes");
+    assert.equal(h.saved[0].terms_and_conditions, "Reviewed and edited by the owner.");
+  }
+});
+
+test("generation shows a spinner, prevents duplicate requests and preserves terms until success", async () => {
+  let resolve;
+  const h = await wizard({ generate: () => new Promise((done) => { resolve = done; }) });
+  for (let i = 0; i < 3; i++) await h.click("Next");
+  const button = h.find((node) => node.props["aria-controls"] === "card-terms");
+  const pending = button.props.onClick();
+  await button.props.onClick(); // Same-frame duplicate, before React has rerendered.
+  h.render();
+  assert.equal(h.generationRequests.length, 1);
+  assert.equal(h.find((node) => node.props["aria-controls"] === "card-terms").props.disabled, true);
+  assert.equal(h.find((node) => node.props.id === "card-terms").props.readOnly, true);
+  assert.equal(h.find((node) => node.props.id === "card-terms").props.value, validDraft.terms_and_conditions);
+  assert.match(h.html(), /Generating…/);
+  assert.match(h.html(), /motion-safe:animate-spin/);
+  assert.match(h.html(), /<button disabled="">Next/);
+  resolve({ terms: "Generated terms after a streamed response." });
+  await pending;
+  h.render();
+  assert.equal(h.find((node) => node.props["aria-controls"] === "card-terms").props.disabled, false);
+  assert.equal(h.find((node) => node.props.id === "card-terms").props.readOnly, false);
+});
+
+for (const message of [
+  "AI is busy right now. Please try again in a moment.", // 429
+  "AI credits are exhausted for this workspace.", // 402
+  "AI is not configured for this project.",
+  "Network request failed",
+]) {
+  test(`AI error preserves existing terms and allows retry: ${message}`, async () => {
+    let fail = true;
+    const h = await wizard({ generate: async () => {
+      if (fail) throw new Error(message);
+      return { terms: "New terms after a successful retry." };
+    } });
+    for (let i = 0; i < 3; i++) await h.click("Next");
+    await h.find((node) => node.props["aria-controls"] === "card-terms").props.onClick();
+    h.render();
+    assert.equal(h.find((node) => node.props.id === "card-terms").props.value, validDraft.terms_and_conditions);
+    assert.equal(h.find((node) => node.props["aria-controls"] === "card-terms").props.disabled, false);
+    assert.deepEqual(h.errors, [["Could not generate terms", { description: message }]]);
+    fail = false;
+    await h.find((node) => node.props["aria-controls"] === "card-terms").props.onClick();
+    h.render();
+    assert.equal(h.find((node) => node.props.id === "card-terms").props.value, "New terms after a successful retry.");
+  });
+}
+
+test("late AI responses cannot overwrite terms after going back or unmounting", async () => {
+  for (const leave of ["back", "unmount"]) {
+    let resolve;
+    const h = await wizard({ generate: () => new Promise((done) => { resolve = done; }) });
+    for (let i = 0; i < 3; i++) await h.click("Next");
+    const pending = h.find((node) => node.props["aria-controls"] === "card-terms").props.onClick();
+    if (leave === "back") { await h.click("Back"); await h.click("Next"); }
+    else h.unmount();
+    resolve({ terms: "Stale generated terms must not be inserted." });
+    await pending;
+    h.render();
+    assert.equal(h.find((node) => node.props.id === "card-terms").props.value, validDraft.terms_and_conditions);
+    assert.equal(h.errors.length, 0);
+  }
+});
+
+test("invalid AI output does not replace the current terms", async () => {
+  const h = await wizard({ generate: async () => ({ terms: " " }) });
+  for (let i = 0; i < 3; i++) await h.click("Next");
+  await h.find((node) => node.props["aria-controls"] === "card-terms").props.onClick();
+  h.render();
+  assert.equal(h.find((node) => node.props.id === "card-terms").props.value, validDraft.terms_and_conditions);
+  assert.equal(h.errors[0][1].description, "The AI returned invalid terms. Please try again.");
 });
 
 test("draft schema no longer requires or retains descriptions", () => {
