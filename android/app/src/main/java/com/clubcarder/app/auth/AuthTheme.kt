@@ -26,7 +26,7 @@ object AuthColors {
     val Muted = Color(0xFF7C8797)
     val Border = Color(0xFFE3E7EC)
     val Input = Color(0xFFF7F8FA)
-    val Primary = Color(0xFF3583F5)
+    val Primary = Color(0xFF012B96)
     val OnPrimary = Color(0xFFFFFFFF)
     val Error = Color(0xFFC62828)
     val ErrorBackground = Color(0xFFFFF1F1)

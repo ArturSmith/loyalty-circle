@@ -55,8 +55,8 @@
   --ink: oklch(0.24 0.02 255);            /* near-black slate */
   --slate: oklch(0.62 0.02 255);          /* #94a3b8-ish */
 
-  --blue: oklch(0.62 0.19 258);           /* #3b82f6 */
-  --blue-strong: oklch(0.55 0.19 258);
+  --blue: #012B96;
+  --blue-strong: color-mix(in srgb, var(--blue) 85%, black);
 
   --background: var(--paper);
   --foreground: var(--ink);
@@ -89,8 +89,8 @@
   --card-foreground: oklch(0.97 0.004 250);
   --popover: oklch(0.23 0.016 255);
   --popover-foreground: oklch(0.97 0.004 250);
-  --primary: oklch(0.68 0.17 258);
-  --primary-foreground: oklch(0.16 0.02 255);
+  --primary: var(--blue);
+  --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.27 0.016 255);
   --secondary-foreground: oklch(0.97 0.004 250);
   --muted: oklch(0.26 0.014 255);
@@ -99,7 +99,7 @@
   --accent-foreground: oklch(0.97 0.004 250);
   --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 14%);
-  --ring: oklch(0.68 0.17 258);
+  --ring: color-mix(in srgb, var(--blue) 60%, white);
 }
 
 @layer base {

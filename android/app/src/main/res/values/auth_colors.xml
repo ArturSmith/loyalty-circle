@@ -6,7 +6,7 @@
     <color name="auth_muted">#7C8797</color>
     <color name="auth_border">#E3E7EC</color>
     <color name="auth_input">#F7F8FA</color>
-    <color name="auth_primary">#3583F5</color>
+    <color name="auth_primary">#012B96</color>
     <color name="auth_error">#C62828</color>
     <color name="auth_error_background">#FFF1F1</color>
 </resources>
