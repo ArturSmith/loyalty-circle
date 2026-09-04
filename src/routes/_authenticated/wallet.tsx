@@ -342,7 +342,7 @@ function Wallet() {
   return (
     <div className="relative min-h-screen flex flex-col overflow-x-clip pb-24 md:pb-0">
       <TabTransition className="wallet-layout flex flex-1 flex-col">
-      <header className="wallet-topbar sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-border bg-card/95 px-5 py-4 backdrop-blur supports-[backdrop-filter]:bg-card/80 md:relative md:z-auto md:border-b-0 md:bg-transparent md:backdrop-blur-none md:supports-[backdrop-filter]:bg-transparent">
+      <header className="wallet-topbar sticky top-0 z-30 mb-4 flex items-center justify-between gap-3 border-b border-border bg-card/95 px-5 py-4 backdrop-blur supports-[backdrop-filter]:bg-card/80 md:relative md:z-auto md:mb-0 md:border-b-0 md:bg-transparent md:backdrop-blur-none md:supports-[backdrop-filter]:bg-transparent">
         <div className="flex min-w-0 flex-1 items-center gap-3 md:hidden">
           <Link to="/profile" aria-label="Open your profile" className="shrink-0">
             <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full glass-panel border border-border text-xs font-bold">
