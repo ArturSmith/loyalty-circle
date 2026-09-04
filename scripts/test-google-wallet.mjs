@@ -93,17 +93,36 @@ test("escaped newlines in the deployed private key are restored to a real PEM", 
   });
 });
 
-test("logos Google cannot rasterise are dropped instead of failing the class write", () => {
+test("logos Google cannot rasterise are rejected before they reach the API", () => {
   withWalletEnv(BASE_ENV, ({ usableLogoUrl }) => {
     // The card editor accepts SVG uploads, but Google rejects them outright.
     assert.equal(usableLogoUrl("https://cdn.example.com/logo.svg"), null);
     assert.equal(usableLogoUrl("https://cdn.example.com/logo.svg?v=2"), null);
+    // Google fetches this URL server-side, so it must be publicly https.
     assert.equal(usableLogoUrl("http://cdn.example.com/logo.png"), null, "must be https");
     assert.equal(usableLogoUrl(null), null);
     assert.equal(
       usableLogoUrl("https://cdn.example.com/logo.png"),
       "https://cdn.example.com/logo.png",
     );
+  });
+});
+
+test("a class always carries a program logo, since the API refuses one without", () => {
+  const source = read("src/lib/googleWallet.server.ts");
+  const build = source.slice(source.indexOf("export async function ensureLoyaltyClass"));
+  const body = build.slice(0, build.indexOf("const existing = await walletFetch"));
+
+  // "LoyaltyClass cannot be created without a program logo" — so an unusable
+  // business logo cannot simply be omitted, it has to fall back.
+  assert.match(body, /programLogo:/, "programLogo is required by the API");
+  assert.doesNotMatch(body, /if \(logoUrl\)/, "it must never be conditional");
+  assert.match(body, /logoUrl \?\? FALLBACK_PROGRAM_LOGO/);
+
+  withWalletEnv(BASE_ENV, ({ FALLBACK_PROGRAM_LOGO, usableLogoUrl }) => {
+    // The fallback is itself sent to Google, so it must satisfy the same rules
+    // every other logo does — a non-PNG or http fallback would fail every card.
+    assert.equal(usableLogoUrl(FALLBACK_PROGRAM_LOGO), FALLBACK_PROGRAM_LOGO);
   });
 });
 

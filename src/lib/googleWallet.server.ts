@@ -158,11 +158,18 @@ function hexColor(value: string | null | undefined, fallback: string): string {
 }
 
 /**
- * Google rasterises `programLogo` itself and rejects anything it cannot decode.
- * Business logos here are frequently SVG (the card editor accepts SVG uploads),
- * and a rejected image fails the whole class write — so unsupported formats are
- * dropped rather than sent. The pass simply renders without a logo.
+ * Google requires `programLogo` on every loyalty class and rasterises it
+ * itself, rejecting anything it cannot decode — including SVG, which the card
+ * editor happily accepts for business logos.
+ *
+ * So an unusable logo cannot simply be omitted: that fails the class write with
+ * "LoyaltyClass cannot be created without a program logo". Falling back to the
+ * ClubCarder mark keeps the pass creatable, and the card still carries the
+ * business's own name, colours and title.
  */
+export const FALLBACK_PROGRAM_LOGO = "https://clubcarder.com/logo.png";
+
+/** The business's own logo, if Google can actually render it. */
 export function usableLogoUrl(url: string | null | undefined): string | null {
   if (!url) return null;
   if (!/^https:\/\//i.test(url)) return null;
@@ -182,6 +189,7 @@ export type ClassInput = {
 
 export async function ensureLoyaltyClass(config: WalletConfig, input: ClassInput): Promise<string> {
   const id = classIdFor(config, input.templateId);
+  const logoUrl = usableLogoUrl(input.logoUrl);
   const body: Record<string, unknown> = {
     id,
     issuerName: input.businessName,
@@ -189,14 +197,17 @@ export async function ensureLoyaltyClass(config: WalletConfig, input: ClassInput
     reviewStatus: REVIEW_STATUS,
     hexBackgroundColor: hexColor(input.accentColor, "#1a1a2e"),
     homepageUri: { uri: input.homepageUrl, description: "Open in ClubCarder" },
+    // Required by the API — always sent, never conditional.
+    programLogo: {
+      sourceUri: { uri: logoUrl ?? FALLBACK_PROGRAM_LOGO },
+      contentDescription: {
+        defaultValue: {
+          language: "en-US",
+          value: logoUrl ? `${input.businessName} logo` : "ClubCarder logo",
+        },
+      },
+    },
   };
-  const logoUrl = usableLogoUrl(input.logoUrl);
-  if (logoUrl) {
-    body["programLogo"] = {
-      sourceUri: { uri: logoUrl },
-      contentDescription: { defaultValue: { language: "en-US", value: `${input.businessName} logo` } },
-    };
-  }
 
   const existing = await walletFetch(config, `/loyaltyClass/${encodeURIComponent(id)}`);
   if (existing.ok) {
