@@ -449,12 +449,12 @@ export type Database = {
           step_size: string
           subtitle: string | null
           terms_and_conditions: string
-          usage_instructions: string | null
           terms_version: number
           text_color: string
           title: string
           total_steps: number
           updated_at: string
+          usage_instructions: string | null
         }
         Insert: {
           accent_color?: string
@@ -476,12 +476,12 @@ export type Database = {
           step_size?: string
           subtitle?: string | null
           terms_and_conditions: string
-          usage_instructions?: string | null
           terms_version?: number
           text_color?: string
           title: string
           total_steps?: number
           updated_at?: string
+          usage_instructions?: string | null
         }
         Update: {
           accent_color?: string
@@ -503,12 +503,12 @@ export type Database = {
           step_size?: string
           subtitle?: string | null
           terms_and_conditions?: string
-          usage_instructions?: string | null
           terms_version?: number
           text_color?: string
           title?: string
           total_steps?: number
           updated_at?: string
+          usage_instructions?: string | null
         }
         Relationships: [
           {
@@ -1055,13 +1055,10 @@ export type Database = {
         Args: { _permission: string; _template_id: string }
         Returns: boolean
       }
+      card_has_customers: { Args: { _template_id: string }; Returns: boolean }
       claim_anonymous_card: {
         Args: { _instance_id: string; _secret: string }
         Returns: string
-      }
-      card_has_customers: {
-        Args: { _template_id: string }
-        Returns: boolean
       }
       claim_card_to_wallet: {
         Args: { _accepted_terms_version: number; _template_id: string }
@@ -1136,11 +1133,11 @@ export type Database = {
           stamp_icon: string
           subtitle: string
           terms_and_conditions: string
-          usage_instructions: string | null
           terms_version: number
           text_color: string
           title: string
           total_steps: number
+          usage_instructions: string
         }[]
       }
       get_business_dashboard_stats: {
