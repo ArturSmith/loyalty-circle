@@ -6,11 +6,6 @@
  *   GOOGLE_WALLET_SA_EMAIL        – service account email
  *   GOOGLE_WALLET_SA_PRIVATE_KEY  – service account private key (PEM, PKCS#8)
  *
- * Optional:
- *   GOOGLE_WALLET_CLASS_REVIEW_STATUS – "APPROVED" once the issuer is approved,
- *                                       otherwise classes stay restricted to
- *                                       allow-listed test accounts.
- *
  * Everything is implemented with WebCrypto + fetch so it runs on the edge runtime.
  */
 
@@ -18,12 +13,21 @@ const WALLET_API = "https://walletobjects.googleapis.com/walletobjects/v1";
 const SCOPE = "https://www.googleapis.com/auth/wallet_object.issuer";
 const SAVE_URL = "https://pay.google.com/gp/v/save/";
 
+/**
+ * The only review status callers are allowed to write.
+ *
+ * `APPROVED` is set by Google, not by us — sending it is rejected outright with
+ * `Invalid review status "APPROVED"`. Per the API reference, an already-approved
+ * class must *keep* being written as `UNDER_REVIEW`; doing so does not demote
+ * it. Whether passes reach real users is decided by issuer approval in the
+ * Wallet Console, which this field has no bearing on.
+ */
+const REVIEW_STATUS = "UNDER_REVIEW";
+
 export type WalletConfig = {
   issuerId: string;
   clientEmail: string;
   privateKey: string;
-  /** `reviewStatus` sent on every loyalty class. */
-  reviewStatus: "UNDER_REVIEW" | "APPROVED";
 };
 
 export function getWalletConfig(): WalletConfig | null {
@@ -31,15 +35,8 @@ export function getWalletConfig(): WalletConfig | null {
   const clientEmail = process.env["GOOGLE_WALLET_SA_EMAIL"];
   const privateKey = process.env["GOOGLE_WALLET_SA_PRIVATE_KEY"];
   if (!issuerId || !clientEmail || !privateKey) return null;
-  // Staging keeps the default so test passes never reach real users, while
-  // production opts in explicitly now that the issuer class was approved.
-  const reviewStatus =
-    process.env["GOOGLE_WALLET_CLASS_REVIEW_STATUS"]?.toUpperCase() === "APPROVED"
-      ? "APPROVED"
-      : "UNDER_REVIEW";
-  return { issuerId, clientEmail, privateKey: privateKey.replace(/\\n/g, "\n"), reviewStatus };
+  return { issuerId, clientEmail, privateKey: privateKey.replace(/\\n/g, "\n") };
 }
-
 
 /* ------------------------------------------------------------------ crypto */
 
@@ -189,7 +186,7 @@ export async function ensureLoyaltyClass(config: WalletConfig, input: ClassInput
     id,
     issuerName: input.businessName,
     programName: input.title,
-    reviewStatus: config.reviewStatus,
+    reviewStatus: REVIEW_STATUS,
     hexBackgroundColor: hexColor(input.accentColor, "#1a1a2e"),
     homepageUri: { uri: input.homepageUrl, description: "Open in ClubCarder" },
   };
@@ -201,21 +198,11 @@ export async function ensureLoyaltyClass(config: WalletConfig, input: ClassInput
     };
   }
 
-
   const existing = await walletFetch(config, `/loyaltyClass/${encodeURIComponent(id)}`);
   if (existing.ok) {
-    // Staging and production share an issuer, and a class id is derived only
-    // from the issuer and the template — so both environments address the very
-    // same class. A staging deploy patching `reviewStatus: UNDER_REVIEW` over a
-    // live class would un-publish it and break passes real customers already
-    // hold. Review status is therefore only ever allowed to move forwards.
-    const patch = { ...body };
-    if (existing.json?.reviewStatus === "APPROVED" && config.reviewStatus !== "APPROVED") {
-      delete patch["reviewStatus"];
-    }
     await walletFetch(config, `/loyaltyClass/${encodeURIComponent(id)}`, {
       method: "PATCH",
-      body: JSON.stringify(patch),
+      body: JSON.stringify(body),
     });
     return id;
   }

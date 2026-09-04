@@ -50,21 +50,24 @@ const BASE_ENV = {
   GOOGLE_WALLET_SA_PRIVATE_KEY: "-----BEGIN PRIVATE KEY-----\\nAAAA\\n-----END PRIVATE KEY-----",
 };
 
-const reviewStatusFor = (value) =>
-  withWalletEnv(
-    { ...BASE_ENV, GOOGLE_WALLET_CLASS_REVIEW_STATUS: value },
-    (wallet) => wallet.getWalletConfig().reviewStatus,
+test("classes are only ever written as UNDER_REVIEW, the one status callers may set", () => {
+  const source = read("src/lib/googleWallet.server.ts");
+
+  // Google rejects `APPROVED` outright ("Invalid review status") — the platform
+  // sets it itself, and an already-approved class must keep being written as
+  // UNDER_REVIEW, which does not demote it. Whether passes reach real users is
+  // decided by issuer approval in the console, not by this field.
+  assert.match(source, /const REVIEW_STATUS = "UNDER_REVIEW"/);
+  assert.match(source, /reviewStatus: REVIEW_STATUS/);
+  assert.doesNotMatch(
+    source,
+    /reviewStatus:\s*"APPROVED"|"APPROVED"\s*:\s*"UNDER_REVIEW"/,
+    "APPROVED must never be sent to the API",
   );
 
-test("an approved issuer publishes classes, everything else stays under review", () => {
-  assert.equal(reviewStatusFor("APPROVED"), "APPROVED");
-  assert.equal(reviewStatusFor("approved"), "APPROVED", "casing should not matter");
-
-  // Anything other than an explicit opt-in must stay restricted, otherwise a
-  // staging deploy would publish live passes to real users.
-  for (const value of [undefined, "", "UNDER_REVIEW", "APPROVE", "yes", "true"]) {
-    assert.equal(reviewStatusFor(value), "UNDER_REVIEW", `"${value}" must not publish`);
-  }
+  // It must also not be configurable: an env var here could only ever produce
+  // a request Google refuses.
+  assert.doesNotMatch(source, /GOOGLE_WALLET_CLASS_REVIEW_STATUS/);
 });
 
 test("missing secrets disable the feature rather than half-configuring it", () => {
@@ -232,19 +235,18 @@ test("mirroring an owned card is scoped to its owner and reuses the existing obj
   assert.match(body, /stampsCount: instance\.stamps_count/, "pass must carry the current progress");
 });
 
-test("a staging deploy cannot un-publish a live class on the shared issuer", () => {
+test("re-writing an existing class patches it rather than failing", () => {
   const source = read("src/lib/googleWallet.server.ts");
   const patched = source.slice(source.indexOf("const existing = await walletFetch"));
 
   // Staging and production share GOOGLE_WALLET_ISSUER_ID, and a class id is
   // derived only from the issuer and the template — so both environments write
-  // to the identical class. Patching UNDER_REVIEW over it would break passes
-  // customers already hold.
-  assert.match(
-    patched,
-    /reviewStatus === "APPROVED"[\s\S]{0,120}delete patch\["reviewStatus"\]/,
-    "an approved class must never be demoted by a non-approved deploy",
-  );
+  // to the identical class. That is safe here: re-sending UNDER_REVIEW to an
+  // already-approved class is the documented way to update one, and does not
+  // demote it. Card ids are UUIDs, so the only real collision risk would be
+  // staging pointing at the production database.
+  assert.match(patched, /method: "PATCH"/);
+  assert.match(patched, /method: "POST"/, "a missing class must still be created");
 });
 
 test("a frozen business's pass is deactivated rather than left presentable", () => {
