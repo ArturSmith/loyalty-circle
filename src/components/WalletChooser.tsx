@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { createWalletPass } from "@/utils/wallet.functions";
+import { openWalletSaveUrl } from "@/lib/walletSave";
 import { toast } from "sonner";
 import { Apple, Smartphone, Wallet } from "lucide-react";
 import { Spinner } from "@/components/Spinner";
@@ -49,11 +50,12 @@ export function WalletChooser({
     setBusy(true);
     try {
       const { saveUrl } = await create({ data: { templateId, acceptedTermsVersion } });
-      window.location.href = saveUrl;
+      await openWalletSaveUrl(saveUrl);
     } catch (error) {
       toast.error("Couldn't create the wallet pass", {
         description: error instanceof Error ? error.message : "Please try again.",
       });
+    } finally {
       setBusy(false);
     }
   };

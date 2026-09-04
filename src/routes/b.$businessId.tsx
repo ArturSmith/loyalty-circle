@@ -526,18 +526,26 @@ function BusinessPublic() {
                         {claiming === t.id ? "Adding…" : "Add to my wallet"}
                       </Button>
                     )}
-                    {googleWalletReady && !ownedInstanceId ? (
-                      <>
+                    {googleWalletReady ? (
+                      ownedInstanceId ? (
                         <GoogleWalletButton
-                          templateId={t.id}
-                          acceptedTermsVersion={hasAcceptedTerms ? t.terms_version : null}
-                          onTermsRequired={requestTermsAcceptance}
+                          mode="instance"
+                          instanceId={ownedInstanceId}
                           className="mt-2"
                         />
-                        <p className="mt-1.5 text-center text-[11px] text-muted-foreground">
-                          No account needed — the pass goes straight to your phone.
-                        </p>
-                      </>
+                      ) : (
+                        <>
+                          <GoogleWalletButton
+                            templateId={t.id}
+                            acceptedTermsVersion={hasAcceptedTerms ? t.terms_version : null}
+                            onTermsRequired={requestTermsAcceptance}
+                            className="mt-2"
+                          />
+                          <p className="mt-1.5 text-center text-[11px] text-muted-foreground">
+                            No account needed — the pass goes straight to your phone.
+                          </p>
+                        </>
+                      )
                     ) : null}
                   </>
                 ) : (

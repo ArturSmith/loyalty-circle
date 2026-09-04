@@ -6,6 +6,11 @@
  *   GOOGLE_WALLET_SA_EMAIL        – service account email
  *   GOOGLE_WALLET_SA_PRIVATE_KEY  – service account private key (PEM, PKCS#8)
  *
+ * Optional:
+ *   GOOGLE_WALLET_CLASS_REVIEW_STATUS – "APPROVED" once the issuer is approved,
+ *                                       otherwise classes stay restricted to
+ *                                       allow-listed test accounts.
+ *
  * Everything is implemented with WebCrypto + fetch so it runs on the edge runtime.
  */
 
@@ -17,6 +22,8 @@ export type WalletConfig = {
   issuerId: string;
   clientEmail: string;
   privateKey: string;
+  /** `reviewStatus` sent on every loyalty class. */
+  reviewStatus: "UNDER_REVIEW" | "APPROVED";
 };
 
 export function getWalletConfig(): WalletConfig | null {
@@ -24,8 +31,15 @@ export function getWalletConfig(): WalletConfig | null {
   const clientEmail = process.env["GOOGLE_WALLET_SA_EMAIL"];
   const privateKey = process.env["GOOGLE_WALLET_SA_PRIVATE_KEY"];
   if (!issuerId || !clientEmail || !privateKey) return null;
-  return { issuerId, clientEmail, privateKey: privateKey.replace(/\\n/g, "\n") };
+  // Staging keeps the default so test passes never reach real users, while
+  // production opts in explicitly now that the issuer class was approved.
+  const reviewStatus =
+    process.env["GOOGLE_WALLET_CLASS_REVIEW_STATUS"]?.toUpperCase() === "APPROVED"
+      ? "APPROVED"
+      : "UNDER_REVIEW";
+  return { issuerId, clientEmail, privateKey: privateKey.replace(/\\n/g, "\n"), reviewStatus };
 }
+
 
 /* ------------------------------------------------------------------ crypto */
 
@@ -146,6 +160,20 @@ function hexColor(value: string | null | undefined, fallback: string): string {
   return value && /^#[0-9a-f]{6}$/i.test(value) ? value : fallback;
 }
 
+/**
+ * Google rasterises `programLogo` itself and rejects anything it cannot decode.
+ * Business logos here are frequently SVG (the card editor accepts SVG uploads),
+ * and a rejected image fails the whole class write — so unsupported formats are
+ * dropped rather than sent. The pass simply renders without a logo.
+ */
+export function usableLogoUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  if (!/^https:\/\//i.test(url)) return null;
+  const path = url.split(/[?#]/)[0] ?? "";
+  if (/\.svg$/i.test(path)) return null;
+  return url;
+}
+
 export type ClassInput = {
   templateId: string;
   title: string;
@@ -161,22 +189,33 @@ export async function ensureLoyaltyClass(config: WalletConfig, input: ClassInput
     id,
     issuerName: input.businessName,
     programName: input.title,
-    reviewStatus: "UNDER_REVIEW",
+    reviewStatus: config.reviewStatus,
     hexBackgroundColor: hexColor(input.accentColor, "#1a1a2e"),
     homepageUri: { uri: input.homepageUrl, description: "Open in ClubCarder" },
   };
-  if (input.logoUrl) {
+  const logoUrl = usableLogoUrl(input.logoUrl);
+  if (logoUrl) {
     body["programLogo"] = {
-      sourceUri: { uri: input.logoUrl },
+      sourceUri: { uri: logoUrl },
       contentDescription: { defaultValue: { language: "en-US", value: `${input.businessName} logo` } },
     };
   }
 
+
   const existing = await walletFetch(config, `/loyaltyClass/${encodeURIComponent(id)}`);
   if (existing.ok) {
+    // Staging and production share an issuer, and a class id is derived only
+    // from the issuer and the template — so both environments address the very
+    // same class. A staging deploy patching `reviewStatus: UNDER_REVIEW` over a
+    // live class would un-publish it and break passes real customers already
+    // hold. Review status is therefore only ever allowed to move forwards.
+    const patch = { ...body };
+    if (existing.json?.reviewStatus === "APPROVED" && config.reviewStatus !== "APPROVED") {
+      delete patch["reviewStatus"];
+    }
     await walletFetch(config, `/loyaltyClass/${encodeURIComponent(id)}`, {
       method: "PATCH",
-      body: JSON.stringify(body),
+      body: JSON.stringify(patch),
     });
     return id;
   }
@@ -201,13 +240,17 @@ export type ObjectInput = {
   nextReward: string | null;
   claimUrl: string;
   bgColor: string | null;
+  /** A frozen business's cards cannot be stamped, so the pass is greyed out. */
+  frozen?: boolean;
+  /** Anonymous passes link to a claim page; owned cards link back to the wallet. */
+  linkLabel?: string;
 };
 
 function objectBody(config: WalletConfig, input: ObjectInput) {
   return {
     id: objectIdFor(config, input.instanceId),
     classId: input.classId,
-    state: "ACTIVE",
+    state: input.frozen ? "INACTIVE" : "ACTIVE",
     hexBackgroundColor: hexColor(input.bgColor, "#1a1a2e"),
     accountName: input.businessName,
     accountId: input.instanceId,
@@ -224,10 +267,17 @@ function objectBody(config: WalletConfig, input: ObjectInput) {
       ? [{ header: "Next reward", body: input.nextReward, id: "next_reward" }]
       : [],
     linksModuleData: {
-      uris: [{ uri: input.claimUrl, description: "Save this card to your account", id: "claim" }],
+      uris: [
+        {
+          uri: input.claimUrl,
+          description: input.linkLabel ?? "Save this card to your account",
+          id: "claim",
+        },
+      ],
     },
   };
 }
+
 
 export async function createLoyaltyObject(config: WalletConfig, input: ObjectInput): Promise<string> {
   const id = objectIdFor(config, input.instanceId);

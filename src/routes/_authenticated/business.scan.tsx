@@ -121,7 +121,7 @@ function ScanPageContent() {
     setCustomerSelection(null);
     setResult(data as unknown as Result);
     // Push the new stamp count to the customer's phone wallet pass (best effort).
-    void syncPass({ data: { instanceId } }).catch(() => {});
+    void syncPass({ data: { instanceId, environment: getPaddleEnvironment() } }).catch(() => {});
   }, [businessId, syncPass]);
 
   const onScan = useCallback(async (text: string) => {

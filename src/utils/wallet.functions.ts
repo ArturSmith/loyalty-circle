@@ -125,7 +125,13 @@ export const createWalletPass = createServerFn({ method: "POST" })
 
     await supabaseAdmin
       .from("card_instances")
-      .update({ google_object_id: objectId } as any)
+      .update({
+        google_object_id: objectId,
+        // Freshly created at zero stamps; recording it keeps the lazy repair
+        // from immediately rewriting a pass that is already correct.
+        wallet_synced_stamps: 0,
+        wallet_synced_at: new Date().toISOString(),
+      } as any)
       .eq("id", created.id);
 
     const { recordWalletPassEvent } = await import("@/lib/walletEvents.server");
@@ -141,52 +147,135 @@ export const createWalletPass = createServerFn({ method: "POST" })
     return { saveUrl, instanceId: created.id, claimUrl };
   });
 
+/**
+ * Adds a card the signed-in user *already owns* to Google Wallet.
+ *
+ * Distinct from `createWalletPass`, which mints a brand-new anonymous instance
+ * for a visitor who scanned a QR. Here the instance exists, so the pass must be
+ * built from its current stamp count and must never create a second card.
+ * Re-running this is safe: it returns a fresh save URL for the same object.
+ */
+export const createWalletPassForOwnedCard = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { instanceId: string }) => {
+    if (!data || typeof data.instanceId !== "string" || data.instanceId.length === 0) {
+      throw new Error("Card is required");
+    }
+    return { instanceId: data.instanceId };
+  })
+  .handler(async ({ data, context }): Promise<WalletPassResult> => {
+    const { getWalletConfig, ensureLoyaltyClass, createLoyaltyObject, buildSaveUrl } = await import(
+      "@/lib/googleWallet.server"
+    );
+    const { PUBLIC_SITE_URL, WALLET_SAVE_ORIGINS, nextRewardLabel } = await import(
+      "@/lib/walletFormat"
+    );
+
+    const config = getWalletConfig();
+    if (!config) throw new Error("Google Wallet is not configured yet");
+
+    // Read through the *user's* client, not the admin one: RLS is what proves
+    // the caller owns this card, so a guessed instance id returns nothing.
+    const { data: row, error } = await context.supabase
+      .from("card_instances")
+      .select(
+        "id, stamps_count, google_object_id, customer_id, template:card_templates(id, title, total_steps, rewards, accent_color, bg_color, logo_url, accepted_by_platform, business:businesses(id, name, logo_url, accepted_by_platform))",
+      )
+      .eq("id", data.instanceId)
+      .eq("customer_id", context.userId)
+      .maybeSingle();
+
+    if (error) throw error;
+    const instance = row as any;
+    if (!instance) throw new Error("Card not found in your wallet");
+
+    const tpl = instance.template;
+    const business = tpl?.business as { id: string; name: string; logo_url: string | null; accepted_by_platform: boolean } | null;
+    if (!tpl?.accepted_by_platform || !business?.accepted_by_platform) {
+      throw new Error("This card is awaiting platform review");
+    }
+
+    const classId = await ensureLoyaltyClass(config, {
+      templateId: tpl.id,
+      title: tpl.title,
+      businessName: business.name,
+      accentColor: tpl.accent_color,
+      logoUrl: tpl.logo_url ?? business.logo_url ?? null,
+      homepageUrl: `${PUBLIC_SITE_URL}/b/${business.id}`,
+    });
+
+    const walletUrl = `${PUBLIC_SITE_URL}/wallet`;
+    const objectId = await createLoyaltyObject(config, {
+      instanceId: instance.id,
+      classId,
+      businessName: business.name,
+      cardTitle: tpl.title,
+      stampsCount: instance.stamps_count,
+      totalSteps: tpl.total_steps,
+      nextReward: nextRewardLabel(tpl.rewards, instance.stamps_count),
+      claimUrl: walletUrl,
+      linkLabel: "Open in ClubCarder",
+      bgColor: tpl.bg_color,
+    });
+
+    if (instance.google_object_id !== objectId) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await supabaseAdmin
+        .from("card_instances")
+        .update({
+          google_object_id: objectId,
+          // The object was just written with this count, so record it — otherwise
+          // the lazy repair would treat a brand-new pass as stale.
+          wallet_synced_stamps: instance.stamps_count,
+          wallet_synced_at: new Date().toISOString(),
+        } as any)
+        .eq("id", instance.id);
+
+      const { recordWalletPassEvent } = await import("@/lib/walletEvents.server");
+      await recordWalletPassEvent({
+        cardInstanceId: instance.id,
+        templateId: tpl.id,
+        platform: "google",
+        event: "created",
+        objectId,
+      });
+    }
+
+    const saveUrl = await buildSaveUrl(config, objectId, WALLET_SAVE_ORIGINS);
+    return { saveUrl, instanceId: instance.id, claimUrl: walletUrl };
+  });
+
 /** Pushes the latest stamp count to the customer's Google Wallet pass. Never throws. */
 export const syncWalletPass = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { instanceId: string }) => {
+  .inputValidator((data: { instanceId: string; environment?: string }) => {
     if (!data || typeof data.instanceId !== "string") throw new Error("Card is required");
-    return { instanceId: data.instanceId };
+    return {
+      instanceId: data.instanceId,
+      environment: data.environment === "sandbox" ? "sandbox" : "live",
+    };
   })
   .handler(async ({ data }): Promise<{ synced: boolean }> => {
-    try {
-      const { getWalletConfig, updateLoyaltyObject } = await import("@/lib/googleWallet.server");
-      const { PUBLIC_SITE_URL, nextRewardLabel, claimUrlFor } = await import("@/lib/walletFormat");
-      const config = getWalletConfig();
-      if (!config) return { synced: false };
+    const { syncOnePass } = await import("@/lib/walletSync.server");
+    return { synced: await syncOnePass(data.instanceId, data.environment) };
+  });
 
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { data: row } = await supabaseAdmin
-        .from("card_instances")
-        .select(
-          "id, stamps_count, google_object_id, anon_secret, template:card_templates(id, title, total_steps, rewards, bg_color, google_class_id, business:businesses(name))",
-        )
-        .eq("id", data.instanceId)
-        .maybeSingle();
-
-      const instance = row as any;
-      if (!instance || !instance.google_object_id) return { synced: false };
-      const template = instance.template;
-      if (!template?.google_class_id) return { synced: false };
-
-      await updateLoyaltyObject(config, {
-        instanceId: instance.id,
-        classId: template.google_class_id,
-        businessName: template.business?.name ?? "ClubCarder",
-        cardTitle: template.title,
-        stampsCount: instance.stamps_count,
-        totalSteps: template.total_steps,
-        nextReward: nextRewardLabel(template.rewards, instance.stamps_count),
-        claimUrl: instance.anon_secret
-          ? claimUrlFor(instance.id, instance.anon_secret)
-          : `${PUBLIC_SITE_URL}/wallet`,
-        bgColor: template.bg_color,
-      });
-      return { synced: true };
-    } catch (error) {
-      console.error("syncWalletPass failed", error);
-      return { synced: false };
-    }
+/**
+ * Repairs any of the caller's passes that have drifted from their card.
+ *
+ * The scanner pushes each stamp as it happens, but that call is made from the
+ * cashier's device and can be lost; a business freeze changes the pass without
+ * involving the scanner at all. This is the safety net, run when the customer
+ * opens their wallet — the one moment we know they care about these cards.
+ */
+export const syncStaleWalletPasses = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data?: { environment?: string }) => ({
+    environment: data?.environment === "sandbox" ? "sandbox" : "live",
+  }))
+  .handler(async ({ data, context }): Promise<{ repaired: number }> => {
+    const { syncStalePassesForCustomer } = await import("@/lib/walletSync.server");
+    return syncStalePassesForCustomer(context.userId, data.environment);
   });
 
 export const getClaimPreview = createServerFn({ method: "POST" })

@@ -11,6 +11,7 @@ import { OrnamentDivider } from "@/components/OrnamentDivider";
 import { getPaddleEnvironment } from "@/lib/paddle";
 import { useServerFn } from "@tanstack/react-start";
 import { getWalletCards, saveWalletCardOrder, type WalletInstance } from "@/utils/cards.functions";
+import { syncStaleWalletPasses } from "@/utils/wallet.functions";
 import { invalidateUnusedVoucherCount } from "@/hooks/useUnusedVoucherCount";
 import { useProfile } from "@/hooks/useProfile";
 import { initialsFrom } from "@/lib/avatar";
@@ -210,6 +211,16 @@ function Wallet() {
       setLoading(false);
     }
   }, [fetchWallet]);
+
+  // Google Wallet passes are pushed from the cashier's device as each stamp is
+  // added, which can be lost, and a business freeze never reaches the pass at
+  // all. Opening the wallet is the moment we know these cards matter to the
+  // customer, so any drift is repaired here. Deliberately fire-and-forget and
+  // outside `load`: it must never delay or fail rendering the cards.
+  const repairPasses = useServerFn(syncStaleWalletPasses);
+  useEffect(() => {
+    void repairPasses({ data: { environment: getPaddleEnvironment() } }).catch(() => {});
+  }, [repairPasses]);
 
   const openArrangeCards = () => {
     setFrontId(null);
