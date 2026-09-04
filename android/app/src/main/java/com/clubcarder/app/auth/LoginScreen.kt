@@ -130,7 +130,7 @@ private fun AuthContent(state: LoginUiState, actions: LoginActions) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Image(
-            painter = painterResource(R.drawable.ic_clubcarder_native),
+            painter = painterResource(R.drawable.ic_clubcarder_logo),
             contentDescription = stringResource(R.string.auth_logo_description),
             modifier = Modifier.size(96.dp),
         )
