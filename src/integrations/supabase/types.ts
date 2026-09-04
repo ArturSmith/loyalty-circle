@@ -1059,6 +1059,10 @@ export type Database = {
         Args: { _instance_id: string; _secret: string }
         Returns: string
       }
+      card_has_customers: {
+        Args: { _template_id: string }
+        Returns: boolean
+      }
       claim_card_to_wallet: {
         Args: { _accepted_terms_version: number; _template_id: string }
         Returns: {

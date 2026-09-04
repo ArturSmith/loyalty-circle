@@ -247,7 +247,7 @@ export function CardWizard(props: Props) {
       : await supabase.from("card_templates").insert({ business_id: businessId!, ...payload });
     setSaving(false);
     if (error) { toast.error(error.message); return; }
-    toast.success(isEdit ? "Card changes submitted for review" : "Card submitted for review");
+    toast.success(isEdit ? "Card changes submitted for review. The card is hidden from Discover until approved." : "Card submitted for review");
     navigate({ to: "/business", search: selectedBusinessId ? { businessId: selectedBusinessId } : {} });
   };
 

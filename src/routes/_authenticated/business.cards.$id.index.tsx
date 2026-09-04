@@ -14,6 +14,7 @@ import { z } from "zod";
 import { useBusinessPermissions } from "@/hooks/useBusinessPermissions";
 import { CardTermsSection } from "@/components/CardTermsSection";
 import { getNavigationCache, invalidateNavigationCache, setNavigationCache } from "@/lib/navigationCache";
+import { CARD_IN_USE_MESSAGE, useCardEditability } from "@/hooks/useCardEditability";
 
 
 type Tpl = {
@@ -67,6 +68,7 @@ function CardDetails() {
   const [analytics, setAnalytics] = useState<{ instances: AnalyticsInstance[]; stamps: AnalyticsStamp[]; vouchers: AnalyticsVoucher[] }>(() => cached?.analytics ?? { instances: [], stamps: [], vouchers: [] });
   const [passEvents, setPassEvents] = useState<AnalyticsPassEvent[]>(() => cached?.passEvents ?? []);
   const permissions = useBusinessPermissions(businessId);
+  const editability = useCardEditability(id, permissions.has("cards.manage"));
 
 
 
@@ -256,7 +258,7 @@ function CardDetails() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <p className="text-xs uppercase tracking-widest text-muted-foreground">Card details</p>
-        {permissions.has("cards.manage") ? (
+        {permissions.has("cards.manage") && editability.canEdit === true ? (
           <Link to="/business/cards/$id/edit" params={{ id: tpl.id }} search={{ businessId: biz.id }}>
             <Button size="sm" className="rounded-full gap-2">
               <Pencil className="h-4 w-4" /> Edit
@@ -264,6 +266,12 @@ function CardDetails() {
           </Link>
         ) : <div className="w-9" />}
       </header>
+
+      {permissions.has("cards.manage") && (editability.canEdit === false || editability.error) && (
+        <p className="mt-4 text-sm text-muted-foreground" role="status">
+          {editability.error ?? CARD_IN_USE_MESSAGE}
+        </p>
+      )}
 
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mt-6">
         <StampCard

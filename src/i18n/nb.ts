@@ -1,5 +1,8 @@
 /** Norwegian Bokmål translations keyed by the existing English UI copy. */
 export const nb = {
+  "This card is already used by customers and cannot be edited. Create a new card instead.": "Dette kortet brukes allerede av kunder og kan ikke redigeres. Opprett et nytt kort i stedet.",
+  "Could not check whether this card can be edited. Please reload and try again.": "Kunne ikke sjekke om kortet kan redigeres. Last siden på nytt og prøv igjen.",
+  "Card changes submitted for review. The card is hidden from Discover until approved.": "Kortendringene er sendt til vurdering. Kortet er skjult fra Utforsk til det er godkjent.",
   // Global navigation and actions
   "Wallet": "Lommebok",
   "Vouchers": "Verdikuponger",
