@@ -121,7 +121,11 @@ function ScanPageContent() {
     setCustomerSelection(null);
     setResult(data as unknown as Result);
     // Push the new stamp count to the customer's phone wallet pass (best effort).
-    void syncPass({ data: { instanceId, environment: getPaddleEnvironment() } }).catch(() => {});
+    // A wallet that lags behind is a nuisance, not a lost stamp, so this never
+    // blocks the till - but it must not vanish silently either.
+    void syncPass({ data: { instanceId, environment: getPaddleEnvironment() } }).catch((error) => {
+      console.error("wallet pass sync failed", error);
+    });
   }, [businessId, syncPass]);
 
   const onScan = useCallback(async (text: string) => {

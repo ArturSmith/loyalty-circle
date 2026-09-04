@@ -11,8 +11,42 @@
  * and is repaired lazily, the next time the customer opens their wallet.
  */
 
-const INSTANCE_SELECT =
-  "id, stamps_count, google_object_id, anon_secret, wallet_synced_stamps, wallet_synced_at, template:card_templates(id, title, total_steps, rewards, bg_color, google_class_id, business:businesses(id, name))";
+const BASE_SELECT =
+  "id, stamps_count, google_object_id, anon_secret, template:card_templates(id, title, total_steps, rewards, bg_color, google_class_id, business:businesses(id, name))";
+
+const INSTANCE_SELECT = `${BASE_SELECT}, wallet_synced_stamps, wallet_synced_at`;
+
+/**
+ * Reads instances, tolerating a database where the lazy-sync migration has not
+ * been applied yet.
+ *
+ * This matters more than it looks: pushing a stamp to Google is the *only*
+ * thing keeping a customer's pass correct, and selecting a column that does not
+ * exist fails the whole query. Without this fallback, an unapplied migration
+ * silently stops every pass from ever updating again — the sync degrades to a
+ * no-op instead of degrading to "syncs, but does not remember that it did".
+ */
+async function selectInstances(
+  admin: Admin,
+  apply: (query: any) => any,
+): Promise<Instance[]> {
+  const withMarkers = await apply(admin.from("card_instances").select(INSTANCE_SELECT));
+  if (!withMarkers.error) return (withMarkers.data ?? []) as unknown as Instance[];
+
+  const fallback = await apply(admin.from("card_instances").select(BASE_SELECT));
+  if (fallback.error) throw fallback.error;
+
+  console.warn(
+    "wallet sync markers unavailable — apply 20260904120000_wallet_pass_lazy_sync.sql",
+  );
+  // Unknown rather than fresh: every pass looks stale and is repaired, which is
+  // the safe direction to fail in.
+  return ((fallback.data ?? []) as unknown as Instance[]).map((row) => ({
+    ...row,
+    wallet_synced_stamps: null,
+    wallet_synced_at: null,
+  }));
+}
 
 /**
  * State that is not derived from `stamps_count` — a business being frozen or
@@ -109,15 +143,21 @@ async function pushOne(
 
   // Recorded only after Google accepts the write, so a failure stays stale and
   // is retried rather than being silently marked as done.
-  const syncedMarker = {
-    wallet_synced_stamps: instance.stamps_count,
-    wallet_synced_at: new Date().toISOString(),
-    // The generated Supabase types are regenerated separately from migrations,
-    // so they do not know about the two sync columns yet.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as any;
-
-  await admin.from("card_instances").update(syncedMarker).eq("id", instance.id);
+  //
+  // The pass itself is already correct at this point, so failing to record that
+  // must not be reported as a failed sync — it only costs a redundant repair.
+  try {
+    const syncedMarker = {
+      wallet_synced_stamps: instance.stamps_count,
+      wallet_synced_at: new Date().toISOString(),
+      // The generated Supabase types are regenerated separately from migrations,
+      // so they do not know about the two sync columns yet.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
+    await admin.from("card_instances").update(syncedMarker).eq("id", instance.id);
+  } catch {
+    // Columns missing (migration not applied yet). Already warned in the read.
+  }
 
   return true;
 }
@@ -130,13 +170,9 @@ export async function syncOnePass(instanceId: string, environment: string): Prom
     if (!config) return false;
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data } = await supabaseAdmin
-      .from("card_instances")
-      .select(INSTANCE_SELECT)
-      .eq("id", instanceId)
-      .maybeSingle();
+    const rows = await selectInstances(supabaseAdmin, (query) => query.eq("id", instanceId));
 
-    const instance = data as unknown as Instance | null;
+    const instance = rows[0] ?? null;
     if (!instance?.google_object_id || !instance.template?.google_class_id) return false;
 
     const businessId = instance.template.business?.id;
@@ -165,13 +201,11 @@ export async function syncStalePassesForCustomer(
     if (!config) return { repaired: 0 };
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data } = await supabaseAdmin
-      .from("card_instances")
-      .select(INSTANCE_SELECT)
-      .eq("customer_id", customerId)
-      .not("google_object_id", "is", null);
+    const rows = await selectInstances(supabaseAdmin, (query) =>
+      query.eq("customer_id", customerId).not("google_object_id", "is", null),
+    );
 
-    const stale = ((data ?? []) as unknown as Instance[]).filter((i) => isStale(i));
+    const stale = rows.filter((i) => isStale(i));
     if (stale.length === 0) return { repaired: 0 };
 
     const batch = stale.slice(0, MAX_PER_RUN);

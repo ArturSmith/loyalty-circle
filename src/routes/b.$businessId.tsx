@@ -131,6 +131,10 @@ function BusinessPublic() {
   const [removing, setRemoving] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [ownedTemplateIds, setOwnedTemplateIds] = useState<Map<string, string>>(new Map());
+  // Card instances that already have a Google Wallet pass. Backed by
+  // `google_object_id` in the database, so this survives a reload, a new
+  // session, and a different device.
+  const [passedToGoogle, setPassedToGoogle] = useState<Set<string>>(new Set());
   const [frontTemplateId, setFrontTemplateId] = useState<string | null>(null);
   const [flippedTemplateId, setFlippedTemplateId] = useState<string | null>(null);
   const [locations, setLocations] = useState<BusinessLocation[]>([]);
@@ -171,11 +175,17 @@ function BusinessPublic() {
       if (uid) {
         const { data: owned } = await supabase
           .from("card_instances")
-          .select("id, template_id")
+          .select("id, template_id, google_object_id")
           .eq("customer_id", uid);
         const m = new Map<string, string>();
-        (owned ?? []).forEach((r: { id: string; template_id: string }) => m.set(r.template_id, r.id));
+        const inGoogle = new Set<string>();
+        (owned ?? []).forEach((r: { id: string; template_id: string; google_object_id: string | null }) => {
+          m.set(r.template_id, r.id);
+          // Persisted, so the button stays hidden across sessions and devices.
+          if (r.google_object_id) inGoogle.add(r.id);
+        });
         setOwnedTemplateIds(m);
+        setPassedToGoogle(inGoogle);
       }
       setLoading(false);
     })();
@@ -528,11 +538,20 @@ function BusinessPublic() {
                     )}
                     {googleWalletReady ? (
                       ownedInstanceId ? (
-                        <GoogleWalletButton
-                          mode="instance"
-                          instanceId={ownedInstanceId}
-                          className="mt-2"
-                        />
+                        // Once the pass exists there is nothing to add, so the
+                        // button disappears rather than offering a no-op.
+                        passedToGoogle.has(ownedInstanceId) ? null : (
+                          <GoogleWalletButton
+                            mode="instance"
+                            instanceId={ownedInstanceId}
+                            onAdded={() =>
+                              setPassedToGoogle((previous) =>
+                                new Set(previous).add(ownedInstanceId),
+                              )
+                            }
+                            className="mt-2"
+                          />
+                        )
                       ) : (
                         <>
                           <GoogleWalletButton

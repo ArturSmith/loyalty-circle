@@ -26,8 +26,11 @@ type TemplateProps = {
 type InstanceProps = {
   mode: "instance";
   instanceId: string;
-  /** Already mirrored - say so instead of implying a duplicate is coming. */
-  alreadyAdded?: boolean;
+  /**
+   * The pass now exists. Lets the caller stop offering to add it — the record
+   * lives in the database, so the button stays gone in later sessions too.
+   */
+  onAdded?: () => void;
   className?: string;
 };
 
@@ -37,7 +40,7 @@ export function GoogleWalletButton(props: TemplateProps | InstanceProps) {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
 
-  const added = props.mode === "instance" && (props.alreadyAdded || done);
+  const added = props.mode === "instance" && done;
 
   const onClick = async () => {
     if (props.mode !== "instance" && props.acceptedTermsVersion == null) {
@@ -51,6 +54,7 @@ export function GoogleWalletButton(props: TemplateProps | InstanceProps) {
       if (props.mode === "instance") {
         ({ saveUrl } = await createForInstance({ data: { instanceId: props.instanceId } }));
         setDone(true);
+        props.onAdded?.();
       } else {
         ({ saveUrl } = await createForTemplate({
           data: {

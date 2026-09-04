@@ -168,13 +168,24 @@ test("a card already in the wallet offers Google Wallet without re-accepting ter
   assert.match(
     renderToStaticMarkup(React.createElement(fresh, { mode: "instance", instanceId: "abc" })),
     /Add to Google Wallet/,
+    "an owned card needs no terms gate",
   );
-  assert.match(
-    renderToStaticMarkup(
-      React.createElement(fresh, { mode: "instance", instanceId: "abc", alreadyAdded: true }),
-    ),
-    /In Google Wallet/,
-    "an existing pass must not look like a new one",
+});
+
+test("saving an owned card tells the caller so the offer can disappear for good", async () => {
+  const calls = [];
+  let announced = 0;
+  const Component = button({}, calls);
+  await clickHandlerOf(Component, {
+    mode: "instance",
+    instanceId: "abc",
+    onAdded: () => (announced += 1),
+  })();
+
+  assert.equal(announced, 1, "the caller must learn the pass now exists");
+  assert.ok(
+    calls.some((call) => call.kind === "open"),
+    "the save URL must still be opened",
   );
 });
 
