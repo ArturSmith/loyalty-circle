@@ -23,6 +23,25 @@ import { CardUsageSection } from "@/components/CardUsageSection";
 import { invalidateTabCache } from "@/lib/tabCache";
 import { resetAppStatusBarTheme } from "@/lib/native";
 
+/**
+ * Google Wallet is parked, not removed.
+ *
+ * The end-to-end path works — passes mint, save, and sync — but three things
+ * are unresolved and are not worth shipping around:
+ *
+ *  1. `supabase/migrations/20260904120000_wallet_pass_lazy_sync.sql` has not
+ *     been applied, so passes refresh but never record that they did.
+ *  2. Google's loyalty template cannot reproduce the app's stamp grid; matching
+ *     the in-app card needs a rendered hero image per stamp.
+ *  3. The whole feature may be replaced by putting the customer's identity QR
+ *     in the wallet instead of one pass per card.
+ *
+ * Flipping this to `true` restores the buttons; nothing else was deleted. If
+ * this is still here long after the questions above are settled, delete the
+ * feature rather than leaving it dark.
+ */
+const GOOGLE_WALLET_UI_ENABLED = false;
+
 type Template = {
   id: string; business_id: string; title: string; subtitle: string | null; description: string | null;
   corner_title: string | null;
@@ -141,14 +160,17 @@ function BusinessPublic() {
   const [socials, setSocials] = useState<BusinessSocial[]>([]);
   const walletEnabled = useServerFn(isGoogleWalletEnabled);
   const appleWalletEnabled = useServerFn(isAppleWalletEnabled);
-  const [googleWalletReady, setGoogleWalletReady] = useState(false);
+  const [googleWalletDetected, setGoogleWalletDetected] = useState(false);
+  // The server may be fully configured for Google Wallet, but the feature is
+  // parked (see GOOGLE_WALLET_UI_ENABLED) so nothing is offered to customers.
+  const googleWalletReady = GOOGLE_WALLET_UI_ENABLED && googleWalletDetected;
   const [appleWalletReady, setAppleWalletReady] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState<Set<string>>(new Set());
   const [expandedTermsId, setExpandedTermsId] = useState<string | null>(null);
   const [cardsLoadError, setCardsLoadError] = useState(false);
 
   useEffect(() => {
-    walletEnabled({}).then((r) => setGoogleWalletReady(r.enabled)).catch(() => setGoogleWalletReady(false));
+    walletEnabled({}).then((r) => setGoogleWalletDetected(r.enabled)).catch(() => setGoogleWalletDetected(false));
     appleWalletEnabled({}).then((r) => setAppleWalletReady(r.enabled)).catch(() => setAppleWalletReady(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
