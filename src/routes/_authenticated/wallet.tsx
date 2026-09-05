@@ -748,8 +748,11 @@ function Wallet() {
                           opacity: i < celebration.stampsCount ? 1 : 0.25,
                         }}
                         transition={{ delay: i === celebration.stampsCount - 1 ? 0.25 : 0, type: "spring", damping: 12 }}
-                        className="h-2.5 w-2.5 rounded-full"
-                        style={{ background: i < celebration.stampsCount ? celebration.accentColor : "currentColor" }}
+                        // The card's own accent is drawn here against the sheet
+                        // rather than against the card, and a pale accent
+                        // vanished into it - taking the stamp count with it.
+                        // The app's primary reads on paper whatever the card.
+                        className={`h-2.5 w-2.5 rounded-full ${i < celebration.stampsCount ? "bg-primary" : "bg-current"}`}
                       />
                     ))}
                   </div>
