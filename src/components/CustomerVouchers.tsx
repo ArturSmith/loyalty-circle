@@ -165,10 +165,19 @@ export function CustomerVouchers({ horizontal = false }: { horizontal?: boolean 
             >
               <div className="flex items-start gap-3">
                 <div
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl"
                   style={{ backgroundColor: `${v.accent_color}1a`, color: v.accent_color }}
                 >
-                  <Gift className="h-5 w-5" />
+                  {v.business?.logo_url ? (
+                    <img
+                      src={v.business.logo_url}
+                      alt=""
+                      loading="lazy"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <Gift className="h-5 w-5" />
+                  )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="truncate font-semibold">{v.label}</div>
@@ -212,10 +221,14 @@ export function CustomerVouchers({ horizontal = false }: { horizontal?: boolean 
                 </Button>
               </div>
               <div
-                className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl"
+                className="mx-auto flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl"
                 style={{ backgroundColor: `${open.accent_color}1a`, color: open.accent_color }}
               >
-                <Gift className="h-6 w-6" />
+                {open.business?.logo_url ? (
+                  <img src={open.business.logo_url} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <Gift className="h-6 w-6" />
+                )}
               </div>
               <h2 className="mt-3 font-display text-xl font-semibold">{open.label}</h2>
               <p className="text-sm text-muted-foreground">{open.business?.name ?? "Business"}</p>
