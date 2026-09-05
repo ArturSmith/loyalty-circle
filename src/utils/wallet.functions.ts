@@ -118,7 +118,7 @@ export const createWalletPass = createServerFn({ method: "POST" })
       cardTitle: tpl.title,
       stampsCount: 0,
       totalSteps: tpl.total_steps,
-      nextReward: nextRewardLabel(tpl.rewards, 0),
+      nextReward: nextRewardLabel(tpl.rewards, 0, tpl.total_steps),
       claimUrl,
       bgColor: tpl.bg_color,
     });
@@ -212,7 +212,7 @@ export const createWalletPassForOwnedCard = createServerFn({ method: "POST" })
       cardTitle: tpl.title,
       stampsCount: instance.stamps_count,
       totalSteps: tpl.total_steps,
-      nextReward: nextRewardLabel(tpl.rewards, instance.stamps_count),
+      nextReward: nextRewardLabel(tpl.rewards, instance.stamps_count, tpl.total_steps),
       claimUrl: walletUrl,
       linkLabel: "Open in ClubCarder",
       bgColor: tpl.bg_color,

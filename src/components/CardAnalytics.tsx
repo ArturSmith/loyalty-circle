@@ -35,6 +35,14 @@ type Props = {
 
 const WEEK = 7 * 86400_000;
 
+// Phone-wallet passes are parked for now: the "Add to Google Wallet" button is
+// hidden behind GOOGLE_WALLET_UI_ENABLED in src/routes/b.$businessId.tsx, so
+// these counters would only ever show stale/zero numbers to business owners.
+// Flip this back to `true` at the same time the wallet button is re-enabled.
+// If we decide not to ship phone wallet passes at all, delete this block (and
+// the `wallet` useMemo + passEvents plumbing) rather than leaving it dark.
+const WALLET_ANALYTICS_ENABLED = false;
+
 function pct(part: number, whole: number) {
   if (!whole) return 0;
   return Math.round((part / whole) * 100);
@@ -154,7 +162,7 @@ export function CardAnalytics({ totalSteps, instances, stamps, vouchers = [], pa
         <ValueTile icon={Sparkles} value={m.issued} label="Rewards unlocked" />
       </div>
 
-      {wallet.any ? (
+      {WALLET_ANALYTICS_ENABLED && wallet.any ? (
         <div className="mt-3 rounded-2xl border-2 border-ink/10 bg-card p-5">
           <div className="flex items-center gap-2">
             <Wallet className="h-4 w-4 text-muted-foreground" />

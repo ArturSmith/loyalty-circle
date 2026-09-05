@@ -20,6 +20,7 @@ import { BusinessCta } from "@/components/BusinessCta";
 import { TabTransition } from "@/components/TabTransition";
 import { ScreenLoader } from "@/components/Spinner";
 import { getTabCache, setTabCache } from "@/lib/tabCache";
+import { scansToNextReward } from "@/lib/rewardProgress";
 import { CustomerQrCard } from "@/components/CustomerQrCard";
 import { NotificationButton } from "@/components/NotificationButton";
 import { SpacesButton } from "@/components/business/SpacesButton";
@@ -127,14 +128,15 @@ function Wallet() {
           if (before !== undefined && inst.stamps_count > before) {
             const rewards = (inst.template.rewards ?? []) as Reward[];
             const unlocked = rewards.find((r) => r.step === inst.stamps_count) ?? null;
-            const upcoming = rewards
-              .filter((r) => r.step > inst.stamps_count)
-              .sort((a, b) => a.step - b.step)[0] ?? null;
-            const stepsToNext = upcoming
-              ? upcoming.step - inst.stamps_count
-              : inst.stamps_count < inst.template.total_steps
-              ? inst.template.total_steps - inst.stamps_count
-              : null;
+            // Reward steps are granted, not scanned, so the remaining count has
+            // to skip them - see scansToNextReward.
+            const progress = scansToNextReward(
+              inst.stamps_count,
+              inst.template.total_steps,
+              rewards,
+            );
+            const upcoming = (progress?.reward as Reward | null) ?? null;
+            const stepsToNext = progress?.scans ?? null;
             setCelebration({
               instanceId: inst.id,
               title: inst.template.title,

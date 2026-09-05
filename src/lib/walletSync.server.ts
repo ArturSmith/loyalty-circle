@@ -132,7 +132,7 @@ async function pushOne(
     cardTitle: template.title,
     stampsCount: instance.stamps_count,
     totalSteps: template.total_steps,
-    nextReward: nextRewardLabel(template.rewards, instance.stamps_count),
+    nextReward: nextRewardLabel(template.rewards, instance.stamps_count, template.total_steps),
     claimUrl: isAnonymous
       ? claimUrlFor(instance.id, instance.anon_secret as string)
       : `${PUBLIC_SITE_URL}/wallet`,
