@@ -134,7 +134,7 @@ test("website navigation and content spacing activate at the same tablet breakpo
   assert.match(read("src/routes/__root.tsx"), /desktopOnly=\{!isTabRoute\(pathname\)\}/);
 });
 
-test("business website navigation retains business selection without changing Wallet and Workspace destinations", () => {
+test("business website navigation retains business selection and never offers Workspace", () => {
   const destinations = [];
   const module = { exports: {} };
   const compiled = ts.transpileModule(read("src/components/business/BusinessDesktopNavigation.tsx"), {
@@ -147,10 +147,11 @@ test("business website navigation retains business selection without changing Wa
     },
   } : require(name), module, module.exports);
   renderToStaticMarkup(React.createElement(module.exports.BusinessDesktopNavigation, { businessId: "selected" }));
+  // /workspace redirects an owner onward, so a "Workspace" link would land the
+  // user on Wallet and read as a broken button.
   assert.deepEqual(destinations, [
     { to: "/business", search: { businessId: "selected" } },
     { to: "/business/menu", search: { businessId: "selected" } },
-    { to: "/workspace", search: {} },
     { to: "/wallet", search: {} },
   ]);
 });
