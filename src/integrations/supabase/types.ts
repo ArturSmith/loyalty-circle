@@ -385,6 +385,8 @@ export type Database = {
           terms_accepted_by: string | null
           terms_accepted_text: string | null
           terms_accepted_version: number | null
+          wallet_synced_at: string | null
+          wallet_synced_stamps: number | null
         }
         Insert: {
           anon_secret?: string | null
@@ -401,6 +403,8 @@ export type Database = {
           terms_accepted_by?: string | null
           terms_accepted_text?: string | null
           terms_accepted_version?: number | null
+          wallet_synced_at?: string | null
+          wallet_synced_stamps?: number | null
         }
         Update: {
           anon_secret?: string | null
@@ -417,6 +421,8 @@ export type Database = {
           terms_accepted_by?: string | null
           terms_accepted_text?: string | null
           terms_accepted_version?: number | null
+          wallet_synced_at?: string | null
+          wallet_synced_stamps?: number | null
         }
         Relationships: [
           {
