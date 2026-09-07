@@ -38,6 +38,7 @@ import { Route as AuthenticatedBusinessIndexRouteImport } from './routes/_authen
 import { Route as DiscoverCategoryCategoryRouteImport } from './routes/discover_.category.$category'
 import { Route as AuthenticatedSettingsBillingRouteImport } from './routes/_authenticated/settings.billing'
 import { Route as AuthenticatedChatsConversationIdRouteImport } from './routes/_authenticated/chats.$conversationId'
+import { Route as AuthenticatedStampTokenRouteImport } from './routes/_authenticated/stamp.$token'
 import { Route as AuthenticatedBusinessWorkspaceRouteImport } from './routes/_authenticated/business.workspace'
 import { Route as AuthenticatedBusinessTeamRouteImport } from './routes/_authenticated/business.team'
 import { Route as AuthenticatedBusinessScanRouteImport } from './routes/_authenticated/business.scan'
@@ -208,6 +209,11 @@ const AuthenticatedChatsConversationIdRoute =
     path: '/chats/$conversationId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedStampTokenRoute = AuthenticatedStampTokenRouteImport.update({
+  id: '/stamp/$token',
+  path: '/stamp/$token',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedBusinessWorkspaceRoute =
   AuthenticatedBusinessWorkspaceRouteImport.update({
     id: '/workspace',
@@ -363,6 +369,7 @@ export interface FileRoutesByFullPath {
   '/business/team': typeof AuthenticatedBusinessTeamRoute
   '/business/workspace': typeof AuthenticatedBusinessWorkspaceRoute
   '/chats/$conversationId': typeof AuthenticatedChatsConversationIdRoute
+  '/stamp/$token': typeof AuthenticatedStampTokenRoute
   '/settings/billing': typeof AuthenticatedSettingsBillingRoute
   '/discover/category/$category': typeof DiscoverCategoryCategoryRoute
   '/business/': typeof AuthenticatedBusinessIndexRoute
@@ -412,6 +419,7 @@ export interface FileRoutesByTo {
   '/business/team': typeof AuthenticatedBusinessTeamRoute
   '/business/workspace': typeof AuthenticatedBusinessWorkspaceRoute
   '/chats/$conversationId': typeof AuthenticatedChatsConversationIdRoute
+  '/stamp/$token': typeof AuthenticatedStampTokenRoute
   '/settings/billing': typeof AuthenticatedSettingsBillingRoute
   '/discover/category/$category': typeof DiscoverCategoryCategoryRoute
   '/business': typeof AuthenticatedBusinessIndexRoute
@@ -464,6 +472,7 @@ export interface FileRoutesById {
   '/_authenticated/business/team': typeof AuthenticatedBusinessTeamRoute
   '/_authenticated/business/workspace': typeof AuthenticatedBusinessWorkspaceRoute
   '/_authenticated/chats/$conversationId': typeof AuthenticatedChatsConversationIdRoute
+  '/_authenticated/stamp/$token': typeof AuthenticatedStampTokenRoute
   '/_authenticated/settings/billing': typeof AuthenticatedSettingsBillingRoute
   '/discover_/category/$category': typeof DiscoverCategoryCategoryRoute
   '/_authenticated/business/': typeof AuthenticatedBusinessIndexRoute
@@ -516,6 +525,7 @@ export interface FileRouteTypes {
     | '/business/team'
     | '/business/workspace'
     | '/chats/$conversationId'
+    | '/stamp/$token'
     | '/settings/billing'
     | '/discover/category/$category'
     | '/business/'
@@ -565,6 +575,7 @@ export interface FileRouteTypes {
     | '/business/team'
     | '/business/workspace'
     | '/chats/$conversationId'
+    | '/stamp/$token'
     | '/settings/billing'
     | '/discover/category/$category'
     | '/business'
@@ -616,6 +627,7 @@ export interface FileRouteTypes {
     | '/_authenticated/business/team'
     | '/_authenticated/business/workspace'
     | '/_authenticated/chats/$conversationId'
+    | '/_authenticated/stamp/$token'
     | '/_authenticated/settings/billing'
     | '/discover_/category/$category'
     | '/_authenticated/business/'
@@ -860,6 +872,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChatsConversationIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/stamp/$token': {
+      id: '/_authenticated/stamp/$token'
+      path: '/stamp/$token'
+      fullPath: '/stamp/$token'
+      preLoaderRoute: typeof AuthenticatedStampTokenRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/business/workspace': {
       id: '/_authenticated/business/workspace'
       path: '/workspace'
@@ -1060,6 +1079,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
   AuthenticatedWorkspaceRoute: typeof AuthenticatedWorkspaceRoute
   AuthenticatedChatsConversationIdRoute: typeof AuthenticatedChatsConversationIdRoute
+  AuthenticatedStampTokenRoute: typeof AuthenticatedStampTokenRoute
   AuthenticatedSettingsBillingRoute: typeof AuthenticatedSettingsBillingRoute
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
 }
@@ -1075,6 +1095,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
   AuthenticatedWorkspaceRoute: AuthenticatedWorkspaceRoute,
   AuthenticatedChatsConversationIdRoute: AuthenticatedChatsConversationIdRoute,
+  AuthenticatedStampTokenRoute: AuthenticatedStampTokenRoute,
   AuthenticatedSettingsBillingRoute: AuthenticatedSettingsBillingRoute,
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
 }

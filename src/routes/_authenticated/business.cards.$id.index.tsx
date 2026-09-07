@@ -5,10 +5,11 @@ import { ScreenLoader } from "@/components/Spinner";
 import { Button } from "@/components/ui/button";
 import { StampCard } from "@/components/StampCard";
 import type { CardFace, CardShape, Reward, StampIconName } from "@/components/StampCard";
-import { ArrowLeft, Pencil, Users, Stamp as StampIco, CheckCircle2, Calendar, Ticket } from "lucide-react";
+import { ArrowLeft, Pencil, Users, Stamp as StampIco, CheckCircle2, Calendar, Ticket, QrCode } from "lucide-react";
 import { motion } from "framer-motion";
 import { resolveAvatarUrls } from "@/lib/avatar";
 import { CardAnalytics } from "@/components/CardAnalytics";
+import { CardStampQrDialog } from "@/components/CardStampQrDialog";
 import type { AnalyticsInstance, AnalyticsStamp, AnalyticsVoucher, AnalyticsPassEvent } from "@/components/CardAnalytics";
 import { z } from "zod";
 import { useBusinessPermissions } from "@/hooks/useBusinessPermissions";
@@ -67,6 +68,7 @@ function CardDetails() {
   const [face, setFace] = useState<CardFace>("info");
   const [analytics, setAnalytics] = useState<{ instances: AnalyticsInstance[]; stamps: AnalyticsStamp[]; vouchers: AnalyticsVoucher[] }>(() => cached?.analytics ?? { instances: [], stamps: [], vouchers: [] });
   const [passEvents, setPassEvents] = useState<AnalyticsPassEvent[]>(() => cached?.passEvents ?? []);
+  const [stampQrOpen, setStampQrOpen] = useState(false);
   const permissions = useBusinessPermissions(businessId);
   const editability = useCardEditability(id, permissions.has("cards.manage"));
 
@@ -301,6 +303,31 @@ function CardDetails() {
         <span className="mx-1">•</span>
         <span className={tpl.active ? "text-emerald-600" : ""}>{tpl.active ? "Active" : "Paused"}</span>
       </div>
+
+      {permissions.has("cards.stamp") && tpl.active && (
+        <>
+          <Button
+            variant="outline"
+            className="mt-5 h-12 w-full gap-2 rounded-2xl"
+            onClick={() => setStampQrOpen(true)}
+          >
+            <QrCode className="h-4 w-4" /> Generate one-time QR
+          </Button>
+          <p className="mt-2 text-center text-xs text-muted-foreground">
+            Show it at the counter — the customer scans it to stamp this card themselves. Each code
+            works once.
+          </p>
+          <CardStampQrDialog
+            templateId={tpl.id}
+            cardTitle={tpl.title}
+            open={stampQrOpen}
+            onOpenChange={setStampQrOpen}
+            // Stats and the customer list are now a stamp behind, so drop the
+            // snapshot rather than showing stale numbers on the next visit.
+            onStamped={() => invalidateNavigationCache(cacheKey)}
+          />
+        </>
+      )}
 
       <CardTermsSection
         terms={tpl.terms_and_conditions}

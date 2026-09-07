@@ -1220,10 +1220,18 @@ export type Database = {
         Args: { _conversation_id: string }
         Returns: boolean
       }
+      issue_card_stamp_qr_token: {
+        Args: { _env?: string; _template_id: string }
+        Returns: Json
+      }
       issue_my_rotating_customer_qr_token: { Args: never; Returns: string }
       mark_conversation_read: {
         Args: { _conversation_id: string; _scope: string }
         Returns: undefined
+      }
+      peek_card_stamp_qr_token: {
+        Args: { _token: string }
+        Returns: Json
       }
       moderation_business_snapshot: {
         Args: { _business_id: string }
@@ -1235,6 +1243,10 @@ export type Database = {
       }
       redeem_business_voucher: {
         Args: { _business_id: string; _voucher_id: string }
+        Returns: Json
+      }
+      redeem_card_stamp_qr_token: {
+        Args: { _env?: string; _token: string }
         Returns: Json
       }
       redeem_voucher: { Args: { _voucher_id: string }; Returns: Json }

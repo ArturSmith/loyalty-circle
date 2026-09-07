@@ -5,6 +5,7 @@ import { QrScanner } from "@/components/QrScanner";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ScanLine } from "lucide-react";
+import { parseStampQrToken } from "@/lib/stamp-qr";
 
 export const Route = createFileRoute("/_authenticated/scan")({
   head: () => ({ meta: [{ title: "Scan QR — ClubCarder" }] }),
@@ -18,6 +19,14 @@ function ScanPage() {
   const onScan = useCallback((text: string) => {
     if (paused) return;
     setPaused(true);
+
+    // A business's one-time stamping code. Checked first because it is also a
+    // clubcarder.com URL and would otherwise fall through to the business match.
+    const stampToken = parseStampQrToken(text);
+    if (stampToken) {
+      navigate({ to: "/stamp/$token", params: { token: stampToken } });
+      return;
+    }
 
     // Accept either a full business URL or a stempel:business:<id> scheme
     const urlMatch = text.match(/\/b\/([0-9a-f-]+)/i);
