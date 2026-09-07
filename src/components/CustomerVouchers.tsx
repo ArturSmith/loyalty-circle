@@ -165,7 +165,7 @@ export function CustomerVouchers({ horizontal = false }: { horizontal?: boolean 
             >
               <div className="flex items-start gap-3">
                 <div
-                  className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl"
+                  className="flex h-11 w-11 shrink-0 self-center items-center justify-center overflow-hidden rounded-xl"
                   style={{ backgroundColor: `${v.accent_color}1a`, color: v.accent_color }}
                 >
                   {v.business?.logo_url ? (
@@ -173,7 +173,7 @@ export function CustomerVouchers({ horizontal = false }: { horizontal?: boolean 
                       src={v.business.logo_url}
                       alt=""
                       loading="lazy"
-                      className="h-full w-full object-cover"
+                      className="h-full w-full object-cover object-center"
                     />
                   ) : (
                     <Gift className="h-5 w-5" />
