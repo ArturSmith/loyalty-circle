@@ -270,7 +270,7 @@ function CardDetails() {
       </header>
 
       {permissions.has("cards.manage") && (editability.canEdit === false || editability.error) && (
-        <p className="mt-4 text-sm text-muted-foreground" role="status">
+        <p className="mt-4 text-center text-sm text-muted-foreground" role="status">
           {editability.error ?? CARD_IN_USE_MESSAGE}
         </p>
       )}
