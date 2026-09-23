@@ -15,7 +15,7 @@ import { useBusinessPermissions } from "@/hooks/useBusinessPermissions";
 import { StampCard } from "@/components/StampCard";
 import type { CardShape, Reward, StampIconName } from "@/components/StampCard";
 import { Carousel, CarouselApi, CarouselContent, CarouselItem } from "@/components/ui/carousel";
-import QRCode from "qrcode";
+// qrcode is imported lazily where it is used: its Node build breaks SSR.
 import { normalizeBrandColor } from "@/lib/brand";
 import { z } from "zod";
 import { BusinessSummaryStat } from "@/components/business/BusinessSummaryStat";
@@ -191,6 +191,7 @@ function BusinessDashboard() {
 
   const downloadBusinessQr = async () => {
     try {
+      const { default: QRCode } = await import("qrcode");
       const dataUrl = await QRCode.toDataURL(bizUrl, {
         width: 1024,
         margin: 2,
