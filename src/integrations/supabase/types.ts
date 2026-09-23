@@ -1120,6 +1120,10 @@ export type Database = {
         Returns: boolean
       }
       business_is_listable: { Args: { _business_id: string }; Returns: boolean }
+      business_logo_folder_visible: {
+        Args: { _folder: string }
+        Returns: boolean
+      }
       business_slot_rank: { Args: { _business_id: string }; Returns: number }
       business_trial_active: {
         Args: { _business_id: string }
