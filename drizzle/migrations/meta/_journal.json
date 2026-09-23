@@ -8,6 +8,13 @@
       "when": 1790184805934,
       "tag": "0000_restrict_business_logo_reads",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790191925719,
+      "tag": "0001_allow_self_stamp_via_qr_token",
+      "breakpoints": true
     }
   ]
 }
