@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import QRCode from "qrcode";
+// Imported lazily in the effect below: the package's Node build pulls in
+// modules the server runtime can't load, which crashes server rendering.
 
 export function QrDisplay({ value, size = 240, className }: { value: string; size?: number; className?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -7,12 +8,21 @@ export function QrDisplay({ value, size = 240, className }: { value: string; siz
 
   useEffect(() => {
     if (!canvasRef.current) return;
-    QRCode.toCanvas(canvasRef.current, value, {
-      width: size,
-      margin: 1,
-      color: { dark: "#1a1a2e", light: "#00000000" },
-      errorCorrectionLevel: "M",
-    }).then(() => setReady(true));
+    let cancelled = false;
+    void import("qrcode").then(({ default: QRCode }) => {
+      if (cancelled || !canvasRef.current) return;
+      return QRCode.toCanvas(canvasRef.current, value, {
+        width: size,
+        margin: 1,
+        color: { dark: "#1a1a2e", light: "#00000000" },
+        errorCorrectionLevel: "M",
+      }).then(() => {
+        if (!cancelled) setReady(true);
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [value, size]);
 
   return (
