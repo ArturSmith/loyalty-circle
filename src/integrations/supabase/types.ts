@@ -434,6 +434,78 @@ export type Database = {
           },
         ]
       }
+      card_stamp_qr_tokens: {
+        Row: {
+          business_id: string
+          card_instance_id: string | null
+          created_at: string
+          created_by: string
+          expires_at: string
+          redeemed_at: string | null
+          redeemed_by: string | null
+          template_id: string
+          token: string
+        }
+        Insert: {
+          business_id: string
+          card_instance_id?: string | null
+          created_at?: string
+          created_by: string
+          expires_at: string
+          redeemed_at?: string | null
+          redeemed_by?: string | null
+          template_id: string
+          token?: string
+        }
+        Update: {
+          business_id?: string
+          card_instance_id?: string | null
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          redeemed_at?: string | null
+          redeemed_by?: string | null
+          template_id?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_stamp_qr_tokens_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "card_stamp_qr_tokens_card_instance_id_fkey"
+            columns: ["card_instance_id"]
+            isOneToOne: false
+            referencedRelation: "card_instances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "card_stamp_qr_tokens_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "card_stamp_qr_tokens_redeemed_by_fkey"
+            columns: ["redeemed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "card_stamp_qr_tokens_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "card_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       card_templates: {
         Row: {
           accent_color: string
@@ -1035,6 +1107,10 @@ export type Database = {
       add_stamp:
         | { Args: { _card_instance_id: string }; Returns: Json }
         | { Args: { _card_instance_id: string; _env?: string }; Returns: Json }
+      apply_card_stamp: {
+        Args: { _card_instance_id: string; _env?: string; _issued_by: string }
+        Returns: Json
+      }
       business_has_access: {
         Args: { _business_created_at: string; _owner_id: string }
         Returns: boolean
@@ -1229,10 +1305,6 @@ export type Database = {
         Args: { _conversation_id: string; _scope: string }
         Returns: undefined
       }
-      peek_card_stamp_qr_token: {
-        Args: { _token: string }
-        Returns: Json
-      }
       moderation_business_snapshot: {
         Args: { _business_id: string }
         Returns: Json
@@ -1241,6 +1313,7 @@ export type Database = {
         Args: { _template_id: string }
         Returns: Json
       }
+      peek_card_stamp_qr_token: { Args: { _token: string }; Returns: Json }
       redeem_business_voucher: {
         Args: { _business_id: string; _voucher_id: string }
         Returns: Json
