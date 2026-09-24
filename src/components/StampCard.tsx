@@ -96,7 +96,7 @@ export function StampCard({
       )}
       {(() => {
         const inner = logoUrl ? (
-          <img src={logoUrl} alt="" className="h-14 w-14 sm:h-16 sm:w-16 object-contain" />
+          <img src={logoUrl} alt="" className="h-20 w-20 sm:h-24 sm:w-24 object-contain" />
         ) : Icon ? (
           <Icon className="h-10 w-10 sm:h-12 sm:w-12" style={{ color: accentColor }} />
         ) : (
